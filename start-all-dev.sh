@@ -178,6 +178,13 @@ sleep 2
 echo "📦 Starting admin (admin_demo)..."
 # Use docker-compose directly for admin
 # Note: admin_demo/start-dev.sh runs tests which can be slow, so we bypass it
+# Ensure the dev network exists with correct labels by starting any service from root docker-compose first
+# This creates the network with proper Docker Compose labels
+if ! docker network ls | grep -q "mfai_demo_dev-network"; then
+    echo "    Creating dev network via docker-compose..."
+    docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
+    sleep 1
+fi
 echo "    Starting with docker-compose..."
 docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
 echo "    ✅ Admin container started"
