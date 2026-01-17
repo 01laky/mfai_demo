@@ -43,16 +43,28 @@ if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]
     TEST_EXIT_CODE=$?
     
     # Parse test results - look for summary line
-    # Format: "Passed!  - Failed: 0, Passed: 118, Skipped: 0, Total: 118, Duration: 2 s"
-    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Total: [0-9]+" | grep -oE "[0-9]+" || echo "0")
-    PASSED=$(echo "$TEST_OUTPUT" | grep -oE "Passed: [0-9]+" | grep -oE "[0-9]+" || echo "0")
-    FAILED=$(echo "$TEST_OUTPUT" | grep -oE "Failed: [0-9]+" | grep -oE "[0-9]+" || echo "0")
+    # Format: "Passed!  - Failed:     0, Passed:   118, Skipped:     0, Total:   118, Duration: 4 s"
+    # Try multiple patterns to match different output formats
+    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Total:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
+    PASSED=$(echo "$TEST_OUTPUT" | grep -oE "Passed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
+    FAILED=$(echo "$TEST_OUTPUT" | grep -oE "Failed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
     
     # Alternative parsing if first didn't work
     if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
         TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Total tests: [0-9]+" | grep -oE "[0-9]+" || echo "0")
         PASSED=$(echo "$TEST_OUTPUT" | grep -oE "Passed! +[0-9]+" | grep -oE "[0-9]+" || echo "0")
         FAILED=$(echo "$TEST_OUTPUT" | grep -oE "Failed! +[0-9]+" | grep -oE "[0-9]+" || echo "0")
+    fi
+    
+    # Another alternative - look for "Passed!" line with comma-separated values
+    if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
+        # Extract from line like: "Passed!  - Failed:     0, Passed:   118, Skipped:     0, Total:   118"
+        LINE=$(echo "$TEST_OUTPUT" | grep "Passed!" | grep "Total:" | head -1)
+        if [ -n "$LINE" ]; then
+            TOTAL=$(echo "$LINE" | grep -oE "Total:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
+            PASSED=$(echo "$LINE" | grep -oE "Passed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
+            FAILED=$(echo "$LINE" | grep -oE "Failed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
+        fi
     fi
     
     # If still no results, check exit code
