@@ -47,18 +47,12 @@ check_service() {
 get_container_status() {
     local container_name=$1
     if check_container "$container_name"; then
-        local status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null || echo "not found")
-        # Get started time - handle both Linux and macOS date formats
+        local status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null || echo "running")
+        # Get started time - use docker's format directly
         local started_at=$(docker inspect --format='{{.State.StartedAt}}' "$container_name" 2>/dev/null || echo "")
-        if [ -n "$started_at" ]; then
-            # Try to format date (works on both Linux and macOS)
-            if date --version > /dev/null 2>&1; then
-                # Linux
-                local uptime=$(date -d "$started_at" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || echo "$started_at")
-            else
-                # macOS
-                local uptime=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${started_at%.*}" +"%Y-%m-%d %H:%M:%S" 2>/dev/null || echo "$started_at")
-            fi
+        if [ -n "$started_at" ] && [ "$started_at" != "<no value>" ]; then
+            # Extract just the date and time part (YYYY-MM-DD HH:MM:SS)
+            local uptime=$(echo "$started_at" | cut -d'.' -f1 | sed 's/T/ /' || echo "$started_at")
         else
             local uptime="unknown"
         fi
