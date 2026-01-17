@@ -13,15 +13,14 @@
 # The script handles:
 # - Dependency ordering (database before backend, backend before frontend/admin)
 # - Port conflict resolution (removes old containers using same ports)
-# - Health checks to verify services are running
-# - Error handling and status reporting
+# - After starting all services, displays a live status screen that refreshes every 5 seconds
 # 
 # Usage: ./start-all-dev.sh
+# Press Ctrl+C to exit the status screen
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Get the directory where this script is located
-# This allows the script to be run from any directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -31,356 +30,329 @@ echo ""
 # ============================================================================
 # START DATABASE (PostgreSQL)
 # ============================================================================
-# Database must start first as backend depends on it for connection
-# PostgreSQL runs in Docker container on port 5432
-
 echo "📦 Starting database (db_demo)..."
 if [ -f "db_demo/start-db.sh" ]; then
-    # Use dedicated database startup script if available
     cd db_demo
-    ./start-db.sh
+    ./start-db.sh > /dev/null 2>&1 &
     cd ..
+    echo "    ✅ Database startup launched"
 else
-    # Fallback: start database container directly using docker-compose
     echo "  ⚠️  db_demo/start-db.sh not found, starting manually..."
     cd db_demo
-    docker-compose up -d
+    docker-compose up -d > /dev/null 2>&1 &
     cd ..
 fi
-
-# Wait for database to be ready before starting backend
-# PostgreSQL needs a few seconds to initialize and accept connections
-echo "  ⏳ Waiting for database to be ready..."
-sleep 5
 
 # ============================================================================
 # START BACKEND (ASP.NET Core API)
 # ============================================================================
-# Backend provides REST API, authentication, and business logic
-# Runs on port 8000 (HTTP) and 8001 (HTTPS)
-# Also starts Seq logging server on port 5341
-
 echo "📦 Starting backend (be_demo)..."
 # Clean up any old containers that might conflict with ports
-# This prevents "port already allocated" errors when restarting
-# Removes containers with old naming conventions (be-demo-seq, be-demo-api, be-demo-dev)
+# Remove both old containers from be_demo docker-compose and root docker-compose
 docker rm -f be-demo-seq be-demo-api be-demo-dev seq seq-dev 2>/dev/null || true
-# Also kill any processes using ports 8000/8001
 lsof -ti:8000,8001 | xargs kill -9 2>/dev/null || true
 sleep 1
 
-if [ -f "be_demo/start-dev.sh" ]; then
-    # Use dedicated backend startup script if available
-    cd be_demo
-    ./start-dev.sh > /dev/null 2>&1 &
-    BACKEND_PID=$!
-    cd ..
-    echo "    ✅ Backend startup script launched (PID: $BACKEND_PID)"
-else
-    # Fallback: start backend and Seq containers directly using docker-compose
-    echo "  ⚠️  be_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq-dev
-fi
-
-# Wait for backend container to be running and healthy
-echo "    ⏳ Waiting for backend to be ready..."
-MAX_WAIT=60
-WAIT_COUNT=0
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if docker ps --format "{{.Names}}" | grep -qE "be-demo-dev|be-demo-api"; then
-        # Check if backend is responding
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 | grep -qE "^[234]"; then
-            echo "    ✅ Backend is ready and responding"
-            break
-        fi
-    fi
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    sleep 2
-done
-if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "    ⚠️  Backend took too long to start, continuing anyway..."
-fi
+# Use root docker-compose to start backend and seq-dev together
+# This ensures we use seq-dev from root docker-compose, not be-demo-seq from be_demo/docker-compose.dev.yml
+echo "    Starting backend and seq with root docker-compose..."
+docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq > /dev/null 2>&1 &
+echo "    ✅ Backend startup launched"
 
 # ============================================================================
 # START FRONTEND (React + Vite)
 # ============================================================================
-# Frontend is the user-facing application
-# Runs on port 8081 (HTTP)
-# Connects to backend API on port 8000
-
 echo "📦 Starting frontend (fe_demo)..."
 if [ -f "fe_demo/start-dev.sh" ]; then
     cd fe_demo
-    
-    # Check if node_modules exists, if not install dependencies
-    # Yarn PnP (Plug'n'Play) uses .yarn/cache instead of node_modules
-    # If neither exists, dependencies need to be installed
-    if [ ! -d "node_modules" ] && [ ! -f ".yarn/cache/.gitignore" ]; then
-        echo "    ⚙️  Installing dependencies..."
-        yarn install
-        if [ $? -ne 0 ]; then
-            echo "    ❌ Failed to install dependencies!"
-            cd ..
-        else
-            echo "    ✅ Dependencies installed!"
-        fi
-    fi
-    
-    # Start frontend development server in background
     ./start-dev.sh > /dev/null 2>&1 &
-    FRONTEND_PID=$!
     cd ..
-    echo "    ✅ Frontend startup script launched (PID: $FRONTEND_PID)"
+    echo "    ✅ Frontend startup launched"
 else
-    # Fallback: start frontend container directly using docker-compose
     echo "  ⚠️  fe_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d fe-demo-dev
-fi
-
-# Wait for frontend container to be running and responding
-echo "    ⏳ Waiting for frontend to be ready..."
-MAX_WAIT=60
-WAIT_COUNT=0
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if docker ps --format "{{.Names}}" | grep -q "fe-demo-dev"; then
-        # Check if frontend is responding
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 2>&1 | grep -qE "^[234]"; then
-            echo "    ✅ Frontend is ready and responding"
-            break
-        fi
-    fi
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    sleep 2
-done
-if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "    ⚠️  Frontend took too long to start, continuing anyway..."
+    docker-compose -f docker-compose.dev.yml up -d fe-demo-dev > /dev/null 2>&1 &
 fi
 
 # ============================================================================
 # START AI DEMO (Python gRPC Server)
 # ============================================================================
-# AI Demo provides gRPC services for AI functionality
-# Runs on port 50051 (gRPC)
-# Backend connects to this service for AI operations
-
 echo "📦 Starting AI Demo (ai_demo)..."
 if [ -f "ai_demo/start-dev.sh" ]; then
-    # Use dedicated AI Demo startup script if available
     cd ai_demo
     ./start-dev.sh > /dev/null 2>&1 &
-    AI_DEMO_PID=$!
     cd ..
-    echo "    ✅ AI Demo startup script launched (PID: $AI_DEMO_PID)"
+    echo "    ✅ AI Demo startup launched"
 else
-    # Fallback: start AI Demo container directly using docker-compose
     echo "  ⚠️  ai_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d ai-demo-dev
-fi
-
-# Wait for AI Demo container to be running
-echo "    ⏳ Waiting for AI Demo to be ready..."
-MAX_WAIT=60
-WAIT_COUNT=0
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if docker ps --format "{{.Names}}" | grep -q "ai-demo-dev"; then
-        # Check if gRPC port is listening (basic check)
-        if docker exec ai-demo-dev sh -c "netstat -tuln | grep -q :50051" 2>/dev/null || true; then
-            echo "    ✅ AI Demo is ready"
-            break
-        fi
-        # If netstat not available, just check container is running for a few seconds
-        if [ $WAIT_COUNT -gt 5 ]; then
-            echo "    ✅ AI Demo container is running"
-            break
-        fi
-    fi
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    sleep 2
-done
-if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "    ⚠️  AI Demo took too long to start, continuing anyway..."
+    docker-compose -f docker-compose.dev.yml up -d ai-demo-dev > /dev/null 2>&1 &
 fi
 
 # ============================================================================
 # START LOGGER DEMO (Dozzle)
 # ============================================================================
-# Logger Demo provides a web UI for viewing logs from all Docker containers
-# Runs on port 8080 (HTTP)
-# Provides real-time log viewing, filtering, and search capabilities
-# Note: Must ensure dev network exists with correct Docker Compose labels
-# The network is created by root docker-compose.dev.yml with proper labels
-
 echo "📦 Starting Logger Demo (logger_demo)..."
-# Ensure dev network exists with correct Docker Compose labels
-# Create network by starting any service from root docker-compose.dev.yml
-# This ensures network has proper labels that docker-compose expects
 if ! docker network ls | grep -q "mfai_demo_dev-network"; then
-    echo "    Creating dev network via docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
+    docker-compose -f docker-compose.dev.yml up -d --no-deps seq > /dev/null 2>&1 || true
     sleep 1
 fi
 
 if [ -f "logger_demo/start-dev.sh" ]; then
-    # Use dedicated Logger Demo startup script if available
     cd logger_demo
-    ./start-dev.sh > /dev/null 2>&1
+    ./start-dev.sh > /dev/null 2>&1 &
     cd ..
-    echo "    ✅ Logger Demo startup script launched"
+    echo "    ✅ Logger Demo startup launched"
 else
-    # Fallback: start Logger Demo container directly using docker-compose
     echo "  ⚠️  logger_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev
-fi
-
-# Wait for Logger Demo container to be running
-echo "    ⏳ Waiting for Logger Demo to be ready..."
-MAX_WAIT=30
-WAIT_COUNT=0
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if docker ps --format "{{.Names}}" | grep -q "dozzle-dev"; then
-        echo "    ✅ Logger Demo is ready"
-        break
-    fi
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    sleep 1
-done
-if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "    ⚠️  Logger Demo took too long to start, continuing anyway..."
+    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev > /dev/null 2>&1 &
 fi
 
 # ============================================================================
 # START ADMIN (React + Vite)
 # ============================================================================
-# Admin panel for managing users, faces, and pages
-# Runs on port 8082 (HTTP)
-# Connects to backend API on port 8000
-
 echo "📦 Starting admin (admin_demo)..."
-# Use docker-compose directly for admin
-# Note: admin_demo/start-dev.sh runs tests which can be slow, so we bypass it
-# Clean up any old backend containers that might conflict with ports
-# be_demo/start-dev.sh creates be-demo-api and be-demo-seq which use ports 5341/5342
-# We need to stop/remove these before starting seq-dev and be-demo-dev via docker-compose
 docker stop be-demo-api be-demo-seq 2>/dev/null || true
 docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
-# Ensure the dev network exists with correct labels by starting any service from root docker-compose first
-# This creates the network with proper Docker Compose labels
 if ! docker network ls | grep -q "mfai_demo_dev-network"; then
-    echo "    Creating dev network via docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
+    docker-compose -f docker-compose.dev.yml up -d --no-deps seq > /dev/null 2>&1 || true
     sleep 1
 fi
-echo "    Starting with docker-compose..."
-docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
+docker-compose -f docker-compose.dev.yml up -d admin-demo-dev > /dev/null 2>&1 &
+echo "    ✅ Admin startup launched"
 
-# Wait for admin container to be running and responding
-echo "    ⏳ Waiting for admin to be ready..."
-MAX_WAIT=60
-WAIT_COUNT=0
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    if docker ps --format "{{.Names}}" | grep -q "admin-demo-dev"; then
-        # Check if admin is responding
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8082 2>&1 | grep -qE "^[234]"; then
-            echo "    ✅ Admin is ready and responding"
-            break
-        fi
-    fi
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    sleep 2
-done
-if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
-    echo "    ⚠️  Admin took too long to start, continuing anyway..."
-fi
-
-# Final wait for all applications to fully initialize
 echo ""
-echo "⏳ Finalizing startup..."
-sleep 3
+echo "✅ All services startup launched!"
+echo ""
+echo "🔄 Starting live status screen (refreshes every 5 seconds)..."
+echo "   Press Ctrl+C to exit"
+echo ""
+
+# Trap Ctrl+C to exit gracefully
+trap 'echo ""; echo "👋 Status screen stopped. Services continue running."; exit 0' INT TERM
 
 # ============================================================================
-# CHECK STATUS AND HEALTH
+# LIVE STATUS SCREEN
 # ============================================================================
-# Verify that all services are running and accessible
-# Uses Docker ps for containers and curl for HTTP endpoints
+# Continuously refresh and display container status every 5 seconds
+# This runs until the user presses Ctrl+C
 
-echo ""
-echo "🔍 Checking application status..."
-echo ""
-
-# Initialize status variables - assume services are down until proven otherwise
-BACKEND_STATUS="❌"
-FRONTEND_STATUS="❌"
-ADMIN_STATUS="❌"
-AI_DEMO_STATUS="❌"
-DB_STATUS="❌"
-LOGGER_DEMO_STATUS="❌"
-
-# Check if database container is running
-# grep returns 0 (success) if postgres-dev is found in docker ps output
-if docker ps | grep -q postgres-dev; then
-    DB_STATUS="✅"
-fi
-
-# Check if backend API is accessible
-# Try both Swagger UI and OAuth2 endpoint to verify backend is responding
-# Use HTTP status code check - any 2xx/4xx response means backend is running (even if it's an error)
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 | grep -qE "^[234]" || \
-   curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/oauth2/token 2>&1 | grep -qE "^[234]"; then
-    BACKEND_STATUS="✅"
-fi
-
-# Check if frontend is accessible
-# Simple HTTP GET request to verify frontend dev server is running
-if curl -s http://localhost:8081 > /dev/null 2>&1; then
-    FRONTEND_STATUS="✅"
-fi
-
-# Check if admin is accessible
-# Simple HTTP GET request to verify admin dev server is running
-if curl -s http://localhost:8082 > /dev/null 2>&1; then
-    ADMIN_STATUS="✅"
-fi
-
-# Check if Logger Demo (Dozzle) is accessible
-# Simple HTTP GET request to verify Dozzle web UI is running
-if curl -s http://localhost:8080 > /dev/null 2>&1; then
-    LOGGER_DEMO_STATUS="✅"
-fi
-
-# Display status summary for each service
-echo "$DB_STATUS Database (db_demo): PostgreSQL on port 5432"
-echo "$BACKEND_STATUS Backend (be_demo): http://localhost:8000"
-echo "$FRONTEND_STATUS Frontend (fe_demo): http://localhost:8081"
-echo "$ADMIN_STATUS Admin (admin_demo): http://localhost:8082"
-echo "$LOGGER_DEMO_STATUS Logger Demo (logger_demo): http://localhost:8080"
-echo ""
-
-# Display all application URLs for easy access
-echo "📋 Application URLs:"
-echo "   Database: localhost:5432"
-echo "   Backend API: http://localhost:8000"
-echo "   Backend Swagger: http://localhost:8000/swagger"
-echo "   Frontend: http://localhost:8081"
-echo "   Admin: http://localhost:8082"
-echo ""
-
-# Check if all services are running successfully
-# If all status variables are ✅, exit with success code (0)
-# Otherwise, exit with error code (1) and provide troubleshooting tips
-if [ "$DB_STATUS" = "✅" ] && [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ] && [ "$AI_DEMO_STATUS" = "✅" ] && [ "$LOGGER_DEMO_STATUS" = "✅" ]; then
-    echo "✅ All applications are running!"
-    exit 0
-else
-    # Some services failed to start or are not accessible
-    # Provide helpful commands to check logs and troubleshoot
-    echo "⚠️  Some applications may still be starting. Please check logs if needed."
+while true; do
+    clear
+    echo "═══════════════════════════════════════════════════════════"
+    echo "  Live Container Status (refreshing every 5 seconds)"
+    echo "  Press Ctrl+C to exit"
+    echo "═══════════════════════════════════════════════════════════"
     echo ""
-    echo "💡 To check logs:"
-    echo "   - Database: cd db_demo && docker-compose logs -f"
-    echo "   - Backend: cd be_demo && docker-compose -f docker-compose.dev.yml logs -f be-demo-dev"
-    echo "   - Frontend: cd fe_demo && docker-compose -f docker-compose.dev.yml logs -f fe-demo-dev"
-    echo "   - Admin: cd admin_demo && docker-compose -f docker-compose.dev.yml logs -f admin-demo-dev"
-    echo "   - AI Demo: docker-compose -f docker-compose.dev.yml logs -f ai-demo-dev"
-    echo "   - Logger Demo: docker-compose -f logger_demo/docker-compose.dev.yml logs -f dozzle-dev"
-    exit 1
-fi
+    
+    # Get current timestamp
+    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "Last updated: $TIMESTAMP"
+    echo ""
+    
+    # ========================================================================
+    # DATABASE STATUS
+    # ========================================================================
+    echo "📦 Database (PostgreSQL)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^postgres-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=postgres-dev)
+        echo "  Container: ✓ Running (postgres-dev)"
+        echo "  Status: $STATUS"
+        
+        # Check database accessibility
+        if nc -z localhost 5432 2>/dev/null; then
+            echo "  Database: ✓ Accessible"
+            echo "  Port: 5432 (localhost)"
+        else
+            echo "  Database: ⚠ Not accessible"
+            echo "  Port: 5432 (localhost)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -q "^postgres-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=postgres-dev | head -1)
+        echo "  Container: ⚠ Stopped (postgres-dev)"
+        echo "  Status: $STATUS"
+    else
+        echo "  Container: ○ Not found (postgres-dev)"
+        echo "  Status: Does not exist"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # BACKEND STATUS
+    # ========================================================================
+    echo "📦 Backend API (be_demo)"
+    echo "───────────────────────────────────────────────────────────"
+    BACKEND_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E '^be-demo-dev$|^be-demo-api$' | head -1)
+    if [ -n "$BACKEND_CONTAINER" ]; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=$BACKEND_CONTAINER)
+        echo "  Container: ✓ Running ($BACKEND_CONTAINER)"
+        echo "  Status: $STATUS"
+        
+        # Check API accessibility
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 || echo "000")
+        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
+            echo "  API: ✓ Accessible (http://localhost:8000)"
+        else
+            echo "  API: ⚠ Not accessible (http://localhost:8000)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -E '^be-demo-dev$|^be-demo-api$' | head -1 | grep -q .; then
+        STOPPED_CONTAINER=$(docker ps -a --format '{{.Names}}' | grep -E '^be-demo-dev$|^be-demo-api$' | head -1)
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=$STOPPED_CONTAINER | head -1)
+        echo "  Container: ⚠ Stopped ($STOPPED_CONTAINER)"
+        echo "  Status: $STATUS"
+    else
+        echo "  Container: ○ Not found (be-demo-dev/be-demo-api)"
+        echo "  Status: Does not exist"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # FRONTEND STATUS
+    # ========================================================================
+    echo "📦 Frontend (fe_demo)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=fe-demo-dev)
+        echo "  Container: ✓ Running (fe-demo-dev)"
+        echo "  Status: $STATUS"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 2>&1 || echo "000")
+        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
+            echo "  App: ✓ Accessible (http://localhost:8081)"
+        else
+            echo "  App: ⚠ Not accessible (http://localhost:8081)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=fe-demo-dev | head -1)
+        echo "  Container: ⚠ Stopped (fe-demo-dev)"
+        echo "  Status: $STATUS"
+    else
+        echo "  Container: ○ Not found (fe-demo-dev)"
+        echo "  Status: Does not exist"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # ADMIN STATUS
+    # ========================================================================
+    echo "📦 Admin (admin_demo)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^admin-demo-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=admin-demo-dev)
+        echo "  Container: ✓ Running (admin-demo-dev)"
+        echo "  Status: $STATUS"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082 2>&1 || echo "000")
+        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
+            echo "  App: ✓ Accessible (http://localhost:8082)"
+        else
+            echo "  App: ⚠ Not accessible (http://localhost:8082)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -q "^admin-demo-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=admin-demo-dev | head -1)
+        echo "  Container: ⚠ Stopped (admin-demo-dev)"
+        echo "  Status: $STATUS"
+        echo "  Port: 8082 (http://localhost:8082)"
+    else
+        echo "  Container: ○ Not found (admin-demo-dev)"
+        echo "  Status: Does not exist"
+        echo "  Port: 8082 (http://localhost:8082)"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # SEQ STATUS
+    # ========================================================================
+    echo "📦 Seq Logging Server"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^seq-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=seq-dev)
+        echo "  Container: ✓ Running (seq-dev)"
+        echo "  Status: $STATUS"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5341 2>&1 || echo "000")
+        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
+            echo "  UI: ✓ Accessible (http://localhost:5341)"
+        else
+            echo "  UI: ⚠ Not accessible (http://localhost:5341)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -q "^seq-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=seq-dev | head -1)
+        echo "  Container: ⚠ Stopped (seq-dev)"
+        echo "  Status: $STATUS"
+    else
+        echo "  Container: ○ Not found (seq-dev)"
+        echo "  Status: Does not exist"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # AI DEMO STATUS
+    # ========================================================================
+    echo "📦 AI Demo (ai_demo)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=ai-demo-dev)
+        echo "  Container: ✓ Running (ai-demo-dev)"
+        echo "  Status: $STATUS"
+        echo "  Service: ✓ Running (gRPC on port 50051)"
+    elif docker ps -a --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=ai-demo-dev | head -1)
+        echo "  Container: ⚠ Stopped (ai-demo-dev)"
+        echo "  Status: $STATUS"
+    else
+        echo "  Container: ○ Not found (ai-demo-dev)"
+        echo "  Status: Does not exist"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # LOGGER DEMO STATUS
+    # ========================================================================
+    echo "📦 Logger Demo (logger_demo)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^dozzle-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=dozzle-dev)
+        echo "  Container: ✓ Running (dozzle-dev)"
+        echo "  Status: $STATUS"
+        # Logger Demo (Dozzle) is considered accessible if container is running
+        echo "  Service: ✓ Running (http://localhost:8080)"
+    elif docker ps -a --format '{{.Names}}' | grep -q "^dozzle-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=dozzle-dev | head -1)
+        echo "  Container: ⚠ Stopped (dozzle-dev)"
+        echo "  Status: $STATUS"
+        echo "  Port: 8080 (http://localhost:8080)"
+    else
+        echo "  Container: ○ Not found (dozzle-dev)"
+        echo "  Status: Does not exist"
+        echo "  Port: 8080 (http://localhost:8080)"
+    fi
+    echo ""
+    
+    # ========================================================================
+    # SUMMARY
+    # ========================================================================
+    echo "═══════════════════════════════════════════════════════════"
+    echo "  Summary"
+    echo "═══════════════════════════════════════════════════════════"
+    
+    RUNNING=$(docker ps --format '{{.Names}}' | grep -E 'postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | wc -l | xargs)
+    STOPPED=$(docker ps -a --format '{{.Names}}' | grep -E 'postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | grep -v "$(docker ps --format '{{.Names}}')" | wc -l | xargs)
+    NOT_FOUND=$((8 - RUNNING - STOPPED))
+    
+    echo "  Containers: $RUNNING running, $STOPPED stopped"
+    echo ""
+    
+    echo "  Quick Links:"
+    echo "    • Backend API: http://localhost:8000"
+    echo "    • Swagger: http://localhost:8000/swagger/index.html"
+    echo "    • Frontend: http://localhost:8081"
+    echo "    • Admin: http://localhost:8082"
+    echo "    • Seq Logs: http://localhost:5341"
+    echo "    • Logger Demo (Dozzle): http://localhost:8080"
+    echo ""
+    
+    echo "═══════════════════════════════════════════════════════════"
+    
+    # Wait 5 seconds before next refresh
+    sleep 5
+done

@@ -85,6 +85,9 @@ services:
       - "5342:5341"
     environment:
       - ACCEPT_EULA=Y
+      # Admin credentials for development
+      - SEQ_FIRSTRUN_ADMINUSERNAME=admin
+      - SEQ_FIRSTRUN_ADMINPASSWORD=admin
     volumes:
       - seq-data:/data
     networks:
