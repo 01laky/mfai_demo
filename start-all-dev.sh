@@ -85,29 +85,10 @@ sleep 3
 # ============================================================================
 
 echo "📦 Starting admin (admin_demo)..."
-if [ -f "admin_demo/start-dev.sh" ]; then
-    cd admin_demo
-    
-    # Check if node_modules exists, if not install dependencies
-    if [ ! -d "node_modules" ] && [ ! -f ".yarn/cache/.gitignore" ]; then
-        echo "    ⚙️  Installing dependencies..."
-        yarn install
-        if [ $? -ne 0 ]; then
-            echo "    ❌ Failed to install dependencies!"
-            cd ..
-        else
-            echo "    ✅ Dependencies installed!"
-        fi
-    fi
-    
-    ./start-dev.sh > /dev/null 2>&1 &
-    ADMIN_PID=$!
-    echo "    ✅ Admin started (PID: $ADMIN_PID)"
-    cd ..
-else
-    echo "  ⚠️  admin_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
-fi
+# Use docker-compose directly for admin (start-dev.sh runs tests which can be slow)
+echo "    Starting with docker-compose..."
+docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
+echo "    ✅ Admin container started"
 
 echo ""
 echo "⏳ Waiting for applications to start..."
