@@ -226,7 +226,7 @@ echo ""
 # Check if all services are running successfully
 # If all status variables are ✅, exit with success code (0)
 # Otherwise, exit with error code (1) and provide troubleshooting tips
-if [ "$DB_STATUS" = "✅" ] && [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ]; then
+if [ "$DB_STATUS" = "✅" ] && [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ] && [ "$AI_DEMO_STATUS" = "✅" ]; then
     echo "✅ All applications are running!"
     exit 0
 else
@@ -236,10 +236,9 @@ else
     echo ""
     echo "💡 To check logs:"
     echo "   - Database: cd db_demo && docker-compose logs -f"
-    echo "   - Database: cd db_demo && docker-compose logs -f"
     echo "   - Backend: cd be_demo && docker-compose -f docker-compose.dev.yml logs -f be-demo-dev"
     echo "   - Frontend: cd fe_demo && docker-compose -f docker-compose.dev.yml logs -f fe-demo-dev"
     echo "   - Admin: cd admin_demo && docker-compose -f docker-compose.dev.yml logs -f admin-demo-dev"
-    echo "   - AI Demo: cd ai_demo && docker-compose -f ../docker-compose.dev.yml logs -f ai-demo-dev"
+    echo "   - AI Demo: docker-compose -f docker-compose.dev.yml logs -f ai-demo-dev"
     exit 1
 fi
