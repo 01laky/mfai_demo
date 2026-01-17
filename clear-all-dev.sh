@@ -3,7 +3,7 @@
 # clear-all-dev.sh - Script to completely remove all development containers and volumes
 # 
 # This script performs a complete cleanup of all development infrastructure:
-# - Stops and removes all Docker containers (database, backend, frontend, admin, seq, ai_demo)
+# - Stops and removes all Docker containers (database, backend, frontend, admin, seq, ai_demo, logger_demo)
 # - Removes all Docker volumes (including database data - this is destructive!)
 # - Removes Docker networks
 # - Kills any remaining processes
@@ -123,6 +123,23 @@ else
     docker rm -f ai-demo-dev 2>/dev/null || true
 fi
 
+# Clear Logger Demo (logger_demo) - Dozzle log viewer
+if [ -f "logger_demo/clear-dev.sh" ]; then
+    # Use dedicated Logger Demo cleanup script if available
+    echo "  📦 Clearing Logger Demo (logger_demo)..."
+    cd logger_demo
+    ./clear-dev.sh 2>/dev/null || true
+    cd ..
+else
+    # Fallback: manually remove Logger Demo containers
+    echo "  ⚠️  logger_demo/clear-dev.sh not found, clearing manually..."
+    # Stop and remove Logger Demo container
+    docker-compose -f logger_demo/docker-compose.dev.yml stop dozzle-dev 2>/dev/null || true
+    docker-compose -f logger_demo/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
+    # Force remove container by name
+    docker rm -f dozzle-dev 2>/dev/null || true
+fi
+
 # Clear database (db_demo) - PostgreSQL database
 # WARNING: This removes all database data permanently!
 if [ -f "db_demo/clear-db.sh" ]; then
@@ -152,7 +169,7 @@ docker-compose -f docker-compose.dev.yml down -v 2>/dev/null || true
 # Remove all containers by name (force removal)
 # This ensures containers are removed even if they're in a stopped or error state
 echo "  🧹 Removing containers by name..."
-docker rm -f be-demo-dev fe-demo-dev admin-demo-dev ai-demo-dev postgres-dev seq-dev 2>/dev/null || true
+docker rm -f be-demo-dev fe-demo-dev admin-demo-dev ai-demo-dev postgres-dev seq-dev dozzle-dev 2>/dev/null || true
 # Also remove any old containers with different names (from previous configurations)
 # This handles containers that may have been created with different naming conventions
 docker rm -f be-demo-seq be-demo-api seq 2>/dev/null || true
@@ -201,7 +218,7 @@ echo ""
 # Check if any development containers are still running or exist
 # grep searches for container names matching our development containers
 # Returns empty string if no containers found (cleanup successful)
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev|dozzle-dev" || true)
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     # No containers found - cleanup successful

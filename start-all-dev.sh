@@ -8,6 +8,7 @@
 # 3. Frontend (React + Vite) - user-facing application
 # 4. AI Demo (Python gRPC) - AI service with gRPC interface
 # 5. Admin (React + Vite) - admin panel application
+# 6. Logger Demo (Dozzle) - log viewer for all containers
 # 
 # The script handles:
 # - Dependency ordering (database before backend, backend before frontend/admin)
@@ -146,6 +147,28 @@ fi
 sleep 3
 
 # ============================================================================
+# START LOGGER DEMO (Dozzle)
+# ============================================================================
+# Logger Demo provides a web UI for viewing logs from all Docker containers
+# Runs on port 8080 (HTTP)
+# Provides real-time log viewing, filtering, and search capabilities
+
+echo "📦 Starting Logger Demo (logger_demo)..."
+if [ -f "logger_demo/start-dev.sh" ]; then
+    # Use dedicated Logger Demo startup script if available
+    cd logger_demo
+    ./start-dev.sh > /dev/null 2>&1
+    echo "    ✅ Logger Demo started"
+    cd ..
+else
+    # Fallback: start Logger Demo container directly using docker-compose
+    echo "  ⚠️  logger_demo/start-dev.sh not found, starting with docker-compose..."
+    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev
+fi
+
+sleep 2
+
+# ============================================================================
 # START ADMIN (React + Vite)
 # ============================================================================
 # Admin panel for managing users, faces, and pages
@@ -181,6 +204,7 @@ FRONTEND_STATUS="❌"
 ADMIN_STATUS="❌"
 AI_DEMO_STATUS="❌"
 DB_STATUS="❌"
+LOGGER_DEMO_STATUS="❌"
 
 # Check if database container is running
 # grep returns 0 (success) if postgres-dev is found in docker ps output
@@ -206,11 +230,18 @@ if curl -s http://localhost:8082 > /dev/null 2>&1; then
     ADMIN_STATUS="✅"
 fi
 
+# Check if Logger Demo (Dozzle) is accessible
+# Simple HTTP GET request to verify Dozzle web UI is running
+if curl -s http://localhost:8080 > /dev/null 2>&1; then
+    LOGGER_DEMO_STATUS="✅"
+fi
+
 # Display status summary for each service
 echo "$DB_STATUS Database (db_demo): PostgreSQL on port 5432"
 echo "$BACKEND_STATUS Backend (be_demo): http://localhost:8000"
 echo "$FRONTEND_STATUS Frontend (fe_demo): http://localhost:8081"
 echo "$ADMIN_STATUS Admin (admin_demo): http://localhost:8082"
+echo "$LOGGER_DEMO_STATUS Logger Demo (logger_demo): http://localhost:8080"
 echo ""
 
 # Display all application URLs for easy access
@@ -225,7 +256,7 @@ echo ""
 # Check if all services are running successfully
 # If all status variables are ✅, exit with success code (0)
 # Otherwise, exit with error code (1) and provide troubleshooting tips
-if [ "$DB_STATUS" = "✅" ] && [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ] && [ "$AI_DEMO_STATUS" = "✅" ]; then
+if [ "$DB_STATUS" = "✅" ] && [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ] && [ "$AI_DEMO_STATUS" = "✅" ] && [ "$LOGGER_DEMO_STATUS" = "✅" ]; then
     echo "✅ All applications are running!"
     exit 0
 else
@@ -239,5 +270,6 @@ else
     echo "   - Frontend: cd fe_demo && docker-compose -f docker-compose.dev.yml logs -f fe-demo-dev"
     echo "   - Admin: cd admin_demo && docker-compose -f docker-compose.dev.yml logs -f admin-demo-dev"
     echo "   - AI Demo: docker-compose -f docker-compose.dev.yml logs -f ai-demo-dev"
+    echo "   - Logger Demo: docker-compose -f logger_demo/docker-compose.dev.yml logs -f dozzle-dev"
     exit 1
 fi

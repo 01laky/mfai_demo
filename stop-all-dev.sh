@@ -13,6 +13,20 @@ echo "🛑 Stopping all development environments..."
 echo ""
 
 # ============================================================================
+# STOP LOGGER DEMO (Dozzle)
+# ============================================================================
+echo "📦 Stopping Logger Demo (logger_demo)..."
+if [ -f "logger_demo/stop-dev.sh" ]; then
+    cd logger_demo
+    ./stop-dev.sh > /dev/null 2>&1
+    cd ..
+else
+    docker-compose -f logger_demo/docker-compose.dev.yml stop 2>/dev/null || true
+fi
+echo "    ✅ Logger Demo stopped"
+echo ""
+
+# ============================================================================
 # STOP ALL APPLICATIONS
 # ============================================================================
 
@@ -64,6 +78,18 @@ else
     docker-compose -f docker-compose.dev.yml rm -f ai-demo-dev 2>/dev/null || true
 fi
 
+# Stop Logger Demo (logger_demo)
+if [ -f "logger_demo/stop-dev.sh" ]; then
+    echo "  📦 Stopping Logger Demo (logger_demo)..."
+    cd logger_demo
+    ./stop-dev.sh 2>/dev/null || true
+    cd ..
+else
+    echo "  ⚠️  logger_demo/stop-dev.sh not found, trying docker-compose directly..."
+    docker-compose -f logger_demo/docker-compose.dev.yml stop dozzle-dev 2>/dev/null || true
+    docker-compose -f logger_demo/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
+fi
+
 # Stop database (db_demo)
 if [ -f "db_demo/stop-db.sh" ]; then
     echo "  📦 Stopping database (db_demo)..."
@@ -102,7 +128,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev|dozzle-dev" || true)
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "✅ All containers are stopped"

@@ -8,6 +8,7 @@
 # - Frontend (React + Vite) - checks container status and app accessibility
 # - Admin (React + Vite) - checks container status and app accessibility
 # - AI Demo (Python gRPC) - checks container status
+# - Logger Demo (Dozzle) - checks container status and UI accessibility
 # - Seq Logging Server - checks container status and UI accessibility
 # 
 # The script distinguishes between:
@@ -452,6 +453,15 @@ if check_container "$AI_DEMO_CONTAINER"; then
     ACCESSIBLE=$((ACCESSIBLE + 1))
 fi
 
+# Check Logger Demo (Dozzle) accessibility
+if check_container "$LOGGER_DEMO_CONTAINER"; then
+    if check_service "http://localhost:8080" "Logger Demo"; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
 if [ $NOT_FOUND -gt 0 ]; then
     echo -e "  Containers: ${GREEN}$RUNNING running${NC}, ${YELLOW}$STOPPED stopped${NC}, ${BLUE}$NOT_FOUND not found${NC}"
 else
@@ -474,6 +484,9 @@ if check_container "$ADMIN_CONTAINER"; then
 fi
 if check_container "$SEQ_CONTAINER"; then
     echo "    • Seq Logs: http://localhost:5341"
+fi
+if check_container "$LOGGER_DEMO_CONTAINER"; then
+    echo "    • Logger Demo (Dozzle): http://localhost:8080"
 fi
 
 echo ""
