@@ -1,0 +1,105 @@
+services:
+  # Backend API (be_demo)
+  be-demo-dev:
+    build:
+      context: ./be_demo/BeDemo.Api
+      dockerfile: Dockerfile.dev
+    container_name: be-demo-dev
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - ./be_demo/BeDemo.Api:/app
+      - be-demo-https:/app/https
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8000
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=bedemo;Username=bedemo_user;Password=bedemo_password
+    depends_on:
+      seq:
+        condition: service_started
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Frontend (fe_demo)
+  fe-demo-dev:
+    build:
+      context: ./fe_demo
+      dockerfile: Dockerfile.dev
+    container_name: fe-demo-dev
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./fe_demo:/app
+      - fe-demo-node-modules:/app/node_modules
+      - fe-demo-yarn-cache:/app/.yarn/cache
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_API_HTTPS_URL=https://localhost:8001
+      - VITE_APP_NAME=Fe Demo Frontend
+      - VITE_APP_VERSION=1.0.0
+      - VITE_PORT=8081
+    env_file:
+      - ./fe_demo/.env
+    depends_on:
+      - be-demo-dev
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Admin Demo (admin_demo)
+  admin-demo-dev:
+    build:
+      context: ./admin_demo
+      dockerfile: Dockerfile.dev
+    container_name: admin-demo-dev
+    ports:
+      - "8082:8081"
+    volumes:
+      - ./admin_demo:/app
+      - admin-demo-node-modules:/app/node_modules
+      - admin-demo-yarn-cache:/app/.yarn/cache
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_API_HTTPS_URL=https://localhost:8001
+      - VITE_APP_NAME=Admin Demo
+      - VITE_APP_VERSION=1.0.0
+      - VITE_PORT=8081
+      - VITE_DEV_PORT=8082
+    env_file:
+      - ./admin_demo/.env
+    depends_on:
+      - be-demo-dev
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Seq Logging Server
+  seq:
+    image: datalust/seq:latest
+    container_name: seq-dev
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq-data:/data
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+volumes:
+  be-demo-data:
+  be-demo-https:
+  seq-data:
+  fe-demo-node-modules:
+  fe-demo-yarn-cache:
+  admin-demo-node-modules:
+  admin-demo-yarn-cache:
+
+networks:
+  dev-network:
+    driver: bridge
