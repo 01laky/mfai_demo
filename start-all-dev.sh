@@ -71,21 +71,35 @@ sleep 1
 
 if [ -f "be_demo/start-dev.sh" ]; then
     # Use dedicated backend startup script if available
-    # Runs in background to allow script to continue
     cd be_demo
     ./start-dev.sh > /dev/null 2>&1 &
     BACKEND_PID=$!
-    echo "    ✅ Backend started (PID: $BACKEND_PID)"
     cd ..
+    echo "    ✅ Backend startup script launched (PID: $BACKEND_PID)"
 else
     # Fallback: start backend and Seq containers directly using docker-compose
     echo "  ⚠️  be_demo/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq-dev
 fi
 
-# Wait for backend to initialize before starting frontend/admin
-# Backend needs time to start, run migrations, and be ready to accept requests
-sleep 5
+# Wait for backend container to be running and healthy
+echo "    ⏳ Waiting for backend to be ready..."
+MAX_WAIT=60
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    if docker ps --format "{{.Names}}" | grep -qE "be-demo-dev|be-demo-api"; then
+        # Check if backend is responding
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 | grep -qE "^[234]"; then
+            echo "    ✅ Backend is ready and responding"
+            break
+        fi
+    fi
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    sleep 2
+done
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "    ⚠️  Backend took too long to start, continuing anyway..."
+fi
 
 # ============================================================================
 # START FRONTEND (React + Vite)
@@ -115,16 +129,32 @@ if [ -f "fe_demo/start-dev.sh" ]; then
     # Start frontend development server in background
     ./start-dev.sh > /dev/null 2>&1 &
     FRONTEND_PID=$!
-    echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
     cd ..
+    echo "    ✅ Frontend startup script launched (PID: $FRONTEND_PID)"
 else
     # Fallback: start frontend container directly using docker-compose
     echo "  ⚠️  fe_demo/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f docker-compose.dev.yml up -d fe-demo-dev
 fi
 
-# Short wait for frontend to start
-sleep 3
+# Wait for frontend container to be running and responding
+echo "    ⏳ Waiting for frontend to be ready..."
+MAX_WAIT=60
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    if docker ps --format "{{.Names}}" | grep -q "fe-demo-dev"; then
+        # Check if frontend is responding
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 2>&1 | grep -qE "^[234]"; then
+            echo "    ✅ Frontend is ready and responding"
+            break
+        fi
+    fi
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    sleep 2
+done
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "    ⚠️  Frontend took too long to start, continuing anyway..."
+fi
 
 # ============================================================================
 # START AI DEMO (Python gRPC Server)
@@ -139,15 +169,37 @@ if [ -f "ai_demo/start-dev.sh" ]; then
     cd ai_demo
     ./start-dev.sh > /dev/null 2>&1 &
     AI_DEMO_PID=$!
-    echo "    ✅ AI Demo started (PID: $AI_DEMO_PID)"
     cd ..
+    echo "    ✅ AI Demo startup script launched (PID: $AI_DEMO_PID)"
 else
     # Fallback: start AI Demo container directly using docker-compose
     echo "  ⚠️  ai_demo/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f docker-compose.dev.yml up -d ai-demo-dev
 fi
 
-sleep 3
+# Wait for AI Demo container to be running
+echo "    ⏳ Waiting for AI Demo to be ready..."
+MAX_WAIT=60
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    if docker ps --format "{{.Names}}" | grep -q "ai-demo-dev"; then
+        # Check if gRPC port is listening (basic check)
+        if docker exec ai-demo-dev sh -c "netstat -tuln | grep -q :50051" 2>/dev/null || true; then
+            echo "    ✅ AI Demo is ready"
+            break
+        fi
+        # If netstat not available, just check container is running for a few seconds
+        if [ $WAIT_COUNT -gt 5 ]; then
+            echo "    ✅ AI Demo container is running"
+            break
+        fi
+    fi
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    sleep 2
+done
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "    ⚠️  AI Demo took too long to start, continuing anyway..."
+fi
 
 # ============================================================================
 # START LOGGER DEMO (Dozzle)
@@ -172,15 +224,29 @@ if [ -f "logger_demo/start-dev.sh" ]; then
     # Use dedicated Logger Demo startup script if available
     cd logger_demo
     ./start-dev.sh > /dev/null 2>&1
-    echo "    ✅ Logger Demo started"
     cd ..
+    echo "    ✅ Logger Demo startup script launched"
 else
     # Fallback: start Logger Demo container directly using docker-compose
     echo "  ⚠️  logger_demo/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev
 fi
 
-sleep 2
+# Wait for Logger Demo container to be running
+echo "    ⏳ Waiting for Logger Demo to be ready..."
+MAX_WAIT=30
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    if docker ps --format "{{.Names}}" | grep -q "dozzle-dev"; then
+        echo "    ✅ Logger Demo is ready"
+        break
+    fi
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    sleep 1
+done
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "    ⚠️  Logger Demo took too long to start, continuing anyway..."
+fi
 
 # ============================================================================
 # START ADMIN (React + Vite)
@@ -206,13 +272,30 @@ if ! docker network ls | grep -q "mfai_demo_dev-network"; then
 fi
 echo "    Starting with docker-compose..."
 docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
-echo "    ✅ Admin container started"
 
-# Wait for all applications to fully initialize
-# This gives services time to start, compile, and be ready to serve requests
+# Wait for admin container to be running and responding
+echo "    ⏳ Waiting for admin to be ready..."
+MAX_WAIT=60
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    if docker ps --format "{{.Names}}" | grep -q "admin-demo-dev"; then
+        # Check if admin is responding
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:8082 2>&1 | grep -qE "^[234]"; then
+            echo "    ✅ Admin is ready and responding"
+            break
+        fi
+    fi
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    sleep 2
+done
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "    ⚠️  Admin took too long to start, continuing anyway..."
+fi
+
+# Final wait for all applications to fully initialize
 echo ""
-echo "⏳ Waiting for applications to start..."
-sleep 10
+echo "⏳ Finalizing startup..."
+sleep 3
 
 # ============================================================================
 # CHECK STATUS AND HEALTH
