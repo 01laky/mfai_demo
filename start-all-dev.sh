@@ -152,8 +152,19 @@ sleep 3
 # Logger Demo provides a web UI for viewing logs from all Docker containers
 # Runs on port 8080 (HTTP)
 # Provides real-time log viewing, filtering, and search capabilities
+# Note: Must ensure dev network exists with correct Docker Compose labels
+# The network is created by root docker-compose.dev.yml with proper labels
 
 echo "📦 Starting Logger Demo (logger_demo)..."
+# Ensure dev network exists with correct Docker Compose labels
+# Create network by starting any service from root docker-compose.dev.yml
+# This ensures network has proper labels that docker-compose expects
+if ! docker network ls | grep -q "mfai_demo_dev-network"; then
+    echo "    Creating dev network via docker-compose..."
+    docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
+    sleep 1
+fi
+
 if [ -f "logger_demo/start-dev.sh" ]; then
     # Use dedicated Logger Demo startup script if available
     cd logger_demo
