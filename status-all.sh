@@ -379,6 +379,48 @@ fi
 echo ""
 
 # ============================================================================
+# CHECK LOGGER DEMO (logger_demo)
+# ============================================================================
+
+echo "📦 Logger Demo (logger_demo)"
+echo "───────────────────────────────────────────────────────────"
+
+LOGGER_DEMO_CONTAINER="dozzle-dev"
+if check_container_exists "$LOGGER_DEMO_CONTAINER"; then
+    if check_container "$LOGGER_DEMO_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$LOGGER_DEMO_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($LOGGER_DEMO_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        
+        # Check if Logger Demo (Dozzle) is accessible
+        if check_service "http://localhost:8080" "Logger Demo"; then
+            echo -e "  Service: ${GREEN}✓ Running${NC} (http://localhost:8080)"
+        else
+            echo -e "  Service: ${YELLOW}⚠ Not accessible${NC} (http://localhost:8080)"
+        fi
+    else
+        STATUS_INFO=$(get_container_status "$LOGGER_DEMO_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($LOGGER_DEMO_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        echo "  Port: 8080 (http://localhost:8080)"
+    fi
+else
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($LOGGER_DEMO_CONTAINER)"
+    echo "  Status: Does not exist (removed)"
+    echo "  Port: 8080 (http://localhost:8080)"
+fi
+
+echo ""
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 
@@ -392,7 +434,7 @@ STOPPED=0
 ACCESSIBLE=0
 NOT_ACCESSIBLE=0
 
-CONTAINERS=("$DB_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER")
+CONTAINERS=("$DB_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER" "$LOGGER_DEMO_CONTAINER")
 
 NOT_FOUND=0
 for container in "${CONTAINERS[@]}"; do
