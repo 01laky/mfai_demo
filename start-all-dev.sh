@@ -63,8 +63,11 @@ sleep 5
 echo "📦 Starting backend (be_demo)..."
 # Clean up any old containers that might conflict with ports
 # This prevents "port already allocated" errors when restarting
-# Removes containers with old naming conventions (be-demo-seq, be-demo-api)
-docker rm -f be-demo-seq be-demo-api seq 2>/dev/null || true
+# Removes containers with old naming conventions (be-demo-seq, be-demo-api, be-demo-dev)
+docker rm -f be-demo-seq be-demo-api be-demo-dev seq seq-dev 2>/dev/null || true
+# Also kill any processes using ports 8000/8001
+lsof -ti:8000,8001 | xargs kill -9 2>/dev/null || true
+sleep 1
 
 if [ -f "be_demo/start-dev.sh" ]; then
     # Use dedicated backend startup script if available
@@ -189,6 +192,11 @@ sleep 2
 echo "📦 Starting admin (admin_demo)..."
 # Use docker-compose directly for admin
 # Note: admin_demo/start-dev.sh runs tests which can be slow, so we bypass it
+# Clean up any old backend containers that might conflict with ports
+# be_demo/start-dev.sh creates be-demo-api and be-demo-seq which use ports 5341/5342
+# We need to stop/remove these before starting seq-dev and be-demo-dev via docker-compose
+docker stop be-demo-api be-demo-seq 2>/dev/null || true
+docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
 # Ensure the dev network exists with correct labels by starting any service from root docker-compose first
 # This creates the network with proper Docker Compose labels
 if ! docker network ls | grep -q "mfai_demo_dev-network"; then
