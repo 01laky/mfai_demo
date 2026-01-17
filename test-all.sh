@@ -1,22 +1,42 @@
 #!/bin/bash
 
-# Script to run tests in all subrepositories
-# Usage: ./test-all.sh
+/**
+ * test-all.sh - Script to run tests in all subrepositories
+ * 
+ * This script orchestrates test execution across all subrepositories in the monorepo:
+ * - Backend (be_demo) - runs .NET xUnit tests using 'dotnet test'
+ * - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run'
+ * - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
+ * - Database (db_demo) - infrastructure only, no tests
+ * 
+ * The script:
+ * - Parses test output from different test frameworks (.NET, Vitest)
+ * - Aggregates results across all repositories
+ * - Displays a consolidated summary with pass/fail counts
+ * - Handles repositories that don't have tests gracefully
+ * 
+ * Usage: ./test-all.sh
+ */
 
-set -e
+set -e  # Exit immediately if a command exits with a non-zero status
 
+# Get the directory where this script is located
+# This allows the script to be run from any directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "🧪 Running tests in all subrepositories..."
 echo ""
 
-# Results tracking
-TOTAL_TESTS=0
-PASSED_TESTS=0
-FAILED_TESTS=0
-SKIPPED_REPOS=0
+# Results tracking variables
+# These accumulate totals across all repositories
+TOTAL_TESTS=0      # Total number of tests across all repositories
+PASSED_TESTS=0     # Number of tests that passed
+FAILED_TESTS=0     # Number of tests that failed
+SKIPPED_REPOS=0    # Number of repositories that don't have tests
 
+# Array to store test results for each repository
+# Used to display a summary at the end
 declare -a TEST_RESULTS
 
 # ============================================================================
@@ -28,23 +48,29 @@ echo "  Testing Backend (be_demo)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
+# Check if backend directory exists and has test project
 if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
     cd be_demo
     
     echo "📦 Running .NET tests..."
     # Run tests from the test project directory or use solution/project file
+    # Try multiple approaches to find and run tests
     if [ -f "BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
+        # Explicitly target the test project file (most reliable)
         TEST_OUTPUT=$(dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj --verbosity minimal 2>&1 || true)
     elif [ -f "*.sln" ]; then
+        # Use solution file if test project not found directly
         TEST_OUTPUT=$(dotnet test *.sln --verbosity minimal 2>&1 || true)
     else
+        # Fallback: run tests from current directory
         TEST_OUTPUT=$(dotnet test --verbosity minimal 2>&1 || true)
     fi
     TEST_EXIT_CODE=$?
     
-    # Parse test results - look for summary line
-    # Format: "Passed!  - Failed:     0, Passed:   118, Skipped:     0, Total:   118, Duration: 4 s"
-    # Try multiple patterns to match different output formats
+    # Parse test results from .NET test output
+    # .NET test output format: "Passed!  - Failed:     0, Passed:   118, Skipped:     0, Total:   118, Duration: 4 s"
+    # Try multiple regex patterns to match different output formats
+    # Extract numbers using grep with extended regex (-oE) and capture groups
     TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Total:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
     PASSED=$(echo "$TEST_OUTPUT" | grep -oE "Passed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")
     FAILED=$(echo "$TEST_OUTPUT" | grep -oE "Failed:[ ]*[0-9]+" | grep -oE "[0-9]+" || echo "0")

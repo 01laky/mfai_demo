@@ -1,73 +1,137 @@
 #!/bin/bash
 
-# Script to check status of all containers and applications
-# Checks: db_demo (PostgreSQL), be_demo (backend), fe_demo (frontend), admin_demo (admin), seq (logging)
-# Usage: ./status-all.sh
+/**
+ * status-all.sh - Script to check status of all containers and applications
+ * 
+ * This script provides a comprehensive status overview of all development services:
+ * - Database (PostgreSQL) - checks container status and database accessibility
+ * - Backend API (ASP.NET Core) - checks container status and API accessibility
+ * - Frontend (React + Vite) - checks container status and app accessibility
+ * - Admin (React + Vite) - checks container status and app accessibility
+ * - Seq Logging Server - checks container status and UI accessibility
+ * 
+ * The script distinguishes between:
+ * - Running containers (✓ Running)
+ * - Stopped containers (⚠ Stopped)
+ * - Removed containers (○ Not found)
+ * 
+ * It also performs health checks by attempting to connect to each service.
+ * 
+ * Usage: ./status-all.sh
+ */
 
-set -e
+set -e  # Exit immediately if a command exits with a non-zero status
 
+# Get the directory where this script is located
+# This allows the script to be run from any directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Colors for output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# ANSI color codes for terminal output
+# These colors are used to make the output more readable and visually distinct
+GREEN='\033[0;32m'    # Green - for success/running status
+RED='\033[0;31m'      # Red - for errors/failed status
+YELLOW='\033[1;33m'   # Yellow - for warnings/stopped status
+BLUE='\033[0;34m'     # Blue - for informational/not found status
+CYAN='\033[0;36m'     # Cyan - for additional info (not used in this script)
+NC='\033[0m'          # No Color - reset to default terminal color
 
 echo "═══════════════════════════════════════════════════════════"
 echo "  Container & Application Status"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-# Function to check if container exists (running or stopped)
+/**
+ * Function to check if container exists (running or stopped)
+ * 
+ * Uses 'docker ps -a' to check all containers (including stopped ones).
+ * Returns 0 (success) if container exists, 1 (failure) if it doesn't.
+ * 
+ * @param container_name - Name of the container to check
+ * @return 0 if container exists, 1 if it doesn't
+ */
 check_container_exists() {
     local container_name=$1
+    # List all containers (running and stopped) and check if name matches
     if docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
-        return 0
+        return 0  # Container exists
     else
-        return 1
+        return 1  # Container doesn't exist
     fi
 }
 
-# Function to check if container is running
+/**
+ * Function to check if container is currently running
+ * 
+ * Uses 'docker ps' to check only running containers.
+ * Returns 0 (success) if container is running, 1 (failure) if it's not.
+ * 
+ * @param container_name - Name of the container to check
+ * @return 0 if container is running, 1 if it's not
+ */
 check_container() {
     local container_name=$1
+    # List only running containers and check if name matches
     if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
-        return 0
+        return 0  # Container is running
     else
-        return 1
+        return 1  # Container is not running
     fi
 }
 
-# Function to check if service is accessible
+/**
+ * Function to check if service is accessible via HTTP
+ * 
+ * Performs a health check by attempting to connect to the service URL.
+ * Uses curl with a short timeout (2 seconds) to avoid hanging.
+ * 
+ * @param url - URL to check (e.g., http://localhost:8000/swagger)
+ * @param name - Name of the service (for logging, not used in this function)
+ * @return 0 if service is accessible, 1 if it's not
+ */
 check_service() {
     local url=$1
     local name=$2
+    # Use curl to check if URL is accessible
+    # -s: silent mode (no progress bar)
+    # -f: fail silently on HTTP errors
+    # -o /dev/null: discard output
+    # --max-time 2: timeout after 2 seconds
     if curl -s -f -o /dev/null --max-time 2 "$url" > /dev/null 2>&1; then
-        return 0
+        return 0  # Service is accessible
     else
-        return 1
+        return 1  # Service is not accessible
     fi
 }
 
-# Function to get container status
+/**
+ * Function to get container status and start time
+ * 
+ * Retrieves container status (running, stopped, etc.) and start time from Docker.
+ * Returns status and uptime separated by pipe (|) for easy parsing.
+ * 
+ * @param container_name - Name of the container to inspect
+ * @return String in format "status|uptime" (e.g., "running|2026-01-17 18:41:31")
+ */
 get_container_status() {
     local container_name=$1
     if check_container_exists "$container_name"; then
+        # Get container status (running, stopped, created, etc.)
         local status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null || echo "unknown")
-        # Get started time - use docker's format directly
+        # Get container start time from Docker
         local started_at=$(docker inspect --format='{{.State.StartedAt}}' "$container_name" 2>/dev/null || echo "")
         if [ -n "$started_at" ] && [ "$started_at" != "<no value>" ]; then
             # Extract just the date and time part (YYYY-MM-DD HH:MM:SS)
+            # Docker returns ISO 8601 format (2026-01-17T18:41:31.123456789Z)
+            # We extract everything before the dot and replace T with space
             local uptime=$(echo "$started_at" | cut -d'.' -f1 | sed 's/T/ /' || echo "$started_at")
         else
             local uptime="unknown"
         fi
+        # Return status and uptime separated by pipe for easy parsing
         echo "$status|$uptime"
     else
+        # Container doesn't exist
         echo "not found|never"
     fi
 }
