@@ -92,6 +92,8 @@ docker-compose -f docker-compose.dev.yml down -v 2>/dev/null || true
 # Remove all containers by name
 echo "  🧹 Removing containers by name..."
 docker rm -f be-demo-dev fe-demo-dev admin-demo-dev postgres-dev seq-dev 2>/dev/null || true
+# Also remove any old seq containers with different names
+docker rm -f be-demo-seq seq 2>/dev/null || true
 
 # Remove all volumes
 echo "  🧹 Removing all volumes..."

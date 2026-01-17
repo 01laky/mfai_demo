@@ -36,6 +36,9 @@ sleep 5
 # ============================================================================
 
 echo "📦 Starting backend (be_demo)..."
+# Clean up any old seq containers that might conflict
+docker rm -f be-demo-seq seq 2>/dev/null || true
+
 if [ -f "be_demo/start-dev.sh" ]; then
     cd be_demo
     ./start-dev.sh > /dev/null 2>&1 &
