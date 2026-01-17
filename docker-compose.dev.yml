@@ -118,4 +118,5 @@ volumes:
 
 networks:
   dev-network:
+    name: mfai_demo_dev-network
     driver: bridge
