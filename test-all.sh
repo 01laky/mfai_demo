@@ -128,8 +128,22 @@ if [ -d "fe_demo" ] && [ -f "fe_demo/package.json" ]; then
     TEST_EXIT_CODE=$?
     
     # Parse Vitest output
-    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files +[0-9]+" | grep -oE "[0-9]+" || echo "0")
-    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests +[0-9]+" | grep -oE "[0-9]+" | head -1 || echo "0")
+    # Format: "Tests  11 passed (11)" or "Tests  23 passed | 8 skipped (31)"
+    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
+    
+    # Extract total from line like "Tests  11 passed (11)" - get number in parentheses (this is the total)
+    TOTAL_LINE=$(echo "$TEST_OUTPUT" | grep -E "Tests[ ]+[0-9]+" | head -1)
+    if [ -n "$TOTAL_LINE" ]; then
+        # Try to get number in parentheses first (this is always the total)
+        TOTAL=$(echo "$TOTAL_LINE" | grep -oE "\([0-9]+\)" | grep -oE "[0-9]+" || echo "0")
+        # If no parentheses, get the first number after "Tests" (this is passed count, use it as total if no failed)
+        if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
+            TOTAL=$(echo "$TOTAL_LINE" | grep -oE "Tests[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
+        fi
+    else
+        TOTAL="0"
+    fi
+    
     PASSED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
     FAILED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
     
@@ -179,12 +193,20 @@ if [ -d "admin_demo" ] && [ -f "admin_demo/package.json" ]; then
     # Parse Vitest output
     # Format: "Tests  23 passed | 8 skipped (31)" or "Tests  11 passed (11)"
     TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
-    # Extract total from line like "Tests  23 passed | 8 skipped (31)" - get number in parentheses
-    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests[ ]+[0-9]+[^)]*\([0-9]+\)" | grep -oE "\([0-9]+\)" | grep -oE "[0-9]+" || echo "0")
-    # If no parentheses, get first number after "Tests"
-    if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
-        TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests[ ]+[0-9]+" | grep -oE "[0-9]+" | head -1 || echo "0")
+    
+    # Extract total from line like "Tests  23 passed | 8 skipped (31)" - get number in parentheses (this is the total)
+    TOTAL_LINE=$(echo "$TEST_OUTPUT" | grep -E "Tests[ ]+[0-9]+" | head -1)
+    if [ -n "$TOTAL_LINE" ]; then
+        # Try to get number in parentheses first (this is always the total)
+        TOTAL=$(echo "$TOTAL_LINE" | grep -oE "\([0-9]+\)" | grep -oE "[0-9]+" || echo "0")
+        # If no parentheses, get the first number after "Tests" (this is passed count, use it as total if no failed)
+        if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
+            TOTAL=$(echo "$TOTAL_LINE" | grep -oE "Tests[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
+        fi
+    else
+        TOTAL="0"
     fi
+    
     PASSED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
     FAILED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
     
