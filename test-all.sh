@@ -32,8 +32,14 @@ if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]
     cd be_demo
     
     echo "📦 Running .NET tests..."
-    # Run tests with minimal verbosity to get clean output
-    TEST_OUTPUT=$(dotnet test --verbosity minimal 2>&1 || true)
+    # Run tests from the test project directory or use solution/project file
+    if [ -f "BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
+        TEST_OUTPUT=$(dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj --verbosity minimal 2>&1 || true)
+    elif [ -f "*.sln" ]; then
+        TEST_OUTPUT=$(dotnet test *.sln --verbosity minimal 2>&1 || true)
+    else
+        TEST_OUTPUT=$(dotnet test --verbosity minimal 2>&1 || true)
+    fi
     TEST_EXIT_CODE=$?
     
     # Parse test results - look for summary line
