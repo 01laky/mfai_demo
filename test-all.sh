@@ -177,8 +177,14 @@ if [ -d "admin_demo" ] && [ -f "admin_demo/package.json" ]; then
     TEST_EXIT_CODE=$?
     
     # Parse Vitest output
-    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files +[0-9]+" | grep -oE "[0-9]+" || echo "0")
-    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests +[0-9]+" | grep -oE "[0-9]+" | head -1 || echo "0")
+    # Format: "Tests  23 passed | 8 skipped (31)" or "Tests  11 passed (11)"
+    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
+    # Extract total from line like "Tests  23 passed | 8 skipped (31)" - get number in parentheses
+    TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests[ ]+[0-9]+[^)]*\([0-9]+\)" | grep -oE "\([0-9]+\)" | grep -oE "[0-9]+" || echo "0")
+    # If no parentheses, get first number after "Tests"
+    if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
+        TOTAL=$(echo "$TEST_OUTPUT" | grep -oE "Tests[ ]+[0-9]+" | grep -oE "[0-9]+" | head -1 || echo "0")
+    fi
     PASSED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
     FAILED=$(echo "$TEST_OUTPUT" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
     
