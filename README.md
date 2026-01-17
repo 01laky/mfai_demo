@@ -90,7 +90,7 @@ _mfai_demo/
 
 ### Database (`db_demo`)
 
-**Technology**: PostgreSQL 16
+**Technology**: PostgreSQL 16, pgAdmin 4
 
 **Configuration**:
 - Host: `localhost` (from host) or `host.docker.internal` (from containers)
@@ -98,6 +98,11 @@ _mfai_demo/
 - Database: `bedemo`
 - Username: `bedemo_user`
 - Password: `bedemo_password`
+
+**pgAdmin Access**:
+- **URL**: http://localhost:5050
+- **Email**: `admin@admin.com`
+- **Password**: `admin`
 
 **Documentation**: See [`db_demo/README.md`](./db_demo/README.md) for detailed documentation.
 
@@ -161,6 +166,7 @@ Once all services are started, access them at:
 - **Admin Panel**: http://localhost:8082
 - **Seq Logging UI**: http://localhost:5341
 - **Logger Demo (Dozzle)**: http://localhost:8080
+- **pgAdmin**: http://localhost:5050
 - **Database**: `localhost:5432`
 
 ### Default Login Credentials
@@ -447,6 +453,7 @@ All services use the following ports (configurable):
 | Seq | 5341 | Logging UI |
 | AI Demo | 50051 | gRPC service |
 | Logger Demo | 8080 | Dozzle log viewer |
+| pgAdmin | 5050 | PostgreSQL admin UI |
 
 ## Testing
 

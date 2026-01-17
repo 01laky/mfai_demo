@@ -4,6 +4,7 @@
 # 
 # This script provides a comprehensive status overview of all development services:
 # - Database (PostgreSQL) - checks container status and database accessibility
+# - pgAdmin - checks container status and UI accessibility
 # - Backend API (ASP.NET Core) - checks container status and API accessibility
 # - Frontend (React + Vite) - checks container status and app accessibility
 # - Admin (React + Vite) - checks container status and app accessibility
@@ -166,6 +167,48 @@ else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($DB_CONTAINER)"
     echo "  Status: Does not exist (removed)"
     echo "  Port: 5432 (localhost)"
+fi
+
+echo ""
+
+# ============================================================================
+# CHECK PGADMIN
+# ============================================================================
+
+echo "📦 pgAdmin (PostgreSQL Admin UI)"
+echo "───────────────────────────────────────────────────────────"
+
+PGADMIN_CONTAINER="pgadmin-dev"
+if check_container_exists "$PGADMIN_CONTAINER"; then
+    if check_container "$PGADMIN_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$PGADMIN_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($PGADMIN_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        
+        # Check if pgAdmin is accessible
+        if check_service "http://localhost:5050" "pgAdmin"; then
+            echo -e "  UI: ${GREEN}✓ Accessible${NC} (http://localhost:5050)"
+        else
+            echo -e "  UI: ${YELLOW}⚠ Not accessible${NC} (http://localhost:5050)"
+        fi
+    else
+        STATUS_INFO=$(get_container_status "$PGADMIN_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($PGADMIN_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        echo "  Port: 5050 (http://localhost:5050)"
+    fi
+else
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($PGADMIN_CONTAINER)"
+    echo "  Status: Does not exist (removed)"
+    echo "  Port: 5050 (http://localhost:5050)"
 fi
 
 echo ""
@@ -432,7 +475,7 @@ STOPPED=0
 ACCESSIBLE=0
 NOT_ACCESSIBLE=0
 
-CONTAINERS=("$DB_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER" "$LOGGER_DEMO_CONTAINER")
+CONTAINERS=("$DB_CONTAINER" "$PGADMIN_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER" "$LOGGER_DEMO_CONTAINER")
 
 NOT_FOUND=0
 for container in "${CONTAINERS[@]}"; do
@@ -450,6 +493,14 @@ done
 # Check service accessibility (only for running containers)
 if check_container "$DB_CONTAINER"; then
     if docker exec "$DB_CONTAINER" pg_isready -U bedemo_user -d bedemo > /dev/null 2>&1; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
+if check_container "$PGADMIN_CONTAINER"; then
+    if check_service "http://localhost:5050" "pgAdmin"; then
         ACCESSIBLE=$((ACCESSIBLE + 1))
     else
         NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
@@ -518,6 +569,9 @@ if check_container "$FE_CONTAINER"; then
 fi
 if check_container "$ADMIN_CONTAINER"; then
     echo "    • Admin: http://localhost:8082"
+fi
+if check_container "$PGADMIN_CONTAINER"; then
+    echo "    • pgAdmin: http://localhost:5050"
 fi
 if check_container "$SEQ_CONTAINER"; then
     echo "    • Seq Logs: http://localhost:5341"

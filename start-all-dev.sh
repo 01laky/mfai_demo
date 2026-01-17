@@ -349,6 +349,7 @@ while true; do
     echo "    • Admin: http://localhost:8082"
     echo "    • Seq Logs: http://localhost:5341"
     echo "    • Logger Demo (Dozzle): http://localhost:8080"
+    echo "    • pgAdmin: http://localhost:5050"
     echo ""
     
     echo "═══════════════════════════════════════════════════════════"
