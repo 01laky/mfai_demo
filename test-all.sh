@@ -1,22 +1,21 @@
 #!/bin/bash
 
-/**
- * test-all.sh - Script to run tests in all subrepositories
- * 
- * This script orchestrates test execution across all subrepositories in the monorepo:
- * - Backend (be_demo) - runs .NET xUnit tests using 'dotnet test'
- * - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run'
- * - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
- * - Database (db_demo) - infrastructure only, no tests
- * 
- * The script:
- * - Parses test output from different test frameworks (.NET, Vitest)
- * - Aggregates results across all repositories
- * - Displays a consolidated summary with pass/fail counts
- * - Handles repositories that don't have tests gracefully
- * 
- * Usage: ./test-all.sh
- */
+# test-all.sh - Script to run tests in all subrepositories
+# 
+# This script orchestrates test execution across all subrepositories in the monorepo:
+# - Backend (be_demo) - runs .NET xUnit tests using 'dotnet test'
+# - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run'
+# - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
+# - Database (db_demo) - infrastructure only, no tests
+# - AI Demo (ai_demo) - infrastructure only, no tests
+# 
+# The script:
+# - Parses test output from different test frameworks (.NET, Vitest)
+# - Aggregates results across all repositories
+# - Displays a consolidated summary with pass/fail counts
+# - Handles repositories that don't have tests gracefully
+# 
+# Usage: ./test-all.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
 

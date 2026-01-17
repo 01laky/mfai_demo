@@ -1,24 +1,23 @@
 #!/bin/bash
 
-/**
- * status-all.sh - Script to check status of all containers and applications
- * 
- * This script provides a comprehensive status overview of all development services:
- * - Database (PostgreSQL) - checks container status and database accessibility
- * - Backend API (ASP.NET Core) - checks container status and API accessibility
- * - Frontend (React + Vite) - checks container status and app accessibility
- * - Admin (React + Vite) - checks container status and app accessibility
- * - Seq Logging Server - checks container status and UI accessibility
- * 
- * The script distinguishes between:
- * - Running containers (✓ Running)
- * - Stopped containers (⚠ Stopped)
- * - Removed containers (○ Not found)
- * 
- * It also performs health checks by attempting to connect to each service.
- * 
- * Usage: ./status-all.sh
- */
+# status-all.sh - Script to check status of all containers and applications
+# 
+# This script provides a comprehensive status overview of all development services:
+# - Database (PostgreSQL) - checks container status and database accessibility
+# - Backend API (ASP.NET Core) - checks container status and API accessibility
+# - Frontend (React + Vite) - checks container status and app accessibility
+# - Admin (React + Vite) - checks container status and app accessibility
+# - AI Demo (Python gRPC) - checks container status
+# - Seq Logging Server - checks container status and UI accessibility
+# 
+# The script distinguishes between:
+# - Running containers (✓ Running)
+# - Stopped containers (⚠ Stopped)
+# - Removed containers (○ Not found)
+# 
+# It also performs health checks by attempting to connect to each service.
+# 
+# Usage: ./status-all.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -41,15 +40,13 @@ echo "  Container & Application Status"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-/**
- * Function to check if container exists (running or stopped)
- * 
- * Uses 'docker ps -a' to check all containers (including stopped ones).
- * Returns 0 (success) if container exists, 1 (failure) if it doesn't.
- * 
- * @param container_name - Name of the container to check
- * @return 0 if container exists, 1 if it doesn't
- */
+# Function to check if container exists (running or stopped)
+# 
+# Uses 'docker ps -a' to check all containers (including stopped ones).
+# Returns 0 (success) if container exists, 1 (failure) if it doesn't.
+# 
+# @param container_name - Name of the container to check
+# @return 0 if container exists, 1 if it doesn't
 check_container_exists() {
     local container_name=$1
     # List all containers (running and stopped) and check if name matches
@@ -60,15 +57,13 @@ check_container_exists() {
     fi
 }
 
-/**
- * Function to check if container is currently running
- * 
- * Uses 'docker ps' to check only running containers.
- * Returns 0 (success) if container is running, 1 (failure) if it's not.
- * 
- * @param container_name - Name of the container to check
- * @return 0 if container is running, 1 if it's not
- */
+# Function to check if container is currently running
+# 
+# Uses 'docker ps' to check only running containers.
+# Returns 0 (success) if container is running, 1 (failure) if it's not.
+# 
+# @param container_name - Name of the container to check
+# @return 0 if container is running, 1 if it's not
 check_container() {
     local container_name=$1
     # List only running containers and check if name matches
@@ -79,16 +74,14 @@ check_container() {
     fi
 }
 
-/**
- * Function to check if service is accessible via HTTP
- * 
- * Performs a health check by attempting to connect to the service URL.
- * Uses curl with a short timeout (2 seconds) to avoid hanging.
- * 
- * @param url - URL to check (e.g., http://localhost:8000/swagger)
- * @param name - Name of the service (for logging, not used in this function)
- * @return 0 if service is accessible, 1 if it's not
- */
+# Function to check if service is accessible via HTTP
+# 
+# Performs a health check by attempting to connect to the service URL.
+# Uses curl with a short timeout (2 seconds) to avoid hanging.
+# 
+# @param url - URL to check (e.g., http://localhost:8000/swagger)
+# @param name - Name of the service (for logging, not used in this function)
+# @return 0 if service is accessible, 1 if it's not
 check_service() {
     local url=$1
     local name=$2
@@ -104,15 +97,13 @@ check_service() {
     fi
 }
 
-/**
- * Function to get container status and start time
- * 
- * Retrieves container status (running, stopped, etc.) and start time from Docker.
- * Returns status and uptime separated by pipe (|) for easy parsing.
- * 
- * @param container_name - Name of the container to inspect
- * @return String in format "status|uptime" (e.g., "running|2026-01-17 18:41:31")
- */
+# Function to get container status and start time
+# 
+# Retrieves container status (running, stopped, etc.) and start time from Docker.
+# Returns status and uptime separated by pipe (|) for easy parsing.
+# 
+# @param container_name - Name of the container to inspect
+# @return String in format "status|uptime" (e.g., "running|2026-01-17 18:41:31")
 get_container_status() {
     local container_name=$1
     if check_container_exists "$container_name"; then

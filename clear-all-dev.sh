@@ -1,23 +1,21 @@
 #!/bin/bash
 
-/**
- * clear-all-dev.sh - Script to completely remove all development containers and volumes
- * 
- * This script performs a complete cleanup of all development infrastructure:
- * - Stops and removes all Docker containers (database, backend, frontend, admin, seq)
- * - Removes all Docker volumes (including database data - this is destructive!)
- * - Removes Docker networks
- * - Kills any remaining processes
- * 
- * WARNING: This script is DESTRUCTIVE and will permanently delete:
- * - All database data (PostgreSQL volumes)
- * - All application data
- * - All container configurations
- * 
- * The script requires user confirmation before proceeding.
- * 
- * Usage: ./clear-all-dev.sh
- */
+# clear-all-dev.sh - Script to completely remove all development containers and volumes
+# 
+# This script performs a complete cleanup of all development infrastructure:
+# - Stops and removes all Docker containers (database, backend, frontend, admin, seq, ai_demo)
+# - Removes all Docker volumes (including database data - this is destructive!)
+# - Removes Docker networks
+# - Kills any remaining processes
+# 
+# WARNING: This script is DESTRUCTIVE and will permanently delete:
+# - All database data (PostgreSQL volumes)
+# - All application data
+# - All container configurations
+# 
+# The script requires user confirmation before proceeding.
+# 
+# Usage: ./clear-all-dev.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
 

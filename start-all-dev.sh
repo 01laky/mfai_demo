@@ -1,22 +1,21 @@
 #!/bin/bash
 
-/**
- * start-all-dev.sh - Script to start all development environments
- * 
- * This script orchestrates the startup of all development services in the correct order:
- * 1. Database (PostgreSQL) - must start first as other services depend on it
- * 2. Backend API (ASP.NET Core) - provides REST API and authentication
- * 3. Frontend (React + Vite) - user-facing application
- * 4. Admin (React + Vite) - admin panel application
- * 
- * The script handles:
- * - Dependency ordering (database before backend, backend before frontend/admin)
- * - Port conflict resolution (removes old containers using same ports)
- * - Health checks to verify services are running
- * - Error handling and status reporting
- * 
- * Usage: ./start-all-dev.sh
- */
+# start-all-dev.sh - Script to start all development environments
+# 
+# This script orchestrates the startup of all development services in the correct order:
+# 1. Database (PostgreSQL) - must start first as other services depend on it
+# 2. Backend API (ASP.NET Core) - provides REST API and authentication
+# 3. Frontend (React + Vite) - user-facing application
+# 4. AI Demo (Python gRPC) - AI service with gRPC interface
+# 5. Admin (React + Vite) - admin panel application
+# 
+# The script handles:
+# - Dependency ordering (database before backend, backend before frontend/admin)
+# - Port conflict resolution (removes old containers using same ports)
+# - Health checks to verify services are running
+# - Error handling and status reporting
+# 
+# Usage: ./start-all-dev.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
