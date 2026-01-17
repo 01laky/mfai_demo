@@ -348,6 +348,45 @@ fi
 echo ""
 
 # ============================================================================
+# CHECK AI DEMO (ai_demo)
+# ============================================================================
+
+echo "📦 AI Demo (ai_demo)"
+echo "───────────────────────────────────────────────────────────"
+
+AI_DEMO_CONTAINER="ai-demo-dev"
+if check_container_exists "$AI_DEMO_CONTAINER"; then
+    if check_container "$AI_DEMO_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$AI_DEMO_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($AI_DEMO_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        
+        # Note: gRPC health check requires gRPC client, so we just check if container is running
+        # In a full implementation, we would call the HealthCheck RPC method
+        echo -e "  Service: ${GREEN}✓ Running${NC} (gRPC on port 50051)"
+    else
+        STATUS_INFO=$(get_container_status "$AI_DEMO_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+        
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($AI_DEMO_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+        echo "  Port: 50051 (gRPC)"
+    fi
+else
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($AI_DEMO_CONTAINER)"
+    echo "  Status: Does not exist (removed)"
+    echo "  Port: 50051 (gRPC)"
+fi
+
+echo ""
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 
@@ -361,7 +400,7 @@ STOPPED=0
 ACCESSIBLE=0
 NOT_ACCESSIBLE=0
 
-CONTAINERS=("$DB_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$SEQ_CONTAINER")
+CONTAINERS=("$DB_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER")
 
 NOT_FOUND=0
 for container in "${CONTAINERS[@]}"; do
@@ -415,6 +454,11 @@ if check_container "$SEQ_CONTAINER"; then
     else
         NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
     fi
+fi
+
+# Note: AI Demo uses gRPC, not HTTP, so we count it as accessible if container is running
+if check_container "$AI_DEMO_CONTAINER"; then
+    ACCESSIBLE=$((ACCESSIBLE + 1))
 fi
 
 if [ $NOT_FOUND -gt 0 ]; then

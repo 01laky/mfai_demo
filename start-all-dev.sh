@@ -124,6 +124,29 @@ fi
 sleep 3
 
 # ============================================================================
+# START AI DEMO (Python gRPC Server)
+# ============================================================================
+# AI Demo provides gRPC services for AI functionality
+# Runs on port 50051 (gRPC)
+# Backend connects to this service for AI operations
+
+echo "📦 Starting AI Demo (ai_demo)..."
+if [ -f "ai_demo/start-dev.sh" ]; then
+    # Use dedicated AI Demo startup script if available
+    cd ai_demo
+    ./start-dev.sh > /dev/null 2>&1 &
+    AI_DEMO_PID=$!
+    echo "    ✅ AI Demo started (PID: $AI_DEMO_PID)"
+    cd ..
+else
+    # Fallback: start AI Demo container directly using docker-compose
+    echo "  ⚠️  ai_demo/start-dev.sh not found, starting with docker-compose..."
+    docker-compose -f docker-compose.dev.yml up -d ai-demo-dev
+fi
+
+sleep 3
+
+# ============================================================================
 # START ADMIN (React + Vite)
 # ============================================================================
 # Admin panel for managing users, faces, and pages
@@ -157,6 +180,7 @@ echo ""
 BACKEND_STATUS="❌"
 FRONTEND_STATUS="❌"
 ADMIN_STATUS="❌"
+AI_DEMO_STATUS="❌"
 DB_STATUS="❌"
 
 # Check if database container is running
@@ -212,8 +236,10 @@ else
     echo ""
     echo "💡 To check logs:"
     echo "   - Database: cd db_demo && docker-compose logs -f"
+    echo "   - Database: cd db_demo && docker-compose logs -f"
     echo "   - Backend: cd be_demo && docker-compose -f docker-compose.dev.yml logs -f be-demo-dev"
     echo "   - Frontend: cd fe_demo && docker-compose -f docker-compose.dev.yml logs -f fe-demo-dev"
     echo "   - Admin: cd admin_demo && docker-compose -f docker-compose.dev.yml logs -f admin-demo-dev"
+    echo "   - AI Demo: cd ai_demo && docker-compose -f ../docker-compose.dev.yml logs -f ai-demo-dev"
     exit 1
 fi

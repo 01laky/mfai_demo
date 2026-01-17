@@ -91,6 +91,22 @@ services:
       - dev-network
     restart: unless-stopped
 
+  # AI Demo gRPC Server
+  ai-demo-dev:
+    build:
+      context: ./ai_demo
+      dockerfile: Dockerfile.dev
+    container_name: ai-demo-dev
+    ports:
+      - "50051:50051"
+    environment:
+      - PORT=50051
+    networks:
+      - dev-network
+    restart: unless-stopped
+    depends_on:
+      - be-demo-dev
+
 volumes:
   be-demo-data:
   be-demo-https:

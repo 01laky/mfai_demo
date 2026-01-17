@@ -52,6 +52,18 @@ else
     docker-compose -f docker-compose.dev.yml rm -f admin-demo-dev 2>/dev/null || true
 fi
 
+# Stop AI Demo (ai_demo)
+if [ -f "ai_demo/stop-dev.sh" ]; then
+    echo "  📦 Stopping AI Demo (ai_demo)..."
+    cd ai_demo
+    ./stop-dev.sh 2>/dev/null || true
+    cd ..
+else
+    echo "  ⚠️  ai_demo/stop-dev.sh not found, trying docker-compose directly..."
+    docker-compose -f docker-compose.dev.yml stop ai-demo-dev 2>/dev/null || true
+    docker-compose -f docker-compose.dev.yml rm -f ai-demo-dev 2>/dev/null || true
+fi
+
 # Stop database (db_demo)
 if [ -f "db_demo/stop-db.sh" ]; then
     echo "  📦 Stopping database (db_demo)..."
@@ -90,7 +102,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|postgres-dev|seq-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev" || true)
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "✅ All containers are stopped"
