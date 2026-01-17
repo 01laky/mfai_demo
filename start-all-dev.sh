@@ -122,67 +122,6 @@ echo "    ✅ Admin startup launched"
 echo ""
 echo "✅ All services startup launched!"
 echo ""
-echo "🔄 Checking for stopped containers and attempting to restart them..."
-echo ""
-
-# ============================================================================
-# RETRY STOPPED CONTAINERS (max 3 attempts)
-# ============================================================================
-# Function to restart stopped containers (max 3 attempts)
-retry_stopped_containers() {
-    MAX_RETRIES=3
-    RETRY_COUNT=0
-    WAIT_TIME=5
-    
-    # List of expected container names
-    EXPECTED_CONTAINERS=("postgres-dev" "be-demo-dev" "be-demo-api" "fe-demo-dev" "admin-demo-dev" "seq-dev" "ai-demo-dev" "dozzle-dev" "pgadmin-dev")
-    
-    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        # Find stopped containers from our list
-        STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
-        
-        if [ -z "$STOPPED" ]; then
-            # No stopped containers found
-            if [ $RETRY_COUNT -eq 0 ]; then
-                echo "    ✅ All containers are running"
-            fi
-            break
-        fi
-        
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        echo "    🔄 Retry attempt $RETRY_COUNT/$MAX_RETRIES: Found stopped containers"
-        
-        # Restart each stopped container using docker start (faster and safer for existing containers)
-        for CONTAINER in $STOPPED; do
-            echo "      ⚡ Attempting to start: $CONTAINER"
-            # Use docker start instead of docker-compose up -d for existing stopped containers
-            # This is faster and avoids potential hangs from docker-compose
-            docker start "$CONTAINER" > /dev/null 2>&1 || true
-        done
-        
-        # Wait before checking again
-        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-            echo "      ⏳ Waiting ${WAIT_TIME}s before next check..."
-            sleep $WAIT_TIME
-        fi
-    done
-    
-    # Final check - show any still stopped containers
-    FINAL_STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
-    if [ -n "$FINAL_STOPPED" ]; then
-        echo ""
-        echo "    ⚠️  Still stopped after $MAX_RETRIES attempts:"
-        for CONTAINER in $FINAL_STOPPED; do
-            echo "      • $CONTAINER"
-        done
-        echo "    💡 Check logs with: docker logs <container-name>"
-    fi
-}
-
-# Run retry function
-retry_stopped_containers
-
-echo ""
 echo "🔄 Starting live status screen (refreshes every 5 seconds)..."
 echo "   Press Ctrl+C to exit"
 echo ""
@@ -207,6 +146,23 @@ while true; do
     # Get current timestamp
     TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
     echo "Last updated: $TIMESTAMP"
+    
+    # ========================================================================
+    # CHECK AND RESTART STOPPED CONTAINERS
+    # ========================================================================
+    # Check for stopped containers and attempt to restart them automatically
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
+    
+    if [ -n "$STOPPED" ]; then
+        echo ""
+        echo "🔄 Restarting stopped containers..."
+        for CONTAINER in $STOPPED; do
+            echo "  ⚡ Starting: $CONTAINER"
+            docker start "$CONTAINER" > /dev/null 2>&1 || true
+        done
+        sleep 1  # Brief pause to let containers start
+    fi
+    
     echo ""
     
     # ========================================================================
