@@ -240,7 +240,9 @@ fi
 
 # Check if backend API is accessible
 # Try both Swagger UI and OAuth2 endpoint to verify backend is responding
-if curl -s http://localhost:8000/swagger > /dev/null 2>&1 || curl -s http://localhost:8000/api/oauth2/token > /dev/null 2>&1; then
+# Use HTTP status code check - any 2xx/4xx response means backend is running (even if it's an error)
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 | grep -qE "^[234]" || \
+   curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/oauth2/token 2>&1 | grep -qE "^[234]"; then
     BACKEND_STATUS="✅"
 fi
 
