@@ -18,10 +18,16 @@ services:
       - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=bedemo;Username=bedemo_user;Password=bedemo_password
     depends_on:
       seq:
-        condition: service_started
+        condition: service_healthy
     networks:
       - dev-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/swagger/index.html", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Frontend (fe_demo)
   fe-demo-dev:
@@ -44,10 +50,17 @@ services:
     env_file:
       - ./fe_demo/.env
     depends_on:
-      - be-demo-dev
+      be-demo-dev:
+        condition: service_healthy
     networks:
       - dev-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Admin Demo (admin_demo)
   admin-demo-dev:
@@ -71,10 +84,17 @@ services:
     env_file:
       - ./admin_demo/.env
     depends_on:
-      - be-demo-dev
+      be-demo-dev:
+        condition: service_healthy
     networks:
       - dev-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Seq Logging Server
   seq:
@@ -93,6 +113,12 @@ services:
     networks:
       - dev-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # AI Demo gRPC Server
   ai-demo-dev:
@@ -108,7 +134,14 @@ services:
       - dev-network
     restart: unless-stopped
     depends_on:
-      - be-demo-dev
+      be-demo-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc; from proto import health_pb2, health_pb2_grpc; channel = grpc.insecure_channel('localhost:50051'); stub = health_pb2_grpc.HealthServiceStub(channel); response = stub.HealthCheck(health_pb2.HealthCheckRequest()); exit(0 if response.status == 'success' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   be-demo-data:
