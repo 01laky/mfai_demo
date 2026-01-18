@@ -13,3 +13,6 @@
 [submodule "db_demo"]
 	path = db_demo
 	url = https://github.com/01laky/db_demo.git
+[submodule "logger_demo"]
+	path = logger_demo
+	url = https://github.com/01laky/logger_demo.git
