@@ -194,6 +194,34 @@ while true; do
     echo ""
     
     # ========================================================================
+    # PGADMIN STATUS
+    # ========================================================================
+    echo "📦 pgAdmin (PostgreSQL Admin UI)"
+    echo "───────────────────────────────────────────────────────────"
+    if docker ps --format '{{.Names}}' | grep -q "^pgadmin-dev$"; then
+        STATUS=$(docker ps --format '{{.Status}}' --filter name=pgadmin-dev)
+        echo "  Container: ✓ Running (pgadmin-dev)"
+        echo "  Status: $STATUS"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5050 2>&1 || echo "000")
+        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
+            echo "  UI: ✓ Accessible (http://localhost:5050)"
+        else
+            echo "  UI: ⚠ Not accessible (http://localhost:5050)"
+        fi
+    elif docker ps -a --format '{{.Names}}' | grep -q "^pgadmin-dev$"; then
+        STATUS=$(docker ps -a --format '{{.Status}}' --filter name=pgadmin-dev | head -1)
+        echo "  Container: ⚠ Stopped (pgadmin-dev)"
+        echo "  Status: $STATUS"
+        echo "  Port: 5050 (http://localhost:5050)"
+    else
+        echo "  Container: ○ Not found (pgadmin-dev)"
+        echo "  Status: Does not exist"
+        echo "  Port: 5050 (http://localhost:5050)"
+    fi
+    echo ""
+    
+    # ========================================================================
     # BACKEND STATUS
     # ========================================================================
     echo "📦 Backend API (be_demo)"
@@ -352,8 +380,8 @@ while true; do
     echo "  Summary"
     echo "═══════════════════════════════════════════════════════════"
     
-    RUNNING=$(docker ps --format '{{.Names}}' | grep -E 'postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | wc -l | xargs)
-    STOPPED=$(docker ps -a --format '{{.Names}}' | grep -E 'postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | grep -v "$(docker ps --format '{{.Names}}')" | wc -l | xargs)
+    RUNNING=$(docker ps --format '{{.Names}}' | grep -E 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | wc -l | xargs)
+    STOPPED=$(docker ps -a --format '{{.Names}}' | grep -E 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | grep -v "$(docker ps --format '{{.Names}}')" | wc -l | xargs)
     NOT_FOUND=$((8 - RUNNING - STOPPED))
     
     echo "  Containers: $RUNNING running, $STOPPED stopped"
