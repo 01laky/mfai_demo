@@ -157,7 +157,8 @@ if [ -d "fe_demo" ] && [ -f "fe_demo/package.json" ]; then
     TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
     
     # Use Python to parse the Tests line more reliably
-    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep -E "Tests[ ]+[0-9]+" | head -1)
+    # Get the full line containing "Tests" - important for parsing "passed (X)" and "(X)"
+    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep "Tests" | head -1)
     if [ -n "$TESTS_LINE" ]; then
         PARSED=$(echo "$TESTS_LINE" | python3 -c "
 import sys
@@ -231,7 +232,8 @@ if [ -d "admin_demo" ] && [ -f "admin_demo/package.json" ]; then
     TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
     
     # Use Python to parse the Tests line more reliably
-    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep -E "Tests[ ]+[0-9]+" | head -1)
+    # Get the full line containing "Tests" - important for parsing "passed (X)" and "(X)"
+    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep "Tests" | head -1)
     if [ -n "$TESTS_LINE" ]; then
         PARSED=$(echo "$TESTS_LINE" | python3 -c "
 import sys
