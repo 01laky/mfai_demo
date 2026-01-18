@@ -470,11 +470,14 @@ All services use the following ports (configurable):
 ./test-all.sh
 ```
 
-This script:
-1. Runs tests for backend (ASP.NET Core)
-2. Runs tests for frontend (Vitest)
-3. Runs tests for admin (Vitest)
-4. Displays a summary of all test results
+Runs tests for all services and displays a consolidated summary:
+
+1. **Backend** - .NET xUnit tests (`dotnet test`)
+2. **Frontend** - Vitest unit tests + Cypress e2e tests (`yarn test --run` + `yarn test:e2e`)
+   - For e2e tests: Automatically ensures database, backend, and frontend are running (starts them if needed)
+3. **Admin** - Vitest unit tests (`yarn test --run`)
+
+The script parses output from different test frameworks (.NET, Vitest, Cypress) and aggregates results into a unified summary with pass/fail counts across all repositories.
 
 ### Run Service-Specific Tests
 
