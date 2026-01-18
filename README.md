@@ -238,7 +238,12 @@ Performs a clean rebuild of all Docker images (no cache). **Note**: This only bu
 ./test-all.sh
 ```
 
-Runs tests for all services and displays a summary.
+Runs tests for all services and displays a consolidated summary. The script:
+- **Backend**: Runs .NET xUnit tests
+- **Frontend**: Runs Vitest unit tests and Cypress e2e tests (automatically starts DB, BE, FE if needed)
+- **Admin**: Runs Vitest unit tests
+
+For Cypress e2e tests, the script automatically ensures all required services (database, backend, frontend) are running before executing tests.
 
 ### Service-Specific Scripts
 

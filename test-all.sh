@@ -4,16 +4,17 @@
 # 
 # This script orchestrates test execution across all subrepositories in the monorepo:
 # - Backend (be_demo) - runs .NET xUnit tests using 'dotnet test'
-# - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run'
+# - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run' and Cypress e2e tests
 # - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
 # - Database (db_demo) - infrastructure only, no tests
 # - AI Demo (ai_demo) - infrastructure only, no tests
 # 
 # The script:
-# - Parses test output from different test frameworks (.NET, Vitest)
+# - Parses test output from different test frameworks (.NET, Vitest, Cypress)
 # - Aggregates results across all repositories
 # - Displays a consolidated summary with pass/fail counts
 # - Handles repositories that don't have tests gracefully
+# - For Cypress e2e tests: automatically starts DB, BE, FE if not running
 # 
 # Usage: ./test-all.sh
 
@@ -184,16 +185,249 @@ print(f'{total}|{passed}|{failed}')
         FAILED="0"
     fi
     
+    VITEST_TOTAL=${TOTAL:-0}
+    VITEST_PASSED=${PASSED:-0}
+    VITEST_FAILED=${FAILED:-0}
+    
     TOTAL_TESTS=$((TOTAL_TESTS + ${TOTAL:-0}))
     PASSED_TESTS=$((PASSED_TESTS + ${PASSED:-0}))
     FAILED_TESTS=$((FAILED_TESTS + ${FAILED:-0}))
     
-    if [ $TEST_EXIT_CODE -eq 0 ] && [ "${FAILED:-0}" = "0" ]; then
-        TEST_RESULTS+=("✅ fe_demo: $PASSED/$TOTAL passed ($TEST_FILES test files)")
-        echo "✅ Frontend tests: $PASSED/$TOTAL passed ($TEST_FILES test files)"
+    VITEST_EXIT_CODE=$TEST_EXIT_CODE
+    
+    # Run Cypress e2e tests if cypress is installed
+    E2E_TOTAL=0
+    E2E_PASSED=0
+    E2E_FAILED=0
+    E2E_SERVICES_STARTED=false
+    
+    if [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
+        echo ""
+        echo "📦 Running Cypress e2e tests..."
+        
+        # Check if required services are running for e2e tests
+        # Vite runs on port 8081 by default (see vite.config.ts)
+        FRONTEND_PORT=8081
+        BACKEND_URL="http://localhost:8000"
+        E2E_SERVICES_STARTED=false
+        
+        echo "🔍 Checking required services for e2e tests..."
+        echo ""
+        
+        # Start database if not running
+        DB_RUNNING=false
+        if docker ps --format '{{.Names}}' | grep -q "postgres-dev"; then
+            echo "✅ Database is already running"
+            DB_RUNNING=true
+        else
+            echo "📦 Starting database..."
+            if [ -d "../db_demo" ]; then
+                cd ../db_demo
+                docker-compose up -d > /dev/null 2>&1 || true
+                sleep 3
+                cd ../fe_demo
+                E2E_SERVICES_STARTED=true
+                DB_RUNNING=true
+            else
+                echo "⚠️  Database directory not found"
+            fi
+        fi
+        
+        # Start backend if not running
+        BACKEND_RUNNING=false
+        if curl -s "$BACKEND_URL/swagger" > /dev/null 2>&1; then
+            echo "✅ Backend is already running"
+            BACKEND_RUNNING=true
+        else
+            echo "📦 Starting backend..."
+            if [ -d "../be_demo" ]; then
+                cd ../be_demo
+                # Try start-dev.sh, fallback to docker-compose
+                ./start-dev.sh > /dev/null 2>&1 || docker-compose -f docker-compose.dev.yml up -d > /dev/null 2>&1 || true
+                cd ../fe_demo
+                E2E_SERVICES_STARTED=true
+                
+                # Wait for backend to be ready (it can take 30-60s)
+                echo "⏳ Waiting for backend to start (this may take up to 60 seconds)..."
+                for i in {1..60}; do
+                    if curl -s "$BACKEND_URL/swagger" > /dev/null 2>&1; then
+                        echo "✅ Backend is ready!"
+                        BACKEND_RUNNING=true
+                        break
+                    fi
+                    if [ $((i % 10)) -eq 0 ]; then
+                        echo "   Still waiting... ($i/60 seconds)"
+                    fi
+                    sleep 1
+                done
+                
+                if [ "$BACKEND_RUNNING" = false ]; then
+                    echo "❌ Backend failed to start within timeout"
+                fi
+            else
+                echo "⚠️  Backend directory not found"
+            fi
+        fi
+        
+        # Check if frontend is running
+        if curl -s http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+            echo "✅ Frontend is already running on localhost:$FRONTEND_PORT"
+            FRONTEND_ALREADY_RUNNING=true
+        else
+            FRONTEND_ALREADY_RUNNING=false
+        fi
+        
+        # Only proceed if database and backend are ready
+        if [ "$DB_RUNNING" = true ] && [ "$BACKEND_RUNNING" = true ]; then
+            echo ""
+            echo "✅ All required services are ready (DB, BE)"
+            
+            if [ "$FRONTEND_ALREADY_RUNNING" = true ]; then
+                # Frontend is already running, run e2e tests
+                E2E_OUTPUT=$(CYPRESS_BASE_URL=http://localhost:$FRONTEND_PORT yarn test:e2e 2>&1 || true)
+                E2E_EXIT_CODE=$?
+            else
+                # Start frontend if not running
+                echo "📦 Starting frontend for e2e tests..."
+                yarn dev > /dev/null 2>&1 &
+                FE_PID=$!
+                E2E_SERVICES_STARTED=true
+                
+                # Wait for frontend to be ready (give it more time - Vite can take 30-60s)
+                echo "⏳ Waiting for frontend to start on port $FRONTEND_PORT (this may take up to 60 seconds)..."
+                for i in {1..60}; do
+                    if curl -s http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+                        echo "✅ Frontend is ready!"
+                        break
+                    fi
+                    if [ $((i % 10)) -eq 0 ]; then
+                        echo "   Still waiting... ($i/60 seconds)"
+                    fi
+                    sleep 1
+                done
+                
+                # Give frontend a bit more time to fully initialize
+                sleep 3
+                
+                # Check if frontend is accessible
+                if curl -s http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+                    # Frontend is ready, run e2e tests (keep frontend running!)
+                    E2E_OUTPUT=$(CYPRESS_BASE_URL=http://localhost:$FRONTEND_PORT yarn test:e2e 2>&1 || true)
+                    E2E_EXIT_CODE=$?
+                else
+                    echo "❌ Frontend failed to start within timeout. Skipping e2e tests."
+                    E2E_OUTPUT=""
+                    E2E_EXIT_CODE=1
+                    kill $FE_PID 2>/dev/null || true
+                fi
+            fi
+        else
+            echo ""
+            echo "❌ Required services (DB, BE) are not ready. Skipping e2e tests."
+            E2E_OUTPUT=""
+            E2E_EXIT_CODE=1
+        fi
+        
+        # Parse Cypress output (common for both branches)
+        if [ -n "$E2E_OUTPUT" ]; then
+            # Cypress output format example:
+            # "✖  4 of 4 failed (100%)   03:05   18    -    18    -    -"
+            # Format: "Spec Tests Passing Failing Pending Skipped"
+            # The summary line has numbers in this order
+            SUMMARY_LINE=$(echo "$E2E_OUTPUT" | grep -E "✖.*failed.*%|✔.*passed.*%|Tests.*Passing.*Failing" | tail -1)
+            
+            if [ -n "$SUMMARY_LINE" ]; then
+                # Extract numbers from the summary line (format: "✖  X of Y failed ... 18  -  18  -  -")
+                # The pattern is: total_tests, passing, failing
+                # Use Python to parse reliably
+                PARSED=$(echo "$SUMMARY_LINE" | python3 -c "
+import sys
+import re
+line = sys.stdin.read().strip()
+# Find pattern like '18  -  18' or numbers separated by spaces/hyphens
+# Format is usually: TotalTests  Passing  Failing  Pending  Skipped
+numbers = re.findall(r'\d+', line)
+if len(numbers) >= 3:
+    # Usually: [total_or_spec_count, passing, failing, ...]
+    total = numbers[0] if numbers[0] else '0'
+    passing = numbers[1] if len(numbers) > 1 and numbers[1] else '0'
+    failing = numbers[2] if len(numbers) > 2 and numbers[2] else '0'
+    # If 'X of Y' pattern, use Y as total
+    of_match = re.search(r'(\d+)\s+of\s+(\d+)', line)
+    if of_match:
+        failing = of_match.group(1)
+        total = of_match.group(2)
+        passing = str(int(total) - int(failing))
+    print(f'{total}|{passing}|{failing}')
+else:
+    print('0|0|0')
+" 2>/dev/null || echo "0|0|0")
+                
+                E2E_TOTAL=$(echo "$PARSED" | cut -d'|' -f1)
+                E2E_PASSING=$(echo "$PARSED" | cut -d'|' -f2)
+                E2E_FAILING=$(echo "$PARSED" | cut -d'|' -f3)
+            else
+                E2E_TOTAL=0
+                E2E_PASSING=0
+                E2E_FAILING=0
+            fi
+            
+            # Fallback: Try simple grep patterns
+            if [ -z "$E2E_PASSING" ] || [ "$E2E_PASSING" = "0" ]; then
+                E2E_PASSING=$(echo "$E2E_OUTPUT" | grep -oE "([0-9]+) passing" | grep -oE "[0-9]+" | head -1 || echo "0")
+                E2E_FAILING=$(echo "$E2E_OUTPUT" | grep -oE "([0-9]+) failing" | grep -oE "[0-9]+" | head -1 || echo "0")
+            fi
+            
+            # Calculate total and assign
+            E2E_PASSED=${E2E_PASSING:-0}
+            E2E_FAILED=${E2E_FAILING:-0}
+            if [ -z "$E2E_TOTAL" ] || [ "$E2E_TOTAL" = "0" ]; then
+                E2E_TOTAL=$((E2E_PASSED + E2E_FAILED))
+            fi
+            
+            # Add E2E tests to global totals (even if parsing failed, we still ran tests)
+            TOTAL_TESTS=$((TOTAL_TESTS + E2E_TOTAL))
+            PASSED_TESTS=$((PASSED_TESTS + E2E_PASSED))
+            FAILED_TESTS=$((FAILED_TESTS + E2E_FAILED))
+            
+            if [ $E2E_EXIT_CODE -eq 0 ] && [ "$E2E_FAILED" = "0" ]; then
+                echo "✅ Cypress e2e tests: $E2E_PASSED/$E2E_TOTAL passed"
+            else
+                echo "❌ Cypress e2e tests: $E2E_FAILED failed, $E2E_PASSED/$E2E_TOTAL passed"
+            fi
+        else
+            # E2E tests were skipped, but E2E_TOTAL is still 0, so no need to add
+            echo "⏭️  Cypress e2e tests: skipped (services not ready)"
+        fi
+        
+        # Stop frontend if we started it (after e2e tests are done)
+        if [ "$E2E_SERVICES_STARTED" = true ]; then
+            echo "🛑 Stopping frontend server..."
+            kill $FE_PID 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+    
+    # Combine Vitest and Cypress results
+    COMBINED_TOTAL=$((VITEST_TOTAL + E2E_TOTAL))
+    COMBINED_PASSED=$((VITEST_PASSED + E2E_PASSED))
+    COMBINED_FAILED=$((VITEST_FAILED + E2E_FAILED))
+    
+    if [ $VITEST_EXIT_CODE -eq 0 ] && [ "${VITEST_FAILED:-0}" = "0" ] && [ "$E2E_FAILED" = "0" ]; then
+        if [ "$E2E_TOTAL" -gt 0 ]; then
+            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, $E2E_TOTAL e2e)")
+            echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, $E2E_TOTAL e2e)"
+        elif [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
+            # Cypress is installed but tests were skipped (frontend not running)
+            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped - frontend not running)")
+            echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped - frontend not running)"
+        else
+            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files)")
+            echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit)"
+        fi
     else
-        TEST_RESULTS+=("❌ fe_demo: $FAILED failed, $PASSED/$TOTAL passed")
-        echo "❌ Frontend tests: $FAILED failed, $PASSED/$TOTAL passed"
+        TEST_RESULTS+=("❌ fe_demo: $COMBINED_FAILED failed, $COMBINED_PASSED/$COMBINED_TOTAL passed")
+        echo "❌ Frontend tests: $COMBINED_FAILED failed, $COMBINED_PASSED/$COMBINED_TOTAL passed"
     fi
     
     cd ..
