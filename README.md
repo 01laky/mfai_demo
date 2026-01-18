@@ -49,6 +49,7 @@ _mfai_demo/
 - Structured logging with Seq
 - SignalR for real-time communication
 - Health checks for AI services
+- **Multi-tenant face-based routing** - URL-based tenant identification and automatic request scoping
 
 **Ports**:
 - HTTP: `8000`
@@ -67,6 +68,7 @@ _mfai_demo/
 - Auto-generated API client from Swagger
 - Type-safe API calls
 - Responsive design with Bootstrap
+- **Face path routing** - Automatic multi-tenant API request scoping based on URL path
 
 **Port**: `8081`
 
