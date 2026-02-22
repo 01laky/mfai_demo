@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "be_demo", "be_demo", "{1321DD22-0FB7-594F-4C72-E9E71D8E4EE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeDemo.Api.Tests", "be_demo\BeDemo.Api.Tests\BeDemo.Api.Tests.csproj", "{B1E8789E-7875-5AD5-5E34-84CE749F4CB3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeDemo.Api", "be_demo\BeDemo.Api\BeDemo.Api.csproj", "{30DB28D5-C965-0E8F-7CAE-16981BE983B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B1E8789E-7875-5AD5-5E34-84CE749F4CB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1E8789E-7875-5AD5-5E34-84CE749F4CB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1E8789E-7875-5AD5-5E34-84CE749F4CB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1E8789E-7875-5AD5-5E34-84CE749F4CB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30DB28D5-C965-0E8F-7CAE-16981BE983B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30DB28D5-C965-0E8F-7CAE-16981BE983B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30DB28D5-C965-0E8F-7CAE-16981BE983B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30DB28D5-C965-0E8F-7CAE-16981BE983B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B1E8789E-7875-5AD5-5E34-84CE749F4CB3} = {1321DD22-0FB7-594F-4C72-E9E71D8E4EE9}
+		{30DB28D5-C965-0E8F-7CAE-16981BE983B5} = {1321DD22-0FB7-594F-4C72-E9E71D8E4EE9}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DB4202E4-D07B-43C6-864B-7CB5D14D6A84}
+	EndGlobalSection
+EndGlobal

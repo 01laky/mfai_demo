@@ -63,15 +63,8 @@ echo "    ✅ Backend startup launched"
 # START FRONTEND (React + Vite)
 # ============================================================================
 echo "📦 Starting frontend (fe_demo)..."
-if [ -f "fe_demo/start-dev.sh" ]; then
-    cd fe_demo
-    ./start-dev.sh > /dev/null 2>&1 &
-    cd ..
-    echo "    ✅ Frontend startup launched"
-else
-    echo "  ⚠️  fe_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d fe-demo-dev > /dev/null 2>&1 &
-fi
+docker-compose -f docker-compose.dev.yml up -d --no-deps fe-demo-dev > /dev/null 2>&1 &
+echo "    ✅ Frontend startup launched"
 
 # ============================================================================
 # START AI DEMO (Python gRPC Server)
@@ -399,6 +392,17 @@ while true; do
     
     echo "═══════════════════════════════════════════════════════════"
     
+    # Stop refreshing when all existing project containers are running (none stopped)
+    # We check: at least 1 container running AND 0 containers stopped
+    ALL_PROJECT=$(docker ps -a --format '{{.Names}}' | grep -cE 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' || echo "0")
+    if [ "$RUNNING" -gt 0 ] && [ "$RUNNING" -eq "$ALL_PROJECT" ]; then
+        echo ""
+        echo "🎉 All $RUNNING containers are running! Status screen stopped."
+        echo "   Services continue running in the background."
+        echo ""
+        exit 0
+    fi
+
     # Wait 5 seconds before next refresh
     sleep 5
 done
