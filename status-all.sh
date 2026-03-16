@@ -264,6 +264,7 @@ echo "📦 Frontend (fe_demo)"
 echo "───────────────────────────────────────────────────────────"
 
 FE_CONTAINER="fe-demo-dev"
+FE_ACCESSIBLE=false
 if check_container_exists "$FE_CONTAINER"; then
     if check_container "$FE_CONTAINER"; then
         STATUS_INFO=$(get_container_status "$FE_CONTAINER")
@@ -277,6 +278,7 @@ if check_container_exists "$FE_CONTAINER"; then
         # Check if frontend is accessible
         if check_service "http://localhost:8081" "Frontend"; then
             echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081)"
+            FE_ACCESSIBLE=true
         else
             echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (http://localhost:8081)"
         fi
@@ -288,12 +290,25 @@ if check_container_exists "$FE_CONTAINER"; then
         echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($FE_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
-        echo "  Port: 8081 (http://localhost:8081)"
+        
+        # FE can run locally (yarn dev) - check port 8081 regardless of container
+        if check_service "http://localhost:8081" "Frontend"; then
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081) [running locally]"
+            FE_ACCESSIBLE=true
+        else
+            echo "  Port: 8081 (http://localhost:8081)"
+        fi
     fi
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($FE_CONTAINER)"
     echo "  Status: Does not exist (removed)"
-    echo "  Port: 8081 (http://localhost:8081)"
+    # Still check if FE runs locally
+    if check_service "http://localhost:8081" "Frontend"; then
+        echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081) [running locally]"
+        FE_ACCESSIBLE=true
+    else
+        echo "  Port: 8081 (http://localhost:8081)"
+    fi
 fi
 
 echo ""
@@ -515,12 +530,11 @@ if check_container "$BE_CONTAINER"; then
     fi
 fi
 
-if check_container "$FE_CONTAINER"; then
-    if check_service "http://localhost:8081" "Frontend"; then
-        ACCESSIBLE=$((ACCESSIBLE + 1))
-    else
-        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
-    fi
+# FE: count as accessible if running in container OR locally on port 8081
+if [ "$FE_ACCESSIBLE" = true ]; then
+    ACCESSIBLE=$((ACCESSIBLE + 1))
+elif check_container "$FE_CONTAINER"; then
+    NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
 fi
 
 if check_container "$ADMIN_CONTAINER"; then
@@ -564,7 +578,7 @@ if check_container "$BE_CONTAINER"; then
     echo "    • Backend API: http://localhost:8000"
     echo "    • Swagger: http://localhost:8000/swagger/index.html"
 fi
-if check_container "$FE_CONTAINER"; then
+if [ "$FE_ACCESSIBLE" = true ]; then
     echo "    • Frontend: http://localhost:8081"
 fi
 if check_container "$ADMIN_CONTAINER"; then

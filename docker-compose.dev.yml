@@ -23,7 +23,7 @@ services:
       - dev-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/swagger/index.html", "||", "exit", "1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/swagger/index.html || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -47,6 +47,7 @@ services:
       - VITE_APP_NAME=Fe Demo Frontend
       - VITE_APP_VERSION=1.0.0
       - VITE_PORT=8081
+      - VITE_SEQ_PROXY_TARGET=http://seq:5341
     env_file:
       - ./fe_demo/.env
     depends_on:
@@ -114,13 +115,13 @@ services:
       - dev-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/api"]
+      test: ["CMD-SHELL", "curl -f http://localhost:80/api || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  # AI Demo gRPC Server
+  # AI Demo gRPC Server (independent - no dependency on backend)
   ai-demo-dev:
     build:
       context: ./ai_demo
@@ -128,20 +129,24 @@ services:
     container_name: ai-demo-dev
     ports:
       - "50051:50051"
+    volumes:
+      - ai-demo-hf-cache:/root/.cache/huggingface
     environment:
       - PORT=50051
+      - HF_HOME=/root/.cache/huggingface
+    deploy:
+      resources:
+        limits:
+          memory: 10G
     networks:
       - dev-network
     restart: unless-stopped
-    depends_on:
-      be-demo-dev:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import grpc; from proto import health_pb2, health_pb2_grpc; channel = grpc.insecure_channel('localhost:50051'); stub = health_pb2_grpc.HealthServiceStub(channel); response = stub.HealthCheck(health_pb2.HealthCheckRequest()); exit(0 if response.status == 'success' else 1)"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 600s
 
 volumes:
   be-demo-data:
@@ -151,6 +156,7 @@ volumes:
   fe-demo-yarn-cache:
   admin-demo-node-modules:
   admin-demo-yarn-cache:
+  ai-demo-hf-cache:
 
 networks:
   dev-network:
