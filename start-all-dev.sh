@@ -151,7 +151,13 @@ while true; do
         echo "🔄 Restarting stopped containers..."
         for CONTAINER in $STOPPED; do
             echo "  ⚡ Starting: $CONTAINER"
-            docker start "$CONTAINER" > /dev/null 2>&1 || true
+            if [ "$CONTAINER" = "dozzle-dev" ]; then
+                # Dozzle can get stuck with "network not found" after dev-network recreate; remove and recreate
+                docker rm -f dozzle-dev 2>/dev/null || true
+                docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev > /dev/null 2>&1 || true
+            else
+                docker start "$CONTAINER" > /dev/null 2>&1 || true
+            fi
         done
         sleep 1  # Brief pause to let containers start
     fi
