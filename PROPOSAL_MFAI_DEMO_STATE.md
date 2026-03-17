@@ -41,7 +41,7 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 | **AuthController** | Register, login, logout. |
 | **OAuth2Controller** | Token, register (OAuth2Service). |
 | **UsersController** | CRUD používateľov; **GetUsers** s pagináciou a search (`page`, `pageSize`, `search`, `forAddFriend`); pri `forAddFriend=true` vracia len používateľov, ktorých môže aktuálny user pridať (bez seba, priateľov a pending friend requestov). |
-| **FacesController** | CRUD faces. |
+| **FacesController** | CRUD faces; **GET config** vracia pri auth aj **myFaceRoleId**, **myFaceRoleName** pre každý face; **GET face-roles** (zoznam face rolí); **PUT {id}/my-role** (nastavenie vlastnej face role). |
 | **PagesController** | CRUD stránok. |
 | **PageTypesController** | CRUD typov stránok. |
 | **FriendRequestsController** | Žiadosti o priateľstvo: zoznam, odoslanie, prijatie, odmietnutie. |
@@ -81,6 +81,11 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 - Ak je face **nepublic** (`IsPublic = false`), pridá sa navyše stránka **Wall** (`/wall`) – PageType `"wall"`.
 - PageType `"wall"` je v seede PageTypes; v seede faces majú neverejné faces (basic, koncept) v zozname pages aj Wall.
 
+#### Výber face role pri prvom visite (súkromný face)
+- **GET /api/faces/config**: pri požiadavke s Authorization header sa pre každý face doplní **myFaceRoleId** a **myFaceRoleName** (aktuálna rola používateľa v tom face).
+- **GET /api/faces/face-roles** (AllowAnonymous): vracia zoznam face rolí `[{ id, name }]` pre dropdown vo frontende.
+- **PUT /api/faces/{id}/my-role** (Authorize): body `{ userRoleId }` – nastaví alebo vytvorí **UserFaceRole** pre aktuálneho používateľa a daný face; validuje, že rola má Scope = Face.
+
 ### Ďalšie
 - Swagger/OpenAPI, health checks, AI gRPC health pri štarte.
 - ChatHub SendToAi: try/catch, user-friendly chybová hláška pri nedostupnosti AI.
@@ -103,6 +108,7 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 
 ### UI komponenty a stránky
 - **Header**, **Footer** (Messenger link), **LanguageSwitcher**, **ProtectedRoute**, **GuestRoute**, **FacePageView**.
+- **Horný panel pri prvom visite súkromného face**: **FaceRoleSelectPanel** – zobrazí sa pod Headerom, keď je používateľ prihlásený, má zvolený súkromný face a v `localStorage` ešte nie je kľúč `face_role_chosen_{faceId}`. Panel obsahuje dropdown s face rolami (z API GET face-roles) a tlačidlo Potvrdiť; po uložení (PUT my-role) sa nastaví localStorage a config sa znovu načíta, panel sa ďalej nezobrazuje.
 - **Settings panel**: jazyk, logout, výber face, Pages nav, **Friend Requests**, **Messenger**, **Notifications** (tabs).
 - Stránky: Home (guest), Login, Register, HomePageProtected, Profile, **Users** (zoznam + detail), dynamické face stránky.
 
@@ -122,6 +128,8 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 - **NotificationsTab**: zobrazenie notifikácií (napr. message request).
 
 ### API a konfigurácia
+- **getFacesConfig(token?)**: pri zadanom tokene posiela Authorization header; backend vráti pre každý face aj **myFaceRoleId**, **myFaceRoleName**. FaceConfigProvider volá load s tokenom, keď je používateľ prihlásený.
+- **FaceRolesService**: **getFaceRoles()** – GET /api/faces/face-roles; **setMyFaceRole(faceId, userRoleId, token)** – PUT /api/faces/{id}/my-role.
 - **UsersListService**: getUsers s parametrami (page, pageSize, search, forAddFriend), GetUsersResponse; getUser(id).
 - **authAwareFetch**: 401 handling, odhlásenie.
 - **env**: VITE_API_URL, VITE_API_HTTPS_URL, OAuth2, Seq proxy, app name/version.
@@ -168,7 +176,7 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 ## 6. Databáza (db_demo)
 
 - PostgreSQL 16 (postgres:16-alpine), pgAdmin 4.
-- Porty: 5432 (PostgreSQL), 5050 (pgAdmin).
+- Porty: 54320 (PostgreSQL), 5050 (pgAdmin).
 - DB: bedemo, user bedemo_user; volume pre perzistenciu; healthcheck.
 - **servers.json** pre pgAdmin (BeDemo Database, host postgres-dev).
 - Migrácie cez backend (EF Core).

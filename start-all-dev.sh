@@ -169,12 +169,12 @@ while true; do
         echo "  Status: $STATUS"
         
         # Check database accessibility
-        if nc -z localhost 5432 2>/dev/null; then
+        if nc -z localhost 54320 2>/dev/null; then
             echo "  Database: ✓ Accessible"
-            echo "  Port: 5432 (localhost)"
+            echo "  Port: 54320 (localhost)"
         else
             echo "  Database: ⚠ Not accessible"
-            echo "  Port: 5432 (localhost)"
+            echo "  Port: 54320 (localhost)"
         fi
     elif docker ps -a --format '{{.Names}}' | grep -q "^postgres-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=postgres-dev | head -1)

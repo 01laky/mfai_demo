@@ -96,7 +96,7 @@ _mfai_demo/
 
 **Configuration**:
 - Host: `localhost` (from host) or `host.docker.internal` (from containers)
-- Port: `5432`
+- Port: `54320`
 - Database: `bedemo`
 - Username: `bedemo_user`
 - Password: `bedemo_password`
@@ -169,7 +169,7 @@ Once all services are started, access them at:
 - **Seq Logging UI**: http://localhost:5341
 - **Logger Demo (Dozzle)**: http://localhost:8080
 - **pgAdmin**: http://localhost:5050
-- **Database**: `localhost:5432`
+- **Database**: `localhost:54320`
 
 ### Default Login Credentials
 
@@ -356,7 +356,7 @@ To completely clean up (remove all containers, volumes, and images):
        │        │        │
 ┌──────▼──┐ ┌──▼───┐ ┌──▼────┐
 │Database │ │ Seq  │ │AI Demo│
-│(5432)   │ │(5341)│ │(50051)│
+│(54320)  │ │(5341)│ │(50051)│
 └─────────┘ └──────┘ └───────┘
 
        ┌──────────────┐
@@ -440,7 +440,7 @@ See each service's README for specific configuration details.
 
 Default connection string:
 ```
-Host=host.docker.internal;Port=5432;Database=bedemo;Username=bedemo_user;Password=bedemo_password
+Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password
 ```
 
 - **From Docker containers**: Use `host.docker.internal`
@@ -452,7 +452,7 @@ All services use the following ports (configurable):
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Database | 5432 | PostgreSQL |
+| Database | 54320 | PostgreSQL |
 | Backend HTTP | 8000 | HTTP API |
 | Backend HTTPS | 8001 | HTTPS API |
 | Frontend | 8081 | User-facing app |

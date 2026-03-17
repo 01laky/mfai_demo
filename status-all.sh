@@ -162,11 +162,11 @@ if check_container_exists "$DB_CONTAINER"; then
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
     fi
-    echo "  Port: 5432 (localhost)"
+    echo "  Port: 54320 (localhost)"
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($DB_CONTAINER)"
     echo "  Status: Does not exist (removed)"
-    echo "  Port: 5432 (localhost)"
+    echo "  Port: 54320 (localhost)"
 fi
 
 echo ""
