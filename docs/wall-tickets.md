@@ -81,7 +81,18 @@ Apply with EF (non-Testing): migration **`AddFaceWallTickets`**. Testing uses `E
 
 ## Automated tests
 
-`BeDemo.Api.Tests/FaceWallTicketsControllerTests.cs` covers host create forbidden, create/like/comment + approve freeze, deny + hard delete service, admin comment delete, 20-ticket cap, non-admin forbidden on admin list, author vs approved edit/delete, long comment, double approve.
+`BeDemo.Api.Tests/FaceWallTicketsControllerTests.cs` covers host create forbidden, create/like/comment + approve freeze, deny + hard delete service, admin comment delete, 20-ticket cap, non-admin forbidden on admin list, author vs approved edit/delete, long comment, double approve, **list when face not found (404)**, **deny then like frozen (400)**.
+
+Frontends: Vitest tests for `parseApiErrorBody` / `getApiErrorMessage` in `fe_demo` and `admin_demo` (`src/utils/apiErrorMessage.test.ts`).
+
+## Client error display (FE / admin)
+
+Failed `fetch` calls use a shared helper that turns response bodies into toast / inline messages (ProblemDetails, `{ error }`, validation `errors`). See [DEVELOPMENT.md](./DEVELOPMENT.md#api-error-messages-in-the-browser).
+
+### UX notes
+
+- **FE**: Host viewers do not get the wall “create” shortcut; `Escape` closes wall panels and settings where implemented.
+- **Admin**: Face wall moderation page disables destructive / moderation actions while a mutation is in progress (`actionBusy`).
 
 ## Manual checks (curl)
 
