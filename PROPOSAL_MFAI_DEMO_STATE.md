@@ -77,9 +77,8 @@ Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na d
 - Seed: globálne a face roly so Scope; pri seede používateľov sa pre každý face vytvorí UserFaceRole FACE_HOST.
 
 #### Default stránky pri vytvorení face
-- Pri **POST /api/faces** sa automaticky vytvoria stránky podľa existujúcich PageTypes: **Home** (`/home`), **Detail** (`/detail`) (a **Wall** pre neverejný face). Zoznamy podľa typu komponentu sú na FE ako fixné route **`/list/:componentTypeId`**, nie ako CMS stránka.
-- Ak je face **nepublic** (`IsPublic = false`), pridá sa navyše stránka **Wall** (`/wall`) – PageType `"wall"`.
-- PageType `"wall"` je v seede PageTypes; v seede faces majú neverejné faces (basic, koncept) v zozname pages aj Wall.
+- Pri **POST /api/faces** sa vytvorí **Home** (`/home`) a pre **nepublic** face **Wall** (`/wall`). CMS **PageTypes** sú len **`home`**, **`static`**, **`wall`** (login/register na public face používajú `static`). Zoznamy a detaily entít sú na FE ako fixné route (napr. **`/list/:componentTypeId`**), nie ako typ stránky v adminovi.
+- PageType `"wall"` je v seede; neverejné faces (basic, koncept) majú Home + Wall.
 
 #### Výber face role pri prvom visite (súkromný face)
 - **GET /api/faces/config**: pri požiadavke s Authorization header sa pre každý face doplní **myFaceRoleId** a **myFaceRoleName** (aktuálna rola používateľa v tom face).
