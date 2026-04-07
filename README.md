@@ -56,7 +56,7 @@ _mfai_demo/
 - HTTP: `8000`
 - HTTPS: `8001`
 
-**Documentation**: See [`be_demo/README.md`](./be_demo/README.md) for detailed documentation.
+**Documentation**: See [`be_demo/README.md`](./be_demo/README.md) for detailed documentation. OAuth2, face roles a Stories over **curl**: [`doc/API_OAUTH_STORIES_CURL.md`](./doc/API_OAUTH_STORIES_CURL.md).
 
 ### Frontend Application (`fe_demo`)
 
