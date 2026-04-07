@@ -32,7 +32,8 @@ _mfai_demo/
 ├── restart-all-dev.sh    # Restart all services with rebuild
 ├── status-all.sh         # Show status of all services
 ├── rebuild-all-dev.sh    # Rebuild all Docker images
-└── test-all.sh           # Run tests for all services
+├── test-all.sh           # Run tests for all services
+└── ci-local.sh           # lint-all → build-all → test-all (same as CI monorepo_scripts job)
 ```
 
 ## Applications
