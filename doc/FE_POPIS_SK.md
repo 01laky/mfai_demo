@@ -288,39 +288,73 @@ Chatové rozhranie pre konverzáciu s AI asistentom.
 
 Každý používateľ môže vytvárať vlastné albumy. Album je entita s nasledujúcimi vlastnosťami:
 
-### Vytvorenie albumu
+### Vytvorenie a editácia albumu
+
+Kliknutím na ikonu **+** v hlavičke albumového komponentu (Album, AlbumGrid, AlbumCarousel) sa otvorí výsuvný panel s formulárom:
 
 - **Názov** (povinný, max 200 znakov)
 - **Popis** (voliteľný, max 2000 znakov)
-- **Typ albumu**:
-  - **Public** – viditeľný pre všetkých používateľov
-  - **Private** – viditeľný len pre tvorcu
-  - **Paid** – zatiaľ viditeľný len pre tvorcu (v budúcnosti paywall)
-- **Typ médií**: Image alebo Video
-- **Priradenie k Faces** – multiselect s výberom faces, ku ktorým album patrí (defaultne všetky)
+- **Typ albumu**: Public / Private / Paid (select)
+- **Typ médií**: Image / Video (select)
+- **Priradenie k Faces** – multiselect s checkboxmi, pri vytváraní predvyplnené všetkými faces
+
+Panel je bez záložiek – zobrazuje sa len formulár (na rozdiel od iných komponentov, kde sú záložky Create/Settings). Po uložení sa panel zatvorí.
+
+Pri editácii sa rovnaký formulár otvorí s predvyplnenými hodnotami existujúceho albumu. Editovať môže len tvorca albumu.
+
+### Zobrazenie albumov
+
+Albumy sa zobrazujú v troch variantoch komponentov:
+
+- **Album** – jedna hlavná fotka s 3 malými thumbnail-mi
+- **AlbumGrid** – stránkovaná mriežka albumov (dynamický výpočet cols×rows podľa veľkosti kontajnera)
+- **AlbumCarousel** – horizontálny carousel s navigáciou prev/next a bodkovými indikátormi
+
+Kliknutím na album kartu v mriežke alebo carouseli sa používateľ presmeruje na **detail albumu**.
+
+### Detail albumu
+
+Samostatná stránka na URL `/album/{id}` s nasledujúcimi sekciami:
+
+- **Späť** – tlačidlo na návrat
+- **Hlavička** – názov, popis, badges (typ albumu + typ médií), meno tvorcu, priradené faces
+- **Akcie** – tlačidlá Edit (otvorí inline formulár) a Delete (zmaže album a presmeruje na zoznam)
+- **Lajky** – tlačidlo srdce s počtom lajkov, klik lajkne/odlajkne
+- **Komentáre** – zoznam komentárov s menom autora a dátumom, formulár na pridanie nového komentára, mazanie vlastných komentárov
 
 ### Viditeľnosť
 
 - **Public albumy** vidí každý prihlásený používateľ.
 - **Private a Paid albumy** vidí len ich tvorca.
 - Na profile iného používateľa sa zobrazujú len jeho public albumy.
+- Komentáre a lajky fungujú len na albumoch, ku ktorým má používateľ prístup.
 
-### Komentáre
+### API endpointy (backend)
 
-- Ku každému albumu (podľa viditeľnosti) je možné pridávať komentáre.
-- Komentár môže upraviť alebo zmazať len jeho autor.
+**Albumy:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums` | Všetky viditeľné albumy |
+| `GET` | `/api/albums/{id}` | Detail albumu |
+| `GET` | `/api/albums/user/{userId}` | Albumy používateľa |
+| `POST` | `/api/albums` | Vytvoriť album |
+| `PUT` | `/api/albums/{id}` | Upraviť album (len creator) |
+| `DELETE` | `/api/albums/{id}` | Zmazať album (len creator) |
 
-### Lajky
+**Komentáre:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums/{id}/comments` | Komentáre albumu |
+| `POST` | `/api/albums/{id}/comments` | Pridať komentár |
+| `PUT` | `/api/albums/{id}/comments/{cid}` | Upraviť komentár |
+| `DELETE` | `/api/albums/{id}/comments/{cid}` | Zmazať komentár |
 
-- Používateľ môže album lajknúť (max 1 lajk na album).
-- Lajk je možné zrušiť (unlike).
-- Pri detaile albumu sa zobrazuje počet lajkov a či ho aktuálny používateľ lajkol.
-
-### Zoznam albumov
-
-- `GET /api/albums` – všetky viditeľné albumy (public + vlastné private/paid)
-- `GET /api/albums/user/{userId}` – albumy konkrétneho používateľa
-- Detail albumu obsahuje: počet lajkov, počet komentárov, priradené faces
+**Lajky:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums/{id}/likes` | Zoznam lajkov |
+| `POST` | `/api/albums/{id}/likes` | Lajknúť album |
+| `DELETE` | `/api/albums/{id}/likes` | Odlajknúť album |
 
 ---
 
