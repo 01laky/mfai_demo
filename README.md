@@ -21,7 +21,8 @@ _mfai_demo/
 ├── be_demo/              # Backend API (ASP.NET Core, PostgreSQL, OAuth2)
 ├── fe_demo/              # Frontend Application (React, TypeScript, Vite)
 ├── admin_demo/           # Admin Panel (React, TypeScript, Vite)
-├── db_demo/              # PostgreSQL Database Setup
+├── db_demo/              # PostgreSQL Database Setup (submodule)
+├── redis_demo/           # Redis for BE job queue (submodule)
 ├── ai_demo/              # AI Demo gRPC Service (Python)
 ├── logger_demo/          # Logger Demo - Dozzle Log Viewer
 ├── docker-compose.dev.yml # Root Docker Compose for development
@@ -107,6 +108,16 @@ _mfai_demo/
 - **Password**: `admin`
 
 **Documentation**: See [`db_demo/README.md`](./db_demo/README.md) for detailed documentation.
+
+### Redis (`redis_demo`)
+
+**Technology**: Redis 7 (Alpine), AOF persistence
+
+**Purpose**: Backend job queue (`bedemo:jobs:ready`, `bedemo:jobs:delayed`).
+
+**Port**: `6379`
+
+**Documentation**: [`redis_demo/README.md`](./redis_demo/README.md). Init submodule: `git submodule update --init redis_demo`.
 
 ### AI Demo Service (`ai_demo`)
 
@@ -399,6 +410,7 @@ Each application has its own git repository (submodule-like structure):
 - `fe_demo/` - Frontend repository
 - `admin_demo/` - Admin repository
 - `db_demo/` - Database setup repository
+- `redis_demo/` - Redis for backend job queue (submodule)
 - `ai_demo/` - AI Demo repository
 - `logger_demo/` - Logger Demo repository
 
@@ -446,6 +458,10 @@ Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Passwo
 - **From Docker containers**: Use `host.docker.internal`
 - **From localhost**: Use `localhost`
 
+### Redis (job queue)
+
+Submodule **`redis_demo`** (ako `db_demo`): `docker-compose.yml` + `start-redis.sh`. Backend v root compose používa **`host.docker.internal:6379`**. Spustenie: `./start-all-dev.sh` alebo `cd redis_demo && ./start-redis.sh`. Podrobnosti: [`doc/REDIS_SUBREPO_DEV_SK.md`](./doc/REDIS_SUBREPO_DEV_SK.md), [`redis_demo/README.md`](./redis_demo/README.md).
+
 ### Port Mapping
 
 All services use the following ports (configurable):
@@ -458,6 +474,7 @@ All services use the following ports (configurable):
 | Frontend | 8081 | User-facing app |
 | Admin | 8082 | Admin panel |
 | Seq | 5341 | Logging UI |
+| Redis | 6379 | Submodule `redis_demo` (nie v root compose) |
 | AI Demo | 50051 | gRPC service |
 | Logger Demo | 8080 | Dozzle log viewer |
 | pgAdmin | 5050 | PostgreSQL admin UI |
@@ -564,6 +581,7 @@ Each service has comprehensive documentation:
 - **[Frontend](./fe_demo/README.md)** - Frontend documentation
 - **[Admin Panel](./admin_demo/README.md)** - Admin panel documentation
 - **[Database](./db_demo/README.md)** - Database setup and configuration
+- **[Redis](./redis_demo/README.md)** - Redis job queue (submodule)
 - **[AI Demo](./ai_demo/README.md)** - AI Demo gRPC service documentation
 - **[Logger Demo](./logger_demo/README.md)** - Logger Demo documentation
 

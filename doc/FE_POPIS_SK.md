@@ -117,7 +117,7 @@ Každá face má vlastné stránky nakonfigurované v admin paneli. Stránky sa 
 | **Blog** | Články s dátumom, titulkom a perexom |
 | **ChatRoom** | Chatové miestnosti s počtom členov |
 | **UserProfile** | Profily používateľov |
-| **Reel** | Krátke video karty s autorom a lajkami |
+| **Reel** | Krátke video (API): prvý reel pre face alebo zoznam v grid/carousel |
 | **Story** | Story bubliny (videné/nevidené) |
 
 Každý typ obsahu má tri varianty zobrazenia:
@@ -358,7 +358,89 @@ Samostatná stránka na URL `/album/{id}` s nasledujúcimi sekciami:
 
 ---
 
-## 16. Blog
+## 16. Reels (krátke videá)
+
+Reel je jedno video s názvom a popisom, s komentármi a lajkmi, podobne ako album v rámci generických grid komponentov.
+
+### Vytvorenie a editácia
+
+Kliknutím na ikonu **+** v hlavičke reel komponentu (**Reel**, **ReelGrid**, **ReelCarousel**) sa otvorí výsuvný panel s formulárom:
+
+- **Názov** (povinný, max 200 znakov)
+- **Popis** (voliteľný, max 2000 znakov)
+- **Video URL** (povinný, max 1000 znakov) – odkaz na video súbor (napr. MP4)
+- **Faces** – voliteľný multiselect: **žiadna zaškrtnutá** = reel je viditeľný na **všetkých** faces; po zaškrtnutí konkrétnych faces je reel viditeľný **len** na týchto faces
+
+Panel je bez záložiek Create/Settings (rovnako ako album/blog). Ikona **zoznamu** v hlavičke presmeruje na stránku `/list/7` (zoznam reels pre daný typ komponentu).
+
+### Zobrazenie v grid layoute
+
+- **Reel** – z API sa načíta prvý reel viditeľný pre aktuálnu face; odkaz vedie na detail
+- **ReelGrid** – mriežka kariet s náhľadom videa (metadata), stránkovanie podľa veľkosti kontajnera; klik na kartu → detail
+- **ReelCarousel** – horizontálny posuv s rovnakými dátami; v grid layoute sa stránkovanie ovláda aj pätičkou komponentu (Predchádzajúci / Ďalší)
+
+Všetky tieto varianty pri volaní API posielajú **faceId** aktuálne zvolenej face (ak je známa), aby backend vedel filtrovať scoped reels.
+
+### Detail reelu
+
+Stránka na URL **`/reel/{id}`** (v rámci jazykového a face prefixu ako ostatné chránené stránky):
+
+- Prehrávač videa (`videoUrl`)
+- Názov, popis, tvorca, zobrazenie priradených faces (ak nejaké sú)
+- Lajky a komentáre (rovnaký UX ako pri albume)
+- Edit / Delete pre tvorcu
+
+Na načítanie detailu, komentárov a lajkov FE posiela `faceId` aktuálnej face v query stringu (`?faceId=`), aby scoped reels neboli dostupné z „nesprávnej“ face.
+
+### Viditeľnosť (business pravidlá)
+
+- Ak reel **nemá** žiadny záznam v tabuľke priradení k faces → zobrazuje sa na **každej** face.
+- Ak má aspoň jedno priradenie → zobrazuje sa **len** na týchto faces.
+
+### API endpointy (backend)
+
+**Reels:**
+
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/reels?faceId=` | Zoznam reels (voliteľný filter podľa face) |
+| `GET` | `/api/reels/{id}?faceId=` | Detail (pre scoped reels treba správny `faceId`) |
+| `GET` | `/api/reels/user/{userId}?faceId=` | Reels daného používateľa |
+| `POST` | `/api/reels` | Vytvoriť reel |
+| `PUT` | `/api/reels/{id}` | Upraviť (len tvorca) |
+| `DELETE` | `/api/reels/{id}` | Zmazať (len tvorca) |
+
+**Komentáre:**
+
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/reels/{id}/comments?faceId=` | Komentáre |
+| `POST` | `/api/reels/{id}/comments?faceId=` | Pridať komentár |
+| `PUT` | `/api/reels/{id}/comments/{cid}` | Upraviť komentár |
+| `DELETE` | `/api/reels/{id}/comments/{cid}` | Zmazať komentár |
+
+**Lajky:**
+
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/reels/{id}/likes?faceId=` | Zoznam lajkov |
+| `POST` | `/api/reels/{id}/likes?faceId=` | Lajk |
+| `DELETE` | `/api/reels/{id}/likes?faceId=` | Odlajk |
+
+### Redis fronta a plánovač úloh (backend, BullMQ-like)
+
+Po vytvorení reelu API zaradí do Redis:
+
+1. **Okamžitá úloha** `reel.postprocess` (napr. miesto pre budúce spracovanie videa).
+2. **Odložená úloha** rovnakého typu s oneskorením ~1 minúta (demonstrácia delayed jobs).
+
+Implementácia: **StackExchange.Redis** – zoznam `bedemo:jobs:ready` (FIFO) a zoradená množina `bedemo:jobs:delayed` (score = čas spustenia UTC v ms). Hostovaná služba `RedisJobWorkerService` v cykle presúva splatné delayed joby do ready fronty a spracováva ich (aktuálne len logovanie).
+
+Redis je git submodule **`redis_demo`** (rovnaký model ako **`db_demo`**): vlastný `docker-compose.yml`, skripty `start-redis.sh` atď. Kontajner `be-demo-dev` sa pripája na **`host.docker.internal:6379`**. Klon: `git submodule update --init redis_demo`. Podrobnosti: `doc/REDIS_SUBREPO_DEV_SK.md`. Ak Redis nie je dostupný alebo je `Redis:Configuration` prázdny (appsettings / Testing), používa sa **NoOp** fronta.
+
+---
+
+## 17. Blog
 
 Každý používateľ môže vytvárať blogové príspevky. Blog je entita priradená k jednej konkrétnej Face.
 
@@ -429,7 +511,7 @@ Blogy sú vždy priradené k jednej Face. API endpoint `GET /api/blogs?faceId={f
 
 ---
 
-## 17. Predvolené prihlasovacie údaje
+## 18. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`

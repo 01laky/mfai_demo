@@ -13,13 +13,14 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
 fi
 
 ROOT_SCRIPTS="start-all-dev.sh stop-all-dev.sh restart-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh status-all.sh test-all.sh lint-all.sh"
-CONTAINER_ORDER="be_demo fe_demo admin_demo ai_demo db_demo logger_demo"
+CONTAINER_ORDER="be_demo fe_demo admin_demo ai_demo db_demo redis_demo logger_demo"
 CONTAINER_SCRIPTS=(
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh generate-diagram.sh"
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh fix-editor.sh"
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh fix-editor.sh"
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh generate_proto.sh"
   "start-db.sh stop-db.sh clear-db.sh"
+  "start-redis.sh stop-redis.sh clear-redis.sh"
   "start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh"
 )
 

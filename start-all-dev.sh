@@ -4,11 +4,12 @@
 # 
 # This script orchestrates the startup of all development services in the correct order:
 # 1. Database (PostgreSQL) - must start first as other services depend on it
-# 2. Backend API (ASP.NET Core) - provides REST API and authentication
-# 3. Frontend (React + Vite) - user-facing application
-# 4. AI Demo (Python gRPC) - AI service with gRPC interface
-# 5. Admin (React + Vite) - admin panel application
-# 6. Logger Demo (Dozzle) - log viewer for all containers
+# 2. Redis (redis_demo) - job queue for backend (optional but recommended before BE)
+# 3. Backend API (ASP.NET Core) - provides REST API and authentication
+# 4. Frontend (React + Vite) - user-facing application
+# 5. AI Demo (Python gRPC) - AI service with gRPC interface
+# 6. Admin (React + Vite) - admin panel application
+# 7. Logger Demo (Dozzle) - log viewer for all containers
 # 
 # The script handles:
 # - Dependency ordering (database before backend, backend before frontend/admin)
@@ -41,6 +42,19 @@ else
     cd db_demo
     docker-compose up -d > /dev/null 2>&1 &
     cd ..
+fi
+
+# ============================================================================
+# START REDIS (redis_demo submodule)
+# ============================================================================
+echo "📦 Starting Redis (redis_demo)..."
+if [ -f "redis_demo/start-redis.sh" ]; then
+    cd redis_demo
+    ./start-redis.sh > /dev/null 2>&1 &
+    cd ..
+    echo "    ✅ Redis startup launched"
+else
+    echo "  ⚠️  redis_demo/start-redis.sh not found, skipping Redis"
 fi
 
 # ============================================================================

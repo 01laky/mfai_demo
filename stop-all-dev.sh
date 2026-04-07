@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to stop all development environments
-# Stops: db_demo (PostgreSQL), be_demo (backend), fe_demo (frontend), admin_demo (admin)
+# Stops: logger, apps, redis_demo (Redis), db_demo (PostgreSQL), root compose
 # Usage: ./stop-all-dev.sh
 
 set -e
@@ -90,6 +90,18 @@ else
     docker-compose -f logger_demo/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
 fi
 
+# Stop Redis (redis_demo)
+if [ -f "redis_demo/stop-redis.sh" ]; then
+    echo "  📦 Stopping Redis (redis_demo)..."
+    cd redis_demo
+    ./stop-redis.sh 2>/dev/null || true
+    cd ..
+else
+    echo "  ⚠️  redis_demo/stop-redis.sh not found, trying docker-compose directly..."
+    cd redis_demo 2>/dev/null && docker-compose down 2>/dev/null || true
+    cd "$SCRIPT_DIR" 2>/dev/null || true
+fi
+
 # Stop database (db_demo)
 if [ -f "db_demo/stop-db.sh" ]; then
     echo "  📦 Stopping database (db_demo)..."
@@ -128,7 +140,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|seq-dev|dozzle-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|redis-dev|seq-dev|dozzle-dev" || true)
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "✅ All containers are stopped"

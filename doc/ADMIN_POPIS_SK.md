@@ -322,7 +322,32 @@ Backend poskytuje plnohodnotný REST API pre správu albumov. Album je entita vy
 
 ---
 
-## 11. Blog (API)
+## 11. Reels (API) a Redis fronta
+
+### Reels – dátový model
+
+- **Reel** – `title`, `description`, `videoUrl`, `creatorId`
+- **ReelFace** – väzba reel ↔ face; **žiadny záznam** = reel je globálny pre všetky faces, inak len na uvedených faces
+- **ReelComment**, **ReelLike** – rovnaký vzor ako pri albumoch
+
+### Reels – API (skrátené)
+
+| Metóda | Endpoint | Poznámka |
+|--------|----------|----------|
+| `GET` | `/api/reels?faceId=` | Voliteľný filter podľa face |
+| `GET` | `/api/reels/{id}?faceId=` | Pre scoped reels treba správny `faceId` |
+| `POST` / `PUT` / `DELETE` | `/api/reels` … | CRUD ako albumy |
+| Komentáre / lajky | `/api/reels/{id}/comments`, `/likes` | Query `faceId` kde treba |
+
+Po **POST** `/api/reels` sa do Redis zaradí okamžitá úloha `reel.postprocess` a odložená úloha (~1 min) – na rozšírenie o transcoding / notifikácie.
+
+### Redis (submodule `redis_demo`)
+
+Ako **`db_demo`**: samostatný submodule s vlastným `docker-compose.yml`. `be-demo-dev` má **`Redis__Configuration=host.docker.internal:6379`** a `extra_hosts` pre Linux. Kľúče: `bedemo:jobs:ready`, `bedemo:jobs:delayed`. Bez Redis / prázdna konfigurácia / **Testing** → NoOp. `doc/REDIS_SUBREPO_DEV_SK.md`, `redis_demo/README.md`.
+
+---
+
+## 12. Blog (API)
 
 Backend poskytuje plné CRUD API pre blogové príspevky vrátane komentárov a lajkov.
 
@@ -370,7 +395,7 @@ Backend poskytuje plné CRUD API pre blogové príspevky vrátane komentárov a 
 
 ---
 
-## 12. Predvolené prihlasovacie údaje
+## 13. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`

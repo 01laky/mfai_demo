@@ -4,7 +4,7 @@
 
 ### 1. Vytvoriť repozitáre na GitHub
 
-Na GitHub vytvor **6 súkromných repozitárov**:
+Na GitHub vytvor **7+ súkromných repozitárov** (root + submoduly):
 
 1. **Root repo**: `_mfai_demo` (alebo `mfai-demo`)
 2. **Submoduly**:
@@ -13,6 +13,7 @@ Na GitHub vytvor **6 súkromných repozitárov**:
    - `admin_demo`
    - `ai_demo`
    - `db_demo`
+   - `redis_demo`
 
 ### 2. Nastaviť remote URL v každom submodule
 
@@ -48,6 +49,12 @@ cd ../db_demo
 git remote add origin https://github.com/YOUR_USERNAME/db_demo.git
 git branch -M main
 git push -u origin main
+
+# Redis (job queue)
+cd ../redis_demo
+git remote add origin https://github.com/YOUR_USERNAME/redis_demo.git
+git branch -M main
+git push -u origin main
 ```
 
 ### 3. Aktualizovať `.gitmodules` s reálnymi GitHub URL
@@ -70,6 +77,7 @@ git submodule add -f https://github.com/YOUR_USERNAME/fe_demo.git fe_demo
 git submodule add -f https://github.com/YOUR_USERNAME/admin_demo.git admin_demo
 git submodule add -f https://github.com/YOUR_USERNAME/ai_demo.git ai_demo
 git submodule add -f https://github.com/YOUR_USERNAME/db_demo.git db_demo
+git submodule add -f https://github.com/YOUR_USERNAME/redis_demo.git redis_demo
 
 # Alebo ak už existujú, len aktualizovať .gitmodules a commitnúť:
 git add .gitmodules

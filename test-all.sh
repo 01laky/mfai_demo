@@ -7,6 +7,7 @@
 # - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run' and Cypress e2e tests
 # - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
 # - Database (db_demo) - infrastructure only, no tests
+# - Redis (redis_demo) - infrastructure only, no tests
 # - AI Demo (ai_demo) - infrastructure only, no tests
 # 
 # The script:
@@ -538,6 +539,33 @@ else
     TEST_RESULTS+=("⏭️  db_demo: Not found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Database: Not found, skipping"
+fi
+
+echo ""
+
+# ============================================================================
+# TEST REDIS (redis_demo)
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing Redis (redis_demo)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -d "redis_demo" ]; then
+    if [ -f "redis_demo/docker-compose.yml" ]; then
+        TEST_RESULTS+=("⏭️  redis_demo: No tests (infrastructure only)")
+        SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+        echo "⏭️  Redis: No tests (infrastructure only)"
+    else
+        TEST_RESULTS+=("⏭️  redis_demo: No compose file")
+        SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+        echo "⏭️  Redis: No compose file, skipping"
+    fi
+else
+    TEST_RESULTS+=("⏭️  redis_demo: Not found")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  Redis: Not found, skipping"
 fi
 
 echo ""

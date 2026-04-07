@@ -39,8 +39,9 @@ temp/
 *.tmp
 
 # Subrepositories - ignore their .git folders
-# Each subrepo (be_demo, fe_demo, admin_demo, db_demo) has its own git repo
+# Each subrepo (be_demo, fe_demo, admin_demo, db_demo, redis_demo, …) has its own git repo
 be_demo/.git/
 fe_demo/.git/
 admin_demo/.git/
 db_demo/.git/
+redis_demo/.git/

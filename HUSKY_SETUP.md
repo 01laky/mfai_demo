@@ -8,7 +8,7 @@ Each subrepository has its own git hooks configuration:
 
 - **React projects** (fe_demo, admin_demo): Husky with lint-staged and commitlint
 - **Python project** (ai_demo): pre-commit framework with Black and Ruff
-- **Other projects** (be_demo, db_demo, logger_demo): No hooks (Docker/infrastructure only)
+- **Other projects** (be_demo, db_demo, redis_demo, logger_demo): No hooks (Docker/infrastructure only)
 
 ## React Projects: fe_demo & admin_demo
 
@@ -211,4 +211,5 @@ Examples: `feat(auth): add login`, `fix(api): resolve bug`
 | ai_demo | pre-commit | Ruff | Black | - |
 | be_demo | - | - | - | - |
 | db_demo | - | - | - | - |
+| redis_demo | - | - | - | - |
 | logger_demo | - | - | - | - |

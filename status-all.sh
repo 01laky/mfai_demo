@@ -172,6 +172,47 @@ fi
 echo ""
 
 # ============================================================================
+# CHECK REDIS (redis_demo)
+# ============================================================================
+
+echo "📦 Redis (redis_demo)"
+echo "───────────────────────────────────────────────────────────"
+
+REDIS_CONTAINER="redis-dev"
+if check_container_exists "$REDIS_CONTAINER"; then
+    if check_container "$REDIS_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$REDIS_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($REDIS_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+
+        if docker exec "$REDIS_CONTAINER" redis-cli ping 2>/dev/null | grep -q PONG; then
+            echo -e "  Redis: ${GREEN}✓ PING OK${NC}"
+        else
+            echo -e "  Redis: ${YELLOW}⚠ Not responding${NC}"
+        fi
+    else
+        STATUS_INFO=$(get_container_status "$REDIS_CONTAINER")
+        STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+        UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($REDIS_CONTAINER)"
+        echo "  Status: $STATUS"
+        echo "  Started: $UPTIME"
+    fi
+    echo "  Port: 6379 (localhost)"
+else
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($REDIS_CONTAINER)"
+    echo "  Status: Does not exist (run redis_demo/start-redis.sh)"
+    echo "  Port: 6379 (localhost)"
+fi
+
+echo ""
+
+# ============================================================================
 # CHECK PGADMIN
 # ============================================================================
 

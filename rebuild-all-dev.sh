@@ -3,7 +3,8 @@
 # rebuild-all-dev.sh - Script to rebuild all development Docker images from scratch
 #
 # This script performs clean rebuilds of all development services:
-# 1. Database (db_demo) - PostgreSQL (no rebuild needed, uses official image)
+# 1. Database (db_demo) - PostgreSQL (no rebuild, official image)
+#    Redis (redis_demo) - same, official redis:7-alpine
 # 2. Backend (be_demo) - ASP.NET Core API
 # 3. Frontend (fe_demo) - React + Vite
 # 4. Admin (admin_demo) - React + Vite admin panel
@@ -111,8 +112,7 @@ echo "   ✅ Admin (admin_demo)"
 echo "   ✅ AI Demo (ai_demo)"
 echo "   ✅ Logger Demo (logger_demo)"
 echo ""
-echo "💡 Note: Database (db_demo) uses official PostgreSQL image"
-echo "   and doesn't need rebuilding."
+echo "💡 Note: db_demo and redis_demo use official images — no rebuild."
 echo ""
 echo "💡 Note: Images were built but containers were NOT started."
 echo "   Use ./start-all-dev.sh to start containers with the new images."

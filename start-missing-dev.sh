@@ -11,6 +11,7 @@ echo "🔍 Checking which containers are missing..."
 MISSING=()
 
 docker ps -a --format '{{.Names}}' | grep -q '^postgres-dev$' || MISSING+=(postgres)
+docker ps -a --format '{{.Names}}' | grep -q '^redis-dev$' || MISSING+=(redis)
 docker ps -a --format '{{.Names}}' | grep -q '^pgadmin-dev$' || MISSING+=(pgadmin)
 docker ps -a --format '{{.Names}}' | grep -qE '^be-demo-dev$|^be-demo-api$' || MISSING+=(backend)
 docker ps -a --format '{{.Names}}' | grep -q '^admin-demo-dev$' || MISSING+=(admin)
@@ -18,7 +19,7 @@ docker ps -a --format '{{.Names}}' | grep -q '^seq-dev$' || MISSING+=(seq)
 
 if [ ${#MISSING[@]} -eq 0 ]; then
   echo "✅ All required containers already exist. Starting any stopped ones..."
-  docker start postgres-dev pgadmin-dev 2>/dev/null || true
+  docker start postgres-dev redis-dev pgadmin-dev 2>/dev/null || true
   docker start seq-dev be-demo-dev admin-demo-dev 2>/dev/null || true
   echo "Done. Run ./status-all.sh to check."
   exit 0
@@ -40,6 +41,17 @@ if [[ " ${MISSING[*]} " =~ " postgres " ]] || [[ " ${MISSING[*]} " =~ " pgadmin 
     [ "$i" -eq 30 ] && { echo "   ❌ PostgreSQL did not become ready."; exit 1; }
     sleep 1
   done
+  echo ""
+fi
+
+# 1b. Redis
+if [[ " ${MISSING[*]} " =~ " redis " ]]; then
+  echo "📦 Starting Redis (redis_demo)..."
+  if [ -f "redis_demo/start-redis.sh" ]; then
+    (cd redis_demo && ./start-redis.sh)
+  else
+    (cd redis_demo && docker-compose up -d)
+  fi
   echo ""
 fi
 
