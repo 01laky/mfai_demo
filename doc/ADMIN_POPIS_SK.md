@@ -276,7 +276,53 @@ Dostupný z bočného menu pod položkou **AI Chat**.
 
 ---
 
-## 10. Predvolené prihlasovacie údaje
+## 10. Albumy (API)
+
+Backend poskytuje plnohodnotný REST API pre správu albumov. Album je entita vytvorená používateľom s väzbami na faces, komentáre a lajky.
+
+### Dátový model
+
+- **Album** – `title`, `description`, `albumType` (Public/Private/Paid), `mediaType` (Image/Video), `creatorId`
+- **AlbumFace** – väzba album ↔ face (many-to-many)
+- **AlbumComment** – komentáre k albumom (`content`, `userId`, `albumId`)
+- **AlbumLike** – unikátny lajk per user per album
+
+### API endpointy
+
+**Albumy:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums` | Všetky viditeľné albumy |
+| `GET` | `/api/albums/{id}` | Detail albumu |
+| `GET` | `/api/albums/user/{userId}` | Albumy používateľa |
+| `POST` | `/api/albums` | Vytvoriť album |
+| `PUT` | `/api/albums/{id}` | Upraviť album (len creator) |
+| `DELETE` | `/api/albums/{id}` | Zmazať album (len creator) |
+
+**Komentáre:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums/{id}/comments` | Komentáre albumu |
+| `POST` | `/api/albums/{id}/comments` | Pridať komentár |
+| `PUT` | `/api/albums/{id}/comments/{cid}` | Upraviť komentár |
+| `DELETE` | `/api/albums/{id}/comments/{cid}` | Zmazať komentár |
+
+**Lajky:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/albums/{id}/likes` | Zoznam lajkov |
+| `POST` | `/api/albums/{id}/likes` | Lajknúť album |
+| `DELETE` | `/api/albums/{id}/likes` | Odlajknúť album |
+
+### Viditeľnosť
+
+- **Public** – vidí každý prihlásený používateľ
+- **Private** – vidí len tvorca
+- **Paid** – zatiaľ len tvorca (pripravené na budúci paywall)
+
+---
+
+## 11. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`

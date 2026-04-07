@@ -284,7 +284,47 @@ Chatové rozhranie pre konverzáciu s AI asistentom.
 
 ---
 
-## 15. Predvolené prihlasovacie údaje
+## 15. Albumy
+
+Každý používateľ môže vytvárať vlastné albumy. Album je entita s nasledujúcimi vlastnosťami:
+
+### Vytvorenie albumu
+
+- **Názov** (povinný, max 200 znakov)
+- **Popis** (voliteľný, max 2000 znakov)
+- **Typ albumu**:
+  - **Public** – viditeľný pre všetkých používateľov
+  - **Private** – viditeľný len pre tvorcu
+  - **Paid** – zatiaľ viditeľný len pre tvorcu (v budúcnosti paywall)
+- **Typ médií**: Image alebo Video
+- **Priradenie k Faces** – multiselect s výberom faces, ku ktorým album patrí (defaultne všetky)
+
+### Viditeľnosť
+
+- **Public albumy** vidí každý prihlásený používateľ.
+- **Private a Paid albumy** vidí len ich tvorca.
+- Na profile iného používateľa sa zobrazujú len jeho public albumy.
+
+### Komentáre
+
+- Ku každému albumu (podľa viditeľnosti) je možné pridávať komentáre.
+- Komentár môže upraviť alebo zmazať len jeho autor.
+
+### Lajky
+
+- Používateľ môže album lajknúť (max 1 lajk na album).
+- Lajk je možné zrušiť (unlike).
+- Pri detaile albumu sa zobrazuje počet lajkov a či ho aktuálny používateľ lajkol.
+
+### Zoznam albumov
+
+- `GET /api/albums` – všetky viditeľné albumy (public + vlastné private/paid)
+- `GET /api/albums/user/{userId}` – albumy konkrétneho používateľa
+- Detail albumu obsahuje: počet lajkov, počet komentárov, priradené faces
+
+---
+
+## 16. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`
