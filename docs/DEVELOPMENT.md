@@ -1,6 +1,6 @@
-# Development — monorepo, CI, Node, errors
+# Development — monorepo, CI, Node, Python, errors
 
-This document covers **how we build and test** `_mfai_demo` (root repo with submodules / nested apps) and **contracts** shared by FE, admin, and BE.
+This document covers **how we build and test** `_mfai_demo` (root repo with submodules / nested apps) and **contracts** shared by FE, admin, BE, and tooling.
 
 ## Layout
 
@@ -9,30 +9,91 @@ This document covers **how we build and test** `_mfai_demo` (root repo with subm
 | Backend API | `be_demo/` | .NET, EF Core, PostgreSQL |
 | Main frontend | `fe_demo/` | Vite, React, Yarn 4 |
 | Admin UI | `admin_demo/` | Vite, React, Yarn 4 |
+| AI gRPC service | `ai_demo/` | Python 3.11+, gRPC, Ruff |
+| PostgreSQL dev stack | `db_demo/` | Docker Compose |
+| Redis dev stack | `redis_demo/` | Docker Compose |
+| Logger UI (Dozzle) | `logger_demo/` | Docker Compose |
 
-The repository root may aggregate CI; each app also has its own `.github/workflows/ci.yml` when developed standalone.
+The **root** repository runs aggregated CI (see below). Each submodule that ships code also has its own `.github/workflows/ci.yml` for standalone pushes to that repo.
 
-## Node.js
+## Node.js (fe_demo, admin_demo)
 
-- **Version**: `22.14.0` (see `.nvmrc` in `fe_demo`, `admin_demo`, and repo root where present).
+- **Version**: `22.14.0` (`.nvmrc` in repo root, `fe_demo`, and `admin_demo`).
 - **Package manager**: Yarn 4 via Corepack (`packageManager` in each `package.json`).
-- **`engines.node`**: `>=22.14.0` in `fe_demo` and `admin_demo` to align local and CI.
+- **`engines.node`**: `>=22.14.0` in `fe_demo` and `admin_demo`.
 
-Use `nvm use` (or your version manager) before `yarn install`.
+Use `nvm use` (or your version manager) before `yarn install`. Older Node versions cause Vite warnings or failures.
+
+## Python (ai_demo)
+
+- **CI / recommended**: **Python 3.11** (matches `pyproject.toml` target and GitHub Actions).
+- Generated gRPC files (`proto/*_pb2*.py`) are **gitignored**; CI and local dev generate them with:
+
+  ```bash
+  cd ai_demo
+  ./generate_proto.sh
+  ```
+
+  or `python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto`.
+
+- **Lint**: `./lint.sh` (Ruff). **Tests**: after generating protos, `PYTHONPATH=. pytest test_server.py` (no PyTorch required for health-check tests).
 
 ## Git hooks (Husky + commitlint)
 
-- Husky **9** does not use `husky.sh`; hooks call tools directly (e.g. `commit-msg` runs `npx --no -- commitlint --edit "$1"`).
-- Conventional commits are enforced where `commitlint` is configured.
+- Husky **9**: hooks **do not** source `husky.sh`. Use a shebang and direct commands, e.g. `npx --no -- commitlint --edit "$1"`.
+- **fe_demo** and **admin_demo**: Yarn `prepare` → Husky; `commitlint.config.js` (ESM).
+- **be_demo**: run **`yarn install`** in `be_demo/` (Yarn 4 / PnP as in `package.json`) so Husky and commitlint are available; **`commitlint.config.cjs`** + `.husky/commit-msg` runs `yarn exec commitlint` (same rules as FE/admin). **`node_modules/`** is gitignored for edge cases; this repo uses Plug’n’Play (`.pnp.cjs`).
+
+### Commit message rules (all repos with commitlint)
+
+Conventional Commits: **`type(scope): subject`**
+
+| Rule | Detail |
+|------|--------|
+| **type** | One of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
+| **scope** | Recommended, not empty (warning if missing): short area, e.g. `wall`, `fe`, `admin`, `api`, `ci` |
+| **subject** | **lower-case** or **sentence-case**; no trailing period; max **100** chars |
+| **Avoid** | Random **ALL CAPS** acronyms in the subject (e.g. write “ci workflow” not “CI Workflow”) — `subject-case` will fail |
+
+**Examples (valid)**
+
+```text
+feat(wall): add host viewer detection for create button
+fix(admin): show api error text in moderation toasts
+test(api): cover wall list when face is missing
+chore: bump fe_demo submodule pointer
+docs: expand development and ci notes
+```
+
+**Examples (invalid)**
+
+```text
+feat: no scope (warning)
+feat(WALL): WRONG CASE SUBJECT
+fix(api): Ends with period.
+```
 
 ## Continuous integration
 
-Workflows (when present):
+### Root `mfai_demo` — workflow `.github/workflows/ci.yml`
 
-- **`be_demo`**: `dotnet restore`, `dotnet format --verify-no-changes`, build, `dotnet test`.
-- **`fe_demo` / `admin_demo`**: Node from `.nvmrc`, `corepack enable`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`.
+On push/PR to `main` / `master`, with **submodules recursive**:
 
-Root-level CI should check out submodules **recursively** if jobs run inside nested folders.
+| Job | What runs |
+|-----|-----------|
+| **be_demo** | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test` |
+| **fe_demo** | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build` |
+| **admin_demo** | Same pattern with `admin_demo/.nvmrc` |
+| **ai_demo** | Python **3.11**, pip install gRPC + ruff + pytest, **generate protos**, `ruff check` + `ruff format --check`, `pytest test_server.py` |
+| **infra_db_demo** | `docker compose -f db_demo/docker-compose.yml config` |
+| **infra_redis_demo** | `docker compose -f redis_demo/docker-compose.yml config` |
+| **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config` |
+
+Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipeline so every merge is validated against the checked-in submodule tree.
+
+### Submodule-only repos
+
+Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, `logger_demo` includes its own **CI** workflow for development outside the monorepo.
 
 ## API error messages in the browser
 
@@ -43,15 +104,16 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo
 
 **Backend**: many endpoints return `new { error = "..." }` or ProblemDetails; both are covered.
 
-## Testing
+## Testing (quick reference)
 
 | Suite | Command | Notes |
 |--------|---------|--------|
-| BE | `dotnet test` in `be_demo` | Integration tests use `Testing` environment / in-memory DB where configured. |
-| FE | `yarn test` in `fe_demo` | Vitest; includes `apiErrorMessage` unit tests. |
-| Admin | `yarn test` in `admin_demo` | Same pattern as FE. |
+| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. |
+| FE | `yarn test` in `fe_demo` | Vitest. |
+| Admin | `yarn test` in `admin_demo` | Vitest. |
+| AI | `pytest test_server.py` in `ai_demo` | After proto generation; `PYTHONPATH=.` |
 
-Wall ticket API behaviour is documented in [wall-tickets.md](./wall-tickets.md), including automated coverage in `FaceWallTicketsControllerTests.cs`.
+Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
 
 ## Functionality gaps (intentional / backlog)
 
@@ -68,3 +130,4 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
 - [CHAT_ROOMS_TESTING_AND_OPERATIONS.md](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) — chat / rooms operations.
+- [GIT_SUBMODULES_SETUP.md](../GIT_SUBMODULES_SETUP.md) — submodule checkout and updates.
