@@ -322,7 +322,55 @@ Backend poskytuje plnohodnotný REST API pre správu albumov. Album je entita vy
 
 ---
 
-## 11. Predvolené prihlasovacie údaje
+## 11. Blog (API)
+
+Backend poskytuje plné CRUD API pre blogové príspevky vrátane komentárov a lajkov.
+
+### Dátový model
+
+- **Blog** – Id, CreatorId, FaceId (povinný FK na Face), Title, Content (text/HTML), CreatedAt, UpdatedAt
+- **BlogImage** – Id, BlogId, ImageUrl, SortOrder (max 3 per blog)
+- **BlogComment** – Id, BlogId, UserId, Content, CreatedAt, UpdatedAt
+- **BlogLike** – Id, BlogId, UserId, CreatedAt (unikátny pár BlogId+UserId)
+
+### API endpointy
+
+**Blogy:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs?faceId={faceId}` | Zoznam blogov (voliteľný filter podľa face) |
+| `GET` | `/api/blogs/{id}` | Detail blogu |
+| `POST` | `/api/blogs` | Vytvoriť blog (title, content, faceId, imageUrls?) |
+| `PUT` | `/api/blogs/{id}` | Upraviť blog (len creator) |
+| `DELETE` | `/api/blogs/{id}` | Zmazať blog (len creator) |
+
+**Komentáre:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs/{id}/comments` | Komentáre blogu |
+| `POST` | `/api/blogs/{id}/comments` | Pridať komentár |
+| `PUT` | `/api/blogs/{id}/comments/{cid}` | Upraviť komentár (len autor) |
+| `DELETE` | `/api/blogs/{id}/comments/{cid}` | Zmazať komentár (len autor) |
+
+**Lajky:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs/{id}/likes` | Zoznam lajkov |
+| `POST` | `/api/blogs/{id}/likes` | Lajknúť blog |
+| `DELETE` | `/api/blogs/{id}/likes` | Odlajknúť blog |
+
+### Kľúčové vlastnosti
+
+- Blog je povinne priradený k jednej Face (single select, nie multiselect)
+- Obsah je ukladaný ako HTML (z WYSIWYG editora)
+- Maximum 3 obrázkov per blog (vynútené na úrovni controllera)
+- Komentáre a lajky môže pridávať každý prihlásený používateľ
+- Upravovať/mazať blog môže len jeho tvorca
+- Lajk je unikátny per blog per používateľ
+
+---
+
+## 12. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`

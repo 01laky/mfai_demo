@@ -358,7 +358,78 @@ Samostatná stránka na URL `/album/{id}` s nasledujúcimi sekciami:
 
 ---
 
-## 16. Predvolené prihlasovacie údaje
+## 16. Blog
+
+Každý používateľ môže vytvárať blogové príspevky. Blog je entita priradená k jednej konkrétnej Face.
+
+### Vytvorenie a editácia blogu
+
+Kliknutím na ikonu **+** v hlavičke blogového komponentu (Blog, BlogGrid, BlogCarousel) sa otvorí výsuvný panel s formulárom:
+
+- **Názov** (povinný, max 200 znakov)
+- **Face** – povinný výber jednej face (select, nie multiselect)
+- **Obsah** – WYSIWYG editor (react-quill-new) s formátovaním: nadpisy, tučné, kurzíva, zoznamy, citáty, kód, odkazy. Obrázky v obsahu nie sú povolené.
+- **Obrázky** – max 3 URL adries obrázkov pripojených k blogu (pridanie/odoberanie cez URL input)
+
+Panel je bez záložiek – zobrazuje sa len formulár (rovnako ako u albumov). Po uložení sa panel zatvorí.
+
+Pri editácii sa rovnaký formulár otvorí s predvyplnenými hodnotami vrátane HTML obsahu v editore. Editovať môže len tvorca blogu.
+
+### Zobrazenie blogov
+
+Blogy sa zobrazujú v troch variantoch komponentov:
+
+- **Blog** – jeden príspevok
+- **BlogGrid** – stránkovaná mriežka blogov (dynamický výpočet cols×rows podľa veľkosti kontajnera)
+- **BlogCarousel** – horizontálny carousel s navigáciou prev/next a bodkovými indikátormi
+
+Kliknutím na blog kartu v mriežke alebo carouseli sa používateľ presmeruje na **detail blogu**.
+
+### Detail blogu
+
+Samostatná stránka na URL `/blog/{id}` s nasledujúcimi sekciami:
+
+- **Späť** – tlačidlo na návrat
+- **Hlavička** – názov, badge s face, meno tvorcu, dátum vytvorenia
+- **Obrázky** – galéria pripojených obrázkov (max 3)
+- **Obsah** – HTML obsah z WYSIWYG editora (formátovaný text s nadpismi, zoznammi, odkazmi, citátmi)
+- **Akcie** – tlačidlá Edit (otvorí inline formulár s WYSIWYG editorom) a Delete (zmaže blog a presmeruje na zoznam)
+- **Lajky** – tlačidlo srdce s počtom lajkov, klik lajkne/odlajkne
+- **Komentáre** – zoznam komentárov s menom autora a dátumom, formulár na pridanie nového komentára, mazanie vlastných komentárov
+
+### Filtrovanie podľa Face
+
+Blogy sú vždy priradené k jednej Face. API endpoint `GET /api/blogs?faceId={faceId}` umožňuje filtrovať blogy podľa vybranej face.
+
+### API endpointy (backend)
+
+**Blogy:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs?faceId={faceId}` | Zoznam blogov (voliteľný filter podľa face) |
+| `GET` | `/api/blogs/{id}` | Detail blogu |
+| `POST` | `/api/blogs` | Vytvoriť blog |
+| `PUT` | `/api/blogs/{id}` | Upraviť blog (len creator) |
+| `DELETE` | `/api/blogs/{id}` | Zmazať blog (len creator) |
+
+**Komentáre:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs/{id}/comments` | Komentáre blogu |
+| `POST` | `/api/blogs/{id}/comments` | Pridať komentár |
+| `PUT` | `/api/blogs/{id}/comments/{cid}` | Upraviť komentár |
+| `DELETE` | `/api/blogs/{id}/comments/{cid}` | Zmazať komentár |
+
+**Lajky:**
+| Metóda | Endpoint | Popis |
+|--------|----------|-------|
+| `GET` | `/api/blogs/{id}/likes` | Zoznam lajkov |
+| `POST` | `/api/blogs/{id}/likes` | Lajknúť blog |
+| `DELETE` | `/api/blogs/{id}/likes` | Odlajknúť blog |
+
+---
+
+## 17. Predvolené prihlasovacie údaje
 
 - **Email**: `admin@admin.com`
 - **Heslo**: `admin`
