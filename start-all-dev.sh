@@ -73,6 +73,36 @@ echo "    Starting backend and seq with root docker-compose..."
 docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq > /dev/null 2>&1 &
 echo "    ✅ Backend startup launched"
 
+# Redis (redis_demo) runs on its own bridge; BE uses hostname redis-dev on mfai_demo_dev-network.
+# Compose štartuje na pozadí — opakovane čakáme na sieť + redis-dev a skúšame connect, kým to nevyjde.
+echo "    Attaching redis-dev to mfai_demo_dev-network (retry until ready)..."
+_redis_net_ok=0
+for _i in {1..90}; do
+    if ! docker network inspect mfai_demo_dev-network >/dev/null 2>&1; then
+        sleep 1
+        continue
+    fi
+    if ! docker ps --format '{{.Names}}' | grep -q '^redis-dev$'; then
+        sleep 1
+        continue
+    fi
+    _out=$(docker network connect mfai_demo_dev-network redis-dev 2>&1) || true
+    if [ -z "$_out" ]; then
+        _redis_net_ok=1
+        echo "    ✅ redis-dev connected to dev network"
+        break
+    fi
+    if echo "$_out" | grep -qi 'already exists'; then
+        _redis_net_ok=1
+        echo "    ✅ redis-dev already on dev network"
+        break
+    fi
+    sleep 1
+done
+if [ "$_redis_net_ok" -eq 0 ]; then
+    echo "    ⚠️  Could not attach redis-dev to mfai_demo_dev-network after 90s (is redis_demo running?)"
+fi
+
 # ============================================================================
 # START FRONTEND (React + Vite)
 # ============================================================================
