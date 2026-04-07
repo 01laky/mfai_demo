@@ -8,7 +8,7 @@
 # - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
 # - Database (db_demo) - infrastructure only, no tests
 # - Redis (redis_demo) - infrastructure only, no tests
-# - AI Demo (ai_demo) - infrastructure only, no tests
+# - AI Demo (ai_demo) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
 # 
 # The script:
 # - Parses test output from different test frameworks (.NET, Vitest, Cypress)
@@ -17,6 +17,9 @@
 # - Handles repositories that don't have tests gracefully
 # - For Cypress e2e tests: automatically starts DB, BE, FE if not running
 # 
+# Environment:
+#   SKIP_CYPRESS=1  Skip Cypress e2e (default in ci-local.sh / monorepo CI job)
+#
 # Usage: ./test-all.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -151,7 +154,7 @@ if [ -d "fe_demo" ] && [ -f "fe_demo/package.json" ]; then
     fi
     
     echo "📦 Running Vitest tests..."
-    TEST_OUTPUT=$(yarn test --run 2>&1 || true)
+    TEST_OUTPUT=$(yarn test 2>&1 || true)
     TEST_EXIT_CODE=$?
     
     # Parse Vitest output using Python for better regex support
@@ -202,7 +205,10 @@ print(f'{total}|{passed}|{failed}')
     E2E_FAILED=0
     E2E_SERVICES_STARTED=false
     
-    if [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
+    if [ "${SKIP_CYPRESS:-}" = "1" ]; then
+        echo ""
+        echo "⏭️  Cypress e2e skipped (SKIP_CYPRESS=1)"
+    elif [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
         echo ""
         echo "📦 Running Cypress e2e tests..."
         
@@ -418,6 +424,9 @@ else:
         if [ "$E2E_TOTAL" -gt 0 ]; then
             TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, $E2E_TOTAL e2e)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, $E2E_TOTAL e2e)"
+        elif [ "${SKIP_CYPRESS:-}" = "1" ] && { [ -f "cypress.config.ts" ] || [ -d "cypress" ]; }; then
+            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped via SKIP_CYPRESS)")
+            echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped via SKIP_CYPRESS)"
         elif [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
             # Cypress is installed but tests were skipped (frontend not running)
             TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped - frontend not running)")
@@ -459,7 +468,7 @@ if [ -d "admin_demo" ] && [ -f "admin_demo/package.json" ]; then
     fi
     
     echo "📦 Running Vitest tests..."
-    TEST_OUTPUT=$(yarn test --run 2>&1 || true)
+    TEST_OUTPUT=$(yarn test 2>&1 || true)
     TEST_EXIT_CODE=$?
     
     # Parse Vitest output using Python for better regex support
@@ -511,6 +520,36 @@ else
     TEST_RESULTS+=("⏭️  admin_demo: No tests found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Admin: No tests found, skipping"
+fi
+
+echo ""
+
+# ============================================================================
+# TEST AI (ai_demo) — same as CI: verify-ci.sh
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing AI service (ai_demo)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -d "ai_demo" ] && [ -f "ai_demo/verify-ci.sh" ]; then
+    chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
+    if (cd ai_demo && ./verify-ci.sh); then
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        TEST_RESULTS+=("✅ ai_demo: verify-ci (ruff + pytest) passed")
+        echo "✅ ai_demo: verify-ci passed"
+    else
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        TEST_RESULTS+=("❌ ai_demo: verify-ci failed")
+        echo "❌ ai_demo: verify-ci failed"
+    fi
+else
+    TEST_RESULTS+=("⏭️  ai_demo: verify-ci.sh not found, skipping")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  ai_demo: not found or no verify-ci.sh, skipping"
 fi
 
 echo ""

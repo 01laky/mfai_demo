@@ -25,7 +25,7 @@ echo "════════════════════════�
 echo "  Building Backend (be_demo)"
 echo "═══════════════════════════════════════════════════════════"
 if [ -d "be_demo" ]; then
-  (cd be_demo && dotnet build) || FAILED=1
+  (cd be_demo && dotnet build -c Release) || FAILED=1
 else
   echo "⚠️  be_demo not found, skipping"
 fi
@@ -53,16 +53,13 @@ else
 fi
 echo ""
 
-# AI Demo - Python, verify deps install
+# AI Demo — same checks as CI (ruff + pytest, no full torch stack)
 echo "═══════════════════════════════════════════════════════════"
-echo "  Verifying AI Demo (ai_demo)"
+echo "  Verifying AI Demo (ai_demo / verify-ci.sh)"
 echo "═══════════════════════════════════════════════════════════"
 if [ -d "ai_demo" ]; then
-  if command -v python3 &>/dev/null; then
-    (cd ai_demo && python3 -m pip install -q -r requirements.txt 2>/dev/null) && echo "✅ ai_demo: dependencies OK" || echo "⚠️  ai_demo: pip install had issues (optional for Docker builds)"
-  else
-    echo "⚠️  python3 not found, ai_demo skip (use Docker for ai_demo)"
-  fi
+  chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
+  (cd ai_demo && ./verify-ci.sh) || FAILED=1
 else
   echo "⚠️  ai_demo not found, skipping"
 fi

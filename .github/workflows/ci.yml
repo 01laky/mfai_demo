@@ -88,8 +88,8 @@ jobs:
 
       - name: Install tooling and gRPC deps (no torch)
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff pytest grpcio==1.60.1 grpcio-tools==1.60.1 protobuf==4.25.1 grpcio-testing==1.60.1
+          python -m pip install --upgrade pip setuptools wheel
+          pip install ruff pytest grpcio==1.68.1 grpcio-tools==1.68.1 protobuf==5.28.3 grpcio-testing==1.68.1
 
       - name: Generate protobuf / gRPC stubs
         run: python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto
@@ -136,3 +136,40 @@ jobs:
 
       - name: Validate docker compose
         run: docker compose -f logger_demo/docker-compose.dev.yml config
+
+  monorepo_scripts:
+    name: monorepo (ci-local.sh)
+    runs-on: ubuntu-latest
+    env:
+      SKIP_CYPRESS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: fe_demo/.nvmrc
+
+      - run: corepack enable
+
+      - name: Yarn install (fe_demo + admin_demo)
+        run: |
+          (cd fe_demo && yarn install --immutable)
+          (cd admin_demo && yarn install --immutable)
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ci-local.sh lint-all.sh build-all.sh test-all.sh
+          chmod +x be_demo/lint.sh fe_demo/lint.sh admin_demo/lint.sh ai_demo/lint.sh ai_demo/verify-ci.sh
+
+      - name: Run ci-local.sh (lint-all → build-all → test-all)
+        run: ./ci-local.sh

@@ -84,12 +84,29 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | **be_demo** | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test` |
 | **fe_demo** | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build` |
 | **admin_demo** | Same pattern with `admin_demo/.nvmrc` |
-| **ai_demo** | Python **3.11**, pip install gRPC + ruff + pytest, **generate protos**, `ruff check` + `ruff format --check`, `pytest test_server.py` |
+| **ai_demo** | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py` |
 | **infra_db_demo** | `docker compose -f db_demo/docker-compose.yml config` |
 | **infra_redis_demo** | `docker compose -f redis_demo/docker-compose.yml config` |
 | **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config` |
+| **monorepo_scripts** | Runs **`./ci-local.sh`**: `lint-all.sh` → `build-all.sh` → `test-all.sh` (with `SKIP_CYPRESS=1`) |
+
+The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `lint-all.sh` or `verify-ci.sh` drifts from CI.
 
 Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipeline so every merge is validated against the checked-in submodule tree.
+
+## Root shell scripts (monorepo)
+
+Run from repository root (submodules checked out). Make executable if needed: `chmod +x *.sh **/lint.sh ai_demo/verify-ci.sh`.
+
+| Script | Purpose |
+|--------|---------|
+| **`ci-local.sh`** | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. |
+| **`lint-all.sh`** | Calls `fe_demo`, `be_demo`, `admin_demo`, `ai_demo` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
+| **`build-all.sh`** | `be_demo`: `dotnet build -c Release`; `fe_demo` / `admin_demo`: `yarn build`; `ai_demo`: `./verify-ci.sh`. |
+| **`test-all.sh`** | `dotnet test` (BE), `yarn test` (FE/admin), **`ai_demo/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`. |
+| **`status-all.sh`** | Docker / HTTP status of dev containers (does not run builds). |
+
+**`ai_demo/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **ai_demo** GitHub Actions job (no PyTorch).
 
 ### Submodule-only repos
 
