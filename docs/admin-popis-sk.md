@@ -343,7 +343,7 @@ Po **POST** `/api/reels` sa do Redis zaradí okamžitá úloha `reel.postprocess
 
 ### Redis (submodule `redis_demo`)
 
-Ako **`db_demo`**: samostatný submodule s vlastným `docker-compose.yml`. `be-demo-dev` má **`Redis__Configuration=host.docker.internal:6379`** a `extra_hosts` pre Linux. Kľúče: `bedemo:jobs:ready`, `bedemo:jobs:delayed`. Bez Redis / prázdna konfigurácia / **Testing** → NoOp. `doc/REDIS_SUBREPO_DEV_SK.md`, `redis_demo/README.md`.
+Ako **`db_demo`**: samostatný submodule s vlastným `docker-compose.yml`. `be-demo-dev` má **`Redis__Configuration=host.docker.internal:6379`** a `extra_hosts` pre Linux. Kľúče: `bedemo:jobs:ready`, `bedemo:jobs:delayed`. Bez Redis / prázdna konfigurácia / **Testing** → NoOp. [`redis-subrepo-dev-sk.md`](./redis-subrepo-dev-sk.md), `redis_demo/README.md`.
 
 ---
 

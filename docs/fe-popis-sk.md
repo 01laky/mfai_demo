@@ -436,7 +436,7 @@ Po vytvorení reelu API zaradí do Redis:
 
 Implementácia: **StackExchange.Redis** – zoznam `bedemo:jobs:ready` (FIFO) a zoradená množina `bedemo:jobs:delayed` (score = čas spustenia UTC v ms). Hostovaná služba `RedisJobWorkerService` v cykle presúva splatné delayed joby do ready fronty a spracováva ich (aktuálne len logovanie).
 
-Redis je git submodule **`redis_demo`** (rovnaký model ako **`db_demo`**): vlastný `docker-compose.yml`, skripty `start-redis.sh` atď. Kontajner `be-demo-dev` sa pripája na **`host.docker.internal:6379`**. Klon: `git submodule update --init redis_demo`. Podrobnosti: `doc/REDIS_SUBREPO_DEV_SK.md`. Ak Redis nie je dostupný alebo je `Redis:Configuration` prázdny (appsettings / Testing), používa sa **NoOp** fronta.
+Redis je git submodule **`redis_demo`** (rovnaký model ako **`db_demo`**): vlastný `docker-compose.yml`, skripty `start-redis.sh` atď. Kontajner `be-demo-dev` sa pripája na **`host.docker.internal:6379`**. Klon: `git submodule update --init redis_demo`. Podrobnosti: [`redis-subrepo-dev-sk.md`](./redis-subrepo-dev-sk.md). Ak Redis nie je dostupný alebo je `Redis:Configuration` prázdny (appsettings / Testing), používa sa **NoOp** fronta.
 
 ---
 

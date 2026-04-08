@@ -57,7 +57,7 @@ _mfai_demo/
 - HTTP: `8000`
 - HTTPS: `8001`
 
-**Documentation**: See [`be_demo/README.md`](./be_demo/README.md) for detailed documentation. OAuth2, face roles a Stories over **curl**: [`doc/API_OAUTH_STORIES_CURL.md`](./doc/API_OAUTH_STORIES_CURL.md).
+**Documentation**: Index v [`docs/README.md`](./docs/README.md). Backend: [`be_demo/README.md`](./be_demo/README.md). OAuth2, face roles a Stories (**curl**): [`docs/api-oauth-stories-curl.md`](./docs/api-oauth-stories-curl.md).
 
 ### Frontend Application (`fe_demo`)
 
@@ -461,7 +461,7 @@ Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Passwo
 
 ### Redis (job queue)
 
-Submodule **`redis_demo`** (ako `db_demo`): `docker-compose.yml` + `start-redis.sh`. Backend v root compose používa **`host.docker.internal:6379`**. Spustenie: `./start-all-dev.sh` alebo `cd redis_demo && ./start-redis.sh`. Podrobnosti: [`doc/REDIS_SUBREPO_DEV_SK.md`](./doc/REDIS_SUBREPO_DEV_SK.md), [`redis_demo/README.md`](./redis_demo/README.md).
+Submodule **`redis_demo`** (ako `db_demo`): `docker-compose.yml` + `start-redis.sh`. Backend v root compose používa **`host.docker.internal:6379`**. Spustenie: `./start-all-dev.sh` alebo `cd redis_demo && ./start-redis.sh`. Podrobnosti: [`docs/redis-subrepo-dev-sk.md`](./docs/redis-subrepo-dev-sk.md), [`redis_demo/README.md`](./redis_demo/README.md).
 
 ### Port Mapping
 

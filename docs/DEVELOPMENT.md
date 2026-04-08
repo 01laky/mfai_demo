@@ -2,6 +2,11 @@
 
 This document covers **how we build and test** `_mfai_demo` (root repo with submodules / nested apps) and **contracts** shared by FE, admin, BE, and tooling.
 
+## Documentation layout
+
+- **Single folder**: all guides live in **`docs/`** (see [**docs/README.md**](./README.md) for a full index).
+- Historical **`doc/`** at repo root was **removed**; files were moved into `docs/` with stable kebab-case names (e.g. `api-oauth-stories-curl.md`, `redis-subrepo-dev-sk.md`).
+
 ## Layout
 
 | Area | Path | Stack |
@@ -132,6 +137,34 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo
 
 Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
 
+## Face home grid & demo content (FE + BE)
+
+The **page grid** on a face home page (`PageGridLayout` + `fe_demo/src/components/grid/*`) supports **single**, **grid**, and **carousel** display modes per component type (Ad, Album, Blog, ChatRoom, UserProfile, Story, Reel).
+
+### Data sources (authenticated, scoped by selected face)
+
+| Type | Source | Notes |
+|------|--------|--------|
+| **Ad** | `GET /api/faces/{faceId}/wall-tickets` (paged; FE may fetch multiple pages) | Listing-style UI; image is a **placeholder** (picsum) — tickets have no image URL. |
+| **Album** | `GET /api/Albums?faceId=` | Cover is placeholder by album id; album has no cover field on API. |
+| **Blog** | `GET /api/Blogs?faceId=` | Uses first blog image when present. |
+| **Chat room** | `GET /api/faces/{faceId}/chat-rooms` | Single tile: first room or `boundChatRoomId` from grid JSON. |
+| **User profile** | `GET /api/faces/{faceId}/profiles` (paged; FE aggregates pages) | Directory lists **non-host** face roles; links use `/{faceIndex}/profile/{userId}`. |
+| **Story** | `GET /api/stories?faceId=` | Published, non-expired, targeted to face; links to `/{faceIndex}/stories`. |
+| **Reel** | `GET /api/Reels?faceId=` | Standard reel list filter. |
+
+**Pagination**: grid/carousel components compute **items per page** from container size; **`ComponentBlock`** footer prev/next is **wired** via `page` / `onPageChange` from `PageGridLayout` for all modes that declare a footer.
+
+### Database seeding (`DatabaseSeeder`)
+
+After **`SeedUsersAsync`** (demo `@demo.com` users), **`SeedFaceGridContentAsync`** runs (non-fatal on failure):
+
+- For **each** demo user and **each** face, ensures **5** items per content class: wall tickets, albums (+ `AlbumFace`), blogs (+ image), reels (+ `ReelFace`), **published** stories (+ `StoryFace` + image), `FaceChatRoom`.
+- **Regular** seeded users (`user01@demo.com` …) are normalized to **`FACE_USER`** per face (not `FACE_HOST`) so the **profile directory** is populated; **admins** stay **`FACE_HOST`** for moderation semantics.
+- Logic is **idempotent** (counts per user+face, fills up to 5).
+
+Implementation: `be_demo/BeDemo.Api/Scripts/DatabaseSeeder.cs`; invoked from `Program.cs` after user seed in non-Testing environments.
+
 ## Functionality gaps (intentional / backlog)
 
 Not implemented in this baseline (see also **Future** in [wall-tickets.md](./wall-tickets.md)):
@@ -145,6 +178,10 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 
 ## Related docs
 
+- [**docs/README.md**](./README.md) — **full documentation index** (EN + SK + curl).
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
 - [CHAT_ROOMS_TESTING_AND_OPERATIONS.md](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) — chat / rooms operations.
+- [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.
+- [redis-subrepo-dev-sk.md](./redis-subrepo-dev-sk.md) — Redis submodule (SK).
+- [fe-popis-sk.md](./fe-popis-sk.md) / [admin-popis-sk.md](./admin-popis-sk.md) — FE / admin overviews (SK).
 - [GIT_SUBMODULES_SETUP.md](../GIT_SUBMODULES_SETUP.md) — submodule checkout and updates.
