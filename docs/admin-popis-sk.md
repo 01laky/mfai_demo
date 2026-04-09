@@ -10,9 +10,10 @@ Aplikácia je dostupná na adrese **http://localhost:8082**.
 
 ## 1. Prihlásenie
 
-Admin vidí jednoduchý prihlasovací formulár:
+Admin vidí prihlasovací formulár:
 - **Email** (povinný, validný formát)
 - **Heslo** (min. 4 znaky)
+- **„Zostať trvalo prihlásený“** — voliteľné; ak je zaškrtnuté, API vydá **dlhšie platný JWT** (rovnaký mechanizmus ako vo `fe_demo`). Podrobnosti a význam konfigurácie: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
 - Tlačidlo **Prihlásiť sa**
 
 Po úspešnom prihlásení sa admin presunie na Nástenku. Pri neúspechu sa zobrazí chybová hláška.

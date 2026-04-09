@@ -25,12 +25,13 @@ Po úspešnej registrácii sa zobrazí oznámenie a používateľ je presmerovan
 Prihlasovací formulár obsahuje:
 - **Email** (povinný)
 - **Heslo** (min. 4 znaky)
+- **Zaškrtávacie pole „Zostať trvalo prihlásený“** — ak je zaškrtnuté, API vydá JWT s **dlhšou platnosťou** (konfigurácia `Jwt:ExpiresInMinutesRememberMe`); ak nie, platí kratšia relácia (`Jwt:ExpiresInMinutes`). Ide o rovnaký typ tokenu v `localStorage`, líši sa len čas v nároku `exp`. Technický rozbor: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
 
 Po úspešnom prihlásení sa používateľ dostane na domovskú stránku aktuálnej face.
 
 ### Automatické odhlásenie
 
-Ak platnosť prihlásenia vyprší, aplikácia používateľa automaticky odhlási a presmeruje na prihlásenie s hláškou „Platnosť prihlásenia vypršala".
+Ak **vyprší platnosť JWT** (nárok `exp`), aplikácia vyčistí uložený token a používateľ uvidí hlášku o vypršanej relácii; API už nebude requesty s týmto tokenom akceptovať. Periódická kontrola beží aj na pozadí (cca každých 30 s). Viac v [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
 
 ---
 

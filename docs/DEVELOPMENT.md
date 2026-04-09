@@ -24,7 +24,7 @@ The **root** repository runs aggregated CI (see below). Each submodule that ship
 ## Node.js (fe_demo, admin_demo)
 
 - **Version**: `22.14.0` (`.nvmrc` in repo root, `fe_demo`, and `admin_demo`).
-- **Package manager**: Yarn 4 via Corepack (`packageManager` in each `package.json`).
+- **Package manager**: **Yarn 4** via Corepack (`packageManager` in each `package.json`). Do **not** use `npm` or `npx` for `fe_demo` / `admin_demo` (install, scripts, hooks, Docker) — use `yarn` / `yarn exec` / `yarn run` instead.
 - **`engines.node`**: `>=22.14.0` in `fe_demo` and `admin_demo`.
 
 Use `nvm use` (or your version manager) before `yarn install`. Older Node versions cause Vite warnings or failures.
@@ -45,7 +45,7 @@ Use `nvm use` (or your version manager) before `yarn install`. Older Node versio
 
 ## Git hooks (Husky + commitlint)
 
-- Husky **9**: hooks **do not** source `husky.sh`. Use a shebang and direct commands, e.g. `npx --no -- commitlint --edit "$1"`.
+- Husky **9**: hooks **do not** source `husky.sh`. Use a shebang and direct commands, e.g. `yarn exec commitlint --edit "$1"` (same for `lint-staged`).
 - **fe_demo** and **admin_demo**: Yarn `prepare` → Husky; `commitlint.config.js` (ESM).
 - **be_demo**: run **`yarn install`** in `be_demo/` (Yarn 4 / PnP as in `package.json`) so Husky and commitlint are available; **`commitlint.config.cjs`** + `.husky/commit-msg` runs `yarn exec commitlint` (same rules as FE/admin). **`node_modules/`** is gitignored for edge cases; this repo uses Plug’n’Play (`.pnp.cjs`).
 
@@ -117,6 +117,20 @@ Run from repository root (submodules checked out). Make executable if needed: `c
 
 Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, `logger_demo` includes its own **CI** workflow for development outside the monorepo.
 
+## Authentication, JWT, and “stay signed in” (`rememberMe`)
+
+**Purpose:** Users log in through **`POST /api/oauth2/token`** (password grant). The optional **`rememberMe`** flag does **not** create a separate session type — it only selects a **longer JWT lifetime** from configuration (`Jwt:ExpiresInMinutesRememberMe` vs `Jwt:ExpiresInMinutes`). Both **`fe_demo`** and **`admin_demo`** store the access token in **`localStorage`**, decode **`exp`** in **`jwtUtils.isTokenExpired`**, and clear storage when the token is invalid so the UI matches API **401** behaviour.
+
+**Why it matters:** Misunderstanding `rememberMe` leads to wrong ops expectations (e.g. assuming refresh tokens work end-to-end). In this codebase the **refresh_token grant is not implemented** on the server; persistent login relies on a **long-lived access JWT** when the user checks “stay signed in”.
+
+**Detailed guides (tables, file map, curl, tests):**
+
+- English: [**authentication-and-sessions.md**](./authentication-and-sessions.md)
+- Slovenčina: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md)
+- Curl register/token (includes `rememberMe` example): [**api-oauth-stories-curl.md**](./api-oauth-stories-curl.md)
+
+**Tests (auth slice):** `BeDemo.Api.Tests/OAuth2RememberMeTests.cs`; `fe_demo` / `admin_demo` — `src/utils/__tests__/jwtUtils.test.ts`, `src/hooks/api/__tests__/authTokenRequest.test.ts`.
+
 ## API error messages in the browser
 
 User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo`: `src/utils/apiErrorMessage.ts`):
@@ -130,9 +144,9 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo
 
 | Suite | Command | Notes |
 |--------|---------|--------|
-| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. |
-| FE | `yarn test` in `fe_demo` | Vitest. |
-| Admin | `yarn test` in `admin_demo` | Vitest. |
+| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. Includes **`OAuth2RememberMeTests`** for JWT TTL vs `rememberMe`. |
+| FE | `yarn test` in `fe_demo` | Vitest. Auth-related: **`jwtUtils`**, **`authTokenRequest`**. |
+| Admin | `yarn test` in `admin_demo` | Vitest. Same auth unit tests as FE pattern. |
 | AI | `pytest test_server.py` in `ai_demo` | After proto generation; `PYTHONPATH=.` |
 
 Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
@@ -179,6 +193,8 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 ## Related docs
 
 - [**docs/README.md**](./README.md) — **full documentation index** (EN + SK + curl).
+- [authentication-and-sessions.md](./authentication-and-sessions.md) — **EN:** login, JWT, `rememberMe`, config, FE/admin, tests, security.
+- [autentifikacia-a-relacie-sk.md](./autentifikacia-a-relacie-sk.md) — **SK:** rovnaká náplň podrobne.
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
 - [CHAT_ROOMS_TESTING_AND_OPERATIONS.md](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) — chat / rooms operations.
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.

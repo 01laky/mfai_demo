@@ -72,13 +72,13 @@ Configuration: `commitlint.config.js`
 Run lint-staged manually:
 
 ```bash
-npx lint-staged
+yarn exec lint-staged
 ```
 
 Validate commit message:
 
 ```bash
-echo "feat(auth): add login" | npx commitlint
+echo "feat(auth): add login" | yarn exec commitlint
 ```
 
 ### Skip Hooks (Not Recommended)

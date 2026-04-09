@@ -98,7 +98,7 @@
 ### 🔒 Security
 - ⚠️ **Dependabot** - No automated dependency updates
 - **Recommendation**: Add `.github/dependabot.yml` for:
-  - npm/yarn dependency updates
+  - Yarn dependency updates (use Yarn, not npm, for JS apps in this repo)
   - Docker image updates
   - GitHub Actions updates
 

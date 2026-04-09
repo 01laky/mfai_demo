@@ -57,7 +57,7 @@ _mfai_demo/
 - HTTP: `8000`
 - HTTPS: `8001`
 
-**Documentation**: Index v [`docs/README.md`](./docs/README.md). Backend: [`be_demo/README.md`](./be_demo/README.md). OAuth2, face roles a Stories (**curl**): [`docs/api-oauth-stories-curl.md`](./docs/api-oauth-stories-curl.md).
+**Documentation**: Index v [`docs/README.md`](./docs/README.md). Backend: [`be_demo/README.md`](./be_demo/README.md). **Prihlásenie, JWT, „zostať prihlásený“:** [`docs/autentifikacia-a-relacie-sk.md`](./docs/autentifikacia-a-relacie-sk.md) / EN [`docs/authentication-and-sessions.md`](./docs/authentication-and-sessions.md). OAuth2, face roles a Stories (**curl**): [`docs/api-oauth-stories-curl.md`](./docs/api-oauth-stories-curl.md).
 
 ### Frontend Application (`fe_demo`)
 

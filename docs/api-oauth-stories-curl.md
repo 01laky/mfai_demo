@@ -81,7 +81,30 @@ Odpoveď pri úspechu obsahuje napr.:
 
 Chyby: `401` s `error` / `errorDescription` (OAuth2 error objekt), alebo `503` ak databáza nie je pripravená.
 
+### 4.1 Dlhšia platnosť tokenu — `rememberMe`
+
+**Význam:** Voliteľné pole **`rememberMe: true`** v tele password grantu povie API, aby vydalo JWT s dlhšou životnosťou podľa **`Jwt:ExpiresInMinutesRememberMe`** v `appsettings.json`. Ak pole **vynecháš** alebo dáš **`false`**, použije sa **`Jwt:ExpiresInMinutes`** (krátka relácia). Nie je to samostatný typ relácie — len iný čas v nároku **`exp`** v JWT. Podrobne: [autentifikacia-a-relacie-sk.md](./autentifikacia-a-relacie-sk.md) / [authentication-and-sessions.md](./authentication-and-sessions.md).
+
+```bash
+TOK_LONG_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"grantType\": \"password\",
+    \"clientId\": \"be-demo-client\",
+    \"clientSecret\": \"be-demo-secret-very-strong-key\",
+    \"username\": \"$EMAIL\",
+    \"password\": \"$PASS\",
+    \"rememberMe\": true
+  }")
+
+echo "$TOK_LONG_JSON" | jq '{ expiresIn, tokenType }'
+```
+
+Porovnanie: hodnota **`expiresIn`** (sekundy) býva pri `rememberMe: true` **väčšia** než bez neho (závisí od konfigurácie v API).
+
 ## 5. Token — refresh_token grant
+
+> **Poznámka:** V aktuálnej demo implementácii **refresh_token grant na serveri nefunguje** (tokeny sa nepersistujú / nevalidujú). Príkaz nižšie môžeš použiť na overenie chybovej odpovede; spoľahlivé „dlhé“ prihlásenie rieši **`rememberMe`** pri password grante.
 
 ```bash
 TOK_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
