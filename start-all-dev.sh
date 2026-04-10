@@ -303,11 +303,11 @@ while true; do
         echo "  Container: ✓ Running (fe-demo-dev)"
         echo "  Status: $STATUS"
         
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 2>&1 || echo "000")
+        HTTP_CODE=$(curl -sk -m 8 -o /dev/null -w "%{http_code}" https://localhost:9081/ 2>/dev/null || echo "000")
         if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
-            echo "  App: ✓ Accessible (http://localhost:8081)"
+            echo "  App: ✓ Accessible (https://localhost:9081 — Docker maps host 9081 → Vite 8081)"
         else
-            echo "  App: ⚠ Not accessible (http://localhost:8081)"
+            echo "  App: ⚠ Not accessible (https://localhost:9081)"
         fi
     elif docker ps -a --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=fe-demo-dev | head -1)
@@ -329,11 +329,11 @@ while true; do
         echo "  Container: ✓ Running (admin-demo-dev)"
         echo "  Status: $STATUS"
         
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082 2>&1 || echo "000")
+        HTTP_CODE=$(curl -sk -m 8 -o /dev/null -w "%{http_code}" https://localhost:8082/ 2>/dev/null || echo "000")
         if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
-            echo "  App: ✓ Accessible (http://localhost:8082)"
+            echo "  App: ✓ Accessible (https://localhost:8082)"
         else
-            echo "  App: ⚠ Not accessible (http://localhost:8082)"
+            echo "  App: ⚠ Not accessible (https://localhost:8082)"
         fi
     elif docker ps -a --format '{{.Names}}' | grep -q "^admin-demo-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=admin-demo-dev | head -1)
@@ -431,10 +431,10 @@ while true; do
     echo ""
     
     echo "  Quick Links:"
-    echo "    • Backend API: http://localhost:8000"
-    echo "    • Swagger: http://localhost:8000/swagger/index.html"
-    echo "    • Frontend: http://localhost:8081"
-    echo "    • Admin: http://localhost:8082"
+    echo "    • Backend API: http://localhost:8000 / https://localhost:8001"
+    echo "    • Swagger: https://localhost:8001/swagger/index.html"
+    echo "    • Frontend (Docker): https://localhost:9081"
+    echo "    • Admin: https://localhost:8082"
     echo "    • Seq Logs: http://localhost:5341"
     echo "    • Logger Demo (Dozzle): http://localhost:8080"
     echo "    • pgAdmin: http://localhost:5050"

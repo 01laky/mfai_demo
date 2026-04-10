@@ -10,13 +10,13 @@ services:
       - "8001:8001"
     volumes:
       - ./be_demo/BeDemo.Api:/app
-      - be-demo-https:/app/https
+      - ./dev/certs:/https-certs:ro
     # Redis beží v samostatnom repozitári / compose; na hostiteľovi publikuj port 6379 (alebo použi spoločnú Docker sieť).
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://0.0.0.0:8000
+      - ASPNETCORE_DEV_HTTPS_PFX=/https-certs/localhost.pfx
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
       - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password
       # Redis z redis_demo (redis-dev) musí byť na tejto sieti: ./start-all-dev.sh alebo
@@ -41,18 +41,21 @@ services:
       context: ./fe_demo
       dockerfile: Dockerfile.dev
     container_name: fe-demo-dev
+    # Host 9081 avoids conflict with IDE / other tools binding localhost:8081 (Vite still listens on 8081 inside the container).
     ports:
-      - "8081:8081"
+      - "9081:8081"
     volumes:
       - ./fe_demo:/app
+      - ./dev/certs:/certs:ro
       - fe-demo-node-modules:/app/node_modules
       - fe-demo-yarn-cache:/app/.yarn/cache
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=https://localhost:8001
       - VITE_API_HTTPS_URL=https://localhost:8001
       - VITE_APP_NAME=Fe Demo Frontend
       - VITE_APP_VERSION=1.0.0
       - VITE_PORT=8081
+      - VITE_DEV_CERT_DIR=/certs
       - VITE_SEQ_PROXY_TARGET=http://seq:5341
     env_file:
       - ./fe_demo/.env
@@ -63,7 +66,7 @@ services:
       - dev-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8081/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --no-check-certificate --spider https://127.0.0.1:8081/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -79,15 +82,16 @@ services:
       - "8082:8081"
     volumes:
       - ./admin_demo:/app
+      - ./dev/certs:/certs:ro
       - admin-demo-node-modules:/app/node_modules
       - admin-demo-yarn-cache:/app/.yarn/cache
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=https://localhost:8001
       - VITE_API_HTTPS_URL=https://localhost:8001
       - VITE_APP_NAME=Admin Demo
       - VITE_APP_VERSION=1.0.0
       - VITE_PORT=8081
-      - VITE_DEV_PORT=8082
+      - VITE_DEV_CERT_DIR=/certs
     env_file:
       - ./admin_demo/.env
     depends_on:
@@ -97,7 +101,7 @@ services:
       - dev-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8081/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --no-check-certificate --spider https://127.0.0.1:8081/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -156,7 +160,6 @@ services:
 
 volumes:
   be-demo-data:
-  be-demo-https:
   seq-data:
   fe-demo-node-modules:
   fe-demo-yarn-cache:

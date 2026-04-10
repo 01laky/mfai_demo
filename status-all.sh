@@ -87,15 +87,18 @@ check_container() {
 check_service() {
     local url=$1
     local name=$2
-    # Use curl to check if URL is accessible
-    # -s: silent mode (no progress bar)
-    # -f: fail silently on HTTP errors
-    # -o /dev/null: discard output
-    # --max-time 2: timeout after 2 seconds
+    # HTTPS dev servers use self-signed / mkcert; use -k for https:// URLs.
+    if [[ "$url" == https://* ]]; then
+        if curl -sk -f -o /dev/null --max-time 8 "$url" > /dev/null 2>&1; then
+            return 0
+        else
+            return 1
+        fi
+    fi
     if curl -s -f -o /dev/null --max-time 2 "$url" > /dev/null 2>&1; then
-        return 0  # Service is accessible
+        return 0
     else
-        return 1  # Service is not accessible
+        return 1
     fi
 }
 
@@ -317,11 +320,11 @@ if check_container_exists "$FE_CONTAINER"; then
         echo "  Started: $UPTIME"
         
         # Check if frontend is accessible
-        if check_service "http://localhost:8081" "Frontend"; then
-            echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081)"
+        if check_service "https://localhost:9081/" "Frontend"; then
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 — Docker)"
             FE_ACCESSIBLE=true
         else
-            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (http://localhost:8081)"
+            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:9081)"
         fi
     else
         STATUS_INFO=$(get_container_status "$FE_CONTAINER")
@@ -333,22 +336,22 @@ if check_container_exists "$FE_CONTAINER"; then
         echo "  Started: $UPTIME"
         
         # FE can run locally (yarn dev) - check port 8081 regardless of container
-        if check_service "http://localhost:8081" "Frontend"; then
-            echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081) [running locally]"
+        if check_service "https://localhost:8081/" "Frontend"; then
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:8081) [running locally]"
             FE_ACCESSIBLE=true
         else
-            echo "  Port: 8081 (http://localhost:8081)"
+            echo "  Port: 8081 (https://localhost:8081 when using yarn dev)"
         fi
     fi
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($FE_CONTAINER)"
     echo "  Status: Does not exist (removed)"
     # Still check if FE runs locally
-    if check_service "http://localhost:8081" "Frontend"; then
-        echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8081) [running locally]"
+    if check_service "https://localhost:8081/" "Frontend"; then
+        echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:8081) [running locally]"
         FE_ACCESSIBLE=true
     else
-        echo "  Port: 8081 (http://localhost:8081)"
+        echo "  Port: 8081 (https://localhost:8081 when using yarn dev)"
     fi
 fi
 
@@ -373,10 +376,10 @@ if check_container_exists "$ADMIN_CONTAINER"; then
         echo "  Started: $UPTIME"
         
         # Check if admin is accessible
-        if check_service "http://localhost:8082" "Admin"; then
-            echo -e "  App: ${GREEN}✓ Accessible${NC} (http://localhost:8082)"
+        if check_service "https://localhost:8082/" "Admin"; then
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:8082)"
         else
-            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (http://localhost:8082)"
+            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:8082)"
         fi
     else
         STATUS_INFO=$(get_container_status "$ADMIN_CONTAINER")
@@ -386,12 +389,12 @@ if check_container_exists "$ADMIN_CONTAINER"; then
         echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($ADMIN_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
-        echo "  Port: 8082 (http://localhost:8082)"
+        echo "  Port: 8082 (https://localhost:8082)"
     fi
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($ADMIN_CONTAINER)"
     echo "  Status: Does not exist (removed)"
-    echo "  Port: 8082 (http://localhost:8082)"
+    echo "  Port: 8082 (https://localhost:8082)"
 fi
 
 echo ""
@@ -579,7 +582,7 @@ elif check_container "$FE_CONTAINER"; then
 fi
 
 if check_container "$ADMIN_CONTAINER"; then
-    if check_service "http://localhost:8082" "Admin"; then
+    if check_service "https://localhost:8082/" "Admin"; then
         ACCESSIBLE=$((ACCESSIBLE + 1))
     else
         NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
@@ -620,10 +623,10 @@ if check_container "$BE_CONTAINER"; then
     echo "    • Swagger: http://localhost:8000/swagger/index.html"
 fi
 if [ "$FE_ACCESSIBLE" = true ]; then
-    echo "    • Frontend: http://localhost:8081"
+    echo "    • Frontend: https://localhost:9081 (Docker) or https://localhost:8081 (yarn dev on host)"
 fi
 if check_container "$ADMIN_CONTAINER"; then
-    echo "    • Admin: http://localhost:8082"
+    echo "    • Admin: https://localhost:8082"
 fi
 if check_container "$PGADMIN_CONTAINER"; then
     echo "    • pgAdmin: http://localhost:5050"
