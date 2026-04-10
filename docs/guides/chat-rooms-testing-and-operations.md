@@ -1,113 +1,111 @@
-# Chat rooms: testy a prevádzka
+# Chat rooms: tests and operations
 
-Tento dokument popisuje **face chat rooms** (API, SignalR, FE routing), **automatické testy** a **manuálnu kontrolu** v prehliadači. Ad-hoc overenie HTTP (napr. curl) sa nerobí cez súbory v repozitári — len podľa potreby pri vývoji.
+This document covers **face chat rooms** (API, SignalR, FE routing), **automated tests**, and **manual checks** in the browser. Ad-hoc HTTP checks (e.g. curl) are not scripted in the repo—do them as needed during development.
 
 ---
 
 ## 1. Backend (BeDemo.Api)
 
-### 1.1 Spustenie v prostredí `Testing` (in-memory, bez Postgres)
+### 1.1 Running with `Testing` environment (in-memory, no Postgres)
 
-Odporúčané pre **rýchlu manuálnu kontrolu** bez Dockeru (Swagger, Postman, jednorazový curl):
+Recommended for **quick manual checks** without Docker (Swagger, Postman, one-off curl):
 
 ```bash
 cd be_demo/BeDemo.Api
 ASPNETCORE_ENVIRONMENT=Testing dotnet run --urls http://127.0.0.1:17778 --no-launch-profile
 ```
 
-Pri štarte sa v `Program.cs` vykoná **`EnsureCreated` + `DatabaseSeeder.SeedDataOnlyAsync`**: role, face, stránky (rovnaké dáta ako pri integračných testoch). Bez tohto kroku by `dotnet run` s `Testing` mal **prázdnu DB** a registrácia by zlyhala na „USER role not found“.
+On startup, `Program.cs` runs **`EnsureCreated` + `DatabaseSeeder.SeedDataOnlyAsync`**: roles, faces, pages (same data as integration tests). Without this, `dotnet run` with `Testing` would see an **empty DB** and registration would fail with “USER role not found”.
 
-**Poznámka:** Nepúšťajte súčasne `dotnet test` a `dotnet run` s `Testing` tak, aby oba zdieľali jednu in-memory inštanciu s rovnakým názvom databázy v **jednom procese** — integračné testy bežia v samostatnom procese, takže bežne nie je konflikt; problém bol skôr pri starom správaní bez seedu pri samostatnom `dotnet run`.
+**Note:** Do not run `dotnet test` and `dotnet run` with `Testing` in a way that shares one in-memory database name in **one process**—integration tests run in a separate process, so there is usually no conflict; issues were more common before seeding was added for standalone `dotnet run`.
 
-### 1.2 Produčný / dev režim (Postgres)
+### 1.2 Production / dev mode (Postgres)
 
-Použite `docker-compose.dev.yml` alebo vlastný connection string. Po migráciách sa volá plný `DatabaseSeeder.SeedAsync` + voliteľne `SeedUsersAsync`.
+Use `docker-compose.dev.yml` or your own connection string. After migrations, full `DatabaseSeeder.SeedAsync` runs, optionally `SeedUsersAsync`.
 
-### 1.3 REST API (skrátený prehľad)
+### 1.3 REST API (short reference)
 
-| Metóda | Cesta | Popis |
-|--------|--------|--------|
-| GET | `/api/faces/{faceId}/chat-rooms` | Zoznam miestností (host vidí `canParticipate: false`) |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/faces/{faceId}/chat-rooms` | List rooms (host sees `canParticipate: false`) |
 | GET | `/api/faces/{faceId}/chat-rooms/{roomId}` | Detail |
-| POST | `/api/faces/{faceId}/chat-rooms` | Používateľská miestnosť (`Face.ChatRoomsCreate`, nie host) |
-| POST | `/api/faces/{faceId}/chat-rooms/system` | Systémová miestnosť (globálny admin) |
-| POST | `/api/faces/{faceId}/chat-rooms/{roomId}/join` | Verejná miestnosť |
-| POST | `/api/faces/{faceId}/chat-rooms/{roomId}/join-requests` | Súkromná miestnosť |
-| POST | `/api/faces/{faceId}/chat-rooms/requests/{id}/approve` | Schválenie (iba tvorca) |
-| POST | `/api/faces/{faceId}/chat-rooms/requests/{id}/deny` | Zamietnutie |
-| GET | `/api/faces/{faceId}/chat-rooms/{roomId}/messages` | História (host alebo člen) |
-| PUT/DELETE | `.../chat-rooms/{roomId}` | Úprava / zmazanie podľa pravidiel |
+| POST | `/api/faces/{faceId}/chat-rooms` | User room (`Face.ChatRoomsCreate`, not host) |
+| POST | `/api/faces/{faceId}/chat-rooms/system` | System room (global admin) |
+| POST | `/api/faces/{faceId}/chat-rooms/{roomId}/join` | Public room |
+| POST | `/api/faces/{faceId}/chat-rooms/{roomId}/join-requests` | Private room |
+| POST | `/api/faces/{faceId}/chat-rooms/requests/{id}/approve` | Approve (creator only) |
+| POST | `/api/faces/{faceId}/chat-rooms/requests/{id}/deny` | Deny |
+| GET | `/api/faces/{faceId}/chat-rooms/{roomId}/messages` | History (host or member) |
+| PUT/DELETE | `.../chat-rooms/{roomId}` | Update / delete per rules |
 
-**OAuth2 (password grant)** (napr. pri ručnom volaní API):
+**OAuth2 (password grant)** (e.g. manual API calls):
 
 - `POST /api/oauth2/register`
-- `POST /api/oauth2/token` s `grantType=password`, `clientId=be-demo-client`, `clientSecret=be-demo-secret-very-strong-key`
+- `POST /api/oauth2/token` with `grantType=password`, `clientId=be-demo-client`, `clientSecret=be-demo-secret-very-strong-key`
 
-**Úloha face role:** Nový používateľ má po registrácii **`FACE_HOST`**. Na vytvorenie miestnosti musí mať **`FACE_USER`** (alebo inú ne-host rolu): `PUT /api/faces/{faceId}/my-role` s `userRoleId` z `GET /api/faces/face-roles`.
+**Face role:** A new user often has **`FACE_HOST`** after registration. To create a room they need **`FACE_USER`** (or another non-host role): `PUT /api/faces/{faceId}/my-role` with `userRoleId` from `GET /api/faces/face-roles`.
 
-**Zapnutie tvorby miestností:** `PUT /api/faces/{faceId}` s `{ "chatRoomsCreate": true }`.
+**Enabling room creation:** `PUT /api/faces/{faceId}` with `{ "chatRoomsCreate": true }`.
 
 ### 1.4 SignalR
 
 - Hub: **`/hubs/chatroom`**
-- Metódy: `JoinRoom(faceChatRoomId)`, `LeaveRoom(faceChatRoomId)`, `SendRoomMessage(faceChatRoomId, content)`
-- Klient: `ReceiveRoomMessage`, `ChatRoomClosed`
-- Notifikácie o join request / idle close idú aj cez **`MessengerHub`** (`ReceiveNotification`) — pozri existujúci FE `MessengerContext`.
+- Methods: `JoinRoom(faceChatRoomId)`, `LeaveRoom(faceChatRoomId)`, `SendRoomMessage(faceChatRoomId, content)`
+- Client: `ReceiveRoomMessage`, `ChatRoomClosed`
+- Join-request / idle-close notifications also go through **`MessengerHub`** (`ReceiveNotification`)—see existing FE `MessengerContext`.
 
 ### 1.5 Idle lifecycle (Redis)
 
-Job typ: `chatroom.idle-check`. Spracovanie v `RedisJobWorkerService` → `IChatRoomLifecycleService.ProcessIdleCheckAsync`. Ak bola aktivita pred menej ako 1 h, job sa znovu naplánuje; inak sa miestnosť zmaže a skupina dostane `ChatRoomClosed`.
+Job type: `chatroom.idle-check`. Handled in `RedisJobWorkerService` → `IChatRoomLifecycleService.ProcessIdleCheckAsync`. If activity was within the last hour, the job is rescheduled; otherwise the room is deleted and the group receives `ChatRoomClosed`.
 
 ---
 
-## 2. Automatické testy — Backend (`BeDemo.Api.Tests`)
-
-Spustenie:
+## 2. Automated tests — Backend (`BeDemo.Api.Tests`)
 
 ```bash
 cd be_demo
 dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
 ```
 
-### 2.1 `FaceChatRoomsControllerTests` (integrácia, WebApplicationFactory)
+### 2.1 `FaceChatRoomsControllerTests` (integration, WebApplicationFactory)
 
-- **401** — list bez tokenu  
-- **404** — neexistujúci `faceId`  
-- **403** — `Create` pri vypnutom `ChatRoomsCreate`  
-- **403** — `Create` pre **FACE_HOST**  
-- **400** — prázdny názov miestnosti  
-- **201** — vytvorenie, tvorca je členom  
-- **404** — GET miestnosti pod iným `faceId`  
-- **403** — join pre hosta  
-- **200** — join verejnej miestnosti (FACE_USER)  
-- **200** — duplicitný join → `alreadyMember`  
-- **400** — join-request na verejnú miestnosť  
-- **200** — join-request na súkromnú  
-- **403** — správy pre nečlena (nie host)  
-- **200** — správy pre hosta bez členstva  
-- **403** — system create pre bežného používateľa  
-- **201** — system create po **promócii používateľa na globálneho admina v DB** (test nemôže spoliehať na seed admin účty v in-memory)  
-- **403** — delete cudzej miestnosti  
-- **204** — delete vlastnej miestnosti  
-- **200** — approve žiadosti tvorcom + overenie `isMember`  
-- **200** — deny + overenie `!isMember`  
-- **403** — approve cudzím používateľom  
-- **Paginácia správ** — `beforeId` + vloženie správ cez `ApplicationDbContext`  
+- **401** — list without token  
+- **404** — invalid `faceId`  
+- **403** — `Create` when `ChatRoomsCreate` is off  
+- **403** — `Create` for **FACE_HOST**  
+- **400** — empty room name  
+- **201** — create; creator is a member  
+- **404** — GET room under wrong `faceId`  
+- **403** — join for host  
+- **200** — join public room (FACE_USER)  
+- **200** — duplicate join → `alreadyMember`  
+- **400** — join-request on public room  
+- **200** — join-request on private room  
+- **403** — messages for non-member (non-host)  
+- **200** — messages for host without membership  
+- **403** — system create for normal user  
+- **201** — system create after **promoting user to global admin in DB** (test cannot rely on seeded admin accounts in in-memory DB)  
+- **403** — delete someone else’s room  
+- **204** — delete own room  
+- **200** — approve request as creator + verify `isMember`  
+- **200** — deny + verify `!isMember`  
+- **403** — approve as wrong user  
+- **Message pagination** — `beforeId` + insert messages via `ApplicationDbContext`  
 
-Pomocné metódy: `PromoteUserToGlobalAdminAsync` — nastaví `ApplicationUser.UserRoleId` na globálnu rolu **Admin** (API kontroluje DB, nie JWT).
+Helper: `PromoteUserToGlobalAdminAsync` sets `ApplicationUser.UserRoleId` to global **Admin** (API checks DB, not JWT).
 
 ### 2.2 `ChatRoomLifecycleServiceTests` (unit, InMemory + Moq)
 
-- Žiadna miestnosť → žiadna výnimka, žiadny reschedule  
-- Nedávna `LastMessageAt` → `IRedisJobQueue.ScheduleAsync("chatroom.idle-check", …)`  
-- Stará aktivita, `CreatorUserId == null` → miestnosť zmazaná  
-- `ScheduleIdleCheckAsync` → správny typ a payload  
-- `LastMessageAt == null` → použije sa `CreatedAt` pre rozhodnutie o reschedule  
+- No room → no exception, no reschedule  
+- Recent `LastMessageAt` → `IRedisJobQueue.ScheduleAsync("chatroom.idle-check", …)`  
+- Old activity, `CreatorUserId == null` → room deleted  
+- `ScheduleIdleCheckAsync` → correct type and payload  
+- `LastMessageAt == null` → uses `CreatedAt` for reschedule decision  
 
 ### 2.3 `FaceRoleParticipationTests`
 
-- `IsHostFaceRole` len pre presný `FACE_HOST` (case sensitive)  
-- `IsActiveForFaceRoleName` pre ne-host role  
+- `IsHostFaceRole` only for exact `FACE_HOST` (case sensitive)  
+- `IsActiveForFaceRoleName` for non-host roles  
 
 ---
 
@@ -118,15 +116,15 @@ cd fe_demo
 yarn test
 ```
 
-### 3.1 Nové / dotknuté súbory
+### 3.1 New / touched files
 
-- `src/api/services/__tests__/ChatRoomsService.test.ts` — URL, metódy, hlavičky, query `pageSize`/`beforeId`, chyba pri `!res.ok`  
-- `src/constants/__tests__/componentTypeIds.test.ts` — chat varianty → **4**, stories/reels sanity  
+- `src/api/services/__tests__/ChatRoomsService.test.ts` — URLs, methods, headers, query `pageSize`/`beforeId`, error when `!res.ok`  
+- `src/constants/__tests__/componentTypeIds.test.ts` — chat variants → **4**, stories/reels sanity  
 
 ### 3.2 Routing
 
 - Detail: `/:lang/detail/4/:entityId` (`ComponentTypeId` chat = **4**)  
-- Zoznam: `/:lang/list/4`  
+- List: `/:lang/list/4`  
 
 ---
 
@@ -137,41 +135,41 @@ cd admin_demo
 yarn test
 ```
 
-- `useFacesApi`: typy `Face`, `CreateFaceData`, `UpdateFaceData` rozšírené o **`chatRoomsCreate`**  
-- Test overí, že `updateFace` pošle `body.chatRoomsCreate`  
+- `useFacesApi`: `Face`, `CreateFaceData`, `UpdateFaceData` include **`chatRoomsCreate`**  
+- Test asserts `updateFace` sends `body.chatRoomsCreate`  
 
-*(UI checkbox v edit forme môžete doplniť samostatne — API a typy sú pripravené.)*
-
----
-
-## 5. Manuálny checklist (OAuth + UI)
-
-1. Spustiť API (`Testing` alebo Postgres dev).  
-2. Spustiť `fe_demo`, prihlásiť sa (rovnaký OAuth password flow ako v aplikácii).  
-3. V nastaveniach face zvoliť **nie host** rolu, ak treba vytvárať miestnosti.  
-4. Zapnúť **chat rooms create** na face (admin API alebo budúci admin UI).  
-5. Otvoriť stránku s gridom chatu → klik na kartu → `/detail/4/{id}`.  
-6. Overiť: host vidí históriu, nemôže písať; člen píše; SignalR doručuje správy.  
-7. Notifikácie: súkromná miestnosť → join request → `ReceiveNotification` v messengri.  
+*(You can add a UI checkbox in the face edit form separately—API and types are ready.)*
 
 ---
 
-## 6. Súhrn súborov (hlavné zmeny)
+## 5. Manual checklist (OAuth + UI)
 
-| Oblast | Súbor |
-|--------|--------|
+1. Run API (`Testing` or Postgres dev).  
+2. Run `fe_demo`, sign in (same OAuth password flow as the app).  
+3. In face settings pick a **non-host** role if you need to create rooms.  
+4. Turn **chat rooms create** on for the face (admin API or future admin UI).  
+5. Open the page with the chat grid → click a card → `/detail/4/{id}`.  
+6. Verify: host sees history, cannot write; member writes; SignalR delivers messages.  
+7. Notifications: private room → join request → `ReceiveNotification` in messenger.  
+
+---
+
+## 6. File summary (main changes)
+
+| Area | Files |
+|------|--------|
 | BE seed Testing | `BeDemo.Api/Program.cs` |
-| BE testy | `BeDemo.Api.Tests/FaceChatRoomsControllerTests.cs`, `ChatRoomLifecycleServiceTests.cs`, `FaceRoleParticipationTests.cs` |
-| FE testy | `fe_demo/src/api/services/__tests__/ChatRoomsService.test.ts`, `fe_demo/src/constants/__tests__/componentTypeIds.test.ts` |
+| BE tests | `BeDemo.Api.Tests/FaceChatRoomsControllerTests.cs`, `ChatRoomLifecycleServiceTests.cs`, `FaceRoleParticipationTests.cs` |
+| FE tests | `fe_demo/src/api/services/__tests__/ChatRoomsService.test.ts`, `fe_demo/src/constants/__tests__/componentTypeIds.test.ts` |
 | Admin | `admin_demo/src/hooks/api/useFacesApi.ts`, `.../__tests__/useFacesApi.test.ts` |
-| Dokumentácia | `docs/guides/chat-rooms-testing-and-operations.md` |
+| Docs | `docs/guides/chat-rooms-testing-and-operations.md` |
 
 ---
 
-## 7. Verifikácia v tomto repozitári (2026-04-07)
+## 7. Verification in this repo (2026-04-07)
 
-- `dotnet test BeDemo.Api.Tests` — **296 passed**, 1 skipped (existujúci).  
+- `dotnet test BeDemo.Api.Tests` — **296 passed**, 1 skipped (pre-existing).  
 - `fe_demo` `yarn test` — **58 passed**.  
-- `admin_demo` `yarn test` — **24 passed** (niektoré súbory skipped ako predtým).  
+- `admin_demo` `yarn test` — **24 passed** (some files skipped as before).  
 
-Pri problémoch skontrolujte URL API, prostredie (`Testing` vs Postgres) a OAuth `clientId` / `clientSecret` v `appsettings`.
+If something fails, check API URL, environment (`Testing` vs Postgres), and OAuth `clientId` / `clientSecret` in `appsettings`.

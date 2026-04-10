@@ -125,8 +125,7 @@ Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, 
 
 **Detailed guides (tables, file map, curl, tests):**
 
-- English: [**authentication-and-sessions.md**](./authentication-and-sessions.md)
-- Slovenčina: [**authentication-and-sessions-sk.md**](../readmes/authentication-and-sessions-sk.md)
+- [**authentication-and-sessions.md**](./authentication-and-sessions.md)
 - Curl register/token (includes `rememberMe` example): [**api-oauth-stories-curl.md**](./api-oauth-stories-curl.md)
 
 **Tests (auth slice):** `BeDemo.Api.Tests/OAuth2RememberMeTests.cs`; `fe_demo` / `admin_demo` — `src/utils/__tests__/jwtUtils.test.ts`, `src/hooks/api/__tests__/authTokenRequest.test.ts`.
@@ -200,13 +199,12 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 ## Related docs
 
 - [**`docs/README.md`**](../README.md) — documentation hub.
-- [authentication-and-sessions.md](./authentication-and-sessions.md) — **EN:** login, JWT, `rememberMe`, config, FE/admin, tests, security.
-- [authentication-and-sessions-sk.md](../readmes/authentication-and-sessions-sk.md) — **SK:** same topic.
+- [authentication-and-sessions.md](./authentication-and-sessions.md) — login, JWT, `rememberMe`, config, FE/admin, tests, security.
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
 - [chat-rooms-testing-and-operations.md](./chat-rooms-testing-and-operations.md) — chat / rooms operations.
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.
 - [acl-and-capabilities.md](./acl-and-capabilities.md) — capabilities API, permission keys, FE/admin wiring, tests.
-- [redis-subrepo-sk.md](../readmes/redis-subrepo-sk.md) — Redis submodule (SK).
-- [fe-demo-overview-sk.md](../readmes/fe-demo-overview-sk.md) / [admin-demo-overview-sk.md](../readmes/admin-demo-overview-sk.md) — FE / admin overviews (SK).
+- [redis-subrepo.md](../readmes/redis-subrepo.md) — Redis submodule.
+- [fe-demo-overview.md](../readmes/fe-demo-overview.md) / [admin-demo-overview.md](../readmes/admin-demo-overview.md) — FE / admin extended overviews.
 - [git-submodules.md](./git-submodules.md) — submodule checkout and updates.
 - [security-crypto-sockets.md](./security-crypto-sockets.md) — TLS, JWT keys, WebSockets backlog.

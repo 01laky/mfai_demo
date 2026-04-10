@@ -2,8 +2,7 @@
 
 This document explains **how login works** across **BeDemo API** (`be_demo`), **main frontend** (`fe_demo`), and **admin UI** (`admin_demo`): OAuth2 password grant, the optional **`rememberMe`** flag, JWT configuration, browser storage, and how clients detect **expired** tokens.
 
-For a **curl walkthrough** (register + token), see [api-oauth-stories-curl.md](./api-oauth-stories-curl.md).  
-Slovenský ekvivalent tohto dokumentu: [authentication-and-sessions-sk.md](../readmes/authentication-and-sessions-sk.md).
+For a **curl walkthrough** (register + token), see [api-oauth-stories-curl.md](./api-oauth-stories-curl.md).
 
 ---
 

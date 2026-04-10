@@ -1,13 +1,13 @@
-# Git Submodules Setup Guide
+# Git submodules setup
 
-## Postup vytvorenia GitHub repozitárov so submodulmi
+## Creating GitHub repositories with submodules
 
-### 1. Vytvoriť repozitáre na GitHub
+### 1. Create repositories on GitHub
 
-Na GitHub vytvor **7+ súkromných repozitárov** (root + submoduly):
+Create **7+ private repositories** on GitHub (root + submodules):
 
-1. **Root repo**: `_mfai_demo` (alebo `mfai-demo`)
-2. **Submoduly**:
+1. **Root repo**: `_mfai_demo` (or `mfai-demo`)
+2. **Submodules**:
    - `be_demo`
    - `fe_demo`
    - `admin_demo`
@@ -15,9 +15,9 @@ Na GitHub vytvor **7+ súkromných repozitárov** (root + submoduly):
    - `db_demo`
    - `redis_demo`
 
-### 2. Nastaviť remote URL v každom submodule
+### 2. Set remote URL in each submodule
 
-Pre každý submodul nastav remote URL (nahraď `YOUR_USERNAME` svojím GitHub username):
+For each submodule, set the remote URL (replace `YOUR_USERNAME` with your GitHub username):
 
 ```bash
 # Backend
@@ -57,21 +57,21 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3. Aktualizovať `.gitmodules` s reálnymi GitHub URL
+### 3. Update `.gitmodules` with real GitHub URLs
 
-Uprav `.gitmodules` súbor - nahraď `YOUR_USERNAME` skutočným username:
+Edit `.gitmodules` and replace `YOUR_USERNAME` with the actual username:
 
 ```bash
-# V root adresári
-nano .gitmodules  # alebo použi svoj editor
+# From repo root
+nano .gitmodules   # or use your editor
 ```
 
-### 4. Registrovať submoduly v root repozitári
+### 4. Register submodules in the root repository
 
 ```bash
 cd /Users/ladislavkostolny/Soft/_mfai_demo
 
-# Pridať submoduly
+# Add submodules
 git submodule add -f https://github.com/YOUR_USERNAME/be_demo.git be_demo
 git submodule add -f https://github.com/YOUR_USERNAME/fe_demo.git fe_demo
 git submodule add -f https://github.com/YOUR_USERNAME/admin_demo.git admin_demo
@@ -79,15 +79,15 @@ git submodule add -f https://github.com/YOUR_USERNAME/ai_demo.git ai_demo
 git submodule add -f https://github.com/YOUR_USERNAME/db_demo.git db_demo
 git submodule add -f https://github.com/YOUR_USERNAME/redis_demo.git redis_demo
 
-# Alebo ak už existujú, len aktualizovať .gitmodules a commitnúť:
+# Or if they already exist, update .gitmodules and commit:
 git add .gitmodules
 git commit -m "Add git submodules configuration"
 ```
 
-### 5. Nastaviť remote URL v root repozitári
+### 5. Set remote URL on the root repository
 
 ```bash
-# V root adresári
+# From repo root
 git remote add origin https://github.com/YOUR_USERNAME/_mfai_demo.git
 git branch -M main
 git add .gitmodules
@@ -95,34 +95,34 @@ git commit -m "Configure git submodules"
 git push -u origin main
 ```
 
-### 6. Pushnúť submoduly do root repozitára
+### 6. Push submodule references from the root
 
 ```bash
-# Root repo sa bude odkazovať na konkrétne commity v submoduloch
+# Root points at specific commits inside submodules
 git add .gitmodules
 git commit -m "Update submodule references"
 git push
 ```
 
-## Dôležité poznámky
+## Important notes
 
-- **Root repo obsahuje iba odkazy na commity** v submoduloch, nie samotný kód
-- Pri clone root repa treba použiť `git clone --recursive` alebo `git submodule update --init --recursive`
-- Pri update submodulu treba commitnúť zmenu v root repozitári
+- The **root repo only stores pointers to commits** in submodules, not the full tree.
+- Clone with `git clone --recursive` or run `git submodule update --init --recursive` after clone.
+- After updating a submodule, **commit the new pointer** in the root repository.
 
-## Použitie po setup
+## Day-to-day usage
 
 ```bash
-# Clone celého projektu so submodulmi
+# Clone entire project with submodules
 git clone --recursive https://github.com/YOUR_USERNAME/_mfai_demo.git
 
-# Alebo ak už máš root repo:
+# Or if you already have the root:
 git submodule update --init --recursive
 
-# Update všetkých submodulov
+# Update all submodules to remote tracking branches
 git submodule update --remote
 
-# Commitnutie zmien v submodule
+# Commit changes inside a submodule
 cd be_demo
 git add .
 git commit -m "Changes"

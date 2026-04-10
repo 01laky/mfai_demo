@@ -1,36 +1,35 @@
 # MFAI Demo — monorepo
 
-Monorepo s **Dockerom**, **ASP.NET Core** API, **React (Vite)** FE/admin, **PostgreSQL**, **Redis**, **Python gRPC** AI službou a nástrojmi na logy. Každá aplikácia je vlastný **git submodule**.
+Monorepo with **Docker**, **ASP.NET Core** API, **React (Vite)** FE and admin apps, **PostgreSQL**, **Redis**, a **Python gRPC** AI service, and log tooling. Each app is its own **git submodule**.
 
-## Dokumentácia (štart tu)
+## Documentation (start here)
 
 **[`docs/README.md`](./docs/README.md)** — hub: `guides/`, `components/`, `prompts/`, `readmes/`.  
-Štruktúra priečinkov: [`docs/STRUCTURE.md`](./docs/STRUCTURE.md).  
-Vývoj, CI, skripty: [`docs/guides/development.md`](./docs/guides/development.md).
+Folder layout: [`docs/STRUCTURE.md`](./docs/STRUCTURE.md).  
+Development, CI, scripts: [`docs/guides/development.md`](./docs/guides/development.md).
 
-### Rýchle odkazy
+### Quick links
 
-| Téma | Dokument |
-|------|-----------|
-| Auth / JWT / `rememberMe` (EN) | [`docs/guides/authentication-and-sessions.md`](./docs/guides/authentication-and-sessions.md) |
-| Auth (SK) | [`docs/readmes/authentication-and-sessions-sk.md`](./docs/readmes/authentication-and-sessions-sk.md) |
+| Topic | Document |
+|--------|----------|
+| Auth / JWT / `rememberMe` | [`docs/guides/authentication-and-sessions.md`](./docs/guides/authentication-and-sessions.md) |
 | ACL / capabilities API | [`docs/guides/acl-and-capabilities.md`](./docs/guides/acl-and-capabilities.md) |
 | OAuth2 + Stories (curl) | [`docs/guides/api-oauth-stories-curl.md`](./docs/guides/api-oauth-stories-curl.md) |
-| Git submoduly | [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md) |
-| Lokálne HTTPS (`dev/`) | [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) |
-| TLS / krypto backlog | [`docs/guides/security-crypto-sockets.md`](./docs/guides/security-crypto-sockets.md) |
-| Index README submodule | [`docs/readmes/README.md`](./docs/readmes/README.md) |
+| Git submodules | [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md) |
+| Local HTTPS (`dev/`) | [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) |
+| TLS / crypto backlog | [`docs/guides/security-crypto-sockets.md`](./docs/guides/security-crypto-sockets.md) |
+| Submodule README index | [`docs/readmes/README.md`](./docs/readmes/README.md) |
 
-Backend detail: [`be_demo/README.md`](./be_demo/README.md). Ostatné služby — stĺpec v [`docs/readmes/README.md`](./docs/readmes/README.md).
+Backend details: [`be_demo/README.md`](./be_demo/README.md). Other services — see the table in [`docs/readmes/README.md`](./docs/readmes/README.md).
 
-## Štruktúra (skrátene)
+## Layout (short)
 
 ```
 be_demo/       # API (OAuth2, JWT, SignalR, EF Core)
-fe_demo/       # Používateľská SPA
+fe_demo/       # User-facing SPA
 admin_demo/    # Admin SPA
 db_demo/       # PostgreSQL compose
-redis_demo/    # Redis (fronta)
+redis_demo/    # Redis (job queue)
 ai_demo/       # gRPC health / AI
 logger_demo/   # Dozzle
 *.sh           # start-all-dev, ci-local, test-all, …
@@ -38,26 +37,26 @@ logger_demo/   # Dozzle
 
 ## Quick start
 
-**Požiadavky:** Docker, Docker Compose, Bash.
+**Requirements:** Docker, Docker Compose, Bash.
 
 ```bash
 git submodule update --init --recursive
 ./start-all-dev.sh
 ```
 
-**Časté porty:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`. Presná mapa je v [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) a v submodule README.
+**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`. Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
 
-**Testy (všetko):**
+**Run all tests:**
 
 ```bash
-export SKIP_CYPRESS=1   # voliteľné; bez toho FE môže spúšťať e2e
-./ci-local.sh           # lint → build → test (ako job monorepo_scripts v CI)
+export SKIP_CYPRESS=1   # optional; without it FE may run e2e
+./ci-local.sh           # lint → build → test (same idea as monorepo_scripts in CI)
 ```
 
-## Ďalšie súbory v koreni (archív / referencie)
+## Other root files (archive / reference)
 
-Niektoré návody boli presunuté do **`docs/guides/`** (git submoduly, husky, boilerplate checklist, návrhy). Vyhľadaj názov súboru v `docs/guides/` alebo použite hub vyššie.
+Some guides were moved under **`docs/guides/`** (git submodules, Husky, boilerplate checklist, proposals). Search by filename in `docs/guides/` or use the hub above.
 
-## Licencia / Contributing
+## License / contributing
 
-Doplň podľa projektu.
+Fill in per your project policy.

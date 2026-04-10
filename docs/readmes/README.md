@@ -1,24 +1,27 @@
-# README index & Slovak overviews
+# README index and extended overviews
 
-## Submodule READMEs (source of truth)
+## Submodule README files (source of truth per app)
 
-| Area | README |
-|------|--------|
-| Backend | [`../../be_demo/README.md`](../../be_demo/README.md) |
-| Frontend | [`../../fe_demo/README.md`](../../fe_demo/README.md) |
-| Admin | [`../../admin_demo/README.md`](../../admin_demo/README.md) |
+| Submodule | README |
+|-----------|--------|
+| Backend API | [`../../be_demo/README.md`](../../be_demo/README.md) |
+| Main frontend | [`../../fe_demo/README.md`](../../fe_demo/README.md) |
+| Admin UI | [`../../admin_demo/README.md`](../../admin_demo/README.md) |
 | AI gRPC | [`../../ai_demo/README.md`](../../ai_demo/README.md) |
-| PostgreSQL | [`../../db_demo/README.md`](../../db_demo/README.md) |
-| Redis | [`../../redis_demo/README.md`](../../redis_demo/README.md) |
+| PostgreSQL stack | [`../../db_demo/README.md`](../../db_demo/README.md) |
+| Redis stack | [`../../redis_demo/README.md`](../../redis_demo/README.md) |
 | Logger (Dozzle) | [`../../logger_demo/README.md`](../../logger_demo/README.md) |
 
-## Extended overviews (Slovak)
+---
+
+## Extended overviews (English)
+
+Longer narratives that read like extended READMEs:
 
 | File | Description |
 |------|-------------|
-| [fe-demo-overview-sk.md](./fe-demo-overview-sk.md) | Architektúra a funkcie `fe_demo`. |
-| [admin-demo-overview-sk.md](./admin-demo-overview-sk.md) | Architektúra a funkcie `admin_demo`. |
-| [authentication-and-sessions-sk.md](./authentication-and-sessions-sk.md) | JWT, `rememberMe`, úložisko tokenov (SK). |
-| [redis-subrepo-sk.md](./redis-subrepo-sk.md) | Vývoj s `redis_demo` submodule. |
+| [fe-demo-overview.md](./fe-demo-overview.md) | Architecture and features of `fe_demo`. |
+| [admin-demo-overview.md](./admin-demo-overview.md) | Architecture and features of `admin_demo`. |
+| [redis-subrepo.md](./redis-subrepo.md) | Developing with the `redis_demo` submodule. |
 
-Documentation hub: [`../README.md`](../README.md).
+**Auth / JWT / sessions:** see the canonical guide [authentication-and-sessions.md](../guides/authentication-and-sessions.md).

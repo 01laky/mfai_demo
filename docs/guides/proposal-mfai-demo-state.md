@@ -1,220 +1,220 @@
-# MFAI Demo – Čo máme hotové (aktuálny stav)
+# MFAI Demo — what is implemented (current snapshot)
 
-Kompletný prehľad implementovaných častí projektu. Slúži ako podklad na dohodu, čo ďalej.
+A consolidated inventory of implemented areas. Use it as a baseline when deciding what to build next.
 
 ---
 
-## 1. Koreň repozitára
+## 1. Repository root
 
-### Štruktúra
+### Layout
 - Monorepo: `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `logger_demo`.
-- Hlavný `docker-compose.dev.yml` pre backend, frontend, admin, Seq, AI demo; DB a logger majú vlastné compose súbory.
-- Bash skripty pre štart, stop, status, clear, rebuild, test, lint.
+- Main `docker-compose.dev.yml` for backend, frontend, admin, Seq, AI demo; DB and logger have their own compose files.
+- Bash scripts for start, stop, status, clear, rebuild, test, lint.
 
-### Root skripty
-| Skript | Účel |
-|--------|------|
-| **start-all-dev.sh** | Štart: DB → backend+Seq → frontend → AI demo → logger → admin; živý status každých 5 s; auto-restart zastavených kontajnerov. |
-| **stop-all-dev.sh** | Zastavenie všetkých služieb v opačnom poradí. |
-| **status-all.sh** | Jednorazový status: stav kontajnerov, HTTP/gRPC dostupnosť, porty, odkazy. |
-| **clear-all-dev.sh** | Odstránenie kontajnerov a volumes (strata dát). |
-| **restart-all-dev.sh** | Stop, rebuild obrázkov, start. |
-| **rebuild-all-dev.sh** | Rebuild všetkých Docker obrázkov (bez štartu). |
-| **test-all.sh** | Be_demo xUnit, fe_demo Vitest + Cypress e2e, admin_demo Vitest; súhrn pass/fail. |
-| **lint-all.sh** | Spustí lint v fe_demo, be_demo, admin_demo, ai_demo. |
-| **menu.sh** | TUI menu v štýle Norton Commander: šípky, Enter = vstup/spustenie, Backspace/←/Esc = späť; root skripty + skripty po kontajneroch (be_demo, fe_demo, …). |
+### Root scripts
+| Script | Purpose |
+|--------|---------|
+| **start-all-dev.sh** | Start: DB → backend+Seq → frontend → AI demo → logger → admin; live status every 5s; auto-restart stopped containers. |
+| **stop-all-dev.sh** | Stop all services in reverse order. |
+| **status-all.sh** | One-shot status: containers, HTTP/gRPC reachability, ports, links. |
+| **clear-all-dev.sh** | Remove containers and volumes (**data loss**). |
+| **restart-all-dev.sh** | Stop, rebuild images, start. |
+| **rebuild-all-dev.sh** | Rebuild all Docker images (no start). |
+| **test-all.sh** | `be_demo` xUnit, `fe_demo` Vitest + Cypress e2e, `admin_demo` Vitest; summary pass/fail. |
+| **lint-all.sh** | Lint in `fe_demo`, `be_demo`, `admin_demo`, `ai_demo`. |
+| **menu.sh** | TUI menu (Norton Commander style): arrows, Enter = drill/run, Backspace/←/Esc = back; root scripts + per-container scripts. |
 
-### Konfigurácia
-- **docker-compose.dev.yml**: služby `be-demo-dev` (8000/8001), `fe-demo-dev` (8081), `admin-demo-dev` (8082), `seq` (5341), `ai-demo-dev` (50051); sieť `dev-network`; env pre API URL, Seq, DB; healthchecks; volumes (node_modules, yarn cache, HTTPS cert, seq-data, HuggingFace cache).
-- **README.md**: prehľad, štruktúra, quick start, porty, default credentials, zoznam skriptov, troubleshooting.
+### Configuration
+- **docker-compose.dev.yml**: services `be-demo-dev` (8000/8001), `fe-demo-dev` (8081), `admin-demo-dev` (8082), `seq` (5341), `ai-demo-dev` (50051); network `dev-network`; env for API URL, Seq, DB; healthchecks; volumes (node_modules, yarn cache, HTTPS cert, seq-data, HuggingFace cache).
+- **README.md**: overview, layout, quick start, ports, default credentials, script list, troubleshooting.
 
 ---
 
-## 2. Backend (be_demo)
+## 2. Backend (`be_demo`)
 
-### Technológie
-- ASP.NET Core 10, Identity, EF Core 10, Npgsql (PostgreSQL), JWT Bearer, Serilog + Seq, Swagger, SignalR, gRPC klient (AI).
+### Stack
+- ASP.NET Core 10, Identity, EF Core 10, Npgsql (PostgreSQL), JWT Bearer, Serilog + Seq, Swagger, SignalR, gRPC client (AI).
 
-### Kontroléry
-| Kontrolér | Funkcie |
-|-----------|---------|
+### Controllers
+| Controller | Responsibilities |
+|------------|------------------|
 | **AuthController** | Register, login, logout. |
-| **OAuth2Controller** | Token, register (OAuth2Service). |
-| **UsersController** | CRUD používateľov; **GetUsers** s pagináciou a search (`page`, `pageSize`, `search`, `forAddFriend`); pri `forAddFriend=true` vracia len používateľov, ktorých môže aktuálny user pridať (bez seba, priateľov a pending friend requestov). |
-| **FacesController** | CRUD faces; **GET config** vracia pri auth aj **myFaceRoleId**, **myFaceRoleName** pre každý face; **GET face-roles** (zoznam face rolí); **PUT {id}/my-role** (nastavenie vlastnej face role). |
-| **PagesController** | CRUD stránok. |
-| **PageTypesController** | CRUD typov stránok. |
-| **FriendRequestsController** | Žiadosti o priateľstvo: zoznam, odoslanie, prijatie, odmietnutie. |
+| **OAuth2Controller** | Token, register (`OAuth2Service`). |
+| **UsersController** | User CRUD; **GetUsers** with pagination and search (`page`, `pageSize`, `search`, `forAddFriend`); with `forAddFriend=true` returns only users the current user can add (excludes self, friends, pending friend requests). |
+| **FacesController** | Face CRUD; **GET config** returns **myFaceRoleId**, **myFaceRoleName** per face when authenticated; **GET face-roles**; **PUT {id}/my-role** (set own face role). |
+| **PagesController** | Page CRUD. |
+| **PageTypesController** | Page type CRUD. |
+| **FriendRequestsController** | Friend requests: list, send, accept, reject. |
 
-### SignalR Huby
-| Hub | Endpoint | Funkcie |
-|-----|----------|---------|
-| **ChatHub** | `/hubs/chat` | SendMessage (broadcast), SendPrivateMessage, **SendToAi** (gRPC volanie AI služby, history, ReceiveAiMessage); 401 pri neplatnom tokene. |
+### SignalR hubs
+| Hub | Endpoint | Responsibilities |
+|-----|----------|------------------|
+| **ChatHub** | `/hubs/chat` | SendMessage (broadcast), SendPrivateMessage, **SendToAi** (gRPC to AI service, history, ReceiveAiMessage); 401 on invalid token. |
 | **MessengerHub** | `/hubs/messenger` | SendChatMessage(receiverId, content), AcceptMessageRequest(senderId), RejectMessageRequest(senderId); callbacks: ReceiveChatMessage, ReceiveMessageRequest, ReceiveFriendRequest, MessageRequestAccepted, MessageRequestRejected, ReceiveNotification. |
 
-### Služby
-- **OAuth2Service**, **ECDSAKeyService** (JWT podpis).
-- **FaceService** – lookup face podľa indexu (kebab-case), cache.
-- **UserService** – používatelia.
-- **AiGrpcService** – gRPC klient k ai_demo (Health, Generate); keepalive 60s/30s; handling MODEL_LOADING a chýb.
+### Services
+- **OAuth2Service**, **ECDSAKeyService** (JWT signing).
+- **FaceService** — resolve face by index (kebab-case), cache.
+- **UserService** — users.
+- **AiGrpcService** — gRPC client to `ai_demo` (Health, Generate); keepalive 60s/30s; handles MODEL_LOADING and errors.
 
 ### Middleware
-- **RoutingMiddleware** – face prefix z URL, rewrite na `/api/{face-id}/...?requestFaceID=...`; public paths obídené; 403 pri neplatnom face.
-- **OAuth2Middleware** – validácia OAuth2 tokenov.
+- **RoutingMiddleware** — face prefix from URL, rewrite to `/api/{face-id}/...?requestFaceID=...`; public paths bypassed; 403 on invalid face.
+- **OAuth2Middleware** — OAuth2 client validation.
 
-### Dáta (EF Core)
-- **Identity**: ApplicationUser, UserRole (s **Scope**: Global/Face).
+### Data (EF Core)
+- **Identity**: ApplicationUser, UserRole (**Scope**: Global/Face).
 - **FriendRequest**, **Friendship**, **Message** (IsMessageRequest, MessageRequestStatus), **Notification**.
 - **Face**, **Page**, **PageType**, **PageRouteTranslation**.
-- **UserProfile**, **UserFaceProfile**, **UserFaceRole** (rola používateľa v rámci face).
+- **UserProfile**, **UserFaceProfile**, **UserFaceRole** (per-user per-face role).
 
-#### Roly (globálne a face)
-- **Globálne roly** (jedna na používateľa, `ApplicationUser.UserRoleId`): **SUPER_ADMIN**, **ADMIN**, **USER**, **HOST**.
-- **Face roly** (per user per face, tabuľka **UserFaceRole**): **FACE_ADMIN**, **FACE_USER**, **INZERENT**, **SUBSCRIBER**, **FACE_HOST**.
-- **UserRole** má pole **Scope** (enum: Global, Face); konštanty v `UserRole.GlobalRoleNames` a `UserRole.FaceRoleNames`.
-- Pri **registrácii** sa používateľovi nastaví globálna rola **USER**.
-- Pri vytvorení väzby na face (UserFaceProfile) sa automaticky pridá **UserFaceRole** s rolou **FACE_HOST** pre daný face.
-- Seed: globálne a face roly so Scope; pri seede používateľov sa pre každý face vytvorí UserFaceRole FACE_HOST.
+#### Roles (global and face)
+- **Global roles** (one per user, `ApplicationUser.UserRoleId`): **SUPER_ADMIN**, **ADMIN**, **USER**, **HOST**.
+- **Face roles** (per user per face, **UserFaceRole**): **FACE_ADMIN**, **FACE_USER**, **INZERENT**, **SUBSCRIBER**, **FACE_HOST**.
+- **UserRole** has **Scope** (enum: Global, Face); constants in `UserRole.GlobalRoleNames` and `UserRole.FaceRoleNames`.
+- On **registration**, global role **USER** is assigned.
+- When linking a user to a face (`UserFaceProfile`), a **UserFaceRole** with **FACE_HOST** is added for that face.
+- Seed: global and face roles with Scope; seeded users get `UserFaceRole` FACE_HOST per face.
 
-#### Default stránky pri vytvorení face
-- Pri **POST /api/faces** sa vytvorí **Home** (`/home`) a pre **nepublic** face **Wall** (`/wall`). CMS **PageTypes** sú len **`home`**, **`static`**, **`wall`** (login/register na public face používajú `static`). Zoznamy a detaily entít sú na FE ako fixné route (napr. **`/list/:componentTypeId`**), nie ako typ stránky v adminovi.
-- PageType `"wall"` je v seede; neverejné faces (basic, koncept) majú Home + Wall.
+#### Default pages when creating a face
+- **POST /api/faces** creates **Home** (`/home`) and, for **non-public** faces, **Wall** (`/wall`). CMS **PageTypes** are **`home`**, **`static`**, **`wall`** (login/register on public face use `static`). Entity lists and details on FE use fixed routes (e.g. **`/list/:componentTypeId`**), not admin-defined page types.
+- PageType `"wall"` exists in seed; non-public faces get Home + Wall.
 
-#### Výber face role pri prvom visite (súkromný face)
-- **GET /api/faces/config**: pri požiadavke s Authorization header sa pre každý face doplní **myFaceRoleId** a **myFaceRoleName** (aktuálna rola používateľa v tom face).
-- **GET /api/faces/face-roles** (AllowAnonymous): vracia zoznam face rolí `[{ id, name }]` pre dropdown vo frontende.
-- **PUT /api/faces/{id}/my-role** (Authorize): body `{ userRoleId }` – nastaví alebo vytvorí **UserFaceRole** pre aktuálneho používateľa a daný face; validuje, že rola má Scope = Face.
+#### Choosing a face role on first visit (private face)
+- **GET /api/faces/config**: with `Authorization`, each face includes **myFaceRoleId** and **myFaceRoleName**.
+- **GET /api/faces/face-roles** (AllowAnonymous): `[{ id, name }]` for FE dropdowns.
+- **PUT /api/faces/{id}/my-role** (Authorize): body `{ userRoleId }` — sets or creates **UserFaceRole**; validates `Scope = Face`.
 
-### Ďalšie
-- Swagger/OpenAPI, health checks, AI gRPC health pri štarte.
-- ChatHub SendToAi: try/catch, user-friendly chybová hláška pri nedostupnosti AI.
+### Other
+- Swagger/OpenAPI, health checks, AI gRPC health on startup.
+- ChatHub SendToAi: try/catch, user-friendly errors when AI is unavailable.
 
 ---
 
-## 3. Frontend (fe_demo)
+## 3. Frontend (`fe_demo`)
 
-### Technológie
-- React 18, TypeScript, Vite, React Router, TanStack Query, Bootstrap, Radix UI, react-i18next, axios, react-toastify, @microsoft/signalr, OpenAPI klient.
+### Stack
+- React 18, TypeScript, Vite, React Router, TanStack Query, Bootstrap, Radix UI, react-i18next, axios, react-toastify, @microsoft/signalr, OpenAPI client.
 
-### Autentifikácia a session
-- Registrácia, login, protected/guest routes.
-- **AuthContext**: JWT v localStorage, session watcher (kontrola expirácie každých 30 s), kontrola pri načítaní, **401 interceptor** – pri expirovanom/neplatnom tokene automatické odhlásenie.
-- Logout v Headeri (prvá položka v nav).
+### Auth and session
+- Register, login, protected/guest routes.
+- **AuthContext**: JWT in `localStorage`, session watcher (~30s `exp` check), check on load, **401 interceptor** — auto logout on expired/invalid token.
+- Logout in header (first nav item).
 
-### Lokalizácia a routing
-- i18n: en/sk/cz; lokalizované cesty (napr. `/en/login`, `/sk/prihlasenie`).
-- **Face-based routing**: prefix z URL (napr. `/acme-corp/dashboard`); API klient pridáva face path do requestov; FaceConfigProvider, dynamické stránky z backendu (public/private faces).
+### Localization and routing
+- i18n: en/sk/cz; localized paths (e.g. `/en/login`, `/sk/prihlasenie`).
+- **Face-based routing**: URL prefix (e.g. `/acme-corp/dashboard`); API client adds face path; FaceConfigProvider; dynamic pages from backend (public/private faces).
 
-### UI komponenty a stránky
+### UI and pages
 - **Header**, **Footer** (Messenger link), **LanguageSwitcher**, **ProtectedRoute**, **GuestRoute**, **FacePageView**.
-- **Horný panel pri prvom visite súkromného face**: **FaceRoleSelectPanel** – zobrazí sa pod Headerom, keď je používateľ prihlásený, má zvolený súkromný face a v `localStorage` ešte nie je kľúč `face_role_chosen_{faceId}`. Panel obsahuje dropdown s face rolami (z API GET face-roles) a tlačidlo Potvrdiť; po uložení (PUT my-role) sa nastaví localStorage a config sa znovu načíta, panel sa ďalej nezobrazuje.
-- **Settings panel**: jazyk, logout, výber face, Pages nav, **Friend Requests**, **Messenger**, **Notifications** (tabs).
-- Stránky: Home (guest), Login, Register, HomePageProtected, Profile, **Users** (zoznam + detail), dynamické face stránky.
+- **Top panel on first private-face visit**: **FaceRoleSelectPanel** — shown below Header when user is signed in, private face selected, and `localStorage` lacks `face_role_chosen_{faceId}`. Dropdown from GET face-roles + confirm; after PUT my-role, localStorage key set, config reload, panel hidden.
+- **Settings panel**: language, logout, face picker, Pages nav, **Friend Requests**, **Messenger**, **Notifications** (tabs).
+- Pages: Home (guest), Login, Register, HomePageProtected, Profile, **Users** (list + detail), dynamic face pages.
 
-### Friend Requests (Add Friend)
-- **FriendRequestsTab**: prichádzajúce žiadosti (accept/reject), sekcia „Add friend“.
-- **Backend paginácia a search**: `getUsers(token, { page, pageSize, search, forAddFriend: true })`; odpoveď `{ items, totalCount, page, pageSize, totalPages }`.
-- **Dynamický pageSize**: výpočet podľa dostupnej výšky (ResizeObserver, ITEM_HEIGHT_PX, PAGINATION_HEIGHT_PX, SAFETY_MARGIN_PX); žiadny scroll v liste – presne toľko položiek, koľko sa zmestí; paginácia Next/Prev.
-- Debounce search 300 ms; oddelené loading stavy pre requests vs addable users; optimistické odstránenie po odoslaní žiadosti (sentToIds).
-- Layout: flex, sekcia Add friend s `friend-requests-list-wrapper` (overflow: hidden), aby obsah nepretekal pod footer.
+### Friend requests (Add friend)
+- **FriendRequestsTab**: incoming requests (accept/reject), “Add friend” section.
+- **Backend pagination and search**: `getUsers(token, { page, pageSize, search, forAddFriend: true })`; response `{ items, totalCount, page, pageSize, totalPages }`.
+- **Dynamic pageSize**: from available height (ResizeObserver, ITEM_HEIGHT_PX, PAGINATION_HEIGHT_PX, SAFETY_MARGIN_PX); no inner scroll—exactly as many rows as fit; Next/Prev pagination.
+- Search debounce 300ms; separate loading for requests vs addable users; optimistic removal after send (`sentToIds`).
+- Layout: flex, Add friend section with `friend-requests-list-wrapper` (`overflow: hidden`) so content does not spill under the footer.
 
 ### Messenger
-- **MessengerContext**: SignalR pripojenie na `/hubs/messenger`, stavy Connecting/Connected/Disconnected.
-- **MessengerTab**: zoznam konverzácií, message requests (accept/reject), chat s vybraným používateľom; odoslanie správy, prijímanie v reálnom čase (ReceiveChatMessage, ReceiveMessageRequest, …).
-- Formátovanie času (dnes čas, inak dátum+čas), connection status v UI.
+- **MessengerContext**: SignalR to `/hubs/messenger`, Connecting/Connected/Disconnected.
+- **MessengerTab**: conversation list, message requests (accept/reject), chat with selected user; send; realtime (ReceiveChatMessage, ReceiveMessageRequest, …).
+- Time formatting (today = time, else date+time), connection status in UI.
 
 ### Notifications
-- **NotificationsTab**: zobrazenie notifikácií (napr. message request).
+- **NotificationsTab**: list (e.g. message requests).
 
-### API a konfigurácia
-- **getFacesConfig(token?)**: pri zadanom tokene posiela Authorization header; backend vráti pre každý face aj **myFaceRoleId**, **myFaceRoleName**. FaceConfigProvider volá load s tokenom, keď je používateľ prihlásený.
-- **FaceRolesService**: **getFaceRoles()** – GET /api/faces/face-roles; **setMyFaceRole(faceId, userRoleId, token)** – PUT /api/faces/{id}/my-role.
-- **UsersListService**: getUsers s parametrami (page, pageSize, search, forAddFriend), GetUsersResponse; getUser(id).
-- **authAwareFetch**: 401 handling, odhlásenie.
+### API and config
+- **getFacesConfig(token?)**: sends `Authorization` when token present; backend returns **myFaceRoleId**, **myFaceRoleName** per face. FaceConfigProvider loads with token when signed in.
+- **FaceRolesService**: **getFaceRoles()** — GET /api/faces/face-roles; **setMyFaceRole(faceId, userRoleId, token)** — PUT /api/faces/{id}/my-role.
+- **UsersListService**: getUsers with params; GetUsersResponse; getUser(id).
+- **authAwareFetch**: 401 handling, logout.
 - **env**: VITE_API_URL, VITE_API_HTTPS_URL, OAuth2, Seq proxy, app name/version.
-- Vite proxy pre API a (voliteľne) Seq; v dev móde môže byť Seq logging vypnutý.
+- Vite proxy for API and optional Seq; Seq logging can be off in dev.
 
-### Testovanie
+### Testing
 - Vitest, Cypress e2e; lint, format, type-check, generate:api.
 
 ---
 
-## 4. Admin panel (admin_demo)
+## 4. Admin (`admin_demo`)
 
-### Technológie
-- React 18, TypeScript, Vite, React Router, TanStack Query, Bootstrap, Radix UI, axios, react-toastify, @microsoft/signalr, OpenAPI klient.
+### Stack
+- React 18, TypeScript, Vite, React Router, TanStack Query, Bootstrap, Radix UI, axios, react-toastify, @microsoft/signalr, OpenAPI client.
 
-### Funkcie
-- OAuth2 login, chránené admin routes.
-- **CRUD**: Users (zoznam, detail, create, edit), Faces (zoznam, detail, create, edit), Pages (zoznam, detail, create, edit), Page Types.
-- **AdminLayout**: sidebar + header, tabuľky (sort, pagination), formuláre, toasty.
-- i18n en/sk/cz, lokalizované cesty.
-- Stránky: Dashboard, Login, Users, Faces, Pages, Chat (ak je).
+### Features
+- OAuth2 login, protected admin routes.
+- **CRUD**: Users (list, detail, create, edit), Faces (list, detail, create, edit), Pages (list, detail, create, edit), Page Types.
+- **AdminLayout**: sidebar + header, tables (sort, pagination), forms, toasts.
+- i18n en/sk/cz, localized routes.
+- Pages: Dashboard, Login, Users, Faces, Pages, Chat (if enabled).
 
-### Konfigurácia
-- Port 8082; env VITE_API_URL, VITE_PORT; Docker v root compose.
+### Configuration
+- Port 8082; env VITE_API_URL, VITE_PORT; Docker in root compose.
 
 ---
 
-## 5. AI služba (ai_demo)
+## 5. AI service (`ai_demo`)
 
-### Technológie
+### Stack
 - Python 3.11, gRPC (grpcio, grpcio-tools, protobuf), transformers, torch, accelerate (DistilGPT-2).
 
-### Funkcie
-- **HealthCheck** RPC; backend ho volá pri štarte.
-- **Generate** RPC (prompt, max_new_tokens); model DistilGPT-2 (Hugging Face, lokálne).
-- **Exception handling**: RuntimeError s „MODEL_LOADING“ – vracia priateľskú hlášku (model sa načítava); ostatné chyby logované a vrátené v response.
-- **gRPC server options**: keepalive (permit without calls, min ping interval), aby .NET klient mohol posielať pingy počas dlhého čakania na Generate.
+### Features
+- **HealthCheck** RPC; backend calls on startup.
+- **Generate** RPC (prompt, max_new_tokens); DistilGPT-2 (Hugging Face, local).
+- **Exception handling**: RuntimeError with “MODEL_LOADING” → friendly message; other errors logged and returned.
+- **gRPC server options**: keepalive (permit without calls, min ping interval) so the .NET client can ping during long Generate calls.
 
-### Konfigurácia
-- Port 50051; proto health.proto; generate_proto.sh; Docker s HF_HOME volume, memory limit, dlhý start_period.
-
----
-
-## 6. Databáza (db_demo)
-
-- PostgreSQL 16 (postgres:16-alpine), pgAdmin 4.
-- Porty: 54320 (PostgreSQL), 5050 (pgAdmin).
-- DB: bedemo, user bedemo_user; volume pre perzistenciu; healthcheck.
-- **servers.json** pre pgAdmin (BeDemo Database, host postgres-dev).
-- Migrácie cez backend (EF Core).
+### Configuration
+- Port 50051; `health.proto`; `generate_proto.sh`; Docker with HF_HOME volume, memory limit, long start_period.
 
 ---
 
-## 7. Logger (logger_demo)
+## 6. Database (`db_demo`)
 
-- Dozzle – real-time logy všetkých kontajnerov.
-- Port 8080; discovery z Docker socketu; filter podľa kontajnera.
+- PostgreSQL 16 (`postgres:16-alpine`), pgAdmin 4.
+- Ports: 54320 (PostgreSQL), 5050 (pgAdmin).
+- DB `bedemo`, user `bedemo_user`; volume for persistence; healthcheck.
+- **servers.json** for pgAdmin (BeDemo Database, host `postgres-dev`).
+- Migrations via backend (EF Core).
 
 ---
 
-## 8. Súhrn – čo je hotové
+## 7. Logger (`logger_demo`)
 
-| Oblasť | Stav |
-|--------|------|
-| **Auth** | Backend: OAuth2 + JWT, Identity, ECDSA. FE/Admin: login, register, protected/guest routes, token v API kliente, **auto-logout pri 401/expire**, logout v menu. |
-| **API** | REST (Swagger), face-prefixed routes; FE/Admin klient z OpenAPI. |
-| **Používatelia** | GetUsers s **pagináciou a search**, **forAddFriend** pre Add Friend; UsersPage, UserDetailPage. |
-| **Friend Requests** | Backend: FriendRequestsController; FE: FriendRequestsTab, **backend paginácia + search**, **dynamický počet položiek podľa výšky**, debounce, optimistické UI. |
-| **Real-time** | SignalR: **ChatHub** (broadcast, private, **SendToAi**), **MessengerHub** (chat, message requests, notifikácie); FE MessengerContext, MessengerTab, NotificationsTab. |
-| **AI** | ai_demo gRPC Health + Generate (DistilGPT-2); backend AiGrpcService; ChatHub SendToAi + history; error handling a keepalive. |
-| **Databáza** | PostgreSQL 16, EF Core migrácie, Identity + FriendRequest, Friendship, Message, Notification, Face, Page, … |
+- Dozzle — realtime logs from all containers.
+- Port 8080; discovery via Docker socket; filter by container.
+
+---
+
+## 8. Summary — implemented
+
+| Area | Status |
+|------|--------|
+| **Auth** | Backend: OAuth2 + JWT, Identity, ECDSA. FE/Admin: login, register, protected/guest routes, token on API client, **auto-logout on 401/expiry**, logout in menu. |
+| **API** | REST (Swagger), face-prefixed routes; FE/Admin clients from OpenAPI. |
+| **Users** | GetUsers with **pagination and search**, **forAddFriend** for Add Friend; UsersPage, UserDetailPage. |
+| **Friend requests** | Backend: FriendRequestsController; FE: FriendRequestsTab, **backend pagination + search**, **dynamic row count from height**, debounce, optimistic UI. |
+| **Realtime** | SignalR: **ChatHub** (broadcast, private, **SendToAi**), **MessengerHub** (chat, message requests, notifications); FE MessengerContext, MessengerTab, NotificationsTab. |
+| **AI** | `ai_demo` gRPC Health + Generate (DistilGPT-2); backend AiGrpcService; ChatHub SendToAi + history; error handling and keepalive. |
+| **Database** | PostgreSQL 16, EF Core migrations, Identity + FriendRequest, Friendship, Message, Notification, Face, Page, … |
 | **Multi-tenant** | Face-based routing (backend middleware + FE face path); public/private faces. |
-| **DevOps** | Docker Compose, skripty start/stop/status/clear/rebuild/test/lint, **menu.sh** (NC-štýl TUI). |
-| **Logging** | Serilog → Seq (backend); Dozzle (všetky kontajnerov). |
+| **DevOps** | Docker Compose, start/stop/status/clear/rebuild/test/lint scripts, **menu.sh** (NC-style TUI). |
+| **Logging** | Serilog → Seq (backend); Dozzle (containers). |
 
 ---
 
-## 9. Čo ďalej (na dohodu)
+## 9. Next steps (to agree)
 
-- Rozšírenie funkcionalít (nové moduly, reporty, …).
-- Testy: pokrytie, ďalšie e2e scenáre.
-- UX/UI: úpravy Friend Requests / Messenger / Notifications.
-- Bezpečnosť a výkon: rate limiting, caching, hardening.
-- Dokumentácia: API, deployment, runbook.
-- Iné priority podľa potreby projektu.
+- Feature expansion (new modules, reports, …).
+- Tests: coverage, more e2e scenarios.
+- UX/UI: Friend Requests / Messenger / Notifications polish.
+- Security and performance: rate limiting, caching, hardening.
+- Documentation: API, deployment, runbooks.
+- Other priorities per product needs.
 
 ---
 
-*Dokument popisuje stav projektu k dátumu poslednej úpravy. Ďalší postup sa dohodne na základe tohto prehľadu.*
+*Snapshot as of the last edit. Prioritize follow-up work from this inventory.*

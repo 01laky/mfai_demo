@@ -1,41 +1,41 @@
-# BeDemo API: OAuth2, Faces a Stories — curl návod
+# BeDemo API: OAuth2, faces, and Stories — curl walkthrough
 
-Tento dokument popisuje, ako si cez **curl** overiť **OAuth2** registráciu a token, nastavenie **face role** (nutné pre zobrazenie zoznamu stories) a kompletný **Stories** flow. Hodí sa pri lokálnom vývoji aj pri smoke teste po nasadení.
+This document shows how to verify **OAuth2** registration and token issuance, set a **face role** (needed to see the stories list), and run a full **Stories** flow with **curl**. Useful for local development and post-deploy smoke tests.
 
-## 1. Základná URL (BASE)
+## 1. Base URL
 
-| Prostredie | Typická URL | Poznámka |
-|------------|-------------|----------|
-| Docker Compose (`docker-compose.dev.yml`) | `http://127.0.0.1:8000` | `ASPNETCORE_URLS` mapuje kontajner na host **8000**. |
-| `dotnet run` z Visual Studio / `launchSettings` | `http://127.0.0.1:8080` | Over v `BeDemo.Api/Properties/launchSettings.json`. |
+| Environment | Typical URL | Notes |
+|-------------|-------------|-------|
+| Docker Compose (`docker-compose.dev.yml`) | `http://127.0.0.1:8000` | `ASPNETCORE_URLS` maps the container to host **8000**. |
+| `dotnet run` from Visual Studio / `launchSettings` | `http://127.0.0.1:8080` | Check `BeDemo.Api/Properties/launchSettings.json`. |
 
-V príkazoch nižšie použijeme:
+In the examples below:
 
 ```bash
 export BASE=http://127.0.0.1:8000
 ```
 
-Ak voláš API na inom hoste/porte, zmeň `BASE`.
+Change `BASE` if your API listens elsewhere.
 
-### Overenie, že beží aktuálna verzia API
+### Confirm you are running the expected API build
 
 Swagger UI: `$BASE/swagger/index.html`  
 OpenAPI JSON: `$BASE/swagger/v1/swagger.json`
 
-Po pridaní Stories musí v OpenAPI JSON existovať cesta obsahujúca `Stories` (napr. `/api/Stories` — ASP.NET routovanie je case-insensitive, takže `/api/stories` funguje rovnako). Ak endpointy **Stories** v Swaggeri **chýbajú**, kontajner alebo proces beží so **starým buildom** — urob **rebuild** image / reštart `dotnet run` po `git pull`.
+After adding Stories, OpenAPI should contain a path with `Stories` (e.g. `/api/Stories` — ASP.NET routing is case-insensitive, so `/api/stories` works too). If **Stories** endpoints are **missing** in Swagger, the container or process is an **old build** — rebuild the image / restart `dotnet run` after `git pull`.
 
-## 2. OAuth2 klient (vývojové defaults)
+## 2. OAuth2 client (development defaults)
 
-Hodnoty z `BeDemo.Api/appsettings.json` (Development):
+From `BeDemo.Api/appsettings.json` (Development):
 
-| Pole | Hodnota |
-|------|---------|
+| Field | Value |
+|-------|-------|
 | `clientId` | `be-demo-client` |
 | `clientSecret` | `be-demo-secret-very-strong-key` |
 
-V produkcii musia byť tajné kľúče v konfigurácii/sekretoch, nie v repozitári.
+In production, secrets must live in configuration / a secret store, not in the repo.
 
-## 3. Registrácia používateľa
+## 3. Register a user
 
 `POST /api/oauth2/register` — **AllowAnonymous**.
 
@@ -48,14 +48,14 @@ curl -sS -X POST "$BASE/api/oauth2/register" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"firstName\":\"Test\",\"lastName\":\"User\"}"
 ```
 
-Úspech: JSON s `userId`, `profileId`, prípadne `faceProfileCount`.  
-Zlyhanie: `400` s chybami Identity (napr. slabé heslo, duplicitný e-mail).
+Success: JSON with `userId`, `profileId`, optional `faceProfileCount`.  
+Failure: `400` with Identity validation errors (weak password, duplicate email, etc.).
 
 ## 4. Token — password grant
 
 `POST /api/oauth2/token` — **AllowAnonymous**.
 
-JSON používa **camelCase** property names (napr. `grantType`, `clientId`, `accessToken`).
+JSON uses **camelCase** property names (e.g. `grantType`, `clientId`, `accessToken`).
 
 ```bash
 TOK_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
@@ -73,17 +73,17 @@ REFRESH_TOKEN=$(echo "$TOK_JSON" | jq -r .refreshToken)
 echo "$TOK_JSON" | jq .
 ```
 
-Odpoveď pri úspechu obsahuje napr.:
+On success the body typically includes:
 
-- `accessToken` — JWT pre hlavičku `Authorization: Bearer …`
-- `refreshToken` — na obnovenie access tokenu
-- `expiresIn`, `tokenType` (typicky `Bearer`)
+- `accessToken` — JWT for `Authorization: Bearer …`
+- `refreshToken` — opaque refresh token (stored hashed server-side; rotated on use)
+- `expiresIn`, `tokenType` (usually `Bearer`)
 
-Chyby: `401` s `error` / `errorDescription` (OAuth2 error objekt), alebo `503` ak databáza nie je pripravená.
+Errors: `401` with `error` / `errorDescription` (OAuth2 error object), or `503` if the database is not ready.
 
-### 4.1 Dlhšia platnosť tokenu — `rememberMe`
+### 4.1 Longer access token lifetime — `rememberMe`
 
-**Význam:** Voliteľné pole **`rememberMe: true`** v tele password grantu povie API, aby vydalo JWT s dlhšou životnosťou podľa **`Jwt:ExpiresInMinutesRememberMe`** v `appsettings.json`. Ak pole **vynecháš** alebo dáš **`false`**, použije sa **`Jwt:ExpiresInMinutes`** (krátka relácia). Nie je to samostatný typ relácie — len iný čas v nároku **`exp`** v JWT. Podrobne: [authentication-and-sessions-sk.md](../readmes/authentication-and-sessions-sk.md) / [authentication-and-sessions.md](./authentication-and-sessions.md).
+Optional field **`rememberMe: true`** in the password grant body asks the API for a JWT with a longer lifetime per **`Jwt:ExpiresInMinutesRememberMe`** in `appsettings.json`. If the field is **omitted** or **`false`**, **`Jwt:ExpiresInMinutes`** applies (shorter session). It is not a separate session type—only the **`exp`** claim changes. Details: [authentication-and-sessions.md](./authentication-and-sessions.md).
 
 ```bash
 TOK_LONG_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
@@ -100,11 +100,11 @@ TOK_LONG_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
 echo "$TOK_LONG_JSON" | jq '{ expiresIn, tokenType }'
 ```
 
-Porovnanie: hodnota **`expiresIn`** (sekundy) býva pri `rememberMe: true` **väčšia** než bez neho (závisí od konfigurácie v API).
+Compare: **`expiresIn`** (seconds) is usually **larger** with `rememberMe: true` (depends on API config).
 
-## 5. Token — refresh_token grant
+## 5. Token — `refresh_token` grant
 
-> **Poznámka:** V aktuálnej demo implementácii **refresh_token grant na serveri nefunguje** (tokeny sa nepersistujú / nevalidujú). Príkaz nižšie môžeš použiť na overenie chybovej odpovede; spoľahlivé „dlhé“ prihlásenie rieši **`rememberMe`** pri password grante.
+Use the opaque **`refreshToken`** from the password grant response. The server validates it in **`OAuthRefreshTokens`**, **rotates** it (single-use), and returns a new access + refresh pair. Misusing a valid access JWT as a refresh token is rejected.
 
 ```bash
 TOK_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
@@ -115,31 +115,34 @@ TOK_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
     \"clientSecret\": \"be-demo-secret-very-strong-key\",
     \"refreshToken\": \"$REFRESH_TOKEN\"
   }")
+echo "$TOK_JSON" | jq .
 ```
 
-## 6. Face role — prečo je to dôležité pre Stories
+See [authentication-and-sessions.md](./authentication-and-sessions.md) for lifetimes and rotation rules.
 
-`GET /api/stories?faceId=…` vráti zoznam **len** používateľom, ktorí v danom face majú **face rolu inú než host**.
+## 6. Face role — why it matters for Stories
 
-Konštanta hosta v kóde: `FACE_HOST` (`UserRole.FaceRoleNames.FaceHost`). Nový používateľ po registrácii často dostane predvolene **FACE_HOST**; vtedy je potrebné cez API nastaviť napr. **FACE_USER**.
+`GET /api/stories?faceId=…` returns a list only for users whose face role in that face is **not** the host role.
 
-### 6.1 Zoznam faces (autorizovaný)
+Host constant in code: `FACE_HOST` (`UserRole.FaceRoleNames.FaceHost`). New users often default to **FACE_HOST**; use the API to switch e.g. to **FACE_USER**.
+
+### 6.1 List faces (authorized)
 
 ```bash
 curl -sS "$BASE/api/faces" -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
-Vyber `id` cieľového face → `FACE_ID`.
+Pick target face `id` → `FACE_ID`.
 
-### 6.2 Zoznam face rolí (verejný endpoint)
+### 6.2 List face roles (public endpoint)
 
 ```bash
 curl -sS "$BASE/api/faces/face-roles" | jq .
 ```
 
-Nájdi `id` záznamu s `name` = `FACE_USER` (alebo iná ne-host rola) → `USER_ROLE_ID`.
+Find the row with `name` = `FACE_USER` (or another non-host role) → `USER_ROLE_ID`.
 
-### 6.3 Nastavenie mojej face role
+### 6.3 Set my face role
 
 ```bash
 curl -sS -X PUT "$BASE/api/faces/$FACE_ID/my-role" \
@@ -148,11 +151,11 @@ curl -sS -X PUT "$BASE/api/faces/$FACE_ID/my-role" \
   -d "{\"userRoleId\": $USER_ROLE_ID}" | jq .
 ```
 
-## 7. Stories — kompletný curl flow
+## 7. Stories — full curl flow
 
-Stručný prehľad endpointov je v repozitári **be_demo**: [`STORIES_API.md`](../be_demo/STORIES_API.md).
+Short endpoint overview in **`be_demo`**: [`STORIES_API.md`](../be_demo/STORIES_API.md).
 
-### 7.1 Vytvorenie draftu
+### 7.1 Create draft
 
 ```bash
 STORY_JSON=$(curl -sS -X POST "$BASE/api/stories" \
@@ -164,21 +167,21 @@ STORY_ID=$(echo "$STORY_JSON" | jq -r .id)
 echo "$STORY_JSON" | jq .
 ```
 
-Bez poľa `faceIds` (alebo prázdne) cieli story **všetky** face (rovnaká idea ako pri reeloch). Voliteľne pošli `faceIds: [1,2]`.
+Without `faceIds` (or empty), the story targets **all** faces (same idea as reels). Optionally send `faceIds: [1,2]`.
 
-### 7.2 Nahranie obrázka (multipart)
+### 7.2 Upload image (multipart)
 
-Povinné: aspoň jeden súbor pred publish. `sortOrder` 0–9.
+At least one file is required before publish. `sortOrder` 0–9.
 
 ```bash
 curl -sS -X POST "$BASE/api/stories/$STORY_ID/images" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -F "file=@/cesta/k/fotke.jpg;type=image/jpeg" \
+  -F "file=@/path/to/photo.jpg;type=image/jpeg" \
   -F "sortOrder=0" \
-  -F "description=Voliteľný popis" | jq .
+  -F "description=Optional caption" | jq .
 ```
 
-### 7.3 Publikácia (ihneď)
+### 7.3 Publish (immediate)
 
 ```bash
 curl -sS -X POST "$BASE/api/stories/$STORY_ID/publish" \
@@ -187,27 +190,27 @@ curl -sS -X POST "$BASE/api/stories/$STORY_ID/publish" \
   -d '{"scheduledPublishAt":null}' | jq .
 ```
 
-Naplánovanie: nastav `scheduledPublishAt` na ISO UTC reťazec; worker spracuje job `story.publish`.
+Scheduling: set `scheduledPublishAt` to an ISO UTC string; the worker processes job `story.publish`.
 
-### 7.4 Zoznam stories pre face (non-host viewer)
+### 7.4 List stories for a face (non-host viewer)
 
 ```bash
 curl -sS "$BASE/api/stories?faceId=$FACE_ID" \
   -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
-Ak si stále **FACE_HOST** v tomto face, zoznam bude prázdny alebo nevhodná odpoveď podľa logiky API.
+If you are still **FACE_HOST** in that face, the list may be empty or the API may apply host-specific rules.
 
-### 7.5 Ďalšie volania
+### 7.5 Other calls
 
 - Detail: `GET /api/stories/{id}?faceId=…`
-- Moje: `GET /api/stories/me`
+- Mine: `GET /api/stories/me`
 - View: `POST /api/stories/{id}/view?faceId=…`
-- Likes / comments: pozri tabuľku v `STORIES_API.md`
+- Likes / comments: see the table in `STORIES_API.md`
 
-## 8. Jednoskriptový smoke test (bash)
+## 8. One-shot bash smoke test
 
-Skript predpokladá `jq`, `curl` a platný `BASE`. Po registrácii nastaví `FACE_USER` na prvom face a vytvorí story s minimálnym JPEG (1×1) z base64, ak máš pripravený súbor `/tmp/story-smoke.jpg`.
+Requires `jq`, `curl`, and a valid `BASE`. After registration, sets `FACE_USER` on the first face and creates a story; you can upload `/tmp/story-smoke.jpg` for a minimal JPEG.
 
 ```bash
 #!/usr/bin/env bash
@@ -216,7 +219,7 @@ BASE="${BASE:-http://127.0.0.1:8000}"
 EMAIL="smoke+$(date +%s)@example.com"
 PASS='Test123!@#'
 
-curl -sf "$BASE/swagger/index.html" >/dev/null || { echo "API nebeží na $BASE"; exit 1; }
+curl -sf "$BASE/swagger/index.html" >/dev/null || { echo "API is not running at $BASE"; exit 1; }
 
 curl -sS -X POST "$BASE/api/oauth2/register" -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" | jq .
@@ -231,26 +234,26 @@ curl -sS -X PUT "$BASE/api/faces/$FACE_ID/my-role" \
   -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" \
   -d "{\"userRoleId\":$ROLE_USER}" | jq .
 
-# Ak /api/stories v Swaggeri neexistuje, nasledujúce kroky vrátia 404 — rebuild API.
+# If /api/stories is missing in Swagger, the next steps return 404 — rebuild API.
 STORY_ID=$(curl -sS -X POST "$BASE/api/stories" -H "Authorization: Bearer $TOK" \
   -H "Content-Type: application/json" -d '{"title":"smoke"}' | jq -r .id)
 
-# Nahrať súbor namiesto preskočenia:
+# Upload a file instead of skipping:
 # curl -sS -X POST "$BASE/api/stories/$STORY_ID/images" -H "Authorization: Bearer $TOK" \
 #   -F "file=@/tmp/story-smoke.jpg" -F "sortOrder=0"
 
 curl -sS "$BASE/api/stories?faceId=$FACE_ID" -H "Authorization: Bearer $TOK" | jq .
 ```
 
-## 9. Lint a testy v monorepe
+## 9. Lint and tests in the monorepo
 
-Z koreňa `mfai_demo`:
+From `mfai_demo` root:
 
 ```bash
 ./lint-all.sh
 ```
 
-Backend testy (len test projekt):
+Backend tests (test project only):
 
 ```bash
 cd be_demo && dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
@@ -262,8 +265,8 @@ Frontend:
 cd fe_demo && yarn lint && yarn format:check && yarn test && yarn build
 ```
 
-## 10. Súvisiaca dokumentácia
+## 10. Related documentation
 
-- [Stories API (tabuľka endpointov)](../be_demo/STORIES_API.md)
-- [Docker dev stack](../docker-compose.dev.yml) — porty FE/BE/admin
-- [README](../../README.md) — celkový prehľad repozitára
+- [Stories API (endpoint table)](../be_demo/STORIES_API.md)
+- [Docker dev stack](../docker-compose.dev.yml) — FE/BE/admin ports
+- [README](../../README.md) — monorepo overview

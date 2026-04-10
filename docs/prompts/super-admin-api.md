@@ -1,170 +1,170 @@
-# Super-admin only API — analýza, návrh a prompt pre implementáciu (AI)
+# Super-admin-only API — analysis, design, and AI implementation prompt
 
-Jazyk dokumentu: **slovenčina** (technické identifikátory a cesty v kóde ostávajú v angličtine).  
-Súvisiaca dokumentácia: [acl-and-capabilities.md](../guides/acl-and-capabilities.md), [authentication-and-sessions.md](../guides/authentication-and-sessions.md).
-
----
-
-## 1. Účel dokumentu
-
-1. **Analyzovať** súčasný stav autorizácie `SUPER_ADMIN` vs `ADMIN` v repozitári `_mfai_demo`.
-2. **Definovať**, čo znamená „super-admin only API“ z hľadiska bezpečnosti, routingu a dátového modelu.
-3. **Zapísať detailný prompt pre AI agenta** (sekcia 10), ktorý stačí skopírovať do novej konverzácie a implementovať zmeny konzistentne s existujúcim kódom.
-
-Tento dokument **nesamplementuje** kód; je vstupom pre ďalší implementačný krok.
+**Language:** English (technical identifiers and code paths stay as in the repo).  
+**Related docs:** [acl-and-capabilities.md](../guides/acl-and-capabilities.md), [authentication-and-sessions.md](../guides/authentication-and-sessions.md).
 
 ---
 
-## 2. Súčasný stav (inventory)
+## 1. Purpose
 
-### 2.1 Globálna rola a JWT
+1. **Analyze** current `SUPER_ADMIN` vs `ADMIN` authorization in `_mfai_demo`.
+2. **Define** what “super-admin-only API” means for security, routing, and the data model.
+3. **Provide a detailed AI-agent prompt** (section 10) you can paste into a new chat to implement changes consistently with existing code.
 
-- Globálna rola je na `ApplicationUser.UserRoleId` → tabuľka `UserRoles` (`Name`, `Scope` = `Global` | `Face`).
-- Konštanty mien: `UserRole.GlobalRoleNames` — `SuperAdmin` = `"SUPER_ADMIN"`, `Admin` = `"ADMIN"`, `User`, `Host`.
-- Pri vydaní access tokenu `OAuth2Service.BuildAccessJwtAsync` načíta aktuálny názov role z DB a vloží **jeden** claim `ClaimTypes.Role` s týmto názvom (tenký token, A1/A9).
-- Po zmene `UserRoleId` v DB **starý JWT ešte obsahuje starú rolu** až do expirácie; nová rola sa prejaví po **obnovení tokenu** (`refresh_token` grant) alebo novom **password** logine — poznámka v [`OAuth2Service`](../be_demo/BeDemo.Api/Services/OAuth2Service.cs) (BuildAccessJwtAsync XML).
+This document **does not** implement code; it is input for a follow-up implementation step.
 
-### 2.2 Kto dnes môže čo (platform vs super)
+---
 
-- `PlatformAccessRules.IsGlobalAdmin` = `ADMIN` **alebo** `SUPER_ADMIN` (JWT role claim).
-- `PlatformAccessRules.IsGlobalSuperAdmin` = len `SUPER_ADMIN`.
-- `CanManageAllFaces` = `IFaceScopeContext.IsAdminFaceScope` **a** `IsGlobalAdmin` — teda **obidve** roly majú rovnakú úroveň pre „platform“ operácie pod prefixom admin tváre (napr. `/admin/...`).
-- `CanMutateGlobalPageTypes` = rovnaký prah ako `CanManageAllFaces`.
-- `UsersController.CreateUser` / `UpdateUser` vyžadujú `CanManageAllFaces()` — **ADMIN aj SUPER_ADMIN** môžu vytvárať/aktualizovať používateľov, ale **nemôžu meniť globálnu rolu** (v `UpdateUserModel` nie je `UserRoleId`).
-- **Neexistuje** verejný REST endpoint na zmenu `ApplicationUser.UserRoleId` (globálna rola) — zmena je prakticky len seed / DB / skripty (`InitializeDatabase`, `IntegrationTestSeed`).
+## 2. Current state (inventory)
 
-### 2.3 Capabilities a frontend
+### 2.1 Global role and JWT
 
-- `AccessCapabilitiesService`: `platform:super` (`AclPermissionKeys.PlatformSuper`) len ak `IsGlobalSuperAdmin(principal)`; `platform:admin` ak `CanManageAllFaces`.
-- FE: `fe_demo/src/acl/permissions.ts` — `canSuperAdmin(caps)` už existuje; katalóg kľúčov musí zostať v parite s `BeDemo.Api.Security.AclPermissionKeys` (Vitest).
+- Global role: `ApplicationUser.UserRoleId` → `UserRoles` (`Name`, `Scope` = `Global` | `Face`).
+- Name constants: `UserRole.GlobalRoleNames` — `SuperAdmin` = `"SUPER_ADMIN"`, `Admin` = `"ADMIN"`, `User`, `Host`.
+- When issuing an access token, `OAuth2Service.BuildAccessJwtAsync` loads the current role name from the DB and adds a single `ClaimTypes.Role` claim (thin token, A1/A9).
+- After `UserRoleId` changes in the DB, **an old JWT still carries the old role** until expiry; the new role appears after **token refresh** (`refresh_token` grant) or a new **password** login — see XML on [`OAuth2Service`](../be_demo/BeDemo.Api/Services/OAuth2Service.cs) (`BuildAccessJwtAsync`).
 
-### 2.4 Testovacia infraštruktúra
+### 2.2 Who can do what today (platform vs super)
+
+- `PlatformAccessRules.IsGlobalAdmin` = `ADMIN` **or** `SUPER_ADMIN` (JWT role claim).
+- `PlatformAccessRules.IsGlobalSuperAdmin` = `SUPER_ADMIN` only.
+- `CanManageAllFaces` = `IFaceScopeContext.IsAdminFaceScope` **and** `IsGlobalAdmin` — so **both** roles share the same bar for “platform” operations under the admin face prefix (e.g. `/admin/...`).
+- `CanMutateGlobalPageTypes` = same threshold as `CanManageAllFaces`.
+- `UsersController.CreateUser` / `UpdateUser` require `CanManageAllFaces()` — **ADMIN and SUPER_ADMIN** can create/update users but **cannot change global role** (`UpdateUserModel` has no `UserRoleId`).
+- There is **no** public REST endpoint to change `ApplicationUser.UserRoleId`; changes are effectively seed / DB / scripts (`InitializeDatabase`, `IntegrationTestSeed`).
+
+### 2.3 Capabilities and frontend
+
+- `AccessCapabilitiesService`: `platform:super` (`AclPermissionKeys.PlatformSuper`) only if `IsGlobalSuperAdmin(principal)`; `platform:admin` if `CanManageAllFaces`.
+- FE: `fe_demo/src/acl/permissions.ts` — `canSuperAdmin(caps)` exists; key catalog must stay aligned with `BeDemo.Api.Security.AclPermissionKeys` (Vitest).
+
+### 2.4 Test infrastructure
 
 - `IntegrationTestSeed`: `integration-superadmin@test.com` + `GetSuperAdminAccessTokenAsync`; `integration-admin@test.com` + `GetAdminAccessTokenAsync`.
-- `AclTestClients`: `GetPlatformSuperAdminTokenAsync`, `GetPlatformAdminTokenAsync`; OAuth cez `CreateUnscopedClient()`, API cez `CreateFaceClient("admin")` pre platform scope.
-- Vzor testov: [`PageTypesControllerTests.cs`](../be_demo/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 podľa tokenu a face klienta).
+- `AclTestClients`: `GetPlatformSuperAdminTokenAsync`, `GetPlatformAdminTokenAsync`; OAuth via `CreateUnscopedClient()`, API via `CreateFaceClient("admin")` for platform scope.
+- Test pattern: [`PageTypesControllerTests.cs`](../be_demo/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 by token and face client).
 
 ### 2.5 Audit
 
-- `SecurityAuditLog`: šablóny pre face role, PageType, face config — **žiadna** šablóna pre zmenu globálnej platformovej roly.
+- `SecurityAuditLog`: templates for face roles, PageType, face config — **no** template for changing global platform role.
 
 ### 2.6 OpenAPI
 
-- `BearerAuthOperationFilter` pridáva `security: Bearer` pre akcie s `[Authorize]` (bez `[AllowAnonymous]`).
+- `BearerAuthOperationFilter` adds `security: Bearer` for actions with `[Authorize]` (excluding `[AllowAnonymous]`).
 
 ---
 
-## 3. Problém a biznis požiadavka
+## 3. Problem and product ask
 
-**Požiadavka:** API, ktoré môže volať **iba** globálny `SUPER_ADMIN`, nie bežný `ADMIN`.
+**Requirement:** HTTP API callable **only** by global `SUPER_ADMIN`, not normal `ADMIN`.
 
-**Dôvody (z dizajnu ACL, Part D.6):**
+**Rationale (from ACL design, Part D.6):**
 
-- Oddeliť **eskaláciu** (priradenie `SUPER_ADMIN`, prípadne `ADMIN`) od bežnej správy používateľov.
-- Znížiť blast radius: kompromitovaný `ADMIN` účet nesmie urobiť „break-glass“ zmeny.
-- Zosúladiť produkt s capabilities: UI môže skrývať akcie za `platform:super` (`canSuperAdmin`).
+- Separate **privilege escalation** (assigning `SUPER_ADMIN`, possibly `ADMIN`) from day-to-day user management.
+- Reduce blast radius: a compromised `ADMIN` must not perform “break-glass” changes.
+- Align with capabilities: UI can hide actions behind `platform:super` (`canSuperAdmin`).
 
 ---
 
-## 4. Návrh rozsahu (fázy)
+## 4. Proposed scope (phases)
 
-### 4.1 MVP (odporúčané ako prvý merge)
+### 4.1 MVP (recommended first merge)
 
-Jeden zdroj pravdy pre zmenu globálnej roly:
+Single source of truth for changing global role:
 
-- **HTTP** `PUT` (alebo `PATCH`) pod **admin face prefixom** — konzistentné s `CanManageAllFaces` (platform UI beží na `/admin/...`).
-- **Autorizácia:** volajúci musí mať:
-  - platný JWT,
+- **HTTP** `PUT` (or `PATCH`) under the **admin face prefix** — consistent with platform admin UI on `/admin/...`.
+- **Authorization:** caller must have:
+  - valid JWT,
   - `IFaceScopeContext.IsAdminFaceScope == true`,
   - `_access.IsGlobalSuperAdmin(User) == true`.
-- **Tel požiadavky:** napr. `{ "userRoleId": <int> }` kde `userRoleId` odkazuje na riadok `UserRoles` s `Scope == Global` a `Name` je v **whitelist** (nižšie).
-- **Validácie (povinné):**
-  1. Cieľový používateľ existuje (`FindByIdAsync`).
-  2. Cieľový `UserRole` existuje, `Scope == Global`.
-  3. Cieľová rola je jedna z: `USER`, `ADMIN`, `HOST`, `SUPER_ADMIN` (presne podľa `UserRole.GlobalRoleNames` — načítať z DB podľa mena, nie hardcodovať ID).
-  4. **Zákaz** zmeny vlastnej globálnej roly volajúcim (prevencia self-lockout / eskalácie v jednom kroku).
-  5. **Ochrana posledného SUPER_ADMIN:** ak meníš niekoho z `SUPER_ADMIN` na inú rolu, po zmene musí v systéme zostať aspoň jeden používateľ s touto rolou (inak `400` alebo `409` s jasnou správou).
-  6. Voliteľne: zákaz degradácie iného `SUPER_ADMIN` ak volajúci nie je jediný super (produktové rozhodnutie — v MVP stačí bod 5).
+- **Request body:** e.g. `{ "userRoleId": <int> }` where `userRoleId` references `UserRoles` with `Scope == Global` and `Name` in a **whitelist** (below).
+- **Validations (required):**
+  1. Target user exists (`FindByIdAsync`).
+  2. Target `UserRole` exists, `Scope == Global`.
+  3. Target role is one of: `USER`, `ADMIN`, `HOST`, `SUPER_ADMIN` (match `UserRole.GlobalRoleNames` — resolve from DB by name, do not hardcode IDs).
+  4. **Forbid** changing **your own** global role (avoid self lockout / one-step escalation).
+  5. **Last SUPER_ADMIN protection:** if demoting someone from `SUPER_ADMIN`, at least one other user must remain `SUPER_ADMIN` after the update; else `400` or `409` with a clear message.
+  6. Optional: forbid demoting another `SUPER_ADMIN` unless caller is the only super (product decision — MVP can rely on (5) only).
 
-- **Odpoveď:** 200 + JSON so `id`, `email`, `globalRole` (meno), prípadne `userRoleId`.
-- **Chyby:** 400 (validácia), 401 (bez tokenu), 403 (`ADMIN` alebo tenant scope), 404 (neexistujúci user — alebo 404 vs 403 podľa politiky úniku informácií; pre interné admin API je 404 pre neznáme ID akceptovateľné).
+- **Response:** 200 + JSON with `id`, `email`, `globalRole` (name), optionally `userRoleId`.
+- **Errors:** 400 (validation), 401 (no token), 403 (`ADMIN` or tenant scope), 404 (unknown user — or 404 vs 403 per info-leak policy; 404 for unknown IDs is acceptable for internal admin API).
 
-### 4.2 Rozšírenia (mimo MVP, backlog)
+### 4.2 Extensions (backlog)
 
-- `GET /api/platform/.../global-roles` — read-only zoznam globálnych rolí pre UI (stále super-only alebo admin-readable — rozhodnutie).
-- Samostatné endpointy `promote-super-admin` / `demote-super-admin` s extra potvrdením alebo 2FA (produkcia).
-- Rate limiting na super-only cesty (napr. vlastná politika v `Program.cs`).
-- Event do externého SIEM namiesto len Seq logu.
-
----
-
-## 5. Technické rozhodnutia (odporúčania)
-
-| Téma | Odporúčanie |
-|------|-------------|
-| Umiestnenie | Nový controller, napr. `PlatformUsersController` alebo `SuperAdminUsersController`, route `api/platform/users/{id}/global-role` — aby sa neplietlo s existujúcim `UsersController`. |
-| Face scope | Povinný **admin** prefix URL (`RoutingMiddleware`); rovnaký pattern ako `PageTypesController`. |
-| Kontrola prístupu | Centralizovať: nová metóda v `PlatformAccessRules`, napr. `CanPerformSuperAdminPlatformActions(IFaceScopeContext, ClaimsPrincipal)` = `IsAdminFaceScope && IsGlobalSuperAdmin`, a expozícia cez `IAccessEvaluator` (konzistentné s A3). |
-| DTO | V `Models/DTOs/` alebo pri controlleri — jasný názov `SetGlobalRoleRequest`. |
-| EF | `UserManager` + `ApplicationDbContext` — po zmene `UserRoleId` `UpdateAsync` alebo priamy update cez context s kontrolou konzistencie; preferuj `UserManager` ak ide o používateľské polia. |
-| Audit | Nová metóda `SecurityAuditLog.GlobalRoleChanged(...)` s `HttpContext.TraceIdentifier`. |
-| OpenAPI | Len `[Authorize]` na controlleri; filter pridá Bearer automaticky. |
-| Dokumentácia | Aktualizovať `docs/guides/acl-and-capabilities.md` (nový riadok v tabuľke / file map). |
+- `GET /api/platform/.../global-roles` — read-only list for UI (super-only vs admin-readable — decide).
+- Dedicated `promote-super-admin` / `demote-super-admin` with extra confirmation or 2FA (production).
+- Rate limiting on super-only routes (e.g. policy in `Program.cs`).
+- External SIEM event instead of Seq-only logging.
 
 ---
 
-## 6. Hrozby a mitigácie
+## 5. Technical recommendations
 
-| Riziko | Mitigácia |
-|--------|-----------|
-| ADMIN obíde ochranu | Gate výhradne `IsGlobalSuperAdmin`, nie `IsGlobalAdmin`. |
-| Volanie z tenant URL | Vyžadovať `IsAdminFaceScope`; tenant JWT s `SUPER_ADMIN` by stále nemal mať admin scope bez `/admin/` prefixu — overiť v teste. |
-| Únik, kto je super | Nepovinne nelogovať celý email do verejných chýb; audit len do structured logu. |
-| Žiadny SUPER_ADMIN po zmene | Povinná kontrola počtu pred commitom. |
-| Stale JWT | Dokumentovať v XML controllera: po zmene roly cieľa musí používateľ refreshnúť token. |
+| Topic | Recommendation |
+|-------|----------------|
+| Placement | New controller, e.g. `PlatformUsersController` or `SuperAdminUsersController`, route `api/platform/users/{id}/global-role` — avoid colliding with `UsersController`. |
+| Face scope | Require **admin** URL prefix (`RoutingMiddleware`); same pattern as `PageTypesController`. |
+| Access check | Centralize: e.g. `PlatformAccessRules.CanPerformSuperAdminPlatformActions(IFaceScopeContext, ClaimsPrincipal)` = `IsAdminFaceScope && IsGlobalSuperAdmin`, exposed on `IAccessEvaluator` (consistent with A3). |
+| DTO | In `Models/DTOs/` or next to controller — clear name `SetGlobalRoleRequest`. |
+| EF | `UserManager` + `ApplicationDbContext` — after `UserRoleId` change use `UpdateAsync` or consistent context update; prefer `UserManager` for user fields. |
+| Audit | `SecurityAuditLog.GlobalRoleChanged(...)` with `HttpContext.TraceIdentifier`. |
+| OpenAPI | `[Authorize]` on controller; filter adds Bearer automatically. |
+| Docs | Update `docs/guides/acl-and-capabilities.md` (summary / file map). |
 
 ---
 
-## 7. Test plán (akceptačné kritériá)
+## 6. Threats and mitigations
 
-Pridať test triedu, napr. `SuperAdminGlobalRoleTests.cs` (alebo rozšíriť existujúcu ACL sadu):
+| Risk | Mitigation |
+|------|------------|
+| ADMIN bypass | Gate on `IsGlobalSuperAdmin`, not `IsGlobalAdmin`. |
+| Calls from tenant URL | Require `IsAdminFaceScope`; tenant JWT with `SUPER_ADMIN` still must not get admin scope without `/admin/` prefix — cover in tests. |
+| Enumeration | Avoid logging full email in public errors; audit to structured logs only. |
+| No SUPER_ADMIN left | Mandatory count check before commit. |
+| Stale JWT | Document in controller XML: target user must refresh token after role change. |
 
-1. **SUPER_ADMIN** + `CreateFaceClient("admin")` + Bearer → `PUT` úspech (napr. zmena test používateľa z `USER` na `ADMIN` a späť).
+---
+
+## 7. Test plan (acceptance)
+
+Add a test class, e.g. `SuperAdminGlobalRoleTests.cs` (or extend existing ACL tests):
+
+1. **SUPER_ADMIN** + `CreateFaceClient("admin")` + Bearer → `PUT` success (e.g. flip test user `USER` ↔ `ADMIN`).
 2. **ADMIN** + admin face + Bearer → **403**.
-3. **SUPER_ADMIN** + `CreateFaceClient("public")` (tenant scope) → **403** (ak gate vyžaduje admin scope).
-4. Bez tokenu → **401**.
-5. Cieľový user neexistuje → **404**.
-6. Neplatné / face `userRoleId` → **400**.
-7. Pokus odsunúť posledného SUPER_ADMIN → **400/409**.
-8. Self-target zmena roly → **400** (alebo 403).
+3. **SUPER_ADMIN** + `CreateFaceClient("public")` (tenant scope) → **403** (if gate requires admin scope).
+4. No token → **401**.
+5. Missing target user → **404**.
+6. Invalid / face-scoped `userRoleId` → **400**.
+7. Demoting last SUPER_ADMIN blocked → **400/409**.
+8. Self change blocked → **400** (or 403).
 
-Použiť existujúce seed používateľov alebo dočasného usera vytvoreného cez `UserManager` v teste.
-
----
-
-## 8. Frontend (voliteľné v tom istom PR)
-
-- Ak admin UI potrebuje tlačidlo „Zmeniť globálnu rolu“, zobraziť len ak `canSuperAdmin(caps)` z `useMeCapabilities`.
-- Nový tenký API klient (axios) s base URL cez existujúci face routing interceptor (`/admin/...`).
-- **Nepridávať** nový permission string, pokiaľ MVP stačí `platform:super` (už zodpovedá super-only UI).
+Use seeded users or a temporary user created with `UserManager` in the test.
 
 ---
 
-## 9. Súbory, ktoré AI pravdepodobne upraví / vytvorí
+## 8. Frontend (optional same PR)
 
-| Akcia | Cesta (relatívne k root repa) |
-|-------|-------------------------------|
-| Nový controller | `be_demo/BeDemo.Api/Controllers/...` |
+- If admin UI needs “Change global role”, show only when `canSuperAdmin(caps)` from `useMeCapabilities`.
+- Thin axios client with base URL via existing face routing interceptor (`/admin/...`).
+- **Do not** add a new permission string if MVP only needs existing `platform:super`.
+
+---
+
+## 9. Files the AI will likely touch
+
+| Action | Path (relative to monorepo root) |
+|--------|----------------------------------|
+| New controller | `be_demo/BeDemo.Api/Controllers/...` |
 | DTO | `be_demo/BeDemo.Api/Models/DTOs/...` |
 | `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `be_demo/BeDemo.Api/Utils/`, `Services/` |
 | `SecurityAuditLog` | `be_demo/BeDemo.Api/Utils/SecurityAuditLog.cs` |
-| Testy | `be_demo/BeDemo.Api.Tests/...` |
-| Dokumentácia | `docs/guides/acl-and-capabilities.md` |
-| Voliteľne FE | `admin_demo/src/...`, `fe_demo/src/acl/...` |
+| Tests | `be_demo/BeDemo.Api.Tests/...` |
+| Docs | `docs/guides/acl-and-capabilities.md` |
+| Optional FE | `admin_demo/src/...`, `fe_demo/src/acl/...` |
 
 ---
 
-## 10. PROMPT PRE AI AGENTA (skopíruj celý blok nižšie)
+## 10. AI AGENT PROMPT (copy the block below)
 
 ```
 You are implementing a SUPER_ADMIN-only HTTP API in the BeDemo .NET 10 solution (repo: _mfai_demo, project be_demo/BeDemo.Api).
@@ -222,14 +222,14 @@ DELIVERABLE
 
 ---
 
-## 11. Poznámka pre ľudského reviewera
+## 11. Note for human reviewers
 
-Pred merge odporúčam explicitne schváliť:
+Before merge, explicitly decide:
 
-- či **HOST** môže super priradiť cez rovnaký endpoint ako ostatné globálne roly,
-- či **404** vs **403** pre neexistujúceho usera v admin API,
-- či je potrebná **2FA** alebo ticket systém pre produkciu (mimo demo).
+- whether **HOST** may be assigned via the same endpoint as other global roles,
+- **404** vs **403** for missing users in admin API,
+- whether production needs **2FA** or a ticket system (out of scope for the demo).
 
 ---
 
-*Dokument vytvorený ako podklad pre implementáciu super-admin only API; po implementácii doplniť odkaz na PR a prípadne skrátiť sekciu 10.*
+*Written as a spec for super-admin-only API; after implementation, add a PR link and optionally shorten section 10.*
