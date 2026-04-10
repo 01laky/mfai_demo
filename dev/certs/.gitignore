@@ -1,0 +1,4 @@
+# Local HTTPS material — generate with ../generate-https-certs.sh (do not commit)
+*.pem
+*.pfx
+!/.gitignore

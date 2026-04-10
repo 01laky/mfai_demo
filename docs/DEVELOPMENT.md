@@ -131,6 +131,13 @@ Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, 
 
 **Tests (auth slice):** `BeDemo.Api.Tests/OAuth2RememberMeTests.cs`; `fe_demo` / `admin_demo` — `src/utils/__tests__/jwtUtils.test.ts`, `src/hooks/api/__tests__/authTokenRequest.test.ts`.
 
+## ACL, capabilities, and permission keys
+
+**Purpose:** The UI should not re-implement authorization rules from JWT claims alone. The API exposes computed flags via **`GET /{face}/api/me/capabilities`**; **fe_demo** and **admin_demo** mirror permission strings in **`src/acl/`** and load data through **`fetchMeCapabilities`** + **`useMeCapabilities`** (React Query), with cache invalidation tied to login / logout / refresh in **`useAuthApi`**.
+
+**Detailed reference (API shape, key catalog, file map, integration test users, list of test files):** [**acl-and-capabilities.md**](./acl-and-capabilities.md).  
+**Design backlog and architecture notes:** [**ACL_ROLES_DESIGN.md**](../ACL_ROLES_DESIGN.md) (repo root).
+
 ## API error messages in the browser
 
 User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo`: `src/utils/apiErrorMessage.ts`):
@@ -144,9 +151,9 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo
 
 | Suite | Command | Notes |
 |--------|---------|--------|
-| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. Includes **`OAuth2RememberMeTests`** for JWT TTL vs `rememberMe`. |
-| FE | `yarn test` in `fe_demo` | Vitest. Auth-related: **`jwtUtils`**, **`authTokenRequest`**. |
-| Admin | `yarn test` in `admin_demo` | Vitest. Same auth unit tests as FE pattern. |
+| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. Includes **`OAuth2RememberMeTests`** (JWT TTL vs `rememberMe`), **`AclIntegrationTests`**, **`AclBearerJwtValidationTests`** (expired/malformed JWT), **`AccessCapabilitiesServiceTests`**, **`PlatformAccessRulesTests`**, **`FaceRoleSelfServiceRulesTests`**. |
+| FE | `yarn test` in `fe_demo` | Vitest. Auth: **`jwtUtils`**, **`authTokenRequest`**. ACL: **`src/acl/__tests__`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**, **`facePathRouting`** (includes `/api/me/capabilities`). |
+| Admin | `yarn test` in `admin_demo` | Vitest. Same patterns; plus **`faceApiRouting_acl`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**. |
 | AI | `pytest test_server.py` in `ai_demo` | After proto generation; `PYTHONPATH=.` |
 
 Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
@@ -198,6 +205,7 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
 - [CHAT_ROOMS_TESTING_AND_OPERATIONS.md](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) — chat / rooms operations.
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.
+- [acl-and-capabilities.md](./acl-and-capabilities.md) — capabilities API, permission keys, FE/admin wiring, tests.
 - [redis-subrepo-dev-sk.md](./redis-subrepo-dev-sk.md) — Redis submodule (SK).
 - [fe-popis-sk.md](./fe-popis-sk.md) / [admin-popis-sk.md](./admin-popis-sk.md) — FE / admin overviews (SK).
 - [GIT_SUBMODULES_SETUP.md](../GIT_SUBMODULES_SETUP.md) — submodule checkout and updates.

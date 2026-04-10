@@ -14,9 +14,9 @@ Slovenský ekvivalent tohto dokumentu: [autentifikacia-a-relacie-sk.md](./autent
 | **Access token** | A **JWT** returned by `POST /api/oauth2/token`. The browser stores it and sends `Authorization: Bearer <token>` on API calls. |
 | **JWT `exp` claim** | Unix time (seconds) when the token **stops being valid** for the API. Identity middleware rejects expired JWTs with **401**. |
 | **“Stay signed in” (`rememberMe`)** | **Not** a second session mechanism. It only tells the API to issue a JWT with a **longer** lifetime (different config key). The client still stores one bearer token the same way. |
-| **Refresh token** | The API returns a `refreshToken` field, but the **refresh_token grant is not implemented** (requests fail). Long sessions rely on a **long-lived access JWT** when `rememberMe` is used. |
+| **Refresh token** | Opaque string returned with the access token; stored **hashed** server-side (`OAuthRefreshTokens` table). **`refresh_token` grant** rotates it (single-use) and issues a new access JWT — see §2.1. |
 
-So: **short session** = short JWT `exp`; **persistent login** = long JWT `exp`, both in `localStorage` today.
+So: **short session** = short JWT `exp` + refresh token with shorter absolute expiry; **persistent login** = longer access JWT when `rememberMe` is true **and** longer refresh token lifetime (`Jwt:RefreshTokenDaysRememberMe`).
 
 ---
 
@@ -27,8 +27,8 @@ So: **short session** = short JWT `exp`; **persistent login** = long JWT `exp`, 
 - **Anonymous**; validates **client_id** / **client_secret** in `OAuth2Middleware` before the controller runs.
 - Body model: `OAuth2TokenRequest` (`BeDemo.Api/Models/DTOs/OAuth2Request.cs`).
 - Supported grants in `OAuth2Service.GenerateTokenAsync`:
-  - **`password`** — email/username + password; optional **`rememberMe`**.
-  - **`refresh_token`** — currently **always fails** (no persisted refresh validation).
+  - **`password`** — email/username + password; optional **`rememberMe`**; persists refresh token (hash only).
+  - **`refresh_token`** — validates opaque token in DB, **single-use rotation**, returns new access + refresh pair; misusing a valid access JWT as refresh is rejected.
 
 ### 2.2 Field: `rememberMe` (nullable bool)
 
@@ -49,6 +49,7 @@ In `BeDemo.Api/appsettings.json` (and overridable via environment / secrets):
 | **`Jwt:ExpiresInMinutes`** | Default access-token lifetime when **`rememberMe` is not true** (typical “browser session” length). |
 | **`Jwt:ExpiresInMinutesRememberMe`** | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). In demo configs this can be very large; tune down for production. |
 | **`Jwt:Issuer`**, **`Jwt:Audience`** | Standard JWT validation; must match between token creation and validation. |
+| **`Jwt:RefreshTokenDaysSession`** / **`Jwt:RefreshTokenDaysRememberMe`** | Absolute lifetime (days) for stored refresh rows after password grant (shorter vs remember-me). |
 
 **Environment override example** (Docker / k8s):
 
@@ -63,7 +64,7 @@ Jwt__ExpiresInMinutesRememberMe=43200
 
 - **`expiresIn`** — lifetime of the access token in **seconds** (API returns `expiresInMinutes * 60` from the chosen config).
 - **`accessToken`** — JWT string.
-- **`refreshToken`** — opaque string in this demo; **do not rely** on refresh flow until implemented.
+- **`refreshToken`** — opaque string; store securely on the client; each refresh response **invalidates** the previous refresh value (rotation).
 
 ### 2.5 Optional: request signing
 
@@ -76,6 +77,7 @@ If the body includes **`signature`** + **`signatureAlgorithm`**, middleware vali
 | `BeDemo.Api/Controllers/OAuth2Controller.cs` | Token + register endpoints. |
 | `BeDemo.Api/Middlewares/OAuth2Middleware.cs` | Client credentials; optional signature. |
 | `BeDemo.Api/Services/OAuth2Service.cs` | Password / refresh handling; JWT creation; `rememberMe` → minutes selection. |
+| `BeDemo.Api/Services/OAuthRefreshTokenStore.cs` | Persist / rotate refresh tokens (A17). |
 | `BeDemo.Api/Models/DTOs/OAuth2Request.cs` | DTOs including `RememberMe`. |
 
 ---
@@ -151,16 +153,25 @@ cd admin_demo && yarn test
 
 ---
 
-## 6. Security and product notes
+## 6. JWT strategy (thin token + invalidation) — ACL A9
+
+- The **access JWT** carries identity plus a **single global** `role` claim from `UserRoles` / `ApplicationUser.UserRoleId` at issuance time.
+- **Face roles** and fine-grained **permission strings** are **not** embedded in the JWT; they are resolved from the database (e.g. `AccessCapabilitiesService`, tenant gates).
+- **`refresh_token` grant** rebuilds the access JWT and reloads the global role from the DB, so admin promotion can surface without re-entering the password.
+- **Instant revocation** of an already-issued access JWT is **not** implemented (no server-side token blocklist); wait for `exp` or add a `jti`/version check if you need hard revocation.
+
+---
+
+## 7. Security and product notes
 
 1. **“Stay signed in”** keeps a **valid JWT** on the device longer. On a **shared computer**, that is higher risk than a short session.
 2. Tokens in **`localStorage`** are readable by JavaScript (XSS surface). **HttpOnly cookies** would be a different architecture; not what this demo uses.
 3. **Tune** `Jwt:ExpiresInMinutesRememberMe` per environment; demo values may be extremely large for convenience.
-4. Until **refresh tokens** are stored and validated server-side, treat **refresh** as **non-functional** for production-style session renewal.
+4. **Refresh tokens** are **rotated** server-side; clients must replace stored refresh material on each refresh response.
 
 ---
 
-## 7. Related documentation
+## 8. Related documentation
 
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — curl: register + token (includes `rememberMe` example).
 - [DEVELOPMENT.md](./DEVELOPMENT.md) — monorepo dev workflow and links.

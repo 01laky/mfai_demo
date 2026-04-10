@@ -8,6 +8,8 @@ All long-form documentation for the **`_mfai_demo` monorepo** lives under **`doc
 |----------|----------|
 | [**DEVELOPMENT.md**](./DEVELOPMENT.md) | Monorepo layout, Node/Python versions, Husky/commitlint, CI matrix, **root scripts** (`ci-local.sh`, `lint-all.sh`, `build-all.sh`, `test-all.sh`), API error handling in the browser, testing quick reference, **auth / JWT / remember-me** (summary + links), face **grid** & demo seeding (summary). |
 | [**authentication-and-sessions.md**](./authentication-and-sessions.md) | **EN:** OAuth2 password grant, `rememberMe`, JWT config keys, FE/admin storage & expiry checks, tests, security notes. |
+| [**ACL / roles design (repo root)**](../ACL_ROLES_DESIGN.md) | Full checklist + as-built inventory (Parts A–F); implementers / agents. |
+| [**acl-and-capabilities.md**](./acl-and-capabilities.md) | **Operational detail:** permission keys, `GET …/api/me/capabilities`, PageTypes / `my-role` gates, FE+admin file map, integration users, **test index**. |
 | [**wall-tickets.md**](./wall-tickets.md) | Wall tickets API, moderation, Redis worker, manual checks. |
 | [**CHAT_ROOMS_TESTING_AND_OPERATIONS.md**](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) | Face chat rooms: testing and operations. |
 
@@ -19,6 +21,7 @@ All long-form documentation for the **`_mfai_demo` monorepo** lives under **`doc
 | [**admin-popis-sk.md**](./admin-popis-sk.md) | Prehľad `admin_demo`. |
 | [**redis-subrepo-dev-sk.md**](./redis-subrepo-dev-sk.md) | Submodule `redis_demo`, pripojenie z BE kontajnera, vývoj. |
 | [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md) | **SK:** rovnaká téma ako *authentication-and-sessions* — JWT, `rememberMe`, konfigurácia, FE/admin, testy, bezpečnosť (podrobne). |
+| [**super-admin-api-design.md**](./super-admin-api-design.md) | **SK:** analýza SUPER_ADMIN vs ADMIN, návrh super-only API (MVP), audit, test plán, **copy-paste prompt pre AI** na implementáciu. |
 
 ## API & curl
 
