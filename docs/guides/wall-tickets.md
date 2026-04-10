@@ -87,7 +87,7 @@ Frontends: Vitest tests for `parseApiErrorBody` / `getApiErrorMessage` in `fe_de
 
 ## Client error display (FE / admin)
 
-Failed `fetch` calls use a shared helper that turns response bodies into toast / inline messages (ProblemDetails, `{ error }`, validation `errors`). See [DEVELOPMENT.md](./DEVELOPMENT.md#api-error-messages-in-the-browser).
+Failed `fetch` calls use a shared helper that turns response bodies into toast / inline messages (ProblemDetails, `{ error }`, validation `errors`). See [development.md](./development.md#api-error-messages-in-the-browser).
 
 ### UX notes
 

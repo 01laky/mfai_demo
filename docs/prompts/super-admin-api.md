@@ -1,7 +1,7 @@
 # Super-admin only API — analýza, návrh a prompt pre implementáciu (AI)
 
 Jazyk dokumentu: **slovenčina** (technické identifikátory a cesty v kóde ostávajú v angličtine).  
-Súvisiaca dokumentácia: [`ACL_ROLES_DESIGN.md`](../ACL_ROLES_DESIGN.md), [`docs/acl-and-capabilities.md`](./acl-and-capabilities.md), [`docs/authentication-and-sessions.md`](./authentication-and-sessions.md).
+Súvisiaca dokumentácia: [acl-and-capabilities.md](../guides/acl-and-capabilities.md), [authentication-and-sessions.md](../guides/authentication-and-sessions.md).
 
 ---
 
@@ -109,7 +109,7 @@ Jeden zdroj pravdy pre zmenu globálnej roly:
 | EF | `UserManager` + `ApplicationDbContext` — po zmene `UserRoleId` `UpdateAsync` alebo priamy update cez context s kontrolou konzistencie; preferuj `UserManager` ak ide o používateľské polia. |
 | Audit | Nová metóda `SecurityAuditLog.GlobalRoleChanged(...)` s `HttpContext.TraceIdentifier`. |
 | OpenAPI | Len `[Authorize]` na controlleri; filter pridá Bearer automaticky. |
-| Dokumentácia | Aktualizovať `docs/acl-and-capabilities.md` (nový riadok v tabuľke / file map) a v `ACL_ROLES_DESIGN.md` krátku poznámku k A7 (super-only mutácia existuje). |
+| Dokumentácia | Aktualizovať `docs/guides/acl-and-capabilities.md` (nový riadok v tabuľke / file map). |
 
 ---
 
@@ -159,7 +159,7 @@ Použiť existujúce seed používateľov alebo dočasného usera vytvoreného c
 | `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `be_demo/BeDemo.Api/Utils/`, `Services/` |
 | `SecurityAuditLog` | `be_demo/BeDemo.Api/Utils/SecurityAuditLog.cs` |
 | Testy | `be_demo/BeDemo.Api.Tests/...` |
-| Dokumentácia | `docs/acl-and-capabilities.md`, `ACL_ROLES_DESIGN.md` |
+| Dokumentácia | `docs/guides/acl-and-capabilities.md` |
 | Voliteľne FE | `admin_demo/src/...`, `fe_demo/src/acl/...` |
 
 ---
@@ -207,7 +207,7 @@ IMPLEMENTATION TASKS
    - Last super demotion blocked
    - Self change blocked
 
-5) Update docs/acl-and-capabilities.md (summary + file map) and ACL_ROLES_DESIGN.md (A7 note / Part E file index) briefly.
+5) Update docs/guides/acl-and-capabilities.md (summary + file map) briefly.
 
 CONSTRAINTS
 - Do not widen ADMIN to this endpoint.

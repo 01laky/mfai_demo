@@ -4,7 +4,7 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 **Scope:** Signing keys, JWT hardening, TLS, REST API, SignalR/WebSockets, OAuth2 client flows, operational controls.
 
-**Related:** `ACL_ROLES_DESIGN.md` (authorization model); this file focuses on **transport + token + key lifecycle**.
+**Related:** [acl-and-capabilities.md](./acl-and-capabilities.md) (authorization / capabilities); this file focuses on **transport + token + key lifecycle**.
 
 ---
 
@@ -25,7 +25,7 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 - [ ] **J2** Set non-zero `ClockSkew` (e.g. 1–2 minutes) or keep zero only if all clocks are NTP-synced; document choice.
 - [ ] **J3** Enforce `ValidateAudience`, `ValidateIssuer`, `ValidateIssuerSigningKey` (already largely present); add **`ValidAlgorithms`** whitelist (e.g. only `ES512`) to reject algorithm confusion.
 - [ ] **J4** Add JWT **`aud`** (audience) per client or per surface if needed (e.g. `bedemo-api` vs `bedemo-signalr`) — optional but reduces token reuse across services.
-- [ ] **J5** Short **access token TTL** in production (e.g. 5–15 minutes); long sessions via **refresh tokens** stored server-side (`A17` in `ACL_ROLES_DESIGN.md`), rotated on use, revocable.
+- [ ] **J5** Short **access token TTL** in production (e.g. 5–15 minutes); long sessions via **refresh tokens** stored server-side (see `OAuthRefreshTokenStore` / [acl-and-capabilities.md](./acl-and-capabilities.md)), rotated on use, revocable.
 - [ ] **J6** On **global role or security-sensitive claim change**, invalidate refresh tokens or bump **token version** claim (`token_version`) checked on each request — forces re-auth after privilege change.
 - [ ] **J7** Do not put **PII** or large blobs in JWT claims; keep claims minimal (`sub`, `role`, `jti`, `iat`, `exp`, `nbf`, optional `token_version`).
 

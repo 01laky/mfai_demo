@@ -4,8 +4,8 @@ This document covers **how we build and test** `_mfai_demo` (root repo with subm
 
 ## Documentation layout
 
-- **Single folder**: all guides live in **`docs/`** (see [**docs/README.md**](./README.md) for a full index).
-- Historical **`doc/`** at repo root was **removed**; files were moved into `docs/` with stable kebab-case names (e.g. `api-oauth-stories-curl.md`, `redis-subrepo-dev-sk.md`).
+- **Hub:** [**`docs/README.md`**](../README.md) — index of `guides/`, `components/`, `prompts/`, `readmes/`.
+- **Structure rationale:** [`docs/STRUCTURE.md`](../STRUCTURE.md).
 
 ## Layout
 
@@ -121,12 +121,12 @@ Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, 
 
 **Purpose:** Users log in through **`POST /api/oauth2/token`** (password grant). The optional **`rememberMe`** flag does **not** create a separate session type — it only selects a **longer JWT lifetime** from configuration (`Jwt:ExpiresInMinutesRememberMe` vs `Jwt:ExpiresInMinutes`). Both **`fe_demo`** and **`admin_demo`** store the access token in **`localStorage`**, decode **`exp`** in **`jwtUtils.isTokenExpired`**, and clear storage when the token is invalid so the UI matches API **401** behaviour.
 
-**Why it matters:** Misunderstanding `rememberMe` leads to wrong ops expectations (e.g. assuming refresh tokens work end-to-end). In this codebase the **refresh_token grant is not implemented** on the server; persistent login relies on a **long-lived access JWT** when the user checks “stay signed in”.
+**Why it matters:** Misunderstanding `rememberMe` leads to wrong ops expectations. With **`rememberMe: true`**, the API issues a **longer-lived access JWT**; **refresh tokens** are also supported server-side (rotation, single-use) — see `OAuthRefreshTokenStore` and [acl-and-capabilities.md](./acl-and-capabilities.md).
 
 **Detailed guides (tables, file map, curl, tests):**
 
 - English: [**authentication-and-sessions.md**](./authentication-and-sessions.md)
-- Slovenčina: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md)
+- Slovenčina: [**authentication-and-sessions-sk.md**](../readmes/authentication-and-sessions-sk.md)
 - Curl register/token (includes `rememberMe` example): [**api-oauth-stories-curl.md**](./api-oauth-stories-curl.md)
 
 **Tests (auth slice):** `BeDemo.Api.Tests/OAuth2RememberMeTests.cs`; `fe_demo` / `admin_demo` — `src/utils/__tests__/jwtUtils.test.ts`, `src/hooks/api/__tests__/authTokenRequest.test.ts`.
@@ -136,7 +136,7 @@ Each of `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, 
 **Purpose:** The UI should not re-implement authorization rules from JWT claims alone. The API exposes computed flags via **`GET /{face}/api/me/capabilities`**; **fe_demo** and **admin_demo** mirror permission strings in **`src/acl/`** and load data through **`fetchMeCapabilities`** + **`useMeCapabilities`** (React Query), with cache invalidation tied to login / logout / refresh in **`useAuthApi`**.
 
 **Detailed reference (API shape, key catalog, file map, integration test users, list of test files):** [**acl-and-capabilities.md**](./acl-and-capabilities.md).  
-**Design backlog and architecture notes:** [**ACL_ROLES_DESIGN.md**](../ACL_ROLES_DESIGN.md) (repo root).
+**ACL / capabilities (operational):** [**acl-and-capabilities.md**](./acl-and-capabilities.md).
 
 ## API error messages in the browser
 
@@ -199,13 +199,14 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 
 ## Related docs
 
-- [**docs/README.md**](./README.md) — **full documentation index** (EN + SK + curl).
+- [**`docs/README.md`**](../README.md) — documentation hub.
 - [authentication-and-sessions.md](./authentication-and-sessions.md) — **EN:** login, JWT, `rememberMe`, config, FE/admin, tests, security.
-- [autentifikacia-a-relacie-sk.md](./autentifikacia-a-relacie-sk.md) — **SK:** rovnaká náplň podrobne.
+- [authentication-and-sessions-sk.md](../readmes/authentication-and-sessions-sk.md) — **SK:** same topic.
 - [wall-tickets.md](./wall-tickets.md) — feature behaviour, API tables, Redis worker, manual checks.
-- [CHAT_ROOMS_TESTING_AND_OPERATIONS.md](./CHAT_ROOMS_TESTING_AND_OPERATIONS.md) — chat / rooms operations.
+- [chat-rooms-testing-and-operations.md](./chat-rooms-testing-and-operations.md) — chat / rooms operations.
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.
 - [acl-and-capabilities.md](./acl-and-capabilities.md) — capabilities API, permission keys, FE/admin wiring, tests.
-- [redis-subrepo-dev-sk.md](./redis-subrepo-dev-sk.md) — Redis submodule (SK).
-- [fe-popis-sk.md](./fe-popis-sk.md) / [admin-popis-sk.md](./admin-popis-sk.md) — FE / admin overviews (SK).
-- [GIT_SUBMODULES_SETUP.md](../GIT_SUBMODULES_SETUP.md) — submodule checkout and updates.
+- [redis-subrepo-sk.md](../readmes/redis-subrepo-sk.md) — Redis submodule (SK).
+- [fe-demo-overview-sk.md](../readmes/fe-demo-overview-sk.md) / [admin-demo-overview-sk.md](../readmes/admin-demo-overview-sk.md) — FE / admin overviews (SK).
+- [git-submodules.md](./git-submodules.md) — submodule checkout and updates.
+- [security-crypto-sockets.md](./security-crypto-sockets.md) — TLS, JWT keys, WebSockets backlog.

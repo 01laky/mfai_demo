@@ -13,7 +13,7 @@ Aplikácia je dostupná na adrese **http://localhost:8082**.
 Admin vidí prihlasovací formulár:
 - **Email** (povinný, validný formát)
 - **Heslo** (min. 4 znaky)
-- **„Zostať trvalo prihlásený“** — voliteľné; ak je zaškrtnuté, API vydá **dlhšie platný JWT** (rovnaký mechanizmus ako vo `fe_demo`). Podrobnosti a význam konfigurácie: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
+- **„Zostať trvalo prihlásený“** — voliteľné; ak je zaškrtnuté, API vydá **dlhšie platný JWT** (rovnaký mechanizmus ako vo `fe_demo`). Podrobnosti a význam konfigurácie: [**authentication-and-sessions-sk.md**](./authentication-and-sessions-sk.md).
 - Tlačidlo **Prihlásiť sa**
 
 Po úspešnom prihlásení sa admin presunie na Nástenku. Pri neúspechu sa zobrazí chybová hláška.
@@ -344,7 +344,7 @@ Po **POST** `/api/reels` sa do Redis zaradí okamžitá úloha `reel.postprocess
 
 ### Redis (submodule `redis_demo`)
 
-Ako **`db_demo`**: samostatný submodule s vlastným `docker-compose.yml`. `be-demo-dev` má **`Redis__Configuration=host.docker.internal:6379`** a `extra_hosts` pre Linux. Kľúče: `bedemo:jobs:ready`, `bedemo:jobs:delayed`. Bez Redis / prázdna konfigurácia / **Testing** → NoOp. [`redis-subrepo-dev-sk.md`](./redis-subrepo-dev-sk.md), `redis_demo/README.md`.
+Ako **`db_demo`**: samostatný submodule s vlastným `docker-compose.yml`. `be-demo-dev` má **`Redis__Configuration=host.docker.internal:6379`** a `extra_hosts` pre Linux. Kľúče: `bedemo:jobs:ready`, `bedemo:jobs:delayed`. Bez Redis / prázdna konfigurácia / **Testing** → NoOp. [`redis-subrepo-sk.md`](./redis-subrepo-sk.md), `redis_demo/README.md`.
 
 ---
 

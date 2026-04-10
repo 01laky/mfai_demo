@@ -83,7 +83,7 @@ Chyby: `401` s `error` / `errorDescription` (OAuth2 error objekt), alebo `503` a
 
 ### 4.1 Dlhšia platnosť tokenu — `rememberMe`
 
-**Význam:** Voliteľné pole **`rememberMe: true`** v tele password grantu povie API, aby vydalo JWT s dlhšou životnosťou podľa **`Jwt:ExpiresInMinutesRememberMe`** v `appsettings.json`. Ak pole **vynecháš** alebo dáš **`false`**, použije sa **`Jwt:ExpiresInMinutes`** (krátka relácia). Nie je to samostatný typ relácie — len iný čas v nároku **`exp`** v JWT. Podrobne: [autentifikacia-a-relacie-sk.md](./autentifikacia-a-relacie-sk.md) / [authentication-and-sessions.md](./authentication-and-sessions.md).
+**Význam:** Voliteľné pole **`rememberMe: true`** v tele password grantu povie API, aby vydalo JWT s dlhšou životnosťou podľa **`Jwt:ExpiresInMinutesRememberMe`** v `appsettings.json`. Ak pole **vynecháš** alebo dáš **`false`**, použije sa **`Jwt:ExpiresInMinutes`** (krátka relácia). Nie je to samostatný typ relácie — len iný čas v nároku **`exp`** v JWT. Podrobne: [authentication-and-sessions-sk.md](../readmes/authentication-and-sessions-sk.md) / [authentication-and-sessions.md](./authentication-and-sessions.md).
 
 ```bash
 TOK_LONG_JSON=$(curl -sS -X POST "$BASE/api/oauth2/token" \
@@ -266,4 +266,4 @@ cd fe_demo && yarn lint && yarn format:check && yarn test && yarn build
 
 - [Stories API (tabuľka endpointov)](../be_demo/STORIES_API.md)
 - [Docker dev stack](../docker-compose.dev.yml) — porty FE/BE/admin
-- [README](../README.md) — celkový prehľad repozitára
+- [README](../../README.md) — celkový prehľad repozitára

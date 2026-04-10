@@ -25,13 +25,13 @@ Po úspešnej registrácii sa zobrazí oznámenie a používateľ je presmerovan
 Prihlasovací formulár obsahuje:
 - **Email** (povinný)
 - **Heslo** (min. 4 znaky)
-- **Zaškrtávacie pole „Zostať trvalo prihlásený“** — ak je zaškrtnuté, API vydá JWT s **dlhšou platnosťou** (konfigurácia `Jwt:ExpiresInMinutesRememberMe`); ak nie, platí kratšia relácia (`Jwt:ExpiresInMinutes`). Ide o rovnaký typ tokenu v `localStorage`, líši sa len čas v nároku `exp`. Technický rozbor: [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
+- **Zaškrtávacie pole „Zostať trvalo prihlásený“** — ak je zaškrtnuté, API vydá JWT s **dlhšou platnosťou** (konfigurácia `Jwt:ExpiresInMinutesRememberMe`); ak nie, platí kratšia relácia (`Jwt:ExpiresInMinutes`). Ide o rovnaký typ tokenu v `localStorage`, líši sa len čas v nároku `exp`. Technický rozbor: [**authentication-and-sessions-sk.md**](./authentication-and-sessions-sk.md).
 
 Po úspešnom prihlásení sa používateľ dostane na domovskú stránku aktuálnej face.
 
 ### Automatické odhlásenie
 
-Ak **vyprší platnosť JWT** (nárok `exp`), aplikácia vyčistí uložený token a používateľ uvidí hlášku o vypršanej relácii; API už nebude requesty s týmto tokenom akceptovať. Periódická kontrola beží aj na pozadí (cca každých 30 s). Viac v [**autentifikacia-a-relacie-sk.md**](./autentifikacia-a-relacie-sk.md).
+Ak **vyprší platnosť JWT** (nárok `exp`), aplikácia vyčistí uložený token a používateľ uvidí hlášku o vypršanej relácii; API už nebude requesty s týmto tokenom akceptovať. Periódická kontrola beží aj na pozadí (cca každých 30 s). Viac v [**authentication-and-sessions-sk.md**](./authentication-and-sessions-sk.md).
 
 ---
 
@@ -437,7 +437,7 @@ Po vytvorení reelu API zaradí do Redis:
 
 Implementácia: **StackExchange.Redis** – zoznam `bedemo:jobs:ready` (FIFO) a zoradená množina `bedemo:jobs:delayed` (score = čas spustenia UTC v ms). Hostovaná služba `RedisJobWorkerService` v cykle presúva splatné delayed joby do ready fronty a spracováva ich (aktuálne len logovanie).
 
-Redis je git submodule **`redis_demo`** (rovnaký model ako **`db_demo`**): vlastný `docker-compose.yml`, skripty `start-redis.sh` atď. Kontajner `be-demo-dev` sa pripája na **`host.docker.internal:6379`**. Klon: `git submodule update --init redis_demo`. Podrobnosti: [`redis-subrepo-dev-sk.md`](./redis-subrepo-dev-sk.md). Ak Redis nie je dostupný alebo je `Redis:Configuration` prázdny (appsettings / Testing), používa sa **NoOp** fronta.
+Redis je git submodule **`redis_demo`** (rovnaký model ako **`db_demo`**): vlastný `docker-compose.yml`, skripty `start-redis.sh` atď. Kontajner `be-demo-dev` sa pripája na **`host.docker.internal:6379`**. Klon: `git submodule update --init redis_demo`. Podrobnosti: [`redis-subrepo-sk.md`](./redis-subrepo-sk.md). Ak Redis nie je dostupný alebo je `Redis:Configuration` prázdny (appsettings / Testing), používa sa **NoOp** fronta.
 
 ---
 

@@ -2,8 +2,8 @@
 
 Tento dokument podrobne vysvetľuje **prihlásenie** v projekte BeDemo naprieč **API** (`be_demo`), **hlavným frontendom** (`fe_demo`) a **admin rozhraním** (`admin_demo`): OAuth2 password grant, pole **`rememberMe`**, konfiguráciu dĺžky platnosti JWT, úložisko v prehliadači a spôsob, ako klient zistí **vypršanie** tokenu.
 
-Anglická verzia (rovnaká štruktúra): [authentication-and-sessions.md](./authentication-and-sessions.md).  
-Návod cez **curl** (registrácia, token): [api-oauth-stories-curl.md](./api-oauth-stories-curl.md).
+Anglická verzia (rovnaká štruktúra): [authentication-and-sessions.md](../guides/authentication-and-sessions.md).  
+Návod cez **curl** (registrácia, token): [api-oauth-stories-curl.md](../guides/api-oauth-stories-curl.md).
 
 ---
 
@@ -159,6 +159,6 @@ cd admin_demo && yarn test
 
 ## 7. Súvisiace dokumenty
 
-- [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — curl príklady vrátane `rememberMe`.
-- [DEVELOPMENT.md](./DEVELOPMENT.md) — vývoj v monorepe, CI, skripty.
-- [be_demo/README.md](../be_demo/README.md) — prehľad API.
+- [api-oauth-stories-curl.md](../guides/api-oauth-stories-curl.md) — curl príklady vrátane `rememberMe`.
+- [development.md](../guides/development.md) — vývoj v monorepe, CI, skripty.
+- [be_demo/README.md](../../be_demo/README.md) — prehľad API.

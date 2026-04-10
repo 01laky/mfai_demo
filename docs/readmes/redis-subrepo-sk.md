@@ -51,4 +51,4 @@ git submodule update --init redis_demo
 2. V adresári `redis_demo`: `git init`, `git add .`, commit, `remote add`, `push`.
 3. V root `_mfai_demo`: ak si predtým nemal submodule, `git submodule add <url> redis_demo` (alebo už máš `.gitmodules` + commitni smerovanie submodule na správny commit).
 
-Podrobnejší postup je v **`GIT_SUBMODULES_SETUP.md`** v koreni monorepa (dopln sekciu pre `redis_demo` rovnako ako `db_demo`).
+Podrobnejší postup je v **[git-submodules.md](../guides/git-submodules.md)** (dopln sekciu pre `redis_demo` rovnako ako `db_demo`).

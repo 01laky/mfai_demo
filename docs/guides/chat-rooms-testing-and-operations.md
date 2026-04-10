@@ -164,7 +164,7 @@ yarn test
 | BE testy | `BeDemo.Api.Tests/FaceChatRoomsControllerTests.cs`, `ChatRoomLifecycleServiceTests.cs`, `FaceRoleParticipationTests.cs` |
 | FE testy | `fe_demo/src/api/services/__tests__/ChatRoomsService.test.ts`, `fe_demo/src/constants/__tests__/componentTypeIds.test.ts` |
 | Admin | `admin_demo/src/hooks/api/useFacesApi.ts`, `.../__tests__/useFacesApi.test.ts` |
-| Dokumentácia | `docs/CHAT_ROOMS_TESTING_AND_OPERATIONS.md` |
+| Dokumentácia | `docs/guides/chat-rooms-testing-and-operations.md` |
 
 ---
 

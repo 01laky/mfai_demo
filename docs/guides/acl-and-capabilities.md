@@ -2,7 +2,6 @@
 
 Language: **English**. Audience: implementers maintaining **BE / fe_demo / admin_demo**.
 
-**Canonical design + backlog checklist:** [ACL_ROLES_DESIGN.md](../ACL_ROLES_DESIGN.md) (repo root).  
 **Auth / JWT / storage:** [authentication-and-sessions.md](./authentication-and-sessions.md).
 
 ---
@@ -128,6 +127,5 @@ Password: `Test123!@#` (see `IntegrationTestSeed.Password`).
 
 ## Related
 
-- [ACL_ROLES_DESIGN.md](../ACL_ROLES_DESIGN.md) — full pipeline inventory, gaps A3, A6, A11–A23, etc.
 - [authentication-and-sessions.md](./authentication-and-sessions.md) — OAuth2, JWT storage, `rememberMe`.
-- [DEVELOPMENT.md](./DEVELOPMENT.md) — CI, `yarn test` / `dotnet test`.
+- [development.md](./development.md) — CI, `yarn test` / `dotnet test`.
