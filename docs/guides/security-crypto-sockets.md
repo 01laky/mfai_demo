@@ -6,6 +6,46 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 **Related:** [acl-and-capabilities.md](./acl-and-capabilities.md) (authorization / capabilities); this file focuses on **transport + token + key lifecycle**.
 
+### Diagram: backlog layers (depends-on overview)
+
+```mermaid
+flowchart TB
+  subgraph K["Signing keys K1-K6"]
+    K1[Vault PEM JWKS rotation]
+  end
+  subgraph J["JWT validation J1-J7"]
+    J1[Lifetime audience algorithms]
+  end
+  subgraph O["OAuth endpoint O1-O6"]
+    O1[Client auth rate limits]
+  end
+  subgraph T["TLS T1-T4"]
+    T1[TLS 13 HSTS WSS]
+  end
+  subgraph S["SignalR S1-S6"]
+    S1[Authorize JWT parity face scope]
+  end
+  subgraph H["Headers H1-H4"]
+    H1[CSP CORS hardening]
+  end
+  subgraph D["OpenAPI D1-D2"]
+    D1[Bearer schemes docs]
+  end
+  subgraph M["Monitoring M1-M3"]
+    M1[Auth failure logs alerts]
+  end
+  K --> J
+  J --> O
+  J --> S
+  T --> S
+  O --> J
+
+  classDef apiFill fill:#fff3e0,stroke:#ef6c00
+  class K,J,O,T,S,H,D,M apiFill
+```
+
+**Note:** This maps the **checklist structure**, not a claim that every item is already implemented—verify code before labeling anything “done”.
+
 ---
 
 ## P0 — Signing keys and JWT issuer (foundational)
@@ -94,17 +134,38 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 ---
 
+### Diagram: target request path (roadmap — verify `Program.cs`)
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant TLS as TLS edge
+  participant API
+  participant JWKS as JWKS verify
+  participant Refresh as Refresh store optional
+  participant SignalR as SignalR WSS
+
+  Client->>TLS: HTTPS REST
+  TLS->>API: forward
+  API->>JWKS: validate JWT signing
+  Note over API,JWKS: Target architecture not fully implemented see baseline table
+  Client->>SignalR: WSS with Bearer or access_token query
+  SignalR->>JWKS: same validation rules as REST
+  Client->>API: refresh grant when implemented
+  API->>Refresh: rotate opaque refresh
+```
+
 ## Current baseline (repo facts — do not assume improved until implemented)
 
-| Area | Current behavior |
-|------|------------------|
-| JWT signing | In-memory **P-521 ECDSA**, new key per process start (`ECDSAKeyService` singleton) |
-| Certificate | **No** X.509 for JWT signing in code |
-| JWT `ValidateLifetime` | **Disabled** in `JwtBearer` (`Program.cs`) |
-| Refresh tokens | Issued; **not** stored/validated for refresh grant (`OAuth2Service`) |
-| Optional OAuth body signature | **ES512** verify using **server** key — not client PKI model |
-| SignalR auth | JWT via query `access_token`; same bearer config as API |
-| TLS | Dev often HTTP; production must enforce TLS at edge |
+| Area                          | Current behavior                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| JWT signing                   | In-memory **P-521 ECDSA**, new key per process start (`ECDSAKeyService` singleton) |
+| Certificate                   | **No** X.509 for JWT signing in code                                               |
+| JWT `ValidateLifetime`        | **Disabled** in `JwtBearer` (`Program.cs`)                                         |
+| Refresh tokens                | Issued; **not** stored/validated for refresh grant (`OAuth2Service`)               |
+| Optional OAuth body signature | **ES512** verify using **server** key — not client PKI model                       |
+| SignalR auth                  | JWT via query `access_token`; same bearer config as API                            |
+| TLS                           | Dev often HTTP; production must enforce TLS at edge                                |
 
 ---
 
@@ -113,7 +174,24 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 1. **K1–K4, J1–J5** — production keys + JWKS + lifetime + refresh store (blocks most other work).
 2. **T1–T3, S1–S3** — TLS + SignalR parity + face scope on hubs if multi-tenant.
 3. **O1–O4** — client secrets + rate limits + fix/remove broken request signing model.
-4. **H*, D*, M*** — headers, OpenAPI, logging.
+4. **Checklist rows** `H*`, `D*`, `M*` — headers, OpenAPI, logging.
+
+### Diagram: phased rollout
+
+```mermaid
+flowchart TB
+  P1["Phase 1: K plus J foundation keys JWKS lifetime refresh"]
+  P2["Phase 2: T plus S TLS WSS SignalR parity"]
+  P3["Phase 3: O OAuth client hardening"]
+  P4["Phase 4: H D M headers OpenAPI monitoring parallel"]
+  P1 --> P2
+  P2 --> P3
+  P2 --> P4
+  P3 --> P4
+
+  classDef clientFill fill:#e3f2fd,stroke:#1565c0
+  class P1,P2,P3,P4 clientFill
+```
 
 ---
 

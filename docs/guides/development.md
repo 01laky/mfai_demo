@@ -9,15 +9,31 @@ This document covers **how we build and test** `_mfai_demo` (root repo with subm
 
 ## Layout
 
-| Area | Path | Stack |
-|------|------|--------|
-| Backend API | `be_demo/` | .NET, EF Core, PostgreSQL |
-| Main frontend | `fe_demo/` | Vite, React, Yarn 4 |
-| Admin UI | `admin_demo/` | Vite, React, Yarn 4 |
-| AI gRPC service | `ai_demo/` | Python 3.11+, gRPC, Ruff |
-| PostgreSQL dev stack | `db_demo/` | Docker Compose |
-| Redis dev stack | `redis_demo/` | Docker Compose |
-| Logger UI (Dozzle) | `logger_demo/` | Docker Compose |
+| Area                 | Path           | Stack                     |
+| -------------------- | -------------- | ------------------------- |
+| Backend API          | `be_demo/`     | .NET, EF Core, PostgreSQL |
+| Main frontend        | `fe_demo/`     | Vite, React, Yarn 4       |
+| Admin UI             | `admin_demo/`  | Vite, React, Yarn 4       |
+| AI gRPC service      | `ai_demo/`     | Python 3.11+, gRPC, Ruff  |
+| PostgreSQL dev stack | `db_demo/`     | Docker Compose            |
+| Redis dev stack      | `redis_demo/`  | Docker Compose            |
+| Logger UI (Dozzle)   | `logger_demo/` | Docker Compose            |
+
+### Diagram: monorepo layout
+
+```mermaid
+flowchart TB
+  BE[be_demo .NET EF PostgreSQL]
+  FE[fe_demo Vite React Yarn]
+  AD[admin_demo Vite React Yarn]
+  AI[ai_demo Python gRPC]
+  DB[db_demo Docker Postgres]
+  RD[redis_demo Docker Redis]
+  LG[logger_demo Dozzle]
+
+  classDef apiFill fill:#fff3e0,stroke:#ef6c00
+  class BE,FE,AD,AI,DB,RD,LG apiFill
+```
 
 The **root** repository runs aggregated CI (see below). Each submodule that ships code also has its own `.github/workflows/ci.yml` for standalone pushes to that repo.
 
@@ -53,12 +69,12 @@ Use `nvm use` (or your version manager) before `yarn install`. Older Node versio
 
 Conventional Commits: **`type(scope): subject`**
 
-| Rule | Detail |
-|------|--------|
-| **type** | One of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
-| **scope** | Recommended, not empty (warning if missing): short area, e.g. `wall`, `fe`, `admin`, `api`, `ci` |
-| **subject** | **lower-case** or **sentence-case**; no trailing period; max **100** chars |
-| **Avoid** | Random **ALL CAPS** acronyms in the subject (e.g. write “ci workflow” not “CI Workflow”) — `subject-case` will fail |
+| Rule        | Detail                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| **type**    | One of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`                |
+| **scope**   | Recommended, not empty (warning if missing): short area, e.g. `wall`, `fe`, `admin`, `api`, `ci`                    |
+| **subject** | **lower-case** or **sentence-case**; no trailing period; max **100** chars                                          |
+| **Avoid**   | Random **ALL CAPS** acronyms in the subject (e.g. write “ci workflow” not “CI Workflow”) — `subject-case` will fail |
 
 **Examples (valid)**
 
@@ -78,40 +94,104 @@ feat(WALL): WRONG CASE SUBJECT
 fix(api): Ends with period.
 ```
 
+### Diagram: commitlint decision tree
+
+```mermaid
+flowchart TB
+  T{type valid}
+  S{scope present}
+  C{subject case ok}
+  L{subject length ok}
+  P{no trailing period}
+  T -->|no| F[Fail]
+  T -->|yes| S
+  S -->|warn empty| W[Warning]
+  S --> C
+  C -->|no| F
+  C -->|yes| L
+  L -->|no| F
+  L -->|yes| P
+  P -->|no| F
+  P -->|yes| OK[Pass]
+  W --> C
+```
+
 ## Continuous integration
 
 ### Root `mfai_demo` — workflow `.github/workflows/ci.yml`
 
 On push/PR to `main` / `master`, with **submodules recursive**:
 
-| Job | What runs |
-|-----|-----------|
-| **be_demo** | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test` |
-| **fe_demo** | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build` |
-| **admin_demo** | Same pattern with `admin_demo/.nvmrc` |
-| **ai_demo** | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py` |
-| **infra_db_demo** | `docker compose -f db_demo/docker-compose.yml config` |
-| **infra_redis_demo** | `docker compose -f redis_demo/docker-compose.yml config` |
-| **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config` |
-| **monorepo_scripts** | Runs **`./ci-local.sh`**: `lint-all.sh` → `build-all.sh` → `test-all.sh` (with `SKIP_CYPRESS=1`) |
+| Job                   | What runs                                                                                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **be_demo**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                  |
+| **fe_demo**           | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`                                                   |
+| **admin_demo**        | Same pattern with `admin_demo/.nvmrc`                                                                                                                |
+| **ai_demo**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                     |
+| **infra_db_demo**     | `docker compose -f db_demo/docker-compose.yml config`                                                                                                |
+| **infra_redis_demo**  | `docker compose -f redis_demo/docker-compose.yml config`                                                                                             |
+| **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config`                                                                                        |
+| **docs_mermaid**      | Node from `fe_demo/.nvmrc`, runs **`./check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
+| **monorepo_scripts**  | Runs **`./ci-local.sh`**: `lint-all.sh` → `build-all.sh` → `test-all.sh` (with `SKIP_CYPRESS=1`)                                                     |
 
 The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `lint-all.sh` or `verify-ci.sh` drifts from CI.
+
+### Diagram: root CI jobs (parallel)
+
+```mermaid
+flowchart TB
+  BEJ[be_demo job]
+  FEJ[fe_demo job]
+  ADJ[admin_demo job]
+  AIJ[ai_demo job]
+  DBJ[infra db_demo config]
+  RDJ[infra redis_demo config]
+  LGJ[infra logger_demo config]
+  DOCSJ[docs_mermaid Mermaid CLI]
+  MONO[monorepo_scripts ci-local.sh chain]
+  PARITY[Parity lint build test SKIP_CYPRESS]
+  BEJ --- MONO
+  FEJ --- MONO
+  MONO --- PARITY
+
+  classDef queueFill fill:#fce4ec,stroke:#c2185b
+  class MONO,PARITY queueFill
+```
 
 Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipeline so every merge is validated against the checked-in submodule tree.
 
 ## Root shell scripts (monorepo)
 
-Run from repository root (submodules checked out). Make executable if needed: `chmod +x *.sh **/lint.sh ai_demo/verify-ci.sh`.
+Run from repository root (submodules checked out). Make executable if needed: `chmod +x *.sh check-mermaid-docs.sh **/lint.sh ai_demo/verify-ci.sh`.
 
-| Script | Purpose |
-|--------|---------|
-| **`ci-local.sh`** | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. |
-| **`lint-all.sh`** | Calls `fe_demo`, `be_demo`, `admin_demo`, `ai_demo` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
-| **`build-all.sh`** | `be_demo`: `dotnet build -c Release`; `fe_demo` / `admin_demo`: `yarn build`; `ai_demo`: `./verify-ci.sh`. |
-| **`test-all.sh`** | `dotnet test` (BE), `yarn test` (FE/admin), **`ai_demo/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`. |
-| **`status-all.sh`** | Docker / HTTP status of dev containers (does not run builds). |
+| Script                      | Purpose                                                                                                                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override.                                                                                                                 |
+| **`lint-all.sh`**           | Calls `fe_demo`, `be_demo`, `admin_demo`, `ai_demo` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff).                                                                                        |
+| **`build-all.sh`**          | `be_demo`: `dotnet build -c Release`; `fe_demo` / `admin_demo`: `yarn build`; `ai_demo`: `./verify-ci.sh`.                                                                                                              |
+| **`test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`ai_demo/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`.                                                                                                   |
+| **`status-all.sh`**         | Docker / HTTP status of dev containers (does not run builds).                                                                                                                                                           |
+| **`format-all-doc.sh`**     | Prettier over all `*.md` / `*.mdx` (respects **`.prettierignore`**). Use **`--check`** for a no-write verify. Does **not** validate Mermaid syntax inside fences.                                                       |
+| **`check-mermaid-docs.sh`** | Python walker + **`npx @mermaid-js/mermaid-cli`** (`mmdc`): each **mermaid** fence must render. Slower (Chromium); run before large doc merges. **`docs_mermaid`** CI job runs this. Not included in **`ci-local.sh`**. |
 
 **`ai_demo/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **ai_demo** GitHub Actions job (no PyTorch).
+
+### Diagram: ci-local chain
+
+```mermaid
+flowchart TB
+  CLI[ci-local.sh]
+  L[lint-all.sh]
+  B[build-all.sh]
+  T[test-all.sh]
+  CY{SKIP_CYPRESS}
+  CLI --> L --> B --> T
+  T -->|default 1| SkipCy[Skip Cypress]
+  CY -.-> T
+
+  classDef apiFill fill:#fff3e0,stroke:#ef6c00
+  class CLI,L,B,T apiFill
+```
 
 ### Submodule-only repos
 
@@ -148,12 +228,12 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`fe_demo` / `admin_demo
 
 ## Testing (quick reference)
 
-| Suite | Command | Notes |
-|--------|---------|--------|
-| BE | `dotnet test` in `be_demo` | Integration tests; `Testing` environment where configured. Includes **`OAuth2RememberMeTests`** (JWT TTL vs `rememberMe`), **`AclIntegrationTests`**, **`AclBearerJwtValidationTests`** (expired/malformed JWT), **`AccessCapabilitiesServiceTests`**, **`PlatformAccessRulesTests`**, **`FaceRoleSelfServiceRulesTests`**. |
-| FE | `yarn test` in `fe_demo` | Vitest. Auth: **`jwtUtils`**, **`authTokenRequest`**. ACL: **`src/acl/__tests__`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**, **`facePathRouting`** (includes `/api/me/capabilities`). |
-| Admin | `yarn test` in `admin_demo` | Vitest. Same patterns; plus **`faceApiRouting_acl`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**. |
-| AI | `pytest test_server.py` in `ai_demo` | After proto generation; `PYTHONPATH=.` |
+| Suite | Command                              | Notes                                                                                                                                                                                                                                                                                                                       |
+| ----- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BE    | `dotnet test` in `be_demo`           | Integration tests; `Testing` environment where configured. Includes **`OAuth2RememberMeTests`** (JWT TTL vs `rememberMe`), **`AclIntegrationTests`**, **`AclBearerJwtValidationTests`** (expired/malformed JWT), **`AccessCapabilitiesServiceTests`**, **`PlatformAccessRulesTests`**, **`FaceRoleSelfServiceRulesTests`**. |
+| FE    | `yarn test` in `fe_demo`             | Vitest. Auth: **`jwtUtils`**, **`authTokenRequest`**. ACL: **`src/acl/__tests__`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**, **`facePathRouting`** (includes `/api/me/capabilities`).                                                                                                                           |
+| Admin | `yarn test` in `admin_demo`          | Vitest. Same patterns; plus **`faceApiRouting_acl`**, **`meCapabilitiesClient`**, **`useMeCapabilities`**.                                                                                                                                                                                                                  |
+| AI    | `pytest test_server.py` in `ai_demo` | After proto generation; `PYTHONPATH=.`                                                                                                                                                                                                                                                                                      |
 
 Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
 
@@ -163,15 +243,28 @@ The **page grid** on a face home page (`PageGridLayout` + `fe_demo/src/component
 
 ### Data sources (authenticated, scoped by selected face)
 
-| Type | Source | Notes |
-|------|--------|--------|
-| **Ad** | `GET /api/faces/{faceId}/wall-tickets` (paged; FE may fetch multiple pages) | Listing-style UI; image is a **placeholder** (picsum) — tickets have no image URL. |
-| **Album** | `GET /api/Albums?faceId=` | Cover is placeholder by album id; album has no cover field on API. |
-| **Blog** | `GET /api/Blogs?faceId=` | Uses first blog image when present. |
-| **Chat room** | `GET /api/faces/{faceId}/chat-rooms` | Single tile: first room or `boundChatRoomId` from grid JSON. |
-| **User profile** | `GET /api/faces/{faceId}/profiles` (paged; FE aggregates pages) | Directory lists **non-host** face roles; links use `/{faceIndex}/profile/{userId}`. |
-| **Story** | `GET /api/stories?faceId=` | Published, non-expired, targeted to face; links to `/{faceIndex}/stories`. |
-| **Reel** | `GET /api/Reels?faceId=` | Standard reel list filter. |
+| Type             | Source                                                                      | Notes                                                                               |
+| ---------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **Ad**           | `GET /api/faces/{faceId}/wall-tickets` (paged; FE may fetch multiple pages) | Listing-style UI; image is a **placeholder** (picsum) — tickets have no image URL.  |
+| **Album**        | `GET /api/Albums?faceId=`                                                   | Cover is placeholder by album id; album has no cover field on API.                  |
+| **Blog**         | `GET /api/Blogs?faceId=`                                                    | Uses first blog image when present.                                                 |
+| **Chat room**    | `GET /api/faces/{faceId}/chat-rooms`                                        | Single tile: first room or `boundChatRoomId` from grid JSON.                        |
+| **User profile** | `GET /api/faces/{faceId}/profiles` (paged; FE aggregates pages)             | Directory lists **non-host** face roles; links use `/{faceIndex}/profile/{userId}`. |
+| **Story**        | `GET /api/stories?faceId=`                                                  | Published, non-expired, targeted to face; links to `/{faceIndex}/stories`.          |
+| **Reel**         | `GET /api/Reels?faceId=`                                                    | Standard reel list filter.                                                          |
+
+### Diagram: face grid tile data sources
+
+```mermaid
+flowchart LR
+  Ad[Ad] --> W[GET wall-tickets paged]
+  Album[Album] --> A[GET Albums faceId]
+  Blog[Blog] --> B[GET Blogs faceId]
+  Chat[Chat room] --> C[GET chat-rooms]
+  Prof[User profile] --> P[GET profiles paged]
+  Story[Story] --> S[GET stories faceId]
+  Reel[Reel] --> R[GET Reels faceId]
+```
 
 **Pagination**: grid/carousel components compute **items per page** from container size; **`ComponentBlock`** footer prev/next is **wired** via `page` / `onPageChange` from `PageGridLayout` for all modes that declare a footer.
 
@@ -184,6 +277,26 @@ After **`SeedUsersAsync`** (demo `@demo.com` users), **`SeedFaceGridContentAsync
 - Logic is **idempotent** (counts per user+face, fills up to 5).
 
 Implementation: `be_demo/BeDemo.Api/Scripts/DatabaseSeeder.cs`; invoked from `Program.cs` after user seed in non-Testing environments.
+
+### Diagram: seeding loops (idempotent)
+
+```mermaid
+flowchart TB
+  Users[SeedUsersAsync demo users]
+  Grid[SeedFaceGridContentAsync]
+  Loop[For each demo user and each face]
+  Five[Up to 5 items per content class]
+  Classes[Wall Album Blog Reel Story ChatRoom]
+  Users --> Grid
+  Grid --> Loop
+  Loop --> Five
+  Five --> Classes
+  Note1[Regular users FACE_USER for directory]
+  Note2[Admins stay FACE_HOST]
+
+  classDef dbFill fill:#e8f5e9,stroke:#2e7d32
+  class Users,Grid,Loop,Five dbFill
+```
 
 ## Functionality gaps (intentional / backlog)
 

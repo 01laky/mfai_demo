@@ -10,15 +10,15 @@ Development, CI, scripts: [`docs/guides/development.md`](./docs/guides/developme
 
 ### Quick links
 
-| Topic | Document |
-|--------|----------|
+| Topic                     | Document                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
 | Auth / JWT / `rememberMe` | [`docs/guides/authentication-and-sessions.md`](./docs/guides/authentication-and-sessions.md) |
-| ACL / capabilities API | [`docs/guides/acl-and-capabilities.md`](./docs/guides/acl-and-capabilities.md) |
-| OAuth2 + Stories (curl) | [`docs/guides/api-oauth-stories-curl.md`](./docs/guides/api-oauth-stories-curl.md) |
-| Git submodules | [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md) |
-| Local HTTPS (`dev/`) | [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) |
-| TLS / crypto backlog | [`docs/guides/security-crypto-sockets.md`](./docs/guides/security-crypto-sockets.md) |
-| Submodule README index | [`docs/readmes/README.md`](./docs/readmes/README.md) |
+| ACL / capabilities API    | [`docs/guides/acl-and-capabilities.md`](./docs/guides/acl-and-capabilities.md)               |
+| OAuth2 + Stories (curl)   | [`docs/guides/api-oauth-stories-curl.md`](./docs/guides/api-oauth-stories-curl.md)           |
+| Git submodules            | [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md)                           |
+| Local HTTPS (`dev/`)      | [`docs/guides/dev-https.md`](./docs/guides/dev-https.md)                                     |
+| TLS / crypto backlog      | [`docs/guides/security-crypto-sockets.md`](./docs/guides/security-crypto-sockets.md)         |
+| Submodule README index    | [`docs/readmes/README.md`](./docs/readmes/README.md)                                         |
 
 Backend details: [`be_demo/README.md`](./be_demo/README.md). Other services — see the table in [`docs/readmes/README.md`](./docs/readmes/README.md).
 

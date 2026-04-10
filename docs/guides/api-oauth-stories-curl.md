@@ -4,10 +4,10 @@ This document shows how to verify **OAuth2** registration and token issuance, se
 
 ## 1. Base URL
 
-| Environment | Typical URL | Notes |
-|-------------|-------------|-------|
-| Docker Compose (`docker-compose.dev.yml`) | `http://127.0.0.1:8000` | `ASPNETCORE_URLS` maps the container to host **8000**. |
-| `dotnet run` from Visual Studio / `launchSettings` | `http://127.0.0.1:8080` | Check `BeDemo.Api/Properties/launchSettings.json`. |
+| Environment                                        | Typical URL             | Notes                                                  |
+| -------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| Docker Compose (`docker-compose.dev.yml`)          | `http://127.0.0.1:8000` | `ASPNETCORE_URLS` maps the container to host **8000**. |
+| `dotnet run` from Visual Studio / `launchSettings` | `http://127.0.0.1:8080` | Check `BeDemo.Api/Properties/launchSettings.json`.     |
 
 In the examples below:
 
@@ -16,6 +16,34 @@ export BASE=http://127.0.0.1:8000
 ```
 
 Change `BASE` if your API listens elsewhere.
+
+### Diagram: full curl story (register → stories list)
+
+```mermaid
+sequenceDiagram
+  participant curl
+  participant API
+  participant DB
+  participant Storage as Object storage
+
+  curl->>API: POST register anonymous
+  API->>DB: create user
+  curl->>API: POST token password optional rememberMe
+  API->>DB: validate issue JWT
+  Note over curl,API: Bearer on all following calls
+  opt refresh_token grant
+    curl->>API: POST token refresh_token
+    API->>DB: rotate refresh
+  end
+  curl->>API: GET faces Bearer
+  curl->>API: GET face-roles
+  curl->>API: PUT my-role Bearer
+  curl->>API: POST stories draft Bearer
+  curl->>API: POST story images multipart Bearer
+  curl->>Storage: file bytes via API
+  curl->>API: POST publish Bearer
+  curl->>API: GET stories faceId Bearer
+```
 
 ### Confirm you are running the expected API build
 
@@ -28,9 +56,9 @@ After adding Stories, OpenAPI should contain a path with `Stories` (e.g. `/api/S
 
 From `BeDemo.Api/appsettings.json` (Development):
 
-| Field | Value |
-|-------|-------|
-| `clientId` | `be-demo-client` |
+| Field          | Value                            |
+| -------------- | -------------------------------- |
+| `clientId`     | `be-demo-client`                 |
 | `clientSecret` | `be-demo-secret-very-strong-key` |
 
 In production, secrets must live in configuration / a secret store, not in the repo.
@@ -211,6 +239,31 @@ If you are still **FACE_HOST** in that face, the list may be empty or the API ma
 ## 8. One-shot bash smoke test
 
 Requires `jq`, `curl`, and a valid `BASE`. After registration, sets `FACE_USER` on the first face and creates a story; you can upload `/tmp/story-smoke.jpg` for a minimal JPEG.
+
+### Diagram: smoke script steps
+
+```mermaid
+flowchart TB
+  S1[Check Swagger reachable]
+  S2[POST register]
+  S3[POST token password]
+  S4[GET faces pick FACE_ID]
+  S5[GET face-roles FACE_USER id]
+  S6[PUT my-role]
+  S7[POST story draft]
+  S8[Optional POST story image]
+  S9[GET list stories faceId]
+  S1 -->|fail exit 1| X[Exit 1]
+  S1 --> S2
+  S2 --> S3
+  S3 --> S4
+  S4 --> S5
+  S5 --> S6
+  S6 --> S7
+  S7 --> S8
+  S8 --> S9
+  S7 --> S9
+```
 
 ```bash
 #!/usr/bin/env bash

@@ -104,6 +104,27 @@ git commit -m "Update submodule references"
 git push
 ```
 
+### Diagram: bootstrap submodules from empty GitHub repos
+
+```mermaid
+flowchart TB
+  GH[Create empty GH repos root plus submodules]
+  PushSub[Push each submodule main]
+  Edit[Edit .gitmodules URLs]
+  Add[git submodule add each path]
+  RootRemote[git remote add origin root]
+  Pin[Commit submodule pointers push root]
+
+  GH --> PushSub
+  PushSub --> Edit
+  Edit --> Add
+  Add --> RootRemote
+  RootRemote --> Pin
+
+  classDef clientFill fill:#e3f2fd,stroke:#1565c0
+  class GH,PushSub,Edit,Add,RootRemote,Pin clientFill
+```
+
 ## Important notes
 
 - The **root repo only stores pointers to commits** in submodules, not the full tree.
@@ -131,4 +152,21 @@ cd ..
 git add be_demo
 git commit -m "Update be_demo submodule"
 git push
+```
+
+### Diagram: day-to-day commit in submodule
+
+```mermaid
+sequenceDiagram
+  participant Dev as Developer
+  participant Sub as Submodule be_demo
+  participant RemoteSub as Submodule remote
+  participant Root as Root repo
+  participant RemoteRoot as Root remote
+
+  Dev->>Sub: commit and push
+  Sub->>RemoteSub: git push
+  Dev->>Root: cd root git add submodule path
+  Dev->>Root: commit pointer
+  Root->>RemoteRoot: git push
 ```

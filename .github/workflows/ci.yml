@@ -137,6 +137,23 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f logger_demo/docker-compose.dev.yml config
 
+  docs_mermaid:
+    name: docs (Mermaid diagrams)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: fe_demo/.nvmrc
+
+      - name: Validate fenced Mermaid blocks
+        run: |
+          chmod +x check-mermaid-docs.sh
+          ./check-mermaid-docs.sh
+
   monorepo_scripts:
     name: monorepo (ci-local.sh)
     runs-on: ubuntu-latest

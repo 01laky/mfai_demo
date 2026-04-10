@@ -29,13 +29,41 @@ Root **`docker-compose.dev.yml`** → `be-demo-dev`:
 
 `redis_demo` publishes **6379:6379**, so traffic from the BE container reaches the host and `redis-dev`.
 
+### Diagram: backend to Redis dev container
+
+```mermaid
+flowchart LR
+  Compose["docker-compose.dev.yml be-demo-dev"]
+  HostGW[host.docker.internal:6379]
+  RedisC[redis-dev container 6379]
+  Compose --> HostGW --> RedisC
+```
+
+The API uses **`Redis__Configuration`** to reach this instance; **`RedisJobWorkerService`** in `be_demo` consumes **`bedemo:jobs:ready`** and **`bedemo:jobs:delayed`** for background work (wall ticket delete, chat room idle checks, reel postprocess, etc.).
+
+### Diagram: job queues (ready and delayed)
+
+```mermaid
+flowchart TB
+  Ready[bedemo jobs ready LIST FIFO]
+  Delayed[bedemo jobs delayed ZSET score runAt]
+  Worker[RedisJobWorkerService loop]
+  Promote[Due jobs promoted to ready]
+  Handler[Typed handlers wall chatroom reel]
+  Delayed --> Promote --> Ready
+  Ready --> Worker --> Handler
+
+  classDef queueFill fill:#fce4ec,stroke:#c2185b
+  class Ready,Delayed,Promote queueFill
+```
+
 ## Files in `redis_demo`
 
-| File | Purpose |
-|------|---------|
-| `docker-compose.yml` | `redis:7-alpine`, volume, healthcheck |
-| `start-redis.sh` / `stop-redis.sh` / `clear-redis.sh` | Same idea as `db_demo` scripts |
-| `README.md` | English description for the standalone repo |
+| File                                                  | Purpose                                     |
+| ----------------------------------------------------- | ------------------------------------------- |
+| `docker-compose.yml`                                  | `redis:7-alpine`, volume, healthcheck       |
+| `start-redis.sh` / `stop-redis.sh` / `clear-redis.sh` | Same idea as `db_demo` scripts              |
+| `README.md`                                           | English description for the standalone repo |
 
 ## Fresh monorepo clone
 

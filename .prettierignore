@@ -1,0 +1,2 @@
+# Prettier can corrupt glob patterns and nested emphasis in long agent prompts (e.g. **…** around `docs/**`).
+docs/prompts/mermaid-documentation-diagrams-agent-prompt.md

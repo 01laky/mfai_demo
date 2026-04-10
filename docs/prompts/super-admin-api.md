@@ -33,6 +33,21 @@ This document **does not** implement code; it is input for a follow-up implement
 - `UsersController.CreateUser` / `UpdateUser` require `CanManageAllFaces()` — **ADMIN and SUPER_ADMIN** can create/update users but **cannot change global role** (`UpdateUserModel` has no `UserRoleId`).
 - There is **no** public REST endpoint to change `ApplicationUser.UserRoleId`; changes are effectively seed / DB / scripts (`InitializeDatabase`, `IntegrationTestSeed`).
 
+### Diagram: platform vs super checks
+
+```mermaid
+flowchart TB
+  GA[IsGlobalAdmin ADMIN or SUPER]
+  GS[IsGlobalSuperAdmin SUPER only]
+  CMF[CanManageAllFaces admin face scope plus GA]
+  CMPT[CanMutateGlobalPageTypes same bar as CMF]
+  PS[platform super permission]
+  PA[platform admin permission]
+  GS --> PS
+  CMF --> PA
+  GA --> CMF
+```
+
 ### 2.3 Capabilities and frontend
 
 - `AccessCapabilitiesService`: `platform:super` (`AclPermissionKeys.PlatformSuper`) only if `IsGlobalSuperAdmin(principal)`; `platform:admin` if `CanManageAllFaces`.
@@ -89,6 +104,25 @@ Single source of truth for changing global role:
 - **Response:** 200 + JSON with `id`, `email`, `globalRole` (name), optionally `userRoleId`.
 - **Errors:** 400 (validation), 401 (no token), 403 (`ADMIN` or tenant scope), 404 (unknown user — or 404 vs 403 per info-leak policy; 404 for unknown IDs is acceptable for internal admin API).
 
+### Diagram: PUT global-role decision tree (MVP)
+
+```mermaid
+flowchart TB
+  A[Authorized JWT] --> B{Admin face scope}
+  B -->|no| F403[403 Forbid]
+  B -->|yes| C{IsGlobalSuperAdmin}
+  C -->|no| F403
+  C -->|yes| D[Load target user]
+  D -->|missing| N404[404]
+  D --> E{Self change}
+  E -->|yes| B400a[400 cannot change own role]
+  E -->|no| F[Resolve global UserRole whitelist]
+  F -->|invalid| B400b[400 bad role]
+  F --> G{Last super protection}
+  G -->|violates| C409[409 or 400]
+  G -->|ok| H[Persist audit 200]
+```
+
 ### 4.2 Extensions (backlog)
 
 - `GET /api/platform/.../global-roles` — read-only list for UI (super-only vs admin-readable — decide).
@@ -100,28 +134,28 @@ Single source of truth for changing global role:
 
 ## 5. Technical recommendations
 
-| Topic | Recommendation |
-|-------|----------------|
-| Placement | New controller, e.g. `PlatformUsersController` or `SuperAdminUsersController`, route `api/platform/users/{id}/global-role` — avoid colliding with `UsersController`. |
-| Face scope | Require **admin** URL prefix (`RoutingMiddleware`); same pattern as `PageTypesController`. |
+| Topic        | Recommendation                                                                                                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Placement    | New controller, e.g. `PlatformUsersController` or `SuperAdminUsersController`, route `api/platform/users/{id}/global-role` — avoid colliding with `UsersController`.                                           |
+| Face scope   | Require **admin** URL prefix (`RoutingMiddleware`); same pattern as `PageTypesController`.                                                                                                                     |
 | Access check | Centralize: e.g. `PlatformAccessRules.CanPerformSuperAdminPlatformActions(IFaceScopeContext, ClaimsPrincipal)` = `IsAdminFaceScope && IsGlobalSuperAdmin`, exposed on `IAccessEvaluator` (consistent with A3). |
-| DTO | In `Models/DTOs/` or next to controller — clear name `SetGlobalRoleRequest`. |
-| EF | `UserManager` + `ApplicationDbContext` — after `UserRoleId` change use `UpdateAsync` or consistent context update; prefer `UserManager` for user fields. |
-| Audit | `SecurityAuditLog.GlobalRoleChanged(...)` with `HttpContext.TraceIdentifier`. |
-| OpenAPI | `[Authorize]` on controller; filter adds Bearer automatically. |
-| Docs | Update `docs/guides/acl-and-capabilities.md` (summary / file map). |
+| DTO          | In `Models/DTOs/` or next to controller — clear name `SetGlobalRoleRequest`.                                                                                                                                   |
+| EF           | `UserManager` + `ApplicationDbContext` — after `UserRoleId` change use `UpdateAsync` or consistent context update; prefer `UserManager` for user fields.                                                       |
+| Audit        | `SecurityAuditLog.GlobalRoleChanged(...)` with `HttpContext.TraceIdentifier`.                                                                                                                                  |
+| OpenAPI      | `[Authorize]` on controller; filter adds Bearer automatically.                                                                                                                                                 |
+| Docs         | Update `docs/guides/acl-and-capabilities.md` (summary / file map).                                                                                                                                             |
 
 ---
 
 ## 6. Threats and mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| ADMIN bypass | Gate on `IsGlobalSuperAdmin`, not `IsGlobalAdmin`. |
+| Risk                  | Mitigation                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| ADMIN bypass          | Gate on `IsGlobalSuperAdmin`, not `IsGlobalAdmin`.                                                                                  |
 | Calls from tenant URL | Require `IsAdminFaceScope`; tenant JWT with `SUPER_ADMIN` still must not get admin scope without `/admin/` prefix — cover in tests. |
-| Enumeration | Avoid logging full email in public errors; audit to structured logs only. |
-| No SUPER_ADMIN left | Mandatory count check before commit. |
-| Stale JWT | Document in controller XML: target user must refresh token after role change. |
+| Enumeration           | Avoid logging full email in public errors; audit to structured logs only.                                                           |
+| No SUPER_ADMIN left   | Mandatory count check before commit.                                                                                                |
+| Stale JWT             | Document in controller XML: target user must refresh token after role change.                                                       |
 
 ---
 
@@ -140,6 +174,20 @@ Add a test class, e.g. `SuperAdminGlobalRoleTests.cs` (or extend existing ACL te
 
 Use seeded users or a temporary user created with `UserManager` in the test.
 
+### Diagram: acceptance tests matrix (compact)
+
+```mermaid
+flowchart TB
+  T1[SUPER admin client 200]
+  T2[ADMIN admin client 403]
+  T3[SUPER tenant client 403]
+  T4[No token 401]
+  T5[Missing user 404]
+  T6[Bad role id 400]
+  T7[Last super blocked 409]
+  T8[Self change blocked 400]
+```
+
 ---
 
 ## 8. Frontend (optional same PR)
@@ -152,15 +200,15 @@ Use seeded users or a temporary user created with `UserManager` in the test.
 
 ## 9. Files the AI will likely touch
 
-| Action | Path (relative to monorepo root) |
-|--------|----------------------------------|
-| New controller | `be_demo/BeDemo.Api/Controllers/...` |
-| DTO | `be_demo/BeDemo.Api/Models/DTOs/...` |
-| `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `be_demo/BeDemo.Api/Utils/`, `Services/` |
-| `SecurityAuditLog` | `be_demo/BeDemo.Api/Utils/SecurityAuditLog.cs` |
-| Tests | `be_demo/BeDemo.Api.Tests/...` |
-| Docs | `docs/guides/acl-and-capabilities.md` |
-| Optional FE | `admin_demo/src/...`, `fe_demo/src/acl/...` |
+| Action                                                         | Path (relative to monorepo root)               |
+| -------------------------------------------------------------- | ---------------------------------------------- |
+| New controller                                                 | `be_demo/BeDemo.Api/Controllers/...`           |
+| DTO                                                            | `be_demo/BeDemo.Api/Models/DTOs/...`           |
+| `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `be_demo/BeDemo.Api/Utils/`, `Services/`       |
+| `SecurityAuditLog`                                             | `be_demo/BeDemo.Api/Utils/SecurityAuditLog.cs` |
+| Tests                                                          | `be_demo/BeDemo.Api.Tests/...`                 |
+| Docs                                                           | `docs/guides/acl-and-capabilities.md`          |
+| Optional FE                                                    | `admin_demo/src/...`, `fe_demo/src/acl/...`    |
 
 ---
 
@@ -232,4 +280,4 @@ Before merge, explicitly decide:
 
 ---
 
-*Written as a spec for super-admin-only API; after implementation, add a PR link and optionally shorten section 10.*
+_Written as a spec for super-admin-only API; after implementation, add a PR link and optionally shorten section 10._

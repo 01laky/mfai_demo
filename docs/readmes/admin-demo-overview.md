@@ -11,6 +11,7 @@ Typical dev URL: **http://localhost:8082**.
 ## 1. Sign-in
 
 Fields:
+
 - **Email** (required)
 - **Password** (min 4 characters)
 - **“Stay signed in”** — optional; longer JWT when checked (same mechanism as `fe_demo`). See [**authentication-and-sessions.md**](../guides/authentication-and-sessions.md).
@@ -40,6 +41,23 @@ Unauthenticated visits to protected routes redirect to sign-in, then return to t
 
 On mobile the sidebar is an overlay.
 
+### Diagram: admin shell
+
+```mermaid
+flowchart TB
+  subgraph SB["Sidebar"]
+    D[Dashboard]
+    U[Users]
+    F[Faces]
+    AI[AI Chat]
+  end
+  subgraph HDR["Header"]
+    H[Hamburger title language sign out]
+  end
+  SB --> Main[Main content area]
+  HDR --> Main
+```
+
 ---
 
 ## 3. Languages
@@ -62,14 +80,14 @@ Three locales: **Slovak** (`sk`), **English** (`en`), **Czech** (`cz`). Toggle i
 
 Search, Refresh, **Create user**, sortable paginated table.
 
-| Column | Description |
-|--------|-------------|
-| ID | Click → detail |
-| Email | |
-| First name | |
-| Last name | |
-| Created | |
-| Actions | Edit |
+| Column     | Description    |
+| ---------- | -------------- |
+| ID         | Click → detail |
+| Email      |                |
+| First name |                |
+| Last name  |                |
+| Created    |                |
+| Actions    | Edit           |
 
 ### Detail
 
@@ -95,15 +113,15 @@ A **face** is a tenant space with its own pages and settings.
 
 Search, Refresh, **Create face**, sortable table.
 
-| Column | Description |
-|--------|-------------|
-| ID | Click → detail |
-| Index | URL slug (e.g. `acme-corp`) |
-| Name | Display name |
-| Description | Short text |
-| Color | Badge |
-| Visibility | Public / Private |
-| Actions | Edit |
+| Column      | Description                 |
+| ----------- | --------------------------- |
+| ID          | Click → detail              |
+| Index       | URL slug (e.g. `acme-corp`) |
+| Name        | Display name                |
+| Description | Short text                  |
+| Color       | Badge                       |
+| Visibility  | Public / Private            |
+| Actions     | Edit                        |
 
 ### Detail
 
@@ -151,17 +169,27 @@ Add block, drag/drop, resize, rename, delete, assign component type.
 
 ##### Component categories
 
-| Category | Description |
-|----------|-------------|
-| Albums | Single / grid / carousel |
-| Ads | Classifieds |
-| Blog | Articles |
-| Chat rooms | Chat tiles |
-| Profiles | User profiles |
-| Reels | Short video |
-| Stories | Story bubbles |
+| Category   | Description              |
+| ---------- | ------------------------ |
+| Albums     | Single / grid / carousel |
+| Ads        | Classifieds              |
+| Blog       | Articles                 |
+| Chat rooms | Chat tiles               |
+| Profiles   | User profiles            |
+| Reels      | Short video              |
+| Stories    | Story bubbles            |
 
 Each category: **single**, **grid**, **carousel**.
+
+### Diagram: grid block editor flow
+
+```mermaid
+flowchart LR
+  A[Add block] --> B[Drag and drop order]
+  B --> C[Resize]
+  C --> D[Assign component category]
+  D --> E[Pick variant single grid carousel]
+```
 
 ### Delete page
 
@@ -183,6 +211,19 @@ Sidebar **AI Chat**: connection state, **You** / **AI** history, input, **Send**
 4. Faces — create, tune gradient and visibility.
 5. Pages — routes, translations, grid layout.
 6. AI Chat — optional assistance.
+
+### Diagram: typical workflow
+
+```mermaid
+flowchart TB
+  W1[1 Sign in]
+  W2[2 Dashboard metrics]
+  W3[3 Users CRUD]
+  W4[4 Faces gradient visibility]
+  W5[5 Pages routes grid]
+  W6[6 AI Chat optional]
+  W1 --> W2 --> W3 --> W4 --> W5 --> W6
+```
 
 ---
 

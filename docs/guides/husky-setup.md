@@ -10,6 +10,25 @@ Each subrepository has its own git hooks configuration:
 - **Python project** (ai_demo): pre-commit framework with Black and Ruff
 - **Other projects** (be_demo, db_demo, redis_demo, logger_demo): No hooks (Docker/infrastructure only)
 
+### Diagram: hooks by repo (this document)
+
+```mermaid
+flowchart LR
+  subgraph FE["fe_demo admin_demo"]
+    PC[pre-commit hook]
+    CM[commit-msg hook]
+    PC --> LS[lint-staged ESLint Prettier]
+    CM --> CL[commitlint conventional]
+  end
+  subgraph AI["ai_demo"]
+    PRE[pre-commit framework]
+    PRE --> BR[Black Ruff checks]
+  end
+  subgraph Infra["be db redis logger"]
+    NH[No Husky per this guide]
+  end
+```
+
 ## React Projects: fe_demo & admin_demo
 
 ### Tools Used
@@ -34,19 +53,15 @@ yarn install  # This will run 'prepare' script which sets up Husky
 ### Pre-commit Hook
 
 Runs automatically before each commit:
+
 - **lint-staged** - Runs ESLint (--fix) and Prettier on staged files
 
 Configuration: `.lintstagedrc.json`
 
 ```json
 {
-  "*.{ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,scss,css}": [
-    "prettier --write"
-  ]
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,scss,css}": ["prettier --write"]
 }
 ```
 
@@ -59,6 +74,7 @@ Format: `type(scope): subject`
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
 Examples:
+
 - ✅ `feat(auth): add OAuth2 login`
 - ✅ `fix(api): resolve user registration bug`
 - ✅ `docs(readme): update setup instructions`
@@ -112,6 +128,7 @@ pre-commit install
 ### Pre-commit Hooks
 
 Runs automatically before each commit:
+
 - **Trailing whitespace** - Removes trailing whitespace
 - **End of file** - Ensures files end with newline
 - **YAML/JSON/TOML validation** - Validates config files
@@ -196,6 +213,7 @@ git commit --no-verify -m "your message"
 ### Commit message format rejected
 
 Check commit message format:
+
 ```
 type(scope): subject
 ```
@@ -204,12 +222,12 @@ Examples: `feat(auth): add login`, `fix(api): resolve bug`
 
 ## Summary
 
-| Repository | Hook Tool | Linting | Formatting | Commit Msg |
-|------------|-----------|---------|------------|------------|
-| fe_demo | Husky | ESLint | Prettier | commitlint |
-| admin_demo | Husky | ESLint | Prettier | commitlint |
-| ai_demo | pre-commit | Ruff | Black | - |
-| be_demo | - | - | - | - |
-| db_demo | - | - | - | - |
-| redis_demo | - | - | - | - |
-| logger_demo | - | - | - | - |
+| Repository  | Hook Tool  | Linting | Formatting | Commit Msg |
+| ----------- | ---------- | ------- | ---------- | ---------- |
+| fe_demo     | Husky      | ESLint  | Prettier   | commitlint |
+| admin_demo  | Husky      | ESLint  | Prettier   | commitlint |
+| ai_demo     | pre-commit | Ruff    | Black      | -          |
+| be_demo     | -          | -       | -          | -          |
+| db_demo     | -          | -       | -          | -          |
+| redis_demo  | -          | -       | -          | -          |
+| logger_demo | -          | -       | -          | -          |

@@ -10,16 +10,41 @@ End-to-end feature: per-face **idea / feedback tickets** with **likes** and **co
 
 Deleting a ticket removes comments and likes (EF cascade).
 
+### Diagram: wall ticket ER (minimal)
+
+```mermaid
+erDiagram
+  Face ||--o{ FaceWallTicket : owns
+  ApplicationUser ||--o{ FaceWallTicket : creates
+  FaceWallTicket ||--o{ FaceWallTicketComment : has
+  FaceWallTicket ||--o{ FaceWallTicketLike : has
+  ApplicationUser ||--o{ FaceWallTicketComment : writes
+  ApplicationUser ||--o{ FaceWallTicketLike : toggles
+```
+
 ## Status and rules
 
-| Status    | Visible on wall | Likes / comments | Author edit | Author delete | Notes |
-|-----------|-----------------|------------------|-------------|---------------|--------|
-| Active    | Yes             | Yes (non-host)   | Yes         | Yes           | Max **20** tickets per user per face (any status counts). |
-| Approved  | Yes             | **Frozen** (read counts) | No  | No            | Moderation final. |
-| Denied    | Yes             | **Frozen**       | No          | No            | Scheduler **hard-deletes** after **2 days** (`wall.ticket-delete` job). |
+| Status   | Visible on wall | Likes / comments         | Author edit | Author delete | Notes                                                                   |
+| -------- | --------------- | ------------------------ | ----------- | ------------- | ----------------------------------------------------------------------- |
+| Active   | Yes             | Yes (non-host)           | Yes         | Yes           | Max **20** tickets per user per face (any status counts).               |
+| Approved | Yes             | **Frozen** (read counts) | No          | No            | Moderation final.                                                       |
+| Denied   | Yes             | **Frozen**               | No          | No            | Scheduler **hard-deletes** after **2 days** (`wall.ticket-delete` job). |
 
 - **Host** face role: may **view** list and detail; **cannot** create, like, comment, or unlike.
 - **Global Admin / SuperAdmin** (application role in DB, same check as chat-room admin tools): moderation APIs only; not “face admin” (planned separately).
+
+### Diagram: ticket status machine
+
+```mermaid
+stateDiagram-v2
+  [*] --> active: author creates
+  active --> approved: admin approve
+  active --> denied: admin deny
+  denied --> [*]: wall.ticket-delete after delay
+  note right of active: Author edit delete host cannot create like comment
+  note right of approved: Interactions frozen read only counts
+  note right of denied: Hard delete scheduled 2 days UTC
+```
 
 ## Backend API
 
@@ -27,32 +52,49 @@ Base URL is the API origin (e.g. `https://localhost:7xxx`). All routes require `
 
 ### User — `api/faces/{faceId}/wall-tickets`
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/` | Paginated list (`page`, `pageSize` 1–100). Response includes **`isHostViewer`** (face-level host). |
-| GET | `/{ticketId}` | Detail + embedded `comments` (ordered oldest first). |
-| POST | `/` | Create (`title`, `description`). **403** if host. **400** if over 20 tickets for user+face. |
-| PUT | `/{ticketId}` | Author only; **active** only. |
-| DELETE | `/{ticketId}` | Author + **active**, or **global admin** (any status). Hard delete. |
-| POST | `/{ticketId}/like` | Toggle on; **active** only; not host. |
-| DELETE | `/{ticketId}/like` | Unlike; same rules. |
-| GET | `/{ticketId}/comments` | List comments. |
-| POST | `/{ticketId}/comments` | Add comment; **active** only; not host; body `{ "content": "..." }` (≤255). |
+| Method | Path                   | Purpose                                                                                            |
+| ------ | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| GET    | `/`                    | Paginated list (`page`, `pageSize` 1–100). Response includes **`isHostViewer`** (face-level host). |
+| GET    | `/{ticketId}`          | Detail + embedded `comments` (ordered oldest first).                                               |
+| POST   | `/`                    | Create (`title`, `description`). **403** if host. **400** if over 20 tickets for user+face.        |
+| PUT    | `/{ticketId}`          | Author only; **active** only.                                                                      |
+| DELETE | `/{ticketId}`          | Author + **active**, or **global admin** (any status). Hard delete.                                |
+| POST   | `/{ticketId}/like`     | Toggle on; **active** only; not host.                                                              |
+| DELETE | `/{ticketId}/like`     | Unlike; same rules.                                                                                |
+| GET    | `/{ticketId}/comments` | List comments.                                                                                     |
+| POST   | `/{ticketId}/comments` | Add comment; **active** only; not host; body `{ "content": "..." }` (≤255).                        |
 
 ### Admin — `api/admin/faces/{faceId}/wall-tickets`
 
 **403** if caller is not global Admin/SuperAdmin.
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/` | Paginated list (same paging as above). |
-| GET | `/{ticketId}` | Full detail + comments. |
-| POST | `/{ticketId}/approve` | **Active → approved** only. |
-| POST | `/{ticketId}/deny` | **Active → denied**; schedules **`wall.ticket-delete`** at **UTC + 2 days**. |
-| DELETE | `/{ticketId}` | Hard delete any status. |
-| DELETE | `/{ticketId}/comments/{commentId}` | Remove one comment. |
+| Method | Path                               | Purpose                                                                      |
+| ------ | ---------------------------------- | ---------------------------------------------------------------------------- |
+| GET    | `/`                                | Paginated list (same paging as above).                                       |
+| GET    | `/{ticketId}`                      | Full detail + comments.                                                      |
+| POST   | `/{ticketId}/approve`              | **Active → approved** only.                                                  |
+| POST   | `/{ticketId}/deny`                 | **Active → denied**; schedules **`wall.ticket-delete`** at **UTC + 2 days**. |
+| DELETE | `/{ticketId}`                      | Hard delete any status.                                                      |
+| DELETE | `/{ticketId}/comments/{commentId}` | Remove one comment.                                                          |
 
 Authors **cannot** delete comments; only admins (this route).
+
+### Diagram: user API vs admin API
+
+```mermaid
+flowchart TB
+  subgraph UserAPI["User api faces faceId wall-tickets"]
+    U1[List detail CRUD like comments]
+    U2[Bearer plus face scope]
+    U3[Host may view not create like comment]
+  end
+  subgraph AdminAPI["Admin api admin faces faceId wall-tickets"]
+    A1[List approve deny delete]
+    A2[Global Admin or SuperAdmin only]
+  end
+  U2 --> U1
+  A2 --> A1
+```
 
 ## Redis worker
 
@@ -60,6 +102,24 @@ Authors **cannot** delete comments; only admins (this route).
 - Payload: `{ "wallTicketId": <int> }`
 - Registered in `RedisJobWorkerService`; handler resolves `IFaceWallTicketLifecycleService` and calls **`DeleteTicketHardAsync`**.
 - **Testing** environment uses `NoOpRedisJobQueue` — deny still updates status in DB, but no delayed job is enqueued; use integration tests or call `DeleteTicketHardAsync` manually when verifying.
+
+### Diagram: deny to hard delete via worker
+
+```mermaid
+sequenceDiagram
+  participant Admin
+  participant API
+  participant Queue as Redis job queue
+  participant Worker as RedisJobWorkerService
+  participant Life as IFaceWallTicketLifecycleService
+
+  Admin->>API: POST deny active ticket
+  API->>Queue: enqueue wall.ticket-delete payload id
+  Note over Queue: Testing uses NoOp queue no enqueue
+  Worker->>Queue: dequeue when due
+  Worker->>Life: DeleteTicketHardAsync
+  Life-->>Worker: ticket removed
+```
 
 ## Frontend (`fe_demo`)
 
@@ -74,6 +134,22 @@ Authors **cannot** delete comments; only admins (this route).
 - From **Face detail**, button **Wall tickets (moderation)** → `/:lang/.../faces/:id/wall-tickets`.
 - Table: approve / deny / delete ticket; open title for full text and comments; delete individual comments.
 - Strings under **`pages.faceWallTickets`** and **`pages.faceDetail.wallTickets`** (en / sk / cz).
+
+### Diagram: FE and admin wall UI
+
+```mermaid
+flowchart LR
+  WallPage[FaceWallPage wall index]
+  Create[WallTicketCreateTopPanel]
+  Detail[WallTicketDetailPanel]
+  AdminFace[AdminFaceDetail]
+  ModTable[Admin moderation table]
+
+  WallPage --> Create
+  WallPage --> Detail
+  AdminFace --> ModTable
+  ModTable --> Detail
+```
 
 ## Database migration
 

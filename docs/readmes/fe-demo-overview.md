@@ -13,6 +13,7 @@ Typical dev URL: **http://localhost:8081**.
 ### Registration
 
 Form fields:
+
 - **Email** (required, valid format)
 - **Password** (min 4 characters; must include lowercase, uppercase, and digit)
 - **First name**
@@ -50,9 +51,23 @@ In the side panel, tab **Faces** lists cards; clicking a card switches the activ
 ### First visit to a private face
 
 A **Choose role** panel opens automatically:
+
 - Dropdown of available face roles (e.g. FACE_USER, INZERENT, SUBSCRIBER).
 - After confirm, the role is saved.
 - On later visits the panel does not show again.
+
+### Diagram: public vs private face paths
+
+```mermaid
+flowchart TB
+  Pub[Public face anonymous OK]
+  Prv[Private face sign-in required]
+  Switch[Side panel Faces tab switch]
+  First[First visit role panel PUT my-role]
+  Pub --> Switch
+  Prv --> First
+  Prv --> Switch
+```
 
 ---
 
@@ -74,6 +89,7 @@ Anonymous users only see Sign in and Register.
 ### Side panel
 
 Tabs include:
+
 - **Settings** — language, sign-out.
 - **Profile** — edit profile.
 - **Face role** — role selection (private faces).
@@ -84,11 +100,33 @@ Tabs include:
 - **Faces** — pick face.
 - **Pages** — page navigation.
 
+### Diagram: shell layout
+
+```mermaid
+flowchart TB
+  subgraph Header["Header"]
+    H1[Logo nav profile]
+  end
+  subgraph Main["Main"]
+    M1[Page content]
+  end
+  subgraph Footer["Footer"]
+    F1[Messenger shortcut]
+  end
+  subgraph Side["Side panel tabs"]
+    S1[Settings Profile Face role Friends Messenger Notifications Blocked Faces Pages]
+  end
+  Header --> Main
+  Main --> Footer
+  Side --> Main
+```
+
 ---
 
 ## 4. Languages
 
 The app ships with three locales:
+
 - **Slovak** (`sk`)
 - **English** (`en`)
 - **Czech** (`cz`)
@@ -110,19 +148,30 @@ Each face has pages configured in the admin app. They appear in navigation and c
 
 ### Block types
 
-| Type | Description |
-|------|-------------|
-| **Album** | Photos and albums |
-| **Ad** | Classifieds with price and location |
-| **Blog** | Articles with date, title, excerpt |
-| **ChatRoom** | Chat rooms with member counts |
-| **UserProfile** | User profiles |
-| **Reel** | Short video cards from API (first reel or grid/carousel) |
-| **Story** | Story bubbles (seen/unseen) |
+| Type            | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| **Album**       | Photos and albums                                        |
+| **Ad**          | Classifieds with price and location                      |
+| **Blog**        | Articles with date, title, excerpt                       |
+| **ChatRoom**    | Chat rooms with member counts                            |
+| **UserProfile** | User profiles                                            |
+| **Reel**        | Short video cards from API (first reel or grid/carousel) |
+| **Story**       | Story bubbles (seen/unseen)                              |
 
 Each type supports **single**, **grid**, and **carousel** layouts.
 
 Blocks have a header (Create, List, Report, Help, Sort, Favorites, Settings) and footer navigation (Previous / Play / Next) where applicable.
+
+### Diagram: page to blocks to display mode
+
+```mermaid
+flowchart TB
+  Page[Face page from admin]
+  Blocks[Ordered blocks]
+  Comp[Component type Album Blog Chat etc]
+  Mode[single grid carousel]
+  Page --> Blocks --> Comp --> Mode
+```
 
 ---
 
@@ -157,6 +206,7 @@ Uploads must be images.
 ## 9. Friend requests
 
 **Friend Requests** tab:
+
 - **Incoming** — Accept / Reject.
 - **Add friend** — search (300 ms debounce), paginated list of addable users, **Send request** per row (dynamic page size to fit viewport).
 
@@ -170,6 +220,20 @@ Opened from the side panel or footer.
 - **Right:** chat list and message requests.
 
 **Enter** sends; **Shift+Enter** newline. Realtime delivery. Connection state: Connecting / Connected / Disconnected. Unread badges.
+
+### Diagram: messenger send path (simplified)
+
+```mermaid
+sequenceDiagram
+  participant UI as Messenger UI
+  participant Hub as MessengerHub /hubs/messenger
+  participant Peer as Other client
+
+  UI->>Hub: SendChatMessage
+  Hub-->>Peer: ReceiveChatMessage
+  Hub-->>UI: echo or ack path per implementation
+  Note over UI,Hub: JWT via query or negotiated per app config
+```
 
 ---
 
@@ -213,14 +277,14 @@ Create/edit via **+** in Album / AlbumGrid / AlbumCarousel headers (slide-over f
 
 **API (summary)**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/albums` | Visible albums |
-| GET | `/api/albums/{id}` | Detail |
-| GET | `/api/albums/user/{userId}` | By user |
-| POST | `/api/albums` | Create |
-| PUT | `/api/albums/{id}` | Update (creator) |
-| DELETE | `/api/albums/{id}` | Delete (creator) |
+| Method | Endpoint                    | Description      |
+| ------ | --------------------------- | ---------------- |
+| GET    | `/api/albums`               | Visible albums   |
+| GET    | `/api/albums/{id}`          | Detail           |
+| GET    | `/api/albums/user/{userId}` | By user          |
+| POST   | `/api/albums`               | Create           |
+| PUT    | `/api/albums/{id}`          | Update (creator) |
+| DELETE | `/api/albums/{id}`          | Delete (creator) |
 
 Comments and likes under `/api/albums/{id}/comments` and `/likes`.
 
@@ -240,12 +304,12 @@ Single video with title, description, comments, likes; grid components like albu
 
 **API (summary)**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/reels?faceId=` | List |
-| GET | `/api/reels/{id}?faceId=` | Detail |
-| GET | `/api/reels/user/{userId}?faceId=` | By user |
-| POST/PUT/DELETE | `/api/reels` … | CRUD (creator rules) |
+| Method          | Endpoint                           | Description          |
+| --------------- | ---------------------------------- | -------------------- |
+| GET             | `/api/reels?faceId=`               | List                 |
+| GET             | `/api/reels/{id}?faceId=`          | Detail               |
+| GET             | `/api/reels/user/{userId}?faceId=` | By user              |
+| POST/PUT/DELETE | `/api/reels` …                     | CRUD (creator rules) |
 
 Comments/likes paths mirror albums with `faceId` where needed.
 
@@ -261,13 +325,13 @@ Filter: `GET /api/blogs?faceId=`.
 
 **API (summary)**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/blogs?faceId=` | List |
-| GET | `/api/blogs/{id}` | Detail |
-| POST | `/api/blogs` | Create |
-| PUT | `/api/blogs/{id}` | Update (creator) |
-| DELETE | `/api/blogs/{id}` | Delete (creator) |
+| Method | Endpoint             | Description      |
+| ------ | -------------------- | ---------------- |
+| GET    | `/api/blogs?faceId=` | List             |
+| GET    | `/api/blogs/{id}`    | Detail           |
+| POST   | `/api/blogs`         | Create           |
+| PUT    | `/api/blogs/{id}`    | Update (creator) |
+| DELETE | `/api/blogs/{id}`    | Delete (creator) |
 
 ---
 
