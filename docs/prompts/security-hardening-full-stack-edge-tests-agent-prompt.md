@@ -160,7 +160,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 - Structured auth-failure logs — **no** passwords, refresh tokens, or full JWTs.
 - **Audit templates** for key rotation, client secret change, global role change, sensitive hub ops — **documented**; implement logging hooks where the codebase has patterns.
 - **Swagger / OpenAPI UI in production:** **must** be disabled, auth-gated, or restricted by environment — document exact behavior in `docs/` and **verify** in config.
-- **Dependency audit:** run **`dotnet list package --vulnerable`** (or project-standard) and **`npm audit`** (or **yarn npm audit**) for `fe_demo` and `admin_demo`; **record results** in gap analysis (**§15**); **fix** or **document accepted risk + tracking id** for each high/critical finding.
+- **Dependency audit:** run **`dotnet list package --vulnerable`** (or project-standard) and **`npm audit`** (or **yarn npm audit**) for `fe_demo` and `admin_demo`; **record results** in `docs/guides/security-crypto-sockets.md` (baseline / deferred) or the agent report (**§15**); **fix** or **document accepted risk + tracking id** for each high/critical finding.
 
 **Required docs:** **Canonical** Mermaid for audit event flow (auth failure → log fields → optional audit store).
 
@@ -171,7 +171,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 **Required:**
 
 - **Uploads / static files:** document limits, validation, and abuse notes; add tests if the API exposes upload endpoints affected by this effort.
-- **IDOR:** extend ACL/matrix tests for **representative** resource controllers (stories, albums, profiles, etc.) where IDs cross tenants — **document** coverage in gap analysis.
+- **IDOR:** extend ACL/matrix tests for **representative** resource controllers (stories, albums, profiles, etc.) where IDs cross tenants — **document** coverage in `docs/guides/security-crypto-sockets.md` (deferred) or the agent report.
 - **CSRF:** document **current** model (Bearer + SPA); if cookies are introduced later, CSRF strategy is **required** in that change — document “not applicable today” with **reference to Bearer model** in `docs/guides/`.
 - **OpenAPI contract:** add or extend tests that **sample responses** match documented security-relevant endpoints (OAuth, capabilities) where feasible.
 - **E2E:** If `scripts/test-all.sh` runs **Cypress** (or similar), **add or extend** at least **one** scenario: **login → authenticated request → refresh or logout** — or document **exact** blocker and add a **tracked** item plus **manual test script** in docs.
@@ -254,7 +254,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 **Implementation**
 
-- [ ] **Gap analysis** delivered **in full** in the agent’s **final report** (mandatory). Additionally commit **`SECURITY_GAP_ANALYSIS.md`** at repo root **when** this engagement produces repo changes (same content as report section); if no file is committed, the final report **still** must contain the complete gap analysis — empty gap analysis is **forbidden**.
+- [ ] **Gap analysis** delivered **in full** in the agent’s **final report** (mandatory). When this engagement produces repo changes, also update **`docs/guides/security-crypto-sockets.md`**: baseline table if behavior changed, and **Deferred follow-ups** for any remaining `TRACK-*` items (same substance as the report); empty gap analysis is **forbidden**.
 - [ ] **All §17.2 requirements** addressed in code **or** documented with **tracking id** + **exact** reason per **§1**.
 - [ ] **`scripts/test-all.sh`** (or documented project equivalent) **passes**, **or** failing commands are listed with **cause** and **tracking id**.
 - [ ] **No secrets** in git; examples use **placeholders** and **env var names**.
@@ -304,7 +304,7 @@ You are working in **`_mfai_demo`**. **Every requirement in this file is mandato
 - **K1–K6, J1–J7, O1–O6, T1–T4, S1–S6, H1–H4, D1–D2, M1–M3** from `security-crypto-sockets.md` **implemented** or **documented gap + tracking id** per **§1**.
 - **Super-admin / global role API:** if touched, **super-admin-api.md** is **normative**.
 - **Swagger in production:** restricted per **§11**.
-- **Dependencies:** audited per **§11**; results in gap analysis.
+- **Dependencies:** audited per **§11**; results in `docs/guides/security-crypto-sockets.md` or agent report.
 - **Uploads, ai_demo gRPC, E2E, contracts, CSRF doc, IDOR tests:** per **§12**.
 
 ### 17.3 Testing requirements (all mandatory)
@@ -360,7 +360,7 @@ These boundaries **do not** relax **§16** — they **narrow scope of rewrite**,
 - [ ] **FE:** Face prefix on **all** scoped API calls in tests.
 - [ ] **admin_demo:** Admin prefix + capabilities + error states.
 - [ ] **E2E:** Cypress (or repo E2E) auth path **or** manual script in docs + tracking id.
-- [ ] **Dependencies:** `dotnet` + `npm`/`yarn` audit logged in gap analysis; highs addressed or tracked.
+- [ ] **Dependencies:** `dotnet` + `npm`/`yarn` audit logged in `docs/guides/security-crypto-sockets.md` or agent report; highs addressed or tracked.
 
 ---
 

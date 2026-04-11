@@ -238,7 +238,27 @@ flowchart TB
 
 ---
 
+## Deferred follow-ups (tracked)
+
+Product or infra items not covered by the baseline table above; keep IDs for issue tracking.
+
+| Topic | Notes |
+| ----- | ----- |
+| **TRACK-INFRA-KMS** | Production: HSM/vault for signing keys; operator runbook beyond PEM paths. |
+| **TRACK-OAUTH-MTLS** | Optional mTLS / `private_key_jwt` for confidential clients if required. |
+| **TRACK-OAUTH-RL-PARTITION** | Rate limits: extend beyond per-IP (e.g. per `client_id` / username). |
+| **TRACK-CI-E2E-AUTH** | Minimal always-on auth E2E in CI if Cypress stays behind `SKIP_CYPRESS=1`; manual path: [manual-oauth-smoke.md](./manual-oauth-smoke.md). |
+| **TRACK-QA-IDOR-MATRIX** | Broader IDOR / ACL matrix across controllers vs representative tests today. |
+| **TRACK-DOCS-MERMAID-CI** | Optional CI gate to render-verify Mermaid in `docs/guides/`. |
+| **TRACK-AI-GRPC-THREAT** | Deeper gRPC threat model for `ai_demo` if exposure grows. |
+| **TRACK-DOCS-SUBMODULES** | Exhaustive README sweep per submodule if required as a separate doc pass. |
+
+**Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `be_demo/BeDemo.Api`. Demo OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
+
+---
+
 ## Changelog
 
 - v1: Initial backlog for strong crypto, JWT, API, WebSockets (AI-oriented).
 - v2: Baseline table updated for JWKS, `atv` / `AccessTokenVersion`, refresh revocation, O4 rejection, security headers, Swagger gating (2026-04).
+- v3: **Deferred follow-ups** table consolidated here (replacing root `SECURITY_GAP_ANALYSIS.md`).
