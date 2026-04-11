@@ -2,7 +2,7 @@
 
 **Purpose:** Single inventory of **all declared dependencies** per app/subrepo in `_mfai_demo`, with **observed “latest stable”** from registries or tooling at a fixed snapshot, plus **feasibility / risk** notes for upgrades. Use this as a **copy-paste agent brief** to refresh numbers, open a branch, bump packages, and run tests/CI.
 
-**Snapshot (human + tooling):** 2026-04-10. Re-run the commands in section 0 before executing upgrades — registry “latest” changes daily.
+**Snapshot (human + tooling):** 2026-04-11 (`be_demo` NuGet rows aligned to repo; re-run §0 before upgrades — registry “latest” changes daily).
 
 ### Monorepo layout (`git` submodules)
 
@@ -112,57 +112,61 @@ PY
 
 ### 1.1 `BeDemo.Api/BeDemo.Api.csproj`
 
-| Package | Requested / resolved | Latest (NuGet, `dotnet list package --outdated`, snapshot) | Update feasible? |
-| ------- | -------------------- | ----------------------------------------------------------- | ----------------- |
-| Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.2 | **10.0.5** | Yes — patch aligned with ASP.NET runtime; run full test suite. |
-| Microsoft.AspNetCore.Identity.EntityFrameworkCore | 10.0.2 | **10.0.5** | Yes — same. |
-| Microsoft.AspNetCore.OpenApi | 10.0.0 | **10.0.5** | Yes — align all ASP.NET packages to same patch. |
-| Microsoft.EntityFrameworkCore | 10.0.2 | **10.0.5** | Yes — with Npgsql provider bump. |
-| Microsoft.EntityFrameworkCore.InMemory | 10.0.2 | **10.0.5** | Yes. |
-| Microsoft.EntityFrameworkCore.Tools | 10.0.2 | **10.0.5** | Yes (PrivateAssets). |
-| Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.0 | **10.0.1** | Yes — minor provider patch. |
-| Swashbuckle.AspNetCore | 10.1.0 | **10.1.7** | Yes — patch. |
-| System.IdentityModel.Tokens.Jwt | 8.15.0 | **8.17.0** | Yes — JWT lib patch; verify OAuth/JWKS tests. |
-| Google.Protobuf | 3.29.3 | **3.34.1** | **Careful** — line jump; must match **Grpc.Tools** / **Grpc.Net.Client** and generated proto code. |
-| Grpc.Net.Client | 2.63.0 | **2.76.0** | Yes — bump with Grpc.Tools + regenerate if needed. |
-| Grpc.Tools | 2.63.0 | **2.80.0** | Yes — keep in sync with Grpc.Net.Client. |
-| Serilog.AspNetCore | 8.0.3 | **10.0.0** | **Major** — read Serilog 10 migration / breaking changes; test Seq + console sinks. |
-| Serilog.Sinks.Console | 6.0.0 | **6.1.1** | Yes — patch. |
-| Serilog.Sinks.Seq | 8.0.0 | **9.0.0** | **Major** — check Seq sink compatibility with Serilog.AspNetCore choice. |
-| StackExchange.Redis | 2.9.32 | **2.12.14** | Yes — minor line; run job-queue / Redis integration paths. |
-| Serilog.Enrichers.Environment | 3.0.1 | *(not in outdated list)* | At snapshot NuGet reported no newer compatible version — re-run after other bumps. |
-| Serilog.Enrichers.Thread | 4.0.0 | *(not in outdated list)* | Same. |
+**Repo baseline (2026-04-11):** ASP.NET / EF / Npgsql / Swashbuckle / JWT / Serilog / Redis are on the **bumped** lines below; `dotnet list package --outdated` then only flags the **gRPC triplet**.
+
+| Package                                           | Current (repo) | Latest (NuGet, `dotnet list package --outdated`) | Notes                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------- | -------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Microsoft.AspNetCore.Authentication.JwtBearer     | **10.0.5**     | —                                                | At resolved line.                                                                                                                                                                                                                                                                                    |
+| Microsoft.AspNetCore.Identity.EntityFrameworkCore | **10.0.5**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Microsoft.AspNetCore.OpenApi                      | **10.0.5**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Microsoft.EntityFrameworkCore                     | **10.0.5**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Microsoft.EntityFrameworkCore.InMemory            | **10.0.5**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Microsoft.EntityFrameworkCore.Tools               | **10.0.5**     | —                                                | PrivateAssets.                                                                                                                                                                                                                                                                                       |
+| Npgsql.EntityFrameworkCore.PostgreSQL             | **10.0.1**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Swashbuckle.AspNetCore                            | **10.1.7**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| System.IdentityModel.Tokens.Jwt                   | **8.17.0**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Serilog.AspNetCore                                | **10.0.0**     | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Serilog.Sinks.Console                             | **6.1.1**      | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Serilog.Sinks.Seq                                 | **9.0.0**      | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| StackExchange.Redis                               | **2.12.14**    | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Serilog.Enrichers.Environment                     | **3.0.1**      | —                                                | No newer in default audit at refresh.                                                                                                                                                                                                                                                                |
+| Serilog.Enrichers.Thread                          | **4.0.0**      | —                                                | Same.                                                                                                                                                                                                                                                                                                |
+| Google.Protobuf                                   | **3.29.3**     | **3.34.1**                                       | **Hold on Docker arm64** — `Grpc.Tools` **2.80** ships `protoc` that **exits 139** (segfault) under **`linux_arm64`** in `mcr.microsoft.com/dotnet/sdk:10.0` when building inside **be-demo-dev**; keep **3.29.3 / 2.63.0** until upstream fix or proto codegen **outside** the arm64 SDK container. |
+| Grpc.Net.Client                                   | **2.63.0**     | **2.76.0**                                       | Bump **with** `Grpc.Tools` + `Google.Protobuf` in one change after the tooling issue is resolved.                                                                                                                                                                                                    |
+| Grpc.Tools                                        | **2.63.0**     | **2.80.0**                                       | Same.                                                                                                                                                                                                                                                                                                |
 
 ### 1.2 `BeDemo.Api.Tests/BeDemo.Api.Tests.csproj`
 
-| Package | Requested | Latest (same command) | Update feasible? |
-| ------- | --------- | ---------------------- | ----------------- |
-| coverlet.collector | 6.0.4 | **8.0.1** | **Major** — verify test host / coverage in CI. |
-| FluentAssertions | 8.8.0 | **8.9.0** | Yes — patch. |
-| Microsoft.AspNetCore.Mvc.Testing | 10.0.2 | **10.0.5** | Yes — align with Api. |
-| Microsoft.AspNetCore.SignalR.Client | 10.0.2 | **10.0.5** | Yes. |
-| Microsoft.EntityFrameworkCore.InMemory | 10.0.2 | **10.0.5** | Yes. |
-| Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.0 | **10.0.1** | Yes. |
-| Microsoft.NET.Test.Sdk | 17.14.1 | **18.4.0** | **Major** — usually safe; confirm test SDK with `dotnet test`. |
-| Moq | 4.20.72 | *(not in outdated list)* | At snapshot **no newer stable** top-level version in default `dotnet list package --outdated`; re-run after bump wave. Use `--include-prerelease` only if you deliberately track prereleases. |
-| xunit | 2.9.3 | *(not in outdated list)* | Same. |
-| xunit.runner.visualstudio | 3.1.4 | **3.1.5** | Yes — patch. |
+**Repo baseline (2026-04-11):** `dotnet list package --outdated` reports **no** updates for this project at refresh.
+
+| Package                                | Current (repo) | Latest (same command) | Notes                             |
+| -------------------------------------- | -------------- | --------------------- | --------------------------------- |
+| coverlet.collector                     | **8.0.1**      | —                     | Bumped; verify coverage in CI.    |
+| FluentAssertions                       | **8.9.0**      | —                     |                                   |
+| Microsoft.AspNetCore.Mvc.Testing       | **10.0.5**     | —                     | Aligned with Api.                 |
+| Microsoft.AspNetCore.SignalR.Client    | **10.0.5**     | —                     |                                   |
+| Microsoft.EntityFrameworkCore.InMemory | **10.0.5**     | —                     |                                   |
+| Npgsql.EntityFrameworkCore.PostgreSQL  | **10.0.1**     | —                     |                                   |
+| Microsoft.NET.Test.Sdk                 | **18.4.0**     | —                     |                                   |
+| Moq                                    | **4.20.72**    | —                     | No newer stable in default audit. |
+| xunit                                  | **2.9.3**      | —                     |                                   |
+| xunit.runner.visualstudio              | **3.1.5**      | —                     |                                   |
 
 ### 1.3 `BeDemo.Api/Dockerfile.dev`
 
-| Dependency | Current | Notes |
-| ---------- | ------- | ----- |
-| `dotnet-ef` global tool | **10.0.2** (pinned in Dockerfile) | Align with EF Core package version after upgrades. |
+| Dependency              | Current                           | Notes                                                                 |
+| ----------------------- | --------------------------------- | --------------------------------------------------------------------- |
+| `dotnet-ef` global tool | **10.0.5** (pinned in Dockerfile) | Keep aligned with `Microsoft.EntityFrameworkCore.*` package versions. |
 
 ### 1.4 `be_demo/package.json` (Node — Husky / Commitlint only)
 
 **`packageManager`:** `yarn@4.12.0` (pinned hash in repo).
 
-| Package | Declared | `npm-check-updates` target (snapshot) | Latest `npm view` (snapshot) | Notes |
-| ------- | -------- | ------------------------------------- | ------------------------------ | ----- |
-| @commitlint/cli | ^19.6.0 | **^20.5.0** | **20.5.0** | Major line — align with `fe_demo` / `admin_demo` commitlint. |
-| @commitlint/config-conventional | ^19.6.0 | **^20.5.0** | **20.5.0** | Same. |
-| husky | ^9.1.7 | *(no NCU line)* | **9.1.7** | Matches latest at snapshot. |
+| Package                         | Declared    | `npm-check-updates` (re-run §0) | Latest `npm view` | Notes              |
+| ------------------------------- | ----------- | ------------------------------- | ----------------- | ------------------ |
+| @commitlint/cli                 | **^20.5.0** | _(at line)_                     | **20.5.0**        | Aligned with SPAs. |
+| @commitlint/config-conventional | **^20.5.0** | _(at line)_                     | **20.5.0**        | Same.              |
+| husky                           | **^9.1.7**  | _(at line)_                     | **9.1.7**         |                    |
 
 ---
 
@@ -179,74 +183,74 @@ PY
 
 Suggested bumps if you ran `npx npm-check-updates -u` (review breaking changes before applying):
 
-| Package | Declared (approx.) | NCU suggested target |
-| ------- | ------------------ | --------------------- |
-| @commitlint/cli | ^20.3.1 | **^20.5.0** |
-| @commitlint/config-conventional | ^20.3.1 | **^20.5.0** |
-| @eslint/js | ^9.39.1 | **^10.0.1** |
-| @microsoft/signalr | ^8.0.7 | **^10.0.0** (align with admin + BE SignalR) |
-| @tanstack/react-query | ^5.90.18 | **^5.97.0** |
-| @testing-library/react | ^16.3.1 | **^16.3.2** |
-| @types/jsdom | ^27 | **^28** |
-| @types/node | ^25.0.9 | **^25.6.0** |
-| @types/react | ^19.2.5 | **^19.2.14** |
-| @vitejs/plugin-basic-ssl | ^2.1.0 | **^2.3.0** |
-| @vitejs/plugin-react | ^5.1.1 | **^6.0.1** |
-| @vitest/ui | ^4.0.17 | **^4.1.4** |
-| cypress | ^15.9.0 | **^15.13.1** |
-| eslint | ^9.39.1 | **^10.2.0** |
-| eslint-plugin-react-refresh | ^0.4.24 | **^0.5.2** |
-| globals | ^16.5.0 | **^17.4.0** |
-| i18next | ^25.7.4 | **^26.0.4** |
-| i18next-browser-languagedetector | ^8.2.0 | **^8.2.1** |
-| jsdom | ^27.4.0 | **^29.0.2** |
-| lint-staged | ^15.2.10 | **^16.4.0** |
-| lucide-react | ^0.575.0 | **^1.8.0** |
-| prettier | ^3.8.0 | **^3.8.2** |
-| react / react-dom | ^19.2.0 | **^19.2.5** |
-| react-grid-layout | ^2.2.2 | **^2.2.3** |
-| react-hook-form | ^7.71.1 | **^7.72.1** |
-| react-i18next | ^16.5.3 | **^17.0.2** |
-| react-router-dom | ^7.12.0 | **^7.14.0** |
-| sass | ^1.97.2 | **^1.99.0** |
-| typescript | ~5.9.3 | **~6.0.2** |
-| typescript-eslint | ^8.46.4 | **^8.58.1** |
-| vite | ^7.3.2 | **^8.0.8** |
-| vitest | ^4.0.17 | **^4.1.4** |
+| Package                          | Declared (approx.) | NCU suggested target                        |
+| -------------------------------- | ------------------ | ------------------------------------------- |
+| @commitlint/cli                  | ^20.3.1            | **^20.5.0**                                 |
+| @commitlint/config-conventional  | ^20.3.1            | **^20.5.0**                                 |
+| @eslint/js                       | ^9.39.1            | **^10.0.1**                                 |
+| @microsoft/signalr               | ^8.0.7             | **^10.0.0** (align with admin + BE SignalR) |
+| @tanstack/react-query            | ^5.90.18           | **^5.97.0**                                 |
+| @testing-library/react           | ^16.3.1            | **^16.3.2**                                 |
+| @types/jsdom                     | ^27                | **^28**                                     |
+| @types/node                      | ^25.0.9            | **^25.6.0**                                 |
+| @types/react                     | ^19.2.5            | **^19.2.14**                                |
+| @vitejs/plugin-basic-ssl         | ^2.1.0             | **^2.3.0**                                  |
+| @vitejs/plugin-react             | ^5.1.1             | **^6.0.1**                                  |
+| @vitest/ui                       | ^4.0.17            | **^4.1.4**                                  |
+| cypress                          | ^15.9.0            | **^15.13.1**                                |
+| eslint                           | ^9.39.1            | **^10.2.0**                                 |
+| eslint-plugin-react-refresh      | ^0.4.24            | **^0.5.2**                                  |
+| globals                          | ^16.5.0            | **^17.4.0**                                 |
+| i18next                          | ^25.7.4            | **^26.0.4**                                 |
+| i18next-browser-languagedetector | ^8.2.0             | **^8.2.1**                                  |
+| jsdom                            | ^27.4.0            | **^29.0.2**                                 |
+| lint-staged                      | ^15.2.10           | **^16.4.0**                                 |
+| lucide-react                     | ^0.575.0           | **^1.8.0**                                  |
+| prettier                         | ^3.8.0             | **^3.8.2**                                  |
+| react / react-dom                | ^19.2.0            | **^19.2.5**                                 |
+| react-grid-layout                | ^2.2.2             | **^2.2.3**                                  |
+| react-hook-form                  | ^7.71.1            | **^7.72.1**                                 |
+| react-i18next                    | ^16.5.3            | **^17.0.2**                                 |
+| react-router-dom                 | ^7.12.0            | **^7.14.0**                                 |
+| sass                             | ^1.97.2            | **^1.99.0**                                 |
+| typescript                       | ~5.9.3             | **~6.0.2**                                  |
+| typescript-eslint                | ^8.46.4            | **^8.58.1**                                 |
+| vite                             | ^7.3.2             | **^8.0.8**                                  |
+| vitest                           | ^4.0.17            | **^4.1.4**                                  |
 
 ### 2.2 `npm-check-updates` — `admin_demo` (snapshot)
 
-| Package | NCU suggested target |
-| ------- | --------------------- |
-| @commitlint/cli / config-conventional | **^20.5.0** |
-| @eslint/js | **^10.0.1** |
-| @tanstack/react-query | **^5.97.0** |
-| @testing-library/react | **^16.3.2** |
-| @types/jsdom | **^28** |
-| @types/node | **^25.6.0** |
-| @types/react | **^19.2.14** |
-| @vitejs/plugin-basic-ssl | **^2.3.0** |
-| @vitejs/plugin-react | **^6.0.1** |
-| @vitest/ui | **^4.1.4** |
-| eslint | **^10.2.0** |
-| eslint-plugin-react-refresh | **^0.5.2** |
-| framer-motion | **^12.38.0** |
-| globals | **^17.4.0** |
-| i18next | **^26.0.4** |
-| i18next-browser-languagedetector | **^8.2.1** |
-| jsdom | **^29.0.2** |
-| lint-staged | **^16.4.0** |
-| prettier | **^3.8.2** |
-| react / react-dom | **^19.2.5** |
-| react-grid-layout | **^2.2.3** |
-| react-hook-form | **^7.72.1** |
-| react-i18next | **^17.0.2** |
-| react-router-dom | **^7.14.0** |
-| sass | **^1.99.0** |
-| typescript | **~6.0.2** |
-| typescript-eslint | **^8.58.1** |
-| vite | **^8.0.8** |
-| vitest | **^4.1.4** |
+| Package                               | NCU suggested target |
+| ------------------------------------- | -------------------- |
+| @commitlint/cli / config-conventional | **^20.5.0**          |
+| @eslint/js                            | **^10.0.1**          |
+| @tanstack/react-query                 | **^5.97.0**          |
+| @testing-library/react                | **^16.3.2**          |
+| @types/jsdom                          | **^28**              |
+| @types/node                           | **^25.6.0**          |
+| @types/react                          | **^19.2.14**         |
+| @vitejs/plugin-basic-ssl              | **^2.3.0**           |
+| @vitejs/plugin-react                  | **^6.0.1**           |
+| @vitest/ui                            | **^4.1.4**           |
+| eslint                                | **^10.2.0**          |
+| eslint-plugin-react-refresh           | **^0.5.2**           |
+| framer-motion                         | **^12.38.0**         |
+| globals                               | **^17.4.0**          |
+| i18next                               | **^26.0.4**          |
+| i18next-browser-languagedetector      | **^8.2.1**           |
+| jsdom                                 | **^29.0.2**          |
+| lint-staged                           | **^16.4.0**          |
+| prettier                              | **^3.8.2**           |
+| react / react-dom                     | **^19.2.5**          |
+| react-grid-layout                     | **^2.2.3**           |
+| react-hook-form                       | **^7.72.1**          |
+| react-i18next                         | **^17.0.2**          |
+| react-router-dom                      | **^7.14.0**          |
+| sass                                  | **^1.99.0**          |
+| typescript                            | **~6.0.2**           |
+| typescript-eslint                     | **^8.58.1**          |
+| vite                                  | **^8.0.8**           |
+| vitest                                | **^4.1.4**           |
 
 **Admin-only runtime packages (not in fe NCU block above):** `@microsoft/signalr` already **^10.0.0**; `@tanstack/react-table` **^8.21.3** (NCU did not propose a newer line at snapshot — matches **npm latest 8.21.3**).
 
@@ -259,88 +263,88 @@ Suggested bumps if you ran `npx npm-check-updates -u` (review breaking changes b
 
 `—` = not declared in that app. This table does **not** list transitive packages from `yarn.lock`.
 
-| Package | `fe_demo` | `admin_demo` | Latest (npm) | Note |
-| ------- | --------- | ------------ | ------------ | ---- |
-| `@commitlint/cli` | ^20.3.1 | ^20.3.1 | **20.5.0** |  |
-| `@commitlint/config-conventional` | ^20.3.1 | ^20.3.1 | **20.5.0** |  |
-| `@eslint/js` | ^9.39.1 | ^9.39.1 | **10.0.1** |  |
-| `@hookform/resolvers` | ^5.2.2 | ^5.2.2 | **5.2.2** |  |
-| `@microsoft/signalr` | ^8.0.7 | ^10.0.0 | **10.0.0** | Align fe to ^10 with admin + BE SignalR |
-| `@popperjs/core` | ^2.11.8 | ^2.11.8 | **2.11.8** |  |
-| `@radix-ui/react-accordion` | ^1.2.12 | ^1.2.12 | **1.2.12** |  |
-| `@radix-ui/react-alert-dialog` | ^1.1.15 | ^1.1.15 | **1.1.15** |  |
-| `@radix-ui/react-aspect-ratio` | ^1.1.8 | ^1.1.8 | **1.1.8** |  |
-| `@radix-ui/react-avatar` | ^1.1.11 | ^1.1.11 | **1.1.11** |  |
-| `@radix-ui/react-checkbox` | ^1.3.3 | ^1.3.3 | **1.3.3** |  |
-| `@radix-ui/react-collapsible` | ^1.1.12 | ^1.1.12 | **1.1.12** |  |
-| `@radix-ui/react-context-menu` | ^2.2.16 | ^2.2.16 | **2.2.16** |  |
-| `@radix-ui/react-dialog` | ^1.1.15 | ^1.1.15 | **1.1.15** |  |
-| `@radix-ui/react-dropdown-menu` | ^2.1.16 | ^2.1.16 | **2.1.16** |  |
-| `@radix-ui/react-hover-card` | ^1.1.15 | ^1.1.15 | **1.1.15** |  |
-| `@radix-ui/react-label` | ^2.1.8 | ^2.1.8 | **2.1.8** |  |
-| `@radix-ui/react-menubar` | ^1.1.16 | ^1.1.16 | **1.1.16** |  |
-| `@radix-ui/react-navigation-menu` | ^1.2.14 | ^1.2.14 | **1.2.14** |  |
-| `@radix-ui/react-popover` | ^1.1.15 | ^1.1.15 | **1.1.15** |  |
-| `@radix-ui/react-progress` | ^1.1.8 | ^1.1.8 | **1.1.8** |  |
-| `@radix-ui/react-radio-group` | ^1.3.8 | ^1.3.8 | **1.3.8** |  |
-| `@radix-ui/react-scroll-area` | ^1.2.10 | ^1.2.10 | **1.2.10** |  |
-| `@radix-ui/react-select` | ^2.2.6 | ^2.2.6 | **2.2.6** |  |
-| `@radix-ui/react-separator` | ^1.1.8 | ^1.1.8 | **1.1.8** |  |
-| `@radix-ui/react-slider` | ^1.3.6 | ^1.3.6 | **1.3.6** |  |
-| `@radix-ui/react-slot` | ^1.2.4 | ^1.2.4 | **1.2.4** |  |
-| `@radix-ui/react-switch` | ^1.2.6 | ^1.2.6 | **1.2.6** |  |
-| `@radix-ui/react-tabs` | ^1.1.13 | ^1.1.13 | **1.1.13** |  |
-| `@radix-ui/react-toast` | ^1.2.15 | ^1.2.15 | **1.2.15** |  |
-| `@radix-ui/react-toggle` | ^1.1.10 | ^1.1.10 | **1.1.10** |  |
-| `@radix-ui/react-toggle-group` | ^1.1.11 | ^1.1.11 | **1.1.11** |  |
-| `@radix-ui/react-tooltip` | ^1.2.8 | ^1.2.8 | **1.2.8** |  |
-| `@tanstack/react-query` | ^5.90.18 | ^5.90.18 | **5.97.0** |  |
-| `@tanstack/react-table` | — | ^8.21.3 | **8.21.3** |  |
-| `@testing-library/dom` | ^10.4.1 | ^10.4.1 | **10.4.1** |  |
-| `@testing-library/jest-dom` | ^6.9.1 | ^6.9.1 | **6.9.1** |  |
-| `@testing-library/react` | ^16.3.1 | ^16.3.1 | **16.3.2** |  |
-| `@testing-library/user-event` | ^14.6.1 | ^14.6.1 | **14.6.1** |  |
-| `@types/jsdom` | ^27 | ^27 | **28.0.1** |  |
-| `@types/node` | ^25.0.9 | ^24.10.9 | **25.6.0** | Declared ranges differ between SPAs |
-| `@types/react` | ^19.2.5 | ^19.2.5 | **19.2.14** |  |
-| `@types/react-dom` | ^19.2.3 | ^19.2.3 | **19.2.3** |  |
-| `@vitejs/plugin-basic-ssl` | ^2.1.0 | ^2.1.0 | **2.3.0** |  |
-| `@vitejs/plugin-react` | ^5.1.1 | ^5.1.1 | **6.0.1** |  |
-| `@vitest/ui` | ^4.0.17 | ^4.0.17 | **4.1.4** |  |
-| `@yarnpkg/pnpify` | ^4.1.6 | ^4.1.6 | **4.1.6** |  |
-| `axios` | ^1.15.0 | ^1.15.0 | **1.15.0** |  |
-| `bootstrap` | ^5.3.8 | ^5.3.8 | **5.3.8** |  |
-| `cypress` | ^15.9.0 | — | **15.13.1** | fe only |
-| `eslint` | ^9.39.1 | ^9.39.1 | **10.2.0** |  |
-| `eslint-config-prettier` | ^10.1.8 | ^10.1.8 | **10.1.8** |  |
-| `eslint-plugin-react-hooks` | ^7.0.1 | ^7.0.1 | **7.0.1** |  |
-| `eslint-plugin-react-refresh` | ^0.4.24 | ^0.4.24 | **0.5.2** |  |
-| `framer-motion` | — | ^12.26.2 | **12.38.0** | admin only |
-| `globals` | ^16.5.0 | ^16.5.0 | **17.4.0** |  |
-| `husky` | ^9.1.7 | ^9.1.7 | **9.1.7** |  |
-| `i18next` | ^25.7.4 | ^25.7.4 | **26.0.4** |  |
-| `i18next-browser-languagedetector` | ^8.2.0 | ^8.2.0 | **8.2.1** |  |
-| `jsdom` | ^27.4.0 | ^27.4.0 | **29.0.2** |  |
-| `lint-staged` | ^15.2.10 | ^15.2.10 | **16.4.0** |  |
-| `lucide-react` | ^0.575.0 | — | **1.8.0** | fe only; **major** icon package jump |
-| `openapi-typescript-codegen` | ^0.30.0 | ^0.30.0 | **0.30.0** |  |
-| `prettier` | ^3.8.0 | ^3.8.0 | **3.8.2** |  |
-| `quill-delta` | ^5.1.0 | — | **5.1.0** | fe only |
-| `react` | ^19.2.0 | ^19.2.0 | **19.2.5** |  |
-| `react-bootstrap` | ^2.10.10 | ^2.10.10 | **2.10.10** |  |
-| `react-dom` | ^19.2.0 | ^19.2.0 | **19.2.5** |  |
-| `react-grid-layout` | ^2.2.2 | ^2.2.2 | **2.2.3** |  |
-| `react-hook-form` | ^7.71.1 | ^7.71.1 | **7.72.1** |  |
-| `react-i18next` | ^16.5.3 | ^16.5.3 | **17.0.2** |  |
-| `react-quill-new` | ^3.8.3 | — | **3.8.3** | fe only |
-| `react-router-dom` | ^7.12.0 | ^7.12.0 | **7.14.0** |  |
-| `react-toastify` | ^11.0.5 | ^11.0.5 | **11.0.5** |  |
-| `sass` | ^1.97.2 | ^1.97.2 | **1.99.0** |  |
-| `typescript` | ~5.9.3 | ~5.9.3 | **6.0.2** |  |
-| `typescript-eslint` | ^8.46.4 | ^8.46.4 | **8.58.1** |  |
-| `vite` | ^7.3.2 | ^7.3.2 | **8.0.8** |  |
-| `vitest` | ^4.0.17 | ^4.0.17 | **4.1.4** |  |
-| `yup` | ^1.7.1 | ^1.7.1 | **1.7.1** |  |
+| Package                            | `fe_demo` | `admin_demo` | Latest (npm) | Note                                    |
+| ---------------------------------- | --------- | ------------ | ------------ | --------------------------------------- |
+| `@commitlint/cli`                  | ^20.3.1   | ^20.3.1      | **20.5.0**   |                                         |
+| `@commitlint/config-conventional`  | ^20.3.1   | ^20.3.1      | **20.5.0**   |                                         |
+| `@eslint/js`                       | ^9.39.1   | ^9.39.1      | **10.0.1**   |                                         |
+| `@hookform/resolvers`              | ^5.2.2    | ^5.2.2       | **5.2.2**    |                                         |
+| `@microsoft/signalr`               | ^8.0.7    | ^10.0.0      | **10.0.0**   | Align fe to ^10 with admin + BE SignalR |
+| `@popperjs/core`                   | ^2.11.8   | ^2.11.8      | **2.11.8**   |                                         |
+| `@radix-ui/react-accordion`        | ^1.2.12   | ^1.2.12      | **1.2.12**   |                                         |
+| `@radix-ui/react-alert-dialog`     | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
+| `@radix-ui/react-aspect-ratio`     | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
+| `@radix-ui/react-avatar`           | ^1.1.11   | ^1.1.11      | **1.1.11**   |                                         |
+| `@radix-ui/react-checkbox`         | ^1.3.3    | ^1.3.3       | **1.3.3**    |                                         |
+| `@radix-ui/react-collapsible`      | ^1.1.12   | ^1.1.12      | **1.1.12**   |                                         |
+| `@radix-ui/react-context-menu`     | ^2.2.16   | ^2.2.16      | **2.2.16**   |                                         |
+| `@radix-ui/react-dialog`           | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
+| `@radix-ui/react-dropdown-menu`    | ^2.1.16   | ^2.1.16      | **2.1.16**   |                                         |
+| `@radix-ui/react-hover-card`       | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
+| `@radix-ui/react-label`            | ^2.1.8    | ^2.1.8       | **2.1.8**    |                                         |
+| `@radix-ui/react-menubar`          | ^1.1.16   | ^1.1.16      | **1.1.16**   |                                         |
+| `@radix-ui/react-navigation-menu`  | ^1.2.14   | ^1.2.14      | **1.2.14**   |                                         |
+| `@radix-ui/react-popover`          | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
+| `@radix-ui/react-progress`         | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
+| `@radix-ui/react-radio-group`      | ^1.3.8    | ^1.3.8       | **1.3.8**    |                                         |
+| `@radix-ui/react-scroll-area`      | ^1.2.10   | ^1.2.10      | **1.2.10**   |                                         |
+| `@radix-ui/react-select`           | ^2.2.6    | ^2.2.6       | **2.2.6**    |                                         |
+| `@radix-ui/react-separator`        | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
+| `@radix-ui/react-slider`           | ^1.3.6    | ^1.3.6       | **1.3.6**    |                                         |
+| `@radix-ui/react-slot`             | ^1.2.4    | ^1.2.4       | **1.2.4**    |                                         |
+| `@radix-ui/react-switch`           | ^1.2.6    | ^1.2.6       | **1.2.6**    |                                         |
+| `@radix-ui/react-tabs`             | ^1.1.13   | ^1.1.13      | **1.1.13**   |                                         |
+| `@radix-ui/react-toast`            | ^1.2.15   | ^1.2.15      | **1.2.15**   |                                         |
+| `@radix-ui/react-toggle`           | ^1.1.10   | ^1.1.10      | **1.1.10**   |                                         |
+| `@radix-ui/react-toggle-group`     | ^1.1.11   | ^1.1.11      | **1.1.11**   |                                         |
+| `@radix-ui/react-tooltip`          | ^1.2.8    | ^1.2.8       | **1.2.8**    |                                         |
+| `@tanstack/react-query`            | ^5.90.18  | ^5.90.18     | **5.97.0**   |                                         |
+| `@tanstack/react-table`            | —         | ^8.21.3      | **8.21.3**   |                                         |
+| `@testing-library/dom`             | ^10.4.1   | ^10.4.1      | **10.4.1**   |                                         |
+| `@testing-library/jest-dom`        | ^6.9.1    | ^6.9.1       | **6.9.1**    |                                         |
+| `@testing-library/react`           | ^16.3.1   | ^16.3.1      | **16.3.2**   |                                         |
+| `@testing-library/user-event`      | ^14.6.1   | ^14.6.1      | **14.6.1**   |                                         |
+| `@types/jsdom`                     | ^27       | ^27          | **28.0.1**   |                                         |
+| `@types/node`                      | ^25.0.9   | ^24.10.9     | **25.6.0**   | Declared ranges differ between SPAs     |
+| `@types/react`                     | ^19.2.5   | ^19.2.5      | **19.2.14**  |                                         |
+| `@types/react-dom`                 | ^19.2.3   | ^19.2.3      | **19.2.3**   |                                         |
+| `@vitejs/plugin-basic-ssl`         | ^2.1.0    | ^2.1.0       | **2.3.0**    |                                         |
+| `@vitejs/plugin-react`             | ^5.1.1    | ^5.1.1       | **6.0.1**    |                                         |
+| `@vitest/ui`                       | ^4.0.17   | ^4.0.17      | **4.1.4**    |                                         |
+| `@yarnpkg/pnpify`                  | ^4.1.6    | ^4.1.6       | **4.1.6**    |                                         |
+| `axios`                            | ^1.15.0   | ^1.15.0      | **1.15.0**   |                                         |
+| `bootstrap`                        | ^5.3.8    | ^5.3.8       | **5.3.8**    |                                         |
+| `cypress`                          | ^15.9.0   | —            | **15.13.1**  | fe only                                 |
+| `eslint`                           | ^9.39.1   | ^9.39.1      | **10.2.0**   |                                         |
+| `eslint-config-prettier`           | ^10.1.8   | ^10.1.8      | **10.1.8**   |                                         |
+| `eslint-plugin-react-hooks`        | ^7.0.1    | ^7.0.1       | **7.0.1**    |                                         |
+| `eslint-plugin-react-refresh`      | ^0.4.24   | ^0.4.24      | **0.5.2**    |                                         |
+| `framer-motion`                    | —         | ^12.26.2     | **12.38.0**  | admin only                              |
+| `globals`                          | ^16.5.0   | ^16.5.0      | **17.4.0**   |                                         |
+| `husky`                            | ^9.1.7    | ^9.1.7       | **9.1.7**    |                                         |
+| `i18next`                          | ^25.7.4   | ^25.7.4      | **26.0.4**   |                                         |
+| `i18next-browser-languagedetector` | ^8.2.0    | ^8.2.0       | **8.2.1**    |                                         |
+| `jsdom`                            | ^27.4.0   | ^27.4.0      | **29.0.2**   |                                         |
+| `lint-staged`                      | ^15.2.10  | ^15.2.10     | **16.4.0**   |                                         |
+| `lucide-react`                     | ^0.575.0  | —            | **1.8.0**    | fe only; **major** icon package jump    |
+| `openapi-typescript-codegen`       | ^0.30.0   | ^0.30.0      | **0.30.0**   |                                         |
+| `prettier`                         | ^3.8.0    | ^3.8.0       | **3.8.2**    |                                         |
+| `quill-delta`                      | ^5.1.0    | —            | **5.1.0**    | fe only                                 |
+| `react`                            | ^19.2.0   | ^19.2.0      | **19.2.5**   |                                         |
+| `react-bootstrap`                  | ^2.10.10  | ^2.10.10     | **2.10.10**  |                                         |
+| `react-dom`                        | ^19.2.0   | ^19.2.0      | **19.2.5**   |                                         |
+| `react-grid-layout`                | ^2.2.2    | ^2.2.2       | **2.2.3**    |                                         |
+| `react-hook-form`                  | ^7.71.1   | ^7.71.1      | **7.72.1**   |                                         |
+| `react-i18next`                    | ^16.5.3   | ^16.5.3      | **17.0.2**   |                                         |
+| `react-quill-new`                  | ^3.8.3    | —            | **3.8.3**    | fe only                                 |
+| `react-router-dom`                 | ^7.12.0   | ^7.12.0      | **7.14.0**   |                                         |
+| `react-toastify`                   | ^11.0.5   | ^11.0.5      | **11.0.5**   |                                         |
+| `sass`                             | ^1.97.2   | ^1.97.2      | **1.99.0**   |                                         |
+| `typescript`                       | ~5.9.3    | ~5.9.3       | **6.0.2**    |                                         |
+| `typescript-eslint`                | ^8.46.4   | ^8.46.4      | **8.58.1**   |                                         |
+| `vite`                             | ^7.3.2    | ^7.3.2       | **8.0.8**    |                                         |
+| `vitest`                           | ^4.0.17   | ^4.0.17      | **4.1.4**    |                                         |
+| `yup`                              | ^1.7.1    | ^1.7.1       | **1.7.1**    |                                         |
 
 ### 2.4 High-risk upgrade themes (FE / admin)
 
@@ -350,17 +354,17 @@ ESLint **10**, Vite **8**, TypeScript **6**, i18next **26**, `lucide-react` **1.
 
 ## 3. `ai_demo` — Python (`requirements.txt`)
 
-| Package | Pinned / constrained in repo | Latest on PyPI (`pip index versions`, first line, snapshot) | Notes |
-| ------- | ------------------------------ | ---------------------------------------------------------------- | ----- |
-| grpcio | ==1.60.1 | **1.80.0** | Large jump — regenerate stubs, run gRPC tests, watch protobuf compatibility. |
-| grpcio-tools | ==1.60.1 | **1.80.0** | Align with grpcio. |
-| protobuf | ==4.25.1 | **7.34.1** | **Do not** jump blindly — must match grpcio/grpc generated code; often **grpcio** release notes specify supported `protobuf` range. |
-| transformers | >=4.36.0 | **5.5.3** | Major — evaluate model API + disk; pin upper bound if staying on 4.x. |
-| torch | >=2.0.0 | **2.11.0** | Major — CUDA/CPU wheels, image size, `Dockerfile.dev` base image. |
-| accelerate | >=0.25.0 | **1.13.0** | Bump with transformers/torch as a set. |
-| ruff | >=0.8.0 | **0.15.10** | Dev lint — safe to bump frequently. |
-| pytest | ==8.3.4 | **9.0.3** | Major — check plugins / `grpcio-testing` compatibility. |
-| grpcio-testing | ==1.60.1 | **1.80.0** | Bump in lockstep with grpcio. |
+| Package        | Pinned / constrained in repo | Latest on PyPI (`pip index versions`, first line, snapshot) | Notes                                                                                                                               |
+| -------------- | ---------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| grpcio         | ==1.60.1                     | **1.80.0**                                                  | Large jump — regenerate stubs, run gRPC tests, watch protobuf compatibility.                                                        |
+| grpcio-tools   | ==1.60.1                     | **1.80.0**                                                  | Align with grpcio.                                                                                                                  |
+| protobuf       | ==4.25.1                     | **7.34.1**                                                  | **Do not** jump blindly — must match grpcio/grpc generated code; often **grpcio** release notes specify supported `protobuf` range. |
+| transformers   | >=4.36.0                     | **5.5.3**                                                   | Major — evaluate model API + disk; pin upper bound if staying on 4.x.                                                               |
+| torch          | >=2.0.0                      | **2.11.0**                                                  | Major — CUDA/CPU wheels, image size, `Dockerfile.dev` base image.                                                                   |
+| accelerate     | >=0.25.0                     | **1.13.0**                                                  | Bump with transformers/torch as a set.                                                                                              |
+| ruff           | >=0.8.0                      | **0.15.10**                                                 | Dev lint — safe to bump frequently.                                                                                                 |
+| pytest         | ==8.3.4                      | **9.0.3**                                                   | Major — check plugins / `grpcio-testing` compatibility.                                                                             |
+| grpcio-testing | ==1.60.1                     | **1.80.0**                                                  | Bump in lockstep with grpcio.                                                                                                       |
 
 **Process:** Prefer a **locked** `requirements.lock` or `uv.lock` for reproducible AI images after upgrades.
 
@@ -374,57 +378,57 @@ When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2
 
 ### 4.1 `db_demo/docker-compose.yml`
 
-| Image | Current tag | Latest stable context (snapshot) | Notes |
-| ----- | ----------- | ------------------------------------ | ----- |
-| postgres | **16-alpine** | PostgreSQL **16.x** (and **17.x**, **18.x** lines exist on Hub) | Moving **16 → 17/18** is a **major** DB upgrade — follow PostgreSQL upgrade docs + backup. Minor **16.x** updates: refresh `16-alpine` digest regularly. |
-| dpage/pgadmin4 | **latest** | Unpinned — prefer **specific tag** (e.g. `9.x`) for reproducibility. |
+| Image          | Current tag   | Latest stable context (snapshot)                                     | Notes                                                                                                                                                    |
+| -------------- | ------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| postgres       | **16-alpine** | PostgreSQL **16.x** (and **17.x**, **18.x** lines exist on Hub)      | Moving **16 → 17/18** is a **major** DB upgrade — follow PostgreSQL upgrade docs + backup. Minor **16.x** updates: refresh `16-alpine` digest regularly. |
+| dpage/pgadmin4 | **latest**    | Unpinned — prefer **specific tag** (e.g. `9.x`) for reproducibility. |
 
 ### 4.2 `redis_demo/docker-compose.yml`
 
-| Image | Current tag | Latest stable context | Notes |
-| ----- | ----------- | --------------------- | ----- |
+| Image | Current tag  | Latest stable context               | Notes                                                                                                                                                      |
+| ----- | ------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | redis | **7-alpine** | Official **8.x** line on Docker Hub | **Redis 8+** uses **RSALv2 / SSPL / AGPL** tri-license — **legal review** before upgrading from 7.x (BSD-licensed 7.2 line). See Docker Hub overview text. |
 
 ### 4.3 Root `docker-compose.dev.yml`
 
-| Image / build | Current | Notes |
-| ------------- | ------- | ----- |
-| nginx (fe-demo-proxy) | **nginx:1.27-alpine** | Compare with current stable **1.28.x** / `alpine` on Docker Hub; patch bumps low risk. |
-| datalust/seq | **latest** | Pin to explicit Seq version for reproducible dev/ops. |
-| `fe_demo` / `admin_demo` Dockerfiles | **node:22-slim** + `yarn@4.12.0` | Refresh when Node 22 LTS security updates ship. |
-| `ai_demo` Dockerfile | **python:3.11-slim** | Consider 3.12+ only with explicit test pass for torch/transformers wheels. |
-| `be_demo` Dockerfile | **mcr.microsoft.com/dotnet/sdk:10.0** | Pin digest for reproducibility in CI. |
+| Image / build                        | Current                               | Notes                                                                                  |
+| ------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------- |
+| nginx (fe-demo-proxy)                | **nginx:1.27-alpine**                 | Compare with current stable **1.28.x** / `alpine` on Docker Hub; patch bumps low risk. |
+| datalust/seq                         | **latest**                            | Pin to explicit Seq version for reproducible dev/ops.                                  |
+| `fe_demo` / `admin_demo` Dockerfiles | **node:22-slim** + `yarn@4.12.0`      | Refresh when Node 22 LTS security updates ship.                                        |
+| `ai_demo` Dockerfile                 | **python:3.11-slim**                  | Consider 3.12+ only with explicit test pass for torch/transformers wheels.             |
+| `be_demo` Dockerfile                 | **mcr.microsoft.com/dotnet/sdk:10.0** | Pin digest for reproducibility in CI.                                                  |
 
 ### 4.4 `logger_demo/docker-compose.dev.yml`
 
-| Image | Current tag | Notes |
-| ----- | ----------- | ----- |
-| amir20/dozzle | **latest** | Pin version tag for reproducibility. |
+| Image         | Current tag | Notes                                |
+| ------------- | ----------- | ------------------------------------ |
+| amir20/dozzle | **latest**  | Pin version tag for reproducibility. |
 
 ---
 
 ## 5. Cross-cutting recommendations (for the agent)
 
-1. **.NET:** Bump **all Microsoft.AspNetCore.\*** / **EFCore** / **Npgsql** to the **same patch** (e.g. 10.0.5) in one PR; then run `dotnet test` + integration tests.  
-2. **Serilog:** Treat **Serilog.AspNetCore 10** + **Seq sink 9** as one migration task (read release notes).  
-3. **gRPC / Protobuf:** Upgrade **Google.Protobuf + Grpc.Net.Client + Grpc.Tools** together; regenerate proto if tooling requires.  
-4. **FE/admin:** Use section **2.3** as the authoritative per-package row set; section **2.1–2.2** highlights what NCU would widen.  
-5. **Align SignalR client:** `fe_demo` **^8** vs `admin_demo` **^10** — plan unification with backend SignalR version.  
-6. **Align @types/node:** `admin_demo` **^24.10.9** vs `fe_demo` **^25.0.9** — pick one major line for both SPAs.  
-7. **Python AI:** Pin compatible **grpcio / protobuf / grpcio-tools** triple from upstream docs; avoid mixing unpinned `torch`/`transformers` in production images.  
-8. **Docker:** Replace **`latest`** tags for Seq, pgAdmin, Dozzle with explicit versions in a dedicated infra PR.  
-9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.  
-10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `_mfai_demo` submodule pointers if required by your release process.  
-11. **Security:** run **§0** audit commands plus `yarn npm audit` / `dotnet list package --vulnerable` where available; triage before and after bumps.  
+1. **.NET:** Bump **all Microsoft.AspNetCore.\*** / **EFCore** / **Npgsql** to the **same patch** (e.g. 10.0.5) in one PR; then run `dotnet test` + integration tests.
+2. **Serilog:** Treat **Serilog.AspNetCore 10** + **Seq sink 9** as one migration task (read release notes).
+3. **gRPC / Protobuf:** Upgrade **Google.Protobuf + Grpc.Net.Client + Grpc.Tools** together; regenerate proto if tooling requires. On **Docker arm64** (`linux_arm64`), **`Grpc.Tools` 2.80** has been observed to crash **`protoc` (exit 139)** inside **`mcr.microsoft.com/dotnet/sdk:10.0`** — validate in **be-demo-dev** before merging; see §1.1.
+4. **FE/admin:** Use section **2.3** as the authoritative per-package row set; section **2.1–2.2** highlights what NCU would widen.
+5. **Align SignalR client:** `fe_demo` **^8** vs `admin_demo` **^10** — plan unification with backend SignalR version.
+6. **Align @types/node:** `admin_demo` **^24.10.9** vs `fe_demo` **^25.0.9** — pick one major line for both SPAs.
+7. **Python AI:** Pin compatible **grpcio / protobuf / grpcio-tools** triple from upstream docs; avoid mixing unpinned `torch`/`transformers` in production images.
+8. **Docker:** Replace **`latest`** tags for Seq, pgAdmin, Dozzle with explicit versions in a dedicated infra PR.
+9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.
+10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `_mfai_demo` submodule pointers if required by your release process.
+11. **Security:** run **§0** audit commands plus `yarn npm audit` / `dotnet list package --vulnerable` where available; triage before and after bumps.
 12. **Lockfiles:** any `package.json` / `requirements.txt` change should include updated **`yarn.lock`** or a **pinned lock** for Python where the team adopted one.
 
 ---
 
 ## 6. Deliverables when an agent completes a pass
 
-- [ ] Updated tables (or this file replaced) with **new snapshot date** and command outputs (or links to CI logs).  
-- [ ] PR(s) per ecosystem (.NET / fe / admin / ai / docker) with green tests.  
-- [ ] Short **CHANGELOG** or release note listing major bumps and any intentional skips (with reason).  
+- [ ] Updated tables (or this file replaced) with **new snapshot date** and command outputs (or links to CI logs).
+- [ ] PR(s) per ecosystem (.NET / fe / admin / ai / docker) with green tests.
+- [ ] Short **CHANGELOG** or release note listing major bumps and any intentional skips (with reason).
 - [ ] Submodule repos and parent pointer (if applicable) aligned; lockfiles committed.
 
 ---
@@ -435,48 +439,48 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 
 ### 7.1 Pre-flight
 
-- [ ] `git submodule update --init --recursive` (clean tree for audit).  
-- [ ] Re-run **§0** commands; refresh **§2.3** table via **§0.1** script if npm rows changed.  
+- [ ] `git submodule update --init --recursive` (clean tree for audit).
+- [ ] Re-run **§0** commands; refresh **§2.3** table via **§0.1** script if npm rows changed.
 - [ ] Decide **PR strategy** (one mega-PR vs .NET / fe / admin / ai / infra split).
 
 ### 7.2 `be_demo` — .NET (`BeDemo.Api`, `BeDemo.Api.Tests`)
 
-- [ ] **ASP.NET + EF Core + Npgsql** — align `Microsoft.AspNetCore.*`, `Microsoft.EntityFrameworkCore.*`, `Npgsql.EntityFrameworkCore.PostgreSQL` to the **same patch** (see §1.1 / §1.2).  
-- [ ] **OpenAPI** — `Microsoft.AspNetCore.OpenApi`.  
-- [ ] **Swashbuckle** — `Swashbuckle.AspNetCore`.  
-- [ ] **JWT** — `System.IdentityModel.Tokens.Jwt`.  
-- [ ] **gRPC stack** — `Google.Protobuf`, `Grpc.Net.Client`, `Grpc.Tools` **together**; regenerate proto if tooling requires.  
-- [ ] **Serilog** — `Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Sinks.Seq` (major coordination).  
-- [ ] **Redis** — `StackExchange.Redis`.  
-- [ ] **Enrichers** — `Serilog.Enrichers.Environment`, `Serilog.Enrichers.Thread` (re-check after other bumps).  
-- [ ] **Tests** — `coverlet.collector`, `FluentAssertions`, `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.AspNetCore.SignalR.Client`, `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.NET.Test.Sdk`, `Moq`, `xunit`, `xunit.runner.visualstudio`.  
+- [ ] **ASP.NET + EF Core + Npgsql** — align `Microsoft.AspNetCore.*`, `Microsoft.EntityFrameworkCore.*`, `Npgsql.EntityFrameworkCore.PostgreSQL` to the **same patch** (see §1.1 / §1.2).
+- [ ] **OpenAPI** — `Microsoft.AspNetCore.OpenApi`.
+- [ ] **Swashbuckle** — `Swashbuckle.AspNetCore`.
+- [ ] **JWT** — `System.IdentityModel.Tokens.Jwt`.
+- [ ] **gRPC stack** — `Google.Protobuf`, `Grpc.Net.Client`, `Grpc.Tools` **together**; regenerate proto if tooling requires.
+- [ ] **Serilog** — `Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Sinks.Seq` (major coordination).
+- [ ] **Redis** — `StackExchange.Redis`.
+- [ ] **Enrichers** — `Serilog.Enrichers.Environment`, `Serilog.Enrichers.Thread` (re-check after other bumps).
+- [ ] **Tests** — `coverlet.collector`, `FluentAssertions`, `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.AspNetCore.SignalR.Client`, `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.NET.Test.Sdk`, `Moq`, `xunit`, `xunit.runner.visualstudio`.
 - [ ] Run `dotnet test` (and integration tests) in **be_demo** submodule.
 
 ### 7.3 `be_demo` — Docker + Node tooling
 
-- [ ] **`BeDemo.Api/Dockerfile.dev`** — `dotnet-ef` tool version vs EF Core packages.  
-- [ ] **`be_demo/package.json`** — `@commitlint/cli`, `@commitlint/config-conventional`, `husky`; run `yarn install` if lockfile exists in submodule.  
+- [ ] **`BeDemo.Api/Dockerfile.dev`** — `dotnet-ef` tool version vs EF Core packages.
+- [ ] **`be_demo/package.json`** — `@commitlint/cli`, `@commitlint/config-conventional`, `husky`; run `yarn install` if lockfile exists in submodule.
 - [ ] Optional: **MCR** `mcr.microsoft.com/dotnet/sdk:10.0` digest pin.
 
 ### 7.4 `fe_demo` — `package.json` + lockfile
 
-- [ ] **Commitlint / Husky** — `@commitlint/*`, `husky`, `lint-staged`.  
-- [ ] **Toolchain (high-risk bundle)** — `typescript`, `typescript-eslint`, `eslint`, `@eslint/js`, `eslint-config-prettier`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `globals`, `vite`, `@vitejs/plugin-react`, `@vitejs/plugin-basic-ssl`, `vitest`, `@vitest/ui`, `jsdom`, `@types/jsdom`, `cypress`.  
-- [ ] **React app** — `react`, `react-dom`, `react-router-dom`, `react-hook-form`, `@hookform/resolvers`, `yup`, `axios`, `react-bootstrap`, `bootstrap`, `@popperjs/core`, `sass`, `react-toastify`, `react-grid-layout`, `react-quill-new`, `quill-delta`, `lucide-react`, `i18next`, `i18next-browser-languagedetector`, `react-i18next`, `@tanstack/react-query`, `@microsoft/signalr` (**align to v10** with admin + BE).  
-- [ ] **Radix UI** — all `@radix-ui/react-*` entries (accordion through tooltip).  
-- [ ] **API client gen** — `openapi-typescript-codegen`.  
-- [ ] **Testing libs** — `@testing-library/*`, `@types/react`, `@types/react-dom`, `@types/node`.  
-- [ ] **Yarn** — `@yarnpkg/pnpify`.  
-- [ ] **`yarn.lock`** — committed after any `package.json` change.  
+- [ ] **Commitlint / Husky** — `@commitlint/*`, `husky`, `lint-staged`.
+- [ ] **Toolchain (high-risk bundle)** — `typescript`, `typescript-eslint`, `eslint`, `@eslint/js`, `eslint-config-prettier`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `globals`, `vite`, `@vitejs/plugin-react`, `@vitejs/plugin-basic-ssl`, `vitest`, `@vitest/ui`, `jsdom`, `@types/jsdom`, `cypress`.
+- [ ] **React app** — `react`, `react-dom`, `react-router-dom`, `react-hook-form`, `@hookform/resolvers`, `yup`, `axios`, `react-bootstrap`, `bootstrap`, `@popperjs/core`, `sass`, `react-toastify`, `react-grid-layout`, `react-quill-new`, `quill-delta`, `lucide-react`, `i18next`, `i18next-browser-languagedetector`, `react-i18next`, `@tanstack/react-query`, `@microsoft/signalr` (**align to v10** with admin + BE).
+- [ ] **Radix UI** — all `@radix-ui/react-*` entries (accordion through tooltip).
+- [ ] **API client gen** — `openapi-typescript-codegen`.
+- [ ] **Testing libs** — `@testing-library/*`, `@types/react`, `@types/react-dom`, `@types/node`.
+- [ ] **Yarn** — `@yarnpkg/pnpify`.
+- [ ] **`yarn.lock`** — committed after any `package.json` change.
 - [ ] Run `yarn validate`, `yarn test`, and **Cypress** smoke where applicable.
 
 ### 7.5 `admin_demo` — `package.json` + lockfile
 
-- [ ] Same **toolchain** group as `fe_demo` where shared (§7.4).  
-- [ ] **Admin-only / diffs** — `@tanstack/react-table`, `framer-motion`; **`@types/node`** — align major line with `fe_demo`.  
-- [ ] **`@microsoft/signalr`** — already on ^10; keep in sync with BE after fe bump.  
-- [ ] **Radix + React stack** — mirror `fe_demo` where packages overlap.  
-- [ ] **`yarn.lock`** — committed.  
+- [ ] Same **toolchain** group as `fe_demo` where shared (§7.4).
+- [ ] **Admin-only / diffs** — `@tanstack/react-table`, `framer-motion`; **`@types/node`** — align major line with `fe_demo`.
+- [ ] **`@microsoft/signalr`** — already on ^10; keep in sync with BE after fe bump.
+- [ ] **Radix + React stack** — mirror `fe_demo` where packages overlap.
+- [ ] **`yarn.lock`** — committed.
 - [ ] Run `yarn validate` and `yarn test`.
 
 ### 7.6 `fe_demo` / `admin_demo` — Docker
@@ -485,31 +489,32 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 
 ### 7.7 `ai_demo` — Python
 
-- [ ] **gRPC** — `grpcio`, `grpcio-tools`, `grpcio-testing` in **one** bump.  
-- [ ] **protobuf** — only in a combination supported by grpc release notes / regenerated stubs.  
-- [ ] **ML stack** — `torch`, `transformers`, `accelerate` (evaluate majors together).  
-- [ ] **Dev** — `ruff`, `pytest`.  
-- [ ] Regenerate **proto** Python if proto or grpcio-tools changed; run Python tests.  
+- [ ] **gRPC** — `grpcio`, `grpcio-tools`, `grpcio-testing` in **one** bump.
+- [ ] **.NET gRPC in Docker (arm64)** — after bumping `Grpc.Tools`, run **`docker compose … up -d --build be-demo-dev`** and confirm **`dotnet watch` / `protoc`** does not exit **139** on **`linux_arm64`**.
+- [ ] **protobuf** — only in a combination supported by grpc release notes / regenerated stubs.
+- [ ] **ML stack** — `torch`, `transformers`, `accelerate` (evaluate majors together).
+- [ ] **Dev** — `ruff`, `pytest`.
+- [ ] Regenerate **proto** Python if proto or grpcio-tools changed; run Python tests.
 - [ ] **`Dockerfile.dev`** — `python:3.11-slim` (or agreed bump); rebuild image.
 
 ### 7.8 Infra compose (submodule repos)
 
-- [ ] **`db_demo/docker-compose.yml`** — `postgres:16-alpine`, `dpage/pgadmin4` (replace `latest` with pin when ready).  
-- [ ] **`redis_demo/docker-compose.yml`** — `redis:7-alpine` (legal review before **8.x**).  
-- [ ] **Root `docker-compose.dev.yml`** — `nginx`, `datalust/seq`, service build contexts.  
-- [ ] **`logger_demo/docker-compose.dev.yml`** — `amir20/dozzle` (pin tag).  
+- [ ] **`db_demo/docker-compose.yml`** — `postgres:16-alpine`, `dpage/pgadmin4` (replace `latest` with pin when ready).
+- [ ] **`redis_demo/docker-compose.yml`** — `redis:7-alpine` (legal review before **8.x**).
+- [ ] **Root `docker-compose.dev.yml`** — `nginx`, `datalust/seq`, service build contexts.
+- [ ] **`logger_demo/docker-compose.dev.yml`** — `amir20/dozzle` (pin tag).
 - [ ] Smoke **compose up** paths affected by image changes.
 
 ### 7.9 Security and docs
 
-- [ ] `yarn npm audit` in **fe_demo** and **admin_demo**; address or record accepted risks.  
-- [ ] `dotnet list package --vulnerable` in **be_demo** if supported.  
-- [ ] Update **this prompt** (§1–§4 tables) or attach CI logs + new snapshot date.  
+- [ ] `yarn npm audit` in **fe_demo** and **admin_demo**; address or record accepted risks.
+- [ ] `dotnet list package --vulnerable` in **be_demo** if supported.
+- [ ] Update **this prompt** (§1–§4 tables) or attach CI logs + new snapshot date.
 - [ ] **Parent `_mfai_demo`:** bump submodule SHAs + short release note / CHANGELOG as per §6.
 
 ### 7.10 Explicit “do not forget” cross-cuts
 
-- [ ] **SignalR** — `fe_demo` client major aligned with `admin_demo` and **BeDemo.Api** SignalR.  
-- [ ] **Serilog majors** — Seq + console + AspNetCore tested together.  
-- [ ] **Redis 8+** — legal sign-off before image upgrade.  
+- [ ] **SignalR** — `fe_demo` client major aligned with `admin_demo` and **BeDemo.Api** SignalR.
+- [ ] **Serilog majors** — Seq + console + AspNetCore tested together.
+- [ ] **Redis 8+** — legal sign-off before image upgrade.
 - [ ] **PostgreSQL 17/18** — major DB migration plan, not a silent tag bump.

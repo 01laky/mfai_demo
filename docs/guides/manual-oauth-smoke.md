@@ -30,6 +30,6 @@ Use this when automated E2E is skipped (`SKIP_CYPRESS=1`) or CI has no browser a
 
 ## Security checks (optional)
 
-- Wrong `client_secret` → **401** `invalid_client`.  
-- Wrong password → **401** `invalid_grant`.  
+- Wrong `client_secret` → **401** `invalid_client`.
+- Wrong password → **401** `invalid_grant`.
 - Response includes security headers (`X-Content-Type-Options`, `Content-Security-Policy`) on JSON routes.

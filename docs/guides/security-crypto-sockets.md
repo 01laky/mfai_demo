@@ -157,22 +157,22 @@ sequenceDiagram
 
 ## Current baseline (repo facts — verify in `Program.cs`, `OAuth2Service`, `OAuthAccessTokenFactory`, `OAuthClientValidator` when auditing)
 
-| Area                          | Current behavior                                                                 |
-| ----------------------------- | -------------------------------------------------------------------------------- |
-| JWT signing                   | **P-521 ES512**; optional **`Jwt:SigningPemPath`** for stable PEM-loaded key; else ephemeral per process (`ECDSAKeyService`) |
-| JWT rotation overlap (K4)     | Optional **`Jwt:PreviousSigningPemPath`** + **`Jwt:PreviousKeyId`** — `JwtBearer` validates with **both** keys; **only current** key signs new JWTs; JWKS lists **all** verification keys |
-| JWKS                          | **GET `/api/oauth2/jwks`** (`OAuthJwksController`) — JWK set for issuer verification keys |
-| JWT validation                | **`ValidateLifetime = true`**, **`ValidAlgorithms` = ES512**, **`ClockSkew = 0`**   |
-| Access session (J6)           | Claim **`atv`** must match **`ApplicationUser.AccessTokenVersion`** (`OnTokenValidated`); **password or global `UserRoleId` change** bumps version + revokes active refresh tokens (`ApplicationDbContext` partial) |
-| Refresh tokens                | **Stored** (hash), rotate on use (`OAuthRefreshTokenStore`); in-memory tests use a **semaphore** so concurrent refresh replay is deterministic |
-| OAuth clients (O1)            | **`OAuthClients`** + **`OAuthClientValidator`**; hashed **`client_secret`**; demo client seeded; `IPasswordHasher<OAuthClient>` |
-| Access JWT (issue)            | **`OAuthAccessTokenFactory`** — ES512, global role + **`atv`** from DB, session vs remember TTL; **`OAuth2Service`** orchestrates grants |
-| OAuth rate limits (O2)        | **`POST /api/oauth2/token`** and **`POST /api/oauth2/register`**: fixed window per IP; **`429`** + **`Retry-After`**; in **Testing**, limits bypassed unless **`OAuth2:BypassRateLimitInTesting=false`** |
-| OAuth body signature          | **Rejected** (`400` `invalid_request`) in middleware; **`OAuthTokenRequestSignatureVerifier`** remains for legacy / tests (`IClock`) |
-| SignalR auth                  | JWT via query `access_token`; same bearer rules as HTTP (including **`atv`**)      |
-| Security headers              | **`SecurityHeadersMiddleware`**: nosniff, frame deny, referrer-policy, permissions-policy, **minimal CSP** for JSON API |
-| Swagger UI                    | **Development** only unless **`Swagger:EnableInProduction`** is `true`             |
-| TLS                           | Dev HTTPS optional (`dev/certs`); production TLS at edge still **required**       |
+| Area                      | Current behavior                                                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| JWT signing               | **P-521 ES512**; optional **`Jwt:SigningPemPath`** for stable PEM-loaded key; else ephemeral per process (`ECDSAKeyService`)                                                                                        |
+| JWT rotation overlap (K4) | Optional **`Jwt:PreviousSigningPemPath`** + **`Jwt:PreviousKeyId`** — `JwtBearer` validates with **both** keys; **only current** key signs new JWTs; JWKS lists **all** verification keys                           |
+| JWKS                      | **GET `/api/oauth2/jwks`** (`OAuthJwksController`) — JWK set for issuer verification keys                                                                                                                           |
+| JWT validation            | **`ValidateLifetime = true`**, **`ValidAlgorithms` = ES512**, **`ClockSkew = 0`**                                                                                                                                   |
+| Access session (J6)       | Claim **`atv`** must match **`ApplicationUser.AccessTokenVersion`** (`OnTokenValidated`); **password or global `UserRoleId` change** bumps version + revokes active refresh tokens (`ApplicationDbContext` partial) |
+| Refresh tokens            | **Stored** (hash), rotate on use (`OAuthRefreshTokenStore`); in-memory tests use a **semaphore** so concurrent refresh replay is deterministic                                                                      |
+| OAuth clients (O1)        | **`OAuthClients`** + **`OAuthClientValidator`**; hashed **`client_secret`**; demo client seeded; `IPasswordHasher<OAuthClient>`                                                                                     |
+| Access JWT (issue)        | **`OAuthAccessTokenFactory`** — ES512, global role + **`atv`** from DB, session vs remember TTL; **`OAuth2Service`** orchestrates grants                                                                            |
+| OAuth rate limits (O2)    | **`POST /api/oauth2/token`** and **`POST /api/oauth2/register`**: fixed window per IP; **`429`** + **`Retry-After`**; in **Testing**, limits bypassed unless **`OAuth2:BypassRateLimitInTesting=false`**            |
+| OAuth body signature      | **Rejected** (`400` `invalid_request`) in middleware; **`OAuthTokenRequestSignatureVerifier`** remains for legacy / tests (`IClock`)                                                                                |
+| SignalR auth              | JWT via query `access_token`; same bearer rules as HTTP (including **`atv`**)                                                                                                                                       |
+| Security headers          | **`SecurityHeadersMiddleware`**: nosniff, frame deny, referrer-policy, permissions-policy, **minimal CSP** for JSON API                                                                                             |
+| Swagger UI                | **Development** only unless **`Swagger:EnableInProduction`** is `true`                                                                                                                                              |
+| TLS                       | Dev HTTPS optional (`dev/certs`); production TLS at edge still **required**                                                                                                                                         |
 
 ### Diagram: signing key rotation overlap (K4, canonical)
 
@@ -243,16 +243,16 @@ flowchart TB
 
 Product or infra items not covered by the baseline table above; keep IDs for issue tracking.
 
-| Topic | Notes |
-| ----- | ----- |
-| **TRACK-INFRA-KMS** | Production: HSM/vault for signing keys; operator runbook beyond PEM paths. |
-| **TRACK-OAUTH-MTLS** | Optional mTLS / `private_key_jwt` for confidential clients if required. |
-| **TRACK-OAUTH-RL-PARTITION** | Rate limits: extend beyond per-IP (e.g. per `client_id` / username). |
-| **TRACK-CI-E2E-AUTH** | Minimal always-on auth E2E in CI if Cypress stays behind `SKIP_CYPRESS=1`; manual path: [manual-oauth-smoke.md](./manual-oauth-smoke.md). |
-| **TRACK-QA-IDOR-MATRIX** | Broader IDOR / ACL matrix across controllers vs representative tests today. |
-| **TRACK-DOCS-MERMAID-CI** | Optional CI gate to render-verify Mermaid in `docs/guides/`. |
-| **TRACK-AI-GRPC-THREAT** | Deeper gRPC threat model for `ai_demo` if exposure grows. |
-| **TRACK-DOCS-SUBMODULES** | Exhaustive README sweep per submodule if required as a separate doc pass. |
+| Topic                        | Notes                                                                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **TRACK-INFRA-KMS**          | Production: HSM/vault for signing keys; operator runbook beyond PEM paths.                                                                |
+| **TRACK-OAUTH-MTLS**         | Optional mTLS / `private_key_jwt` for confidential clients if required.                                                                   |
+| **TRACK-OAUTH-RL-PARTITION** | Rate limits: extend beyond per-IP (e.g. per `client_id` / username).                                                                      |
+| **TRACK-CI-E2E-AUTH**        | Minimal always-on auth E2E in CI if Cypress stays behind `SKIP_CYPRESS=1`; manual path: [manual-oauth-smoke.md](./manual-oauth-smoke.md). |
+| **TRACK-QA-IDOR-MATRIX**     | Broader IDOR / ACL matrix across controllers vs representative tests today.                                                               |
+| **TRACK-DOCS-MERMAID-CI**    | Optional CI gate to render-verify Mermaid in `docs/guides/`.                                                                              |
+| **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `ai_demo` if exposure grows.                                                                                 |
+| **TRACK-DOCS-SUBMODULES**    | Exhaustive README sweep per submodule if required as a separate doc pass.                                                                 |
 
 **Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `be_demo/BeDemo.Api`. Demo OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
 
