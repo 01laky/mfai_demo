@@ -57,9 +57,21 @@ flowchart TB
 
 - **Anonymous**; validates **client_id** / **client_secret** in `OAuth2Middleware` before the controller runs.
 - Body model: `OAuth2TokenRequest` (`BeDemo.Api/Models/DTOs/OAuth2Request.cs`).
-- Supported grants in `OAuth2Service.GenerateTokenAsync`:
+- Supported grants in `OAuth2Service.GenerateTokenAsync` (orchestrator; `BeDemo.Api/Services/OAuth2Service.cs`):
   - **`password`** — email/username + password; optional **`rememberMe`**; persists refresh token (hash only).
   - **`refresh_token`** — validates opaque token in DB, **single-use rotation**, returns new access + refresh pair; misusing a valid access JWT as refresh is rejected.
+
+#### OAuth token pipeline (split services)
+
+| Type | Responsibility |
+| ---- | -------------- |
+| `IOAuthClientValidator` / `OAuthClientValidator` | `client_id` + `client_secret` vs `OAuthClients` (hashed secret, O1). |
+| `IOAuthAccessTokenFactory` / `OAuthAccessTokenFactory` | ES512 access JWT (role + `atv` from DB), TTL session vs remember-me; detects access JWT sent as `refresh_token`. |
+| `IOAuthTokenRequestSignatureVerifier` / `OAuthTokenRequestSignatureVerifier` | Legacy ES512 body signature check; uses `IClock` for deterministic canonical payload; middleware still rejects non-empty signature fields (O4). |
+| `IOAuthRefreshTokenStore` | Opaque refresh create / rotate / revoke (A17, J6). |
+| `IClock` / `SystemUtcClock` | Wall time for signature canonical string (`Program.cs`: singleton). |
+
+Unit tests: `OAuthClientValidatorTests`, `OAuthAccessTokenFactoryTests`, `OAuthTokenRequestSignatureVerifierTests`, plus `OAuth2ServiceTests` for the facade.
 
 #### OAuth HTTP error policy (tests: `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests`)
 
@@ -80,11 +92,12 @@ sequenceDiagram
   participant OAuth2Middleware
   participant OAuth2Controller
   participant OAuth2Service
+  participant ClientVal as OAuthClientValidator
   participant UserStore
   participant RefreshStore as OAuthRefreshTokenStore
-  participant JwtSigner
+  participant AccessFactory as OAuthAccessTokenFactory
 
-  Note over OAuth2Middleware: Validates client_id and client_secret before controller
+  Note over OAuth2Middleware: Validates client_id and client_secret via IOAuth2Service to ClientVal
 
   alt password grant
     Client->>OAuth2Middleware: POST /api/oauth2/token JSON body
@@ -92,7 +105,7 @@ sequenceDiagram
     OAuth2Controller->>OAuth2Service: GenerateTokenAsync password
     OAuth2Service->>UserStore: validate credentials
     OAuth2Service->>RefreshStore: persist hashed refresh
-    OAuth2Service->>JwtSigner: build access JWT rememberMe selects lifetime
+    OAuth2Service->>AccessFactory: CreateAsync access JWT rememberMe selects lifetime
     OAuth2Service-->>Client: accessToken refreshToken expiresIn
   else refresh_token grant
     Client->>OAuth2Middleware: POST grant refresh_token
@@ -100,6 +113,7 @@ sequenceDiagram
     OAuth2Controller->>OAuth2Service: GenerateTokenAsync refresh
     OAuth2Service->>RefreshStore: validate opaque rotate single-use
     Note over OAuth2Service: Reject access JWT presented as refresh
+    OAuth2Service->>AccessFactory: CreateAsync new access JWT
     OAuth2Service-->>Client: new access and refresh pair
   end
 
