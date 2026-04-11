@@ -1,3 +1,5 @@
+# GitHub Actions — per-submodule jobs run in parallel. `yarn npm audit` / `audit-monorepo-deps.sh` are
+# informational (`|| true`) so supply-chain noise does not block merges; fix advisories in follow-ups.
 name: Monorepo CI
 
 on:
@@ -7,6 +9,7 @@ on:
     branches: [main, master]
 
 jobs:
+  # .NET 10 API + xUnit integration suite (includes SignalR + OAuth regression tests).
   be_demo:
     name: be_demo
     runs-on: ubuntu-latest
@@ -27,6 +30,7 @@ jobs:
       - run: dotnet build BeDemo.sln --no-restore -c Release --no-incremental
       - run: dotnet test BeDemo.sln --no-build -c Release --verbosity minimal
 
+  # Public Vite/React SPA: lint, unit tests, production build, optional Cypress smoke on `vite preview` (HTTP 4173).
   fe_demo:
     name: fe_demo
     runs-on: ubuntu-latest
@@ -47,6 +51,23 @@ jobs:
       - run: yarn validate
       - run: yarn test
       - run: yarn build
+
+      - name: Dependency audit (informational)
+        run: yarn npm audit || true
+
+      - name: Cypress smoke (built SPA)
+        run: |
+          yarn preview --host 127.0.0.1 --port 4173 --strictPort &
+          PID=$!
+          for i in $(seq 1 45); do
+            if curl -sf "http://127.0.0.1:4173/" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          yarn test:e2e:ci
+          kill $PID || true
+          wait $PID 2>/dev/null || true
 
   admin_demo:
     name: admin_demo
@@ -69,6 +90,10 @@ jobs:
       - run: yarn test
       - run: yarn build
 
+      - name: Dependency audit (informational)
+        run: yarn npm audit || true
+
+  # Python gRPC demo: protobuf generation, Ruff, pytest (torch intentionally omitted in CI install step).
   ai_demo:
     name: ai_demo
     runs-on: ubuntu-latest
@@ -104,6 +129,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/ai_demo
         run: pytest test_server.py -q
 
+  # Compose syntax checks — catches invalid YAML/env interpolation without starting containers.
   infra_db_demo:
     name: infra (db_demo compose)
     runs-on: ubuntu-latest
@@ -115,6 +141,7 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f db_demo/docker-compose.yml config
 
+  # Redis compose file sanity (same pattern as db_demo).
   infra_redis_demo:
     name: infra (redis_demo compose)
     runs-on: ubuntu-latest
@@ -126,6 +153,7 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f redis_demo/docker-compose.yml config
 
+  # Seq / logger sidecar compose used in local dev stacks.
   infra_logger_demo:
     name: infra (logger_demo compose)
     runs-on: ubuntu-latest
@@ -137,6 +165,7 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f logger_demo/docker-compose.dev.yml config
 
+  # Documentation guard: fenced ```mermaid blocks must parse (see scripts/check-mermaid-docs.sh).
   docs_mermaid:
     name: docs (Mermaid diagrams)
     runs-on: ubuntu-latest
@@ -154,6 +183,7 @@ jobs:
           chmod +x scripts/check-mermaid-docs.sh
           ./scripts/check-mermaid-docs.sh
 
+  # Cross-language smoke: installs Yarn workspaces + runs scripts/ci-local.sh (lint/build/test matrix).
   monorepo_scripts:
     name: monorepo (ci-local.sh)
     runs-on: ubuntu-latest
@@ -185,8 +215,11 @@ jobs:
 
       - name: Make scripts executable
         run: |
-          chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh
+          chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
           chmod +x be_demo/lint.sh fe_demo/lint.sh admin_demo/lint.sh ai_demo/lint.sh ai_demo/verify-ci.sh
+
+      - name: Monorepo dependency audit (informational)
+        run: ./scripts/audit-monorepo-deps.sh
 
       - name: Run ci-local.sh (lint-all → build-all → test-all)
         run: ./scripts/ci-local.sh

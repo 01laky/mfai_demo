@@ -651,7 +651,7 @@
 
 ## 5. Master checklist (every requirement in this prompt)
 
-**Status:** **Done** for the current `_mfai_demo` documentation tree — all subsections **5.1–5.7** use **[x]** below. If you rerun the agent from scratch, reset relevant lines to **[ ]** before execution.
+**Status:** **Done** for the current `_mfai_demo` documentation tree — all subsections **5.1–5.7** use **[x]** below. If you rerun the agent from scratch, reset relevant lines to **[ ]** before execution. **Convention:** this file is the **exception** where `[x]` records a completed diagram pass; most other prompts keep `[ ]` as PR-only templates—see [docs/prompts/README.md](./README.md).
 
 Work through **top to bottom** when executing a **new** pass; this copy reflects a **completed** pass you can diff against.
 

@@ -209,7 +209,7 @@ print(f'{total}|{passed}|{failed}')
     if [ "${SKIP_CYPRESS:-}" = "1" ]; then
         echo ""
         echo "⏭️  Cypress e2e skipped (SKIP_CYPRESS=1)"
-    elif [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
+    elif [ -f "cypress.config.ts" ] || [ -f "cypress.config.mjs" ] || [ -d "cypress" ]; then
         echo ""
         echo "📦 Running Cypress e2e tests..."
         
@@ -425,10 +425,10 @@ else:
         if [ "$E2E_TOTAL" -gt 0 ]; then
             TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, $E2E_TOTAL e2e)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, $E2E_TOTAL e2e)"
-        elif [ "${SKIP_CYPRESS:-}" = "1" ] && { [ -f "cypress.config.ts" ] || [ -d "cypress" ]; }; then
+        elif [ "${SKIP_CYPRESS:-}" = "1" ] && { [ -f "cypress.config.ts" ] || [ -f "cypress.config.mjs" ] || [ -d "cypress" ]; }; then
             TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped via SKIP_CYPRESS)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped via SKIP_CYPRESS)"
-        elif [ -f "cypress.config.ts" ] || [ -d "cypress" ]; then
+        elif [ -f "cypress.config.ts" ] || [ -f "cypress.config.mjs" ] || [ -d "cypress" ]; then
             # Cypress is installed but tests were skipped (frontend not running)
             TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped - frontend not running)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped - frontend not running)"

@@ -73,7 +73,7 @@ flowchart TB
 
 Unit tests: `OAuthClientValidatorTests`, `OAuthAccessTokenFactoryTests`, `OAuthTokenRequestSignatureVerifierTests`, plus `OAuth2ServiceTests` for the facade.
 
-#### OAuth HTTP error policy (tests: `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests`)
+#### OAuth HTTP error policy (tests: `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests`; full-stack closure: [security-crypto-sockets.md — engagement record](./security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11))
 
 | Condition                                                         | HTTP    | Response body (`OAuth2ErrorResponse` or JSON) | Notes                                                                                                    |
 | ----------------------------------------------------------------- | ------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |

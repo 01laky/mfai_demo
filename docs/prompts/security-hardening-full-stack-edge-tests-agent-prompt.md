@@ -5,6 +5,10 @@
 
 **Strict compliance:** In this prompt, **nothing is optional**. Every checklist item in **§14–§16** and **§18** must be **completed and explicitly ticked** in the agent’s final report. If work is blocked by an external system, the agent must still **document the blocker**, **update docs** to reflect reality, and **add failing/skipped tests with justification** only where the test host cannot support the scenario — never silence a requirement without a written trace in the deliverable.
 
+**Worksheet vs git:** The `[ ]` lists in **this** markdown file are **copy-paste templates** for each engagement. Tick items in the **agent report / PR body** (and attach evidence). **Do not** assume the repo’s prompt file must become all `[x]` in git after a run—only update this file if the team explicitly uses it as a living completion log (same idea as [docs/prompts/README.md](./README.md) “Checklist conventions”).
+
+**Repo evidence (2026-04-11 pass, updated v6):** A full **§15–§18**-style closure for the current `_mfai_demo` tree (gap analysis, hub matrix, dependency snapshot, §18 test evidence, new Mermaid diagrams with `mmdc` render check, **Cypress CI smoke**, optional **OAuth API chain** spec, **`scripts/audit-monorepo-deps.sh`**, SignalR JWT connect test) is committed under **[`docs/guides/security-crypto-sockets.md`](../guides/security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11)** — use that section as the canonical checklist attachment for audits; keep **this** prompt file’s `[ ]` rows as templates for future engagements.
+
 **Related docs (read in full before coding):**
 
 - [../guides/security-crypto-sockets.md](../guides/security-crypto-sockets.md) — backlog items K/J/O/T/S/H/D/M.

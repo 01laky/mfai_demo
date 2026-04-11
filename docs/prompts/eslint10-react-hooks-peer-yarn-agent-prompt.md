@@ -2,6 +2,8 @@
 
 **Purpose:** Remove **Yarn peer-resolution warnings** (and future hard failures) in **`fe_demo`** and **`admin_demo`** after upgrading to **ESLint 10**, while keeping **`eslint-plugin-react-hooks`** and the **flat config** working. Use this document as a **copy-paste agent brief**: investigate, pick a strategy, implement in **both** SPAs, run **`yarn validate`** / **`yarn test`** / **`yarn build`**, commit in **submodule repos**, bump parent submodule pointers per team rules.
 
+**Checklists:** The `[ ]` rows in **§7** (and similar) are **PR / audit evidence templates**—tick in the PR or issue, not by default in this canonical file ([docs/prompts/README.md](./README.md)).
+
 **Scope:** `fe_demo`, `admin_demo` (Yarn **4.12**). Out of scope: `be_demo` (dotnet), `ai_demo` (Python).
 
 ---

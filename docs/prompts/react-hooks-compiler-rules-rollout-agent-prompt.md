@@ -2,6 +2,8 @@
 
 **Purpose:** Move **`fe_demo`** and **`admin_demo`** from the **minimal** ESLint hooks surface (`react-hooks/rules-of-hooks` + `react-hooks/exhaustive-deps` only) toward the **full** `eslint-plugin-react-hooks` **`flat.recommended`** (or **`flat['recommended-latest']`**) preset **safely**, in controlled phases, with measurable violation counts, refactors, and green **`yarn validate` / `yarn test` / `yarn build`**. Use this document as a **copy-paste agent brief**.
 
+**Checklists:** Trailing `[ ]` deliverable lists are **PR templates**—tick there, not by default in this file ([docs/prompts/README.md](./README.md)).
+
 **(required)** Any agent run using this brief must satisfy **every** **`(required)`** item in **§§3–8** (and **§1.3**, **§2**, **§5** where they apply) before merge unless the task owner explicitly waives a bullet **in writing** in the same PR.
 
 **Scope:** `fe_demo`, `admin_demo` only (Yarn 4, ESLint 10, flat config). **(required)** Stay inside this scope unless the task expands it. Out of scope: `be_demo`, `ai_demo`, changing the **canary vs stable** pin for `eslint-plugin-react-hooks` unless a separate task explicitly upgrades peers (see [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md)).

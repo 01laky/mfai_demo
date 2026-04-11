@@ -28,6 +28,31 @@ Use this when automated E2E is skipped (`SKIP_CYPRESS=1`) or CI has no browser a
 5. **JWKS**  
    `GET /api/oauth2/jwks` — expect **200** and `keys` non-empty.
 
+## Copy-paste (`curl`, replace `API` and values)
+
+Assume `API=http://localhost:8000` (or your mapped port).
+
+```bash
+API=http://localhost:8000
+EMAIL="smoke_$(date +%s)@test.com"
+
+curl -sS -X POST "$API/api/oauth2/register" \
+  -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"Test123!@#\",\"firstName\":\"S\",\"lastName\":\"M\"}"
+
+TOK=$(curl -sS -X POST "$API/api/oauth2/token" \
+  -H 'Content-Type: application/json' \
+  -d "{\"grantType\":\"password\",\"clientId\":\"be-demo-client\",\"clientSecret\":\"be-demo-secret-very-strong-key\",\"username\":\"$EMAIL\",\"password\":\"Test123!@#\"}")
+REF=$(echo "$TOK" | python3 -c "import sys,json; print(json.load(sys.stdin).get('refreshToken',''))")
+
+curl -sS -o /dev/null -w "%{http_code}\n" "$API/public/api/me/capabilities" \
+  -H "Authorization: Bearer $(echo "$TOK" | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])")"
+
+curl -sS -X POST "$API/api/oauth2/token" \
+  -H 'Content-Type: application/json' \
+  -d "{\"grantType\":\"refresh_token\",\"clientId\":\"be-demo-client\",\"clientSecret\":\"be-demo-secret-very-strong-key\",\"refreshToken\":\"$REF\"}"
+```
+
 ## Security checks (optional)
 
 - Wrong `client_secret` → **401** `invalid_client`.

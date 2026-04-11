@@ -248,7 +248,7 @@ Product or infra items not covered by the baseline table above; keep IDs for iss
 | **TRACK-INFRA-KMS**          | Production: HSM/vault for signing keys; operator runbook beyond PEM paths.                                                                |
 | **TRACK-OAUTH-MTLS**         | Optional mTLS / `private_key_jwt` for confidential clients if required.                                                                   |
 | **TRACK-OAUTH-RL-PARTITION** | Rate limits: extend beyond per-IP (e.g. per `client_id` / username).                                                                      |
-| **TRACK-CI-E2E-AUTH**        | Minimal always-on auth E2E in CI if Cypress stays behind `SKIP_CYPRESS=1`; manual path: [manual-oauth-smoke.md](./manual-oauth-smoke.md). |
+| **TRACK-CI-E2E-AUTH**        | **Resolved for CI:** `fe_demo` GitHub job runs **Cypress** `app-load.cy.js` after `yarn build` + `vite preview` (HTTP). **Optional:** set `E2E_API_URL` and run `oauth-api-chain.cy.js` for register→token→refresh→capabilities. **UI login** in browser remains manual or a future Cypress UI spec. |
 | **TRACK-QA-IDOR-MATRIX**     | Broader IDOR / ACL matrix across controllers vs representative tests today.                                                               |
 | **TRACK-DOCS-MERMAID-CI**    | Optional CI gate to render-verify Mermaid in `docs/guides/`.                                                                              |
 | **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `ai_demo` if exposure grows.                                                                                 |
@@ -258,9 +258,150 @@ Product or infra items not covered by the baseline table above; keep IDs for iss
 
 ---
 
+## Security hardening engagement — completion record (2026-04-11)
+
+This section satisfies the **agent report / PR evidence** intent of [security-hardening-full-stack-edge-tests-agent-prompt.md](../prompts/security-hardening-full-stack-edge-tests-agent-prompt.md) **§15–§18** for the current tree: **gap analysis**, **tests**, **canonical diagrams** (with render check), **dependency audit snapshot**, **hub matrix**, and **E2E posture** (Cypress vs manual).
+
+### Gap analysis (full)
+
+| Workstream (prompt §17.2) | Status in this repo | Evidence / gap |
+| --------------------------- | -------------------- | -------------- |
+| **K1–K6** keys / JWKS | **K2–K6** implemented for API validation + JWKS; **K1** production vault not in demo — use `Jwt:SigningPemPath` for stable dev/prod PEM | `ECDSAKeyService`, `OAuthJwksController`, `OAuthJwksTests`; **TRACK-INFRA-KMS** |
+| **J1–J7** JWT validation | **J1,J3,J6,J7** enforced in `Program.cs` + `OAuthAccessTokenFactory`; **J2** `ClockSkew = 0` documented in [authentication-and-sessions.md](./authentication-and-sessions.md); **J4** single audience `Jwt:Audience` — documented rationale in auth guide §JWT | Code + `AccessTokenVersionTests` |
+| **O1–O6** OAuth | **O1** hashed client secrets; **O2** rate limits + 429; **O3** Identity lockout on password path (verify in `OAuth2Service`); **O4** body signature rejected; **O5/O6** documented as future / invite-only | `OAuthRateLimit429Tests`, `OAuthErrorPolicyIntegrationTests` |
+| **T1–T4** TLS | TLS at **edge** in prod; dev HTTPS optional `dev/generate-https-certs.sh` | Diagram below; HSTS when TLS everywhere |
+| **S1–S6** SignalR | `[Authorize]` + `access_token` + `atv` parity; face scope in hubs; AI rate limit in `ChatHub` | `SignalRHubTests` (all three hubs, no token); hub matrix below |
+| **H1–H4** headers / CORS | `SecurityHeadersMiddleware`; CORS explicit origins | `SecurityHeadersIntegrationTests`; diagram below |
+| **D1–D2** OpenAPI | Bearer in Swagger; SignalR URL pattern in this doc + hub comments | `Program.cs` Swagger gate |
+| **M1–M3** monitoring | Structured auth logs (no passwords); audit hooks partial | Serilog; **TRACK** for full audit store |
+| **§12** uploads / IDOR / CSRF / E2E | CSRF N/A (Bearer); IDOR representative tests in `AclIntegrationTests` / controller tests; **E2E** Cypress smoke in CI + optional API chain spec | [manual-oauth-smoke.md](./manual-oauth-smoke.md), `fe_demo/cypress/e2e/*.cy.js` |
+
+### Hub inventory (§8.1 — mandatory matrix)
+
+| Hub file (`Hubs/`) | Rewritten route | Auth | Face / tenant rule | Automated test |
+| ------------------ | ----------------- | ---- | ------------------- | -------------- |
+| `ChatHub.cs` | `/hubs/chat` | `[Authorize]` | `OnConnectedAsync` aborts if `IFaceScopeContext` unavailable; groups `hubchat_face_{faceId}` | `SignalRHubTests.SignalRHub_ShouldRejectConnection_WhenNoToken` |
+| `MessengerHub.cs` | `/hubs/messenger` | `[Authorize]` | `EnforceTenantSocialPairAsync` + `IFaceScopeContext` | `SignalRHubTests.MessengerHub_ShouldRejectConnection_WhenNoToken` |
+| `ChatRoomHub.cs` | `/hubs/chatroom` | `[Authorize]` | `JoinRoom` validates membership + face | `SignalRHubTests.ChatRoomHub_ShouldRejectConnection_WhenNoToken` |
+
+Manual steps (mid-connection expiry): connect with short-lived JWT; when `exp` passes, next hub invoke should fail — verify with browser devtools or SignalR client logging; **TRACK** full automation if product requires.
+
+### Dependency audit snapshot (2026-04-11)
+
+Commands (from repo root):
+
+- `dotnet list package --vulnerable` (projects `BeDemo.Api`, `BeDemo.Api.Tests`): **no vulnerable packages** reported by NuGet advisory API at run time.
+- `yarn npm audit` in `fe_demo` and `admin_demo`: **no audit suggestions** (Yarn 4) at run time.
+
+**Automation:** `./scripts/audit-monorepo-deps.sh` runs the same three checks (non-gating); the **monorepo** GitHub Actions job logs this output each run.
+
+Re-run before each release; if advisories appear, record CVE IDs here or in release notes and patch or accept with **TRACK-*** id.
+
+### Extended test checklist (prompt §18) — evidence
+
+| §18 item | Evidence |
+| -------- | -------- |
+| BE exempt OAuth paths | `AclIntegrationTests` / routing tests for `/api/oauth2/*` without face prefix |
+| BE `invalid_client` / `invalid_grant` / 429 | `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests` — aligned with [authentication-and-sessions.md](./authentication-and-sessions.md) OAuth table |
+| BE concurrent refresh | `RefreshTokenEdgeCaseTests` (semaphore / replay) |
+| BE OpenAPI / capabilities sample | `AclIntegrationTests` JSON for `/api/me/capabilities` |
+| FE ACL + `parseMeCapabilities` | `fe_demo/src/acl/__tests__/permissions.test.ts` |
+| FE auth refresh + no stale cache loop | `clearAuthAndCapabilitiesQueries` + `useAuthApi.queryCleanup.test.ts` |
+| FE face prefix on API | `facePathRouting.test.ts`, `ChatRoomsService.test.ts` |
+| admin_demo | Mirror `useAuthApi.queryCleanup.test.ts`, ACL `permissions.test.ts` |
+| E2E | CI: `yarn test:e2e:ci` (`app-load.cy.js`); optional `cypress/e2e/oauth-api-chain.cy.js` with `E2E_API_URL`; manual: [manual-oauth-smoke.md](./manual-oauth-smoke.md) |
+| Dependencies | Snapshot above |
+
+### Canonical diagrams — TLS / dev vs prod (render-checked 2026-04-11)
+
+```mermaid
+flowchart TB
+  subgraph Dev["Development"]
+    D1[HTTP or Kestrel HTTPS with dev certs]
+    D2[ws or wss to SignalR localhost]
+  end
+  subgraph Prod["Production"]
+    P1[TLS 1.2 plus at reverse proxy or Kestrel]
+    P2[HSTS after HTTPS everywhere]
+    P3[wss only for SignalR from browser]
+  end
+  Dev --> Clients[SPAs fe_demo admin_demo]
+  Prod --> Clients
+```
+
+### Canonical diagrams — security headers + CORS order (render-checked)
+
+```mermaid
+flowchart LR
+  A[Request] --> B[RoutingMiddleware]
+  B --> C[CORS middleware]
+  C --> D[Authentication]
+  D --> E[Authorization plus RateLimiter]
+  E --> F[SecurityHeadersMiddleware on response]
+  F --> G[Controller or Hub]
+```
+
+### Canonical diagrams — audit / auth failure (render-checked)
+
+```mermaid
+flowchart LR
+  AuthFail[JwtBearer or OAuth failure]
+  AuthFail --> Log[Structured log no password no full JWT]
+  Log --> Seq[Optional Seq sink]
+  Log --> Ops[Operator dashboards]
+```
+
+### Canonical diagrams — BE to ai_demo gRPC (render-checked)
+
+```mermaid
+sequenceDiagram
+  participant Hub as ChatHub
+  participant G as IAiGrpcService
+  participant AI as ai_demo gRPC
+
+  Hub->>G: Generate or health
+  G->>AI: gRPC over configured channel
+  Note over G,AI: Use TLS for gRPC in production deployments demo uses insecure channel in dev see ai_demo README
+```
+
+### Canonical diagrams — SPA auth + capabilities warmup (render-checked)
+
+```mermaid
+sequenceDiagram
+  participant SPA as fe_demo or admin_demo
+  participant LS as localStorage
+  participant API as Face prefixed REST
+  participant Cap as GET api me capabilities
+
+  SPA->>LS: read auth_token
+  SPA->>API: Bearer on axios or fetch client
+  SPA->>Cap: after login invalidate meCapabilities
+  Note over SPA,Cap: parseMeCapabilities drives permission gates
+```
+
+**Render validation:** each diagram above was exported with `@mermaid-js/mermaid-cli@11.4.0` (`mmdc -i <file>.mmd -o <file>.svg`) from equivalent `.mmd` sources during this pass — syntax verified.
+
+### Master checklist (prompt §16) — summary
+
+| Block | Done |
+| ----- | ---- |
+| Gap analysis in this doc | Yes (this section) |
+| §17.2 technical rows | Addressed in code or **TRACK-*** / manual doc |
+| `scripts/test-all.sh` | Passes when backends/FE prerequisites met; Cypress still **SKIP_CYPRESS=1** in `ci-local` — use dedicated **fe_demo** CI job for Cypress smoke |
+| No secrets in git | Yes (placeholders + env) |
+| Swagger production policy | `Swagger:EnableInProduction` — documented in baseline table |
+| Operations runbook | Short runbook above + `be_demo/README.md` emergency bullets |
+| English comments §14 | Applied on **new/changed** code in this pass |
+| Mermaid set | Keys/JWKS/J6/OAuth/TLS/SignalR in this file + auth guide; headers+CORS+audit+SPA+gRPC added here |
+| Tests §17.3 §18 | Evidence table above |
+
+---
+
 ## Changelog
 
 - v1: Initial backlog for strong crypto, JWT, API, WebSockets (AI-oriented).
 - v2: Baseline table updated for JWKS, `atv` / `AccessTokenVersion`, refresh revocation, O4 rejection, security headers, Swagger gating (2026-04).
 - v3: **Deferred follow-ups** table consolidated here (replacing root `SECURITY_GAP_ANALYSIS.md`).
 - v4: Baseline rows for **`OAuthClientValidator`**, **`OAuthAccessTokenFactory`**, **`OAuthTokenRequestSignatureVerifier`** / **`IClock`**; O4 backlog text aligned with class names.
+- v5: **Security hardening engagement — completion record** (gap analysis, hub matrix, §18 evidence table, dependency snapshot, new Mermaid: TLS, headers/CORS pipeline, audit, gRPC, SPA capabilities); BE `AclPermissionKeysParityTests`, extended `SignalRHubTests`; FE/admin `clearAuthAndCapabilitiesQueries` tests.
+- v6: Cypress **CI** (`app-load.cy.js` + HTTP `vite preview`), optional **`oauth-api-chain.cy.js`**, `scripts/audit-monorepo-deps.sh` + CI step; SignalR **JWT connect** integration test; `manual-oauth-smoke.md` curl block; FE `useAuthApi` mutation wrappers + `buildLocalizedLinkPath` face index typing.

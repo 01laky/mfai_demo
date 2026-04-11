@@ -134,16 +134,16 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | Job                   | What runs                                                                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **be_demo**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                          |
-| **fe_demo**           | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`                                                           |
-| **admin_demo**        | Same pattern with `admin_demo/.nvmrc`                                                                                                                        |
+| **fe_demo**           | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`, **`yarn npm audit`** (informational, always exits 0 in CI), then **Cypress smoke**: `yarn preview` on **HTTP** `127.0.0.1:4173` + **`yarn test:e2e:ci`** |
+| **admin_demo**        | Same Node/Yarn gate as **fe_demo** through **`yarn build`**, plus informational **`yarn npm audit`**; **no** Cypress job in this workflow yet. |
 | **ai_demo**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                             |
 | **infra_db_demo**     | `docker compose -f db_demo/docker-compose.yml config`                                                                                                        |
 | **infra_redis_demo**  | `docker compose -f redis_demo/docker-compose.yml config`                                                                                                     |
 | **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config`                                                                                                |
 | **docs_mermaid**      | Node from `fe_demo/.nvmrc`, runs **`./scripts/check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
-| **monorepo_scripts**  | Runs **`./scripts/ci-local.sh`**: `scripts/lint-all.sh` → `scripts/build-all.sh` → `scripts/test-all.sh` (with `SKIP_CYPRESS=1`)                             |
+| **monorepo_scripts**  | Yarn installs for **fe_demo** + **admin_demo**, **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + `yarn npm audit` log), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
 
-The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI.
+The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI. Dependency-audit output is logged for triage but does not gate green by itself (`|| true` in the audit script and in **fe_demo** / **admin_demo** audit steps).
 
 ### Diagram: root CI jobs (parallel)
 
