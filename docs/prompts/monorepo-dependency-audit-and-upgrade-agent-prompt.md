@@ -263,88 +263,88 @@ Suggested bumps if you ran `npx npm-check-updates -u` (review breaking changes b
 
 `—` = not declared in that app. This table does **not** list transitive packages from `yarn.lock`.
 
-| Package                            | `fe_demo` | `admin_demo` | Latest (npm) | Note                                    |
-| ---------------------------------- | --------- | ------------ | ------------ | --------------------------------------- |
-| `@commitlint/cli`                  | ^20.3.1   | ^20.3.1      | **20.5.0**   |                                         |
-| `@commitlint/config-conventional`  | ^20.3.1   | ^20.3.1      | **20.5.0**   |                                         |
-| `@eslint/js`                       | ^9.39.1   | ^9.39.1      | **10.0.1**   |                                         |
-| `@hookform/resolvers`              | ^5.2.2    | ^5.2.2       | **5.2.2**    |                                         |
-| `@microsoft/signalr`               | ^8.0.7    | ^10.0.0      | **10.0.0**   | Align fe to ^10 with admin + BE SignalR |
-| `@popperjs/core`                   | ^2.11.8   | ^2.11.8      | **2.11.8**   |                                         |
-| `@radix-ui/react-accordion`        | ^1.2.12   | ^1.2.12      | **1.2.12**   |                                         |
-| `@radix-ui/react-alert-dialog`     | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
-| `@radix-ui/react-aspect-ratio`     | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
-| `@radix-ui/react-avatar`           | ^1.1.11   | ^1.1.11      | **1.1.11**   |                                         |
-| `@radix-ui/react-checkbox`         | ^1.3.3    | ^1.3.3       | **1.3.3**    |                                         |
-| `@radix-ui/react-collapsible`      | ^1.1.12   | ^1.1.12      | **1.1.12**   |                                         |
-| `@radix-ui/react-context-menu`     | ^2.2.16   | ^2.2.16      | **2.2.16**   |                                         |
-| `@radix-ui/react-dialog`           | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
-| `@radix-ui/react-dropdown-menu`    | ^2.1.16   | ^2.1.16      | **2.1.16**   |                                         |
-| `@radix-ui/react-hover-card`       | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
-| `@radix-ui/react-label`            | ^2.1.8    | ^2.1.8       | **2.1.8**    |                                         |
-| `@radix-ui/react-menubar`          | ^1.1.16   | ^1.1.16      | **1.1.16**   |                                         |
-| `@radix-ui/react-navigation-menu`  | ^1.2.14   | ^1.2.14      | **1.2.14**   |                                         |
-| `@radix-ui/react-popover`          | ^1.1.15   | ^1.1.15      | **1.1.15**   |                                         |
-| `@radix-ui/react-progress`         | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
-| `@radix-ui/react-radio-group`      | ^1.3.8    | ^1.3.8       | **1.3.8**    |                                         |
-| `@radix-ui/react-scroll-area`      | ^1.2.10   | ^1.2.10      | **1.2.10**   |                                         |
-| `@radix-ui/react-select`           | ^2.2.6    | ^2.2.6       | **2.2.6**    |                                         |
-| `@radix-ui/react-separator`        | ^1.1.8    | ^1.1.8       | **1.1.8**    |                                         |
-| `@radix-ui/react-slider`           | ^1.3.6    | ^1.3.6       | **1.3.6**    |                                         |
-| `@radix-ui/react-slot`             | ^1.2.4    | ^1.2.4       | **1.2.4**    |                                         |
-| `@radix-ui/react-switch`           | ^1.2.6    | ^1.2.6       | **1.2.6**    |                                         |
-| `@radix-ui/react-tabs`             | ^1.1.13   | ^1.1.13      | **1.1.13**   |                                         |
-| `@radix-ui/react-toast`            | ^1.2.15   | ^1.2.15      | **1.2.15**   |                                         |
-| `@radix-ui/react-toggle`           | ^1.1.10   | ^1.1.10      | **1.1.10**   |                                         |
-| `@radix-ui/react-toggle-group`     | ^1.1.11   | ^1.1.11      | **1.1.11**   |                                         |
-| `@radix-ui/react-tooltip`          | ^1.2.8    | ^1.2.8       | **1.2.8**    |                                         |
-| `@tanstack/react-query`            | ^5.90.18  | ^5.90.18     | **5.97.0**   |                                         |
-| `@tanstack/react-table`            | —         | ^8.21.3      | **8.21.3**   |                                         |
-| `@testing-library/dom`             | ^10.4.1   | ^10.4.1      | **10.4.1**   |                                         |
-| `@testing-library/jest-dom`        | ^6.9.1    | ^6.9.1       | **6.9.1**    |                                         |
-| `@testing-library/react`           | ^16.3.1   | ^16.3.1      | **16.3.2**   |                                         |
-| `@testing-library/user-event`      | ^14.6.1   | ^14.6.1      | **14.6.1**   |                                         |
-| `@types/jsdom`                     | ^27       | ^27          | **28.0.1**   |                                         |
-| `@types/node`                      | ^25.0.9   | ^24.10.9     | **25.6.0**   | Declared ranges differ between SPAs     |
-| `@types/react`                     | ^19.2.5   | ^19.2.5      | **19.2.14**  |                                         |
-| `@types/react-dom`                 | ^19.2.3   | ^19.2.3      | **19.2.3**   |                                         |
-| `@vitejs/plugin-basic-ssl`         | ^2.1.0    | ^2.1.0       | **2.3.0**    |                                         |
-| `@vitejs/plugin-react`             | ^5.1.1    | ^5.1.1       | **6.0.1**    |                                         |
-| `@vitest/ui`                       | ^4.0.17   | ^4.0.17      | **4.1.4**    |                                         |
-| `@yarnpkg/pnpify`                  | ^4.1.6    | ^4.1.6       | **4.1.6**    |                                         |
-| `axios`                            | ^1.15.0   | ^1.15.0      | **1.15.0**   |                                         |
-| `bootstrap`                        | ^5.3.8    | ^5.3.8       | **5.3.8**    |                                         |
-| `cypress`                          | ^15.9.0   | —            | **15.13.1**  | fe only                                 |
-| `eslint`                           | ^9.39.1   | ^9.39.1      | **10.2.0**   |                                         |
-| `eslint-config-prettier`           | ^10.1.8   | ^10.1.8      | **10.1.8**   |                                         |
-| `eslint-plugin-react-hooks`        | ^7.0.1    | ^7.0.1       | **7.0.1**    |                                         |
-| `eslint-plugin-react-refresh`      | ^0.4.24   | ^0.4.24      | **0.5.2**    |                                         |
-| `framer-motion`                    | —         | ^12.26.2     | **12.38.0**  | admin only                              |
-| `globals`                          | ^16.5.0   | ^16.5.0      | **17.4.0**   |                                         |
-| `husky`                            | ^9.1.7    | ^9.1.7       | **9.1.7**    |                                         |
-| `i18next`                          | ^25.7.4   | ^25.7.4      | **26.0.4**   |                                         |
-| `i18next-browser-languagedetector` | ^8.2.0    | ^8.2.0       | **8.2.1**    |                                         |
-| `jsdom`                            | ^27.4.0   | ^27.4.0      | **29.0.2**   |                                         |
-| `lint-staged`                      | ^15.2.10  | ^15.2.10     | **16.4.0**   |                                         |
-| `lucide-react`                     | ^0.575.0  | —            | **1.8.0**    | fe only; **major** icon package jump    |
-| `openapi-typescript-codegen`       | ^0.30.0   | ^0.30.0      | **0.30.0**   |                                         |
-| `prettier`                         | ^3.8.0    | ^3.8.0       | **3.8.2**    |                                         |
-| `quill-delta`                      | ^5.1.0    | —            | **5.1.0**    | fe only                                 |
-| `react`                            | ^19.2.0   | ^19.2.0      | **19.2.5**   |                                         |
-| `react-bootstrap`                  | ^2.10.10  | ^2.10.10     | **2.10.10**  |                                         |
-| `react-dom`                        | ^19.2.0   | ^19.2.0      | **19.2.5**   |                                         |
-| `react-grid-layout`                | ^2.2.2    | ^2.2.2       | **2.2.3**    |                                         |
-| `react-hook-form`                  | ^7.71.1   | ^7.71.1      | **7.72.1**   |                                         |
-| `react-i18next`                    | ^16.5.3   | ^16.5.3      | **17.0.2**   |                                         |
-| `react-quill-new`                  | ^3.8.3    | —            | **3.8.3**    | fe only                                 |
-| `react-router-dom`                 | ^7.12.0   | ^7.12.0      | **7.14.0**   |                                         |
-| `react-toastify`                   | ^11.0.5   | ^11.0.5      | **11.0.5**   |                                         |
-| `sass`                             | ^1.97.2   | ^1.97.2      | **1.99.0**   |                                         |
-| `typescript`                       | ~5.9.3    | ~5.9.3       | **6.0.2**    |                                         |
-| `typescript-eslint`                | ^8.46.4   | ^8.46.4      | **8.58.1**   |                                         |
-| `vite`                             | ^7.3.2    | ^7.3.2       | **8.0.8**    |                                         |
-| `vitest`                           | ^4.0.17   | ^4.0.17      | **4.1.4**    |                                         |
-| `yup`                              | ^1.7.1    | ^1.7.1       | **1.7.1**    |                                         |
+| Package                            | `fe_demo`                      | `admin_demo`                   | Latest (npm) | Note                                                                                                                 |
+| ---------------------------------- | ------------------------------ | ------------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `@commitlint/cli`                  | ^20.3.1                        | ^20.3.1                        | **20.5.0**   |                                                                                                                      |
+| `@commitlint/config-conventional`  | ^20.3.1                        | ^20.3.1                        | **20.5.0**   |                                                                                                                      |
+| `@eslint/js`                       | ^10.0.1                        | ^10.0.1                        | **10.0.1**   | Matches ESLint 10 in both SPAs                                                                                       |
+| `@hookform/resolvers`              | ^5.2.2                         | ^5.2.2                         | **5.2.2**    |                                                                                                                      |
+| `@microsoft/signalr`               | ^8.0.7                         | ^10.0.0                        | **10.0.0**   | Align fe to ^10 with admin + BE SignalR                                                                              |
+| `@popperjs/core`                   | ^2.11.8                        | ^2.11.8                        | **2.11.8**   |                                                                                                                      |
+| `@radix-ui/react-accordion`        | ^1.2.12                        | ^1.2.12                        | **1.2.12**   |                                                                                                                      |
+| `@radix-ui/react-alert-dialog`     | ^1.1.15                        | ^1.1.15                        | **1.1.15**   |                                                                                                                      |
+| `@radix-ui/react-aspect-ratio`     | ^1.1.8                         | ^1.1.8                         | **1.1.8**    |                                                                                                                      |
+| `@radix-ui/react-avatar`           | ^1.1.11                        | ^1.1.11                        | **1.1.11**   |                                                                                                                      |
+| `@radix-ui/react-checkbox`         | ^1.3.3                         | ^1.3.3                         | **1.3.3**    |                                                                                                                      |
+| `@radix-ui/react-collapsible`      | ^1.1.12                        | ^1.1.12                        | **1.1.12**   |                                                                                                                      |
+| `@radix-ui/react-context-menu`     | ^2.2.16                        | ^2.2.16                        | **2.2.16**   |                                                                                                                      |
+| `@radix-ui/react-dialog`           | ^1.1.15                        | ^1.1.15                        | **1.1.15**   |                                                                                                                      |
+| `@radix-ui/react-dropdown-menu`    | ^2.1.16                        | ^2.1.16                        | **2.1.16**   |                                                                                                                      |
+| `@radix-ui/react-hover-card`       | ^1.1.15                        | ^1.1.15                        | **1.1.15**   |                                                                                                                      |
+| `@radix-ui/react-label`            | ^2.1.8                         | ^2.1.8                         | **2.1.8**    |                                                                                                                      |
+| `@radix-ui/react-menubar`          | ^1.1.16                        | ^1.1.16                        | **1.1.16**   |                                                                                                                      |
+| `@radix-ui/react-navigation-menu`  | ^1.2.14                        | ^1.2.14                        | **1.2.14**   |                                                                                                                      |
+| `@radix-ui/react-popover`          | ^1.1.15                        | ^1.1.15                        | **1.1.15**   |                                                                                                                      |
+| `@radix-ui/react-progress`         | ^1.1.8                         | ^1.1.8                         | **1.1.8**    |                                                                                                                      |
+| `@radix-ui/react-radio-group`      | ^1.3.8                         | ^1.3.8                         | **1.3.8**    |                                                                                                                      |
+| `@radix-ui/react-scroll-area`      | ^1.2.10                        | ^1.2.10                        | **1.2.10**   |                                                                                                                      |
+| `@radix-ui/react-select`           | ^2.2.6                         | ^2.2.6                         | **2.2.6**    |                                                                                                                      |
+| `@radix-ui/react-separator`        | ^1.1.8                         | ^1.1.8                         | **1.1.8**    |                                                                                                                      |
+| `@radix-ui/react-slider`           | ^1.3.6                         | ^1.3.6                         | **1.3.6**    |                                                                                                                      |
+| `@radix-ui/react-slot`             | ^1.2.4                         | ^1.2.4                         | **1.2.4**    |                                                                                                                      |
+| `@radix-ui/react-switch`           | ^1.2.6                         | ^1.2.6                         | **1.2.6**    |                                                                                                                      |
+| `@radix-ui/react-tabs`             | ^1.1.13                        | ^1.1.13                        | **1.1.13**   |                                                                                                                      |
+| `@radix-ui/react-toast`            | ^1.2.15                        | ^1.2.15                        | **1.2.15**   |                                                                                                                      |
+| `@radix-ui/react-toggle`           | ^1.1.10                        | ^1.1.10                        | **1.1.10**   |                                                                                                                      |
+| `@radix-ui/react-toggle-group`     | ^1.1.11                        | ^1.1.11                        | **1.1.11**   |                                                                                                                      |
+| `@radix-ui/react-tooltip`          | ^1.2.8                         | ^1.2.8                         | **1.2.8**    |                                                                                                                      |
+| `@tanstack/react-query`            | ^5.90.18                       | ^5.90.18                       | **5.97.0**   |                                                                                                                      |
+| `@tanstack/react-table`            | —                              | ^8.21.3                        | **8.21.3**   |                                                                                                                      |
+| `@testing-library/dom`             | ^10.4.1                        | ^10.4.1                        | **10.4.1**   |                                                                                                                      |
+| `@testing-library/jest-dom`        | ^6.9.1                         | ^6.9.1                         | **6.9.1**    |                                                                                                                      |
+| `@testing-library/react`           | ^16.3.1                        | ^16.3.1                        | **16.3.2**   |                                                                                                                      |
+| `@testing-library/user-event`      | ^14.6.1                        | ^14.6.1                        | **14.6.1**   |                                                                                                                      |
+| `@types/jsdom`                     | ^27                            | ^27                            | **28.0.1**   |                                                                                                                      |
+| `@types/node`                      | ^25.0.9                        | ^24.10.9                       | **25.6.0**   | Declared ranges differ between SPAs                                                                                  |
+| `@types/react`                     | ^19.2.5                        | ^19.2.5                        | **19.2.14**  |                                                                                                                      |
+| `@types/react-dom`                 | ^19.2.3                        | ^19.2.3                        | **19.2.3**   |                                                                                                                      |
+| `@vitejs/plugin-basic-ssl`         | ^2.1.0                         | ^2.1.0                         | **2.3.0**    |                                                                                                                      |
+| `@vitejs/plugin-react`             | ^5.1.1                         | ^5.1.1                         | **6.0.1**    |                                                                                                                      |
+| `@vitest/ui`                       | ^4.0.17                        | ^4.0.17                        | **4.1.4**    |                                                                                                                      |
+| `@yarnpkg/pnpify`                  | ^4.1.6                         | ^4.1.6                         | **4.1.6**    |                                                                                                                      |
+| `axios`                            | ^1.15.0                        | ^1.15.0                        | **1.15.0**   |                                                                                                                      |
+| `bootstrap`                        | ^5.3.8                         | ^5.3.8                         | **5.3.8**    |                                                                                                                      |
+| `cypress`                          | ^15.9.0                        | —                              | **15.13.1**  | fe only                                                                                                              |
+| `eslint`                           | ^9.39.1                        | ^9.39.1                        | **10.2.0**   |                                                                                                                      |
+| `eslint-config-prettier`           | ^10.1.8                        | ^10.1.8                        | **10.1.8**   |                                                                                                                      |
+| `eslint-plugin-react-hooks`        | 7.1.0-canary-705268dc-20260409 | 7.1.0-canary-705268dc-20260409 | **7.0.1**    | **Exact canary** (A2) until `@latest` peers include ESLint 10; see each SPA `docs/eslint-plugin-react-hooks-peer.md` |
+| `eslint-plugin-react-refresh`      | ^0.4.24                        | ^0.4.24                        | **0.5.2**    |                                                                                                                      |
+| `framer-motion`                    | —                              | ^12.26.2                       | **12.38.0**  | admin only                                                                                                           |
+| `globals`                          | ^16.5.0                        | ^16.5.0                        | **17.4.0**   |                                                                                                                      |
+| `husky`                            | ^9.1.7                         | ^9.1.7                         | **9.1.7**    |                                                                                                                      |
+| `i18next`                          | ^25.7.4                        | ^25.7.4                        | **26.0.4**   |                                                                                                                      |
+| `i18next-browser-languagedetector` | ^8.2.0                         | ^8.2.0                         | **8.2.1**    |                                                                                                                      |
+| `jsdom`                            | ^27.4.0                        | ^27.4.0                        | **29.0.2**   |                                                                                                                      |
+| `lint-staged`                      | ^15.2.10                       | ^15.2.10                       | **16.4.0**   |                                                                                                                      |
+| `lucide-react`                     | ^0.575.0                       | —                              | **1.8.0**    | fe only; **major** icon package jump                                                                                 |
+| `openapi-typescript-codegen`       | ^0.30.0                        | ^0.30.0                        | **0.30.0**   |                                                                                                                      |
+| `prettier`                         | ^3.8.0                         | ^3.8.0                         | **3.8.2**    |                                                                                                                      |
+| `quill-delta`                      | ^5.1.0                         | —                              | **5.1.0**    | fe only                                                                                                              |
+| `react`                            | ^19.2.0                        | ^19.2.0                        | **19.2.5**   |                                                                                                                      |
+| `react-bootstrap`                  | ^2.10.10                       | ^2.10.10                       | **2.10.10**  |                                                                                                                      |
+| `react-dom`                        | ^19.2.0                        | ^19.2.0                        | **19.2.5**   |                                                                                                                      |
+| `react-grid-layout`                | ^2.2.2                         | ^2.2.2                         | **2.2.3**    |                                                                                                                      |
+| `react-hook-form`                  | ^7.71.1                        | ^7.71.1                        | **7.72.1**   |                                                                                                                      |
+| `react-i18next`                    | ^16.5.3                        | ^16.5.3                        | **17.0.2**   |                                                                                                                      |
+| `react-quill-new`                  | ^3.8.3                         | —                              | **3.8.3**    | fe only                                                                                                              |
+| `react-router-dom`                 | ^7.12.0                        | ^7.12.0                        | **7.14.0**   |                                                                                                                      |
+| `react-toastify`                   | ^11.0.5                        | ^11.0.5                        | **11.0.5**   |                                                                                                                      |
+| `sass`                             | ^1.97.2                        | ^1.97.2                        | **1.99.0**   |                                                                                                                      |
+| `typescript`                       | ~5.9.3                         | ~5.9.3                         | **6.0.2**    |                                                                                                                      |
+| `typescript-eslint`                | ^8.46.4                        | ^8.46.4                        | **8.58.1**   |                                                                                                                      |
+| `vite`                             | ^7.3.2                         | ^7.3.2                         | **8.0.8**    |                                                                                                                      |
+| `vitest`                           | ^4.0.17                        | ^4.0.17                        | **4.1.4**    |                                                                                                                      |
+| `yup`                              | ^1.7.1                         | ^1.7.1                         | **1.7.1**    |                                                                                                                      |
 
 ### 2.4 High-risk upgrade themes (FE / admin)
 

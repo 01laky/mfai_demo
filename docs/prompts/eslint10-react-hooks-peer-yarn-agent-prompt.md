@@ -28,13 +28,9 @@
 - React issue: [facebook/react#35758 — ESLint 10 not in `eslint-plugin-react-hooks` peers](https://github.com/facebook/react/issues/35758)
 - Landed fix (peer + tests/fixtures): [facebook/react#35720 — Add ESLint v10 support](https://github.com/facebook/react/pull/35720) (merge subject **can** differ; **published** tags are decided by **`npm view`**, not by PR title alone).
 
-**Repos today (baseline — stale over time; §2.2 overrides):** both apps use roughly:
+**Repos today (`fe_demo` / `admin_demo` — verify with each `package.json` and §2.2):** ESLint **10**, `@eslint/js` **^10.0.x**, `typescript-eslint` **^8.58.x**, and an **exact** **`eslint-plugin-react-hooks` canary** pin (**strategy A2** shipped in submodules) until stable `@latest` lists **`^10.0.0`** for `eslint` in peers. Submodule rationale: `docs/eslint-plugin-react-hooks-peer.md` in each SPA.
 
-- `eslint`: **^10.2.0**
-- `@eslint/js`: **^10.0.1**
-- `eslint-plugin-react-hooks`: **^7.0.1**
-- `typescript-eslint`: **^8.58.x**
-- Flat config **can** live in `eslint.config.js`, `eslint.config.mjs`, `eslint.config.cjs`, `eslint.config.ts`, `eslint.config.mts`, or `eslint.config.cts` — **(required)** apply **§2.6** to **whichever filename exists** in each SPA. **(required)** After any `eslint-plugin-react-hooks` version change, the **imported preset** must match that package version’s published API — **§2.6**.
+- Flat config **can** live in `eslint.config.js`, `eslint.config.mjs`, `eslint.config.cjs`, `eslint.config.ts`, `eslint.config.mts`, or `eslint.config.cts` — **(required)** apply **§2.6** to **whichever filename exists** in each SPA. **(required)** After any `eslint-plugin-react-hooks` version change, align plugin registration and rules with that version’s published API — **§2.6** (today: explicit **`rules-of-hooks`** + **`exhaustive-deps`** instead of full canary `flat.recommended`).
 
 ---
 

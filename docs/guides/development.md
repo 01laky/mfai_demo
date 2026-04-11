@@ -45,6 +45,14 @@ The **root** repository runs aggregated CI (see below). Each submodule that ship
 
 Use `nvm use` (or your version manager) before `yarn install`. Older Node versions cause Vite warnings or failures.
 
+### ESLint 10 and `eslint-plugin-react-hooks` (`fe_demo`, `admin_demo`)
+
+Both SPAs use **ESLint 10** with **`@eslint/js` ^10** and **`typescript-eslint` ^8.58**. Stable **`eslint-plugin-react-hooks@latest`** (7.0.x) did not yet list ESLint **10** in `peerDependencies`, which produced Yarn **`YN0060`** against ESLint 10. The repos therefore pin an **exact** **canary** build whose peers include **`^10.0.0`** (strategy **A2** in [`docs/prompts/eslint10-react-hooks-peer-yarn-agent-prompt.md`](../prompts/eslint10-react-hooks-peer-yarn-agent-prompt.md)).
+
+- **Submodule docs:** [`fe_demo/docs/eslint-plugin-react-hooks-peer.md`](../../fe_demo/docs/eslint-plugin-react-hooks-peer.md), [`admin_demo/docs/eslint-plugin-react-hooks-peer.md`](../../admin_demo/docs/eslint-plugin-react-hooks-peer.md) — removal trigger, risk, upstream links.
+- **Flat config:** `eslint.config.js` registers the plugin but enables only **`react-hooks/rules-of-hooks`** and **`react-hooks/exhaustive-deps`** (the canary `configs.flat.recommended` preset pulls in additional experimental rules the codebase has not adopted yet).
+- **Yarn:** after the pin, **`YN0060`** for the ESLint ↔ react-hooks conflict should be **gone**. A generic **`YN0086`** (“peer dependencies incorrectly met by **dependencies**”) may still appear from **transitive** trees (e.g. tooling); investigate with `yarn explain peer-requirements` if it blocks CI policy.
+
 ## Python (ai_demo)
 
 - **CI / recommended**: **Python 3.11** (matches `pyproject.toml` target and GitHub Actions).

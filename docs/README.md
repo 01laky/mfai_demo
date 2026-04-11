@@ -59,10 +59,15 @@ _(Add more files as you ship coherent modules.)_
 
 ## [`prompts/`](./prompts/) — AI prompts
 
-| Document                                                                                                   | Contents                                                                        |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [super-admin-api.md](./prompts/super-admin-api.md)                                                         | SUPER_ADMIN-only global role API — analysis + copy-paste implementation prompt. |
-| [mermaid-documentation-diagrams-agent-prompt.md](./prompts/mermaid-documentation-diagrams-agent-prompt.md) | Agent prompt to insert all Mermaid diagrams across `docs/` (exhaustive specs).  |
+| File                                                                                                                           | Purpose                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [super-admin-api.md](./prompts/super-admin-api.md)                                                                             | SUPER_ADMIN-only global role API — analysis + implementation prompt.                                                                                                                                                                                                                       |
+| [mermaid-documentation-diagrams-agent-prompt.md](./prompts/mermaid-documentation-diagrams-agent-prompt.md)                     | **Agent prompt:** add every specified Mermaid diagram across `docs/` (full inventory, placement, styling, sequence/flow/state/ER specs).                                                                                                                                                   |
+| [security-hardening-full-stack-edge-tests-agent-prompt.md](./prompts/security-hardening-full-stack-edge-tests-agent-prompt.md) | **Agent prompt (strict):** full monorepo security + tests + **English** comments + docs + Mermaid; **no optional items**; use sections 16–18 in that file for checklists.                                                                                                                  |
+| [monorepo-dependency-audit-and-upgrade-agent-prompt.md](./prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md)       | **Agent prompt:** inventory of **all** packages per app (NuGet, Yarn, PyPI, Docker) + **latest stable** snapshot + feasibility; commands to re-run audit and PR checklist.                                                                                                                 |
+| [eslint10-react-hooks-peer-yarn-agent-prompt.md](./prompts/eslint10-react-hooks-peer-yarn-agent-prompt.md)                     | **Agent prompt:** **ESLint 10** vs **`eslint-plugin-react-hooks`** under **Yarn 4** — **required** investigation (full peer trees, `@latest`/`@canary`, whole eslint graph, lockfile), **decision matrix** **A1/A2/B/C**, flat-config alignment, CI `YN0060`/`YN0086` grep, anti-patterns. |
+
+Full index (including retention policy): [`prompts/README.md`](./prompts/README.md).
 
 ---
 
