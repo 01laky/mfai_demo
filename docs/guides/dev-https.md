@@ -73,6 +73,10 @@ flowchart TB
 - Mounts `./dev/certs` into the API container (`ASPNETCORE_DEV_HTTPS_PFX`) and into FE/admin (`VITE_DEV_CERT_DIR=/certs`).
 - Run `./dev/generate-https-certs.sh` on the host **before** `docker compose up` if `dev/certs/` is empty.
 
+## API with `localhost.pfx` on macOS (`dotnet run` on host)
+
+When the PFX exists, Kestrel loads it with PKCS#12 key storage flags that differ by OS: **macOS does not support `EphemeralKeySet`**, so the API uses `DefaultKeySet` on Darwin and `EphemeralKeySet` on Linux/Windows (`Program.cs`). Docker images (Linux) are unchanged.
+
 ## API without `dev/certs`
 
 If `dev/certs/localhost.pfx` is missing, the API uses normal `launchSettings` URLs. Use profile **https** and:

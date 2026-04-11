@@ -155,17 +155,60 @@ sequenceDiagram
   API->>Refresh: rotate opaque refresh
 ```
 
-## Current baseline (repo facts — do not assume improved until implemented)
+## Current baseline (repo facts — verify in `Program.cs` / `OAuth2Service` when auditing)
 
-| Area                          | Current behavior                                                                   |
-| ----------------------------- | ---------------------------------------------------------------------------------- |
-| JWT signing                   | In-memory **P-521 ECDSA**, new key per process start (`ECDSAKeyService` singleton) |
-| Certificate                   | **No** X.509 for JWT signing in code                                               |
-| JWT `ValidateLifetime`        | **Disabled** in `JwtBearer` (`Program.cs`)                                         |
-| Refresh tokens                | Issued; **not** stored/validated for refresh grant (`OAuth2Service`)               |
-| Optional OAuth body signature | **ES512** verify using **server** key — not client PKI model                       |
-| SignalR auth                  | JWT via query `access_token`; same bearer config as API                            |
-| TLS                           | Dev often HTTP; production must enforce TLS at edge                                |
+| Area                          | Current behavior                                                                 |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| JWT signing                   | **P-521 ES512**; optional **`Jwt:SigningPemPath`** for stable PEM-loaded key; else ephemeral per process (`ECDSAKeyService`) |
+| JWT rotation overlap (K4)     | Optional **`Jwt:PreviousSigningPemPath`** + **`Jwt:PreviousKeyId`** — `JwtBearer` validates with **both** keys; **only current** key signs new JWTs; JWKS lists **all** verification keys |
+| JWKS                          | **GET `/api/oauth2/jwks`** (`OAuthJwksController`) — JWK set for issuer verification keys |
+| JWT validation                | **`ValidateLifetime = true`**, **`ValidAlgorithms` = ES512**, **`ClockSkew = 0`**   |
+| Access session (J6)           | Claim **`atv`** must match **`ApplicationUser.AccessTokenVersion`** (`OnTokenValidated`); **password or global `UserRoleId` change** bumps version + revokes active refresh tokens (`ApplicationDbContext` partial) |
+| Refresh tokens                | **Stored** (hash), rotate on use (`OAuthRefreshTokenStore`); in-memory tests use a **semaphore** so concurrent refresh replay is deterministic |
+| OAuth clients (O1)            | **`OAuthClients`** table + hashed **`client_secret`**; demo client seeded; **`ValidateClientAsync`** uses `IPasswordHasher<OAuthClient>` |
+| OAuth rate limits (O2)        | **`POST /api/oauth2/token`** and **`POST /api/oauth2/register`**: fixed window per IP; **`429`** + **`Retry-After`**; in **Testing**, limits bypassed unless **`OAuth2:BypassRateLimitInTesting=false`** |
+| OAuth body signature          | **Rejected** (`400` `invalid_request`) — do not send `Signature` / `SignatureAlgorithm` on token requests |
+| SignalR auth                  | JWT via query `access_token`; same bearer rules as HTTP (including **`atv`**)      |
+| Security headers              | **`SecurityHeadersMiddleware`**: nosniff, frame deny, referrer-policy, permissions-policy, **minimal CSP** for JSON API |
+| Swagger UI                    | **Development** only unless **`Swagger:EnableInProduction`** is `true`             |
+| TLS                           | Dev HTTPS optional (`dev/certs`); production TLS at edge still **required**       |
+
+### Diagram: signing key rotation overlap (K4, canonical)
+
+```mermaid
+flowchart LR
+  subgraph Sign["Issue new access JWTs"]
+    Cur["Current EC private PEM Jwt:SigningPemPath"]
+  end
+  subgraph Verify["JwtBearer + refresh misuse check"]
+    Both["IssuerSigningKeys = current + optional previous public material"]
+  end
+  subgraph Pub["GET /api/oauth2/jwks"]
+    Jwks["keys[] with distinct kid"]
+  end
+  Cur --> Both
+  Prev["Optional Jwt:PreviousSigningPemPath"] --> Both
+  Both --> Jwks
+```
+
+### Diagram: access token version (`atv`, J6)
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant O as OAuth2 token
+    participant API as API + JwtBearer
+    participant DB as User row
+
+    C->>O: password or refresh grant
+    O->>DB: read AccessTokenVersion
+    O-->>C: JWT with claim atv
+    C->>API: Bearer JWT
+    API->>DB: load user, compare atv vs AccessTokenVersion
+    alt mismatch
+        API-->>C: 401 Unauthorized
+    end
+```
 
 ---
 
@@ -198,3 +241,4 @@ flowchart TB
 ## Changelog
 
 - v1: Initial backlog for strong crypto, JWT, API, WebSockets (AI-oriented).
+- v2: Baseline table updated for JWKS, `atv` / `AccessTokenVersion`, refresh revocation, O4 rejection, security headers, Swagger gating (2026-04).

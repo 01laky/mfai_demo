@@ -13,7 +13,7 @@ For a **curl walkthrough** (register + token), see [api-oauth-stories-curl.md](.
 | **Access token**                    | A **JWT** returned by `POST /api/oauth2/token`. The browser stores it and sends `Authorization: Bearer <token>` on API calls.                                                                       |
 | **JWT `exp` claim**                 | Unix time (seconds) when the token **stops being valid** for the API. Identity middleware rejects expired JWTs with **401**.                                                                        |
 | **“Stay signed in” (`rememberMe`)** | **Not** a second session mechanism. It only tells the API to issue a JWT with a **longer** lifetime (different config key). The client still stores one bearer token the same way.                  |
-| **Refresh token**                   | Opaque string returned with the access token; stored **hashed** server-side (`OAuthRefreshTokens` table). **`refresh_token` grant** rotates it (single-use) and issues a new access JWT — see §2.1. |
+| **Refresh token**                   | Opaque string returned with the access token; stored **hashed** server-side (`OAuthRefreshTokens` table). **`refresh_token` grant** rotates it (single-use) and issues a new access JWT — see section 2.1. |
 
 So: **short session** = short JWT `exp` + refresh token with shorter absolute expiry; **persistent login** = longer access JWT when `rememberMe` is true **and** longer refresh token lifetime (`Jwt:RefreshTokenDaysRememberMe`).
 
@@ -29,7 +29,7 @@ flowchart TB
   Storage[Browser localStorage]
   ApiVal[API JWT validation]
   N401[401 Unauthorized]
-  CapNote["Capabilities / face roles from DB not in JWT — see §6"]
+  CapNote["Capabilities / face roles from DB not in JWT — see section 6"]
 
   RememberMe -->|selects access lifetime| AccessToken
   AccessToken --> Exp
@@ -60,6 +60,17 @@ flowchart TB
 - Supported grants in `OAuth2Service.GenerateTokenAsync`:
   - **`password`** — email/username + password; optional **`rememberMe`**; persists refresh token (hash only).
   - **`refresh_token`** — validates opaque token in DB, **single-use rotation**, returns new access + refresh pair; misusing a valid access JWT as refresh is rejected.
+
+#### OAuth HTTP error policy (tests: `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests`)
+
+| Condition | HTTP | Response body (`OAuth2ErrorResponse` or JSON) | Notes |
+| --------- | ---- | ----------------------------------------------- | ----- |
+| Wrong `client_id` / `client_secret` (middleware) | **401** | `error`: **`invalid_client`** | Same for missing secret on token requests. |
+| Wrong password / unknown user / bad refresh (service) | **401** | `error`: **`invalid_grant`** | Enumeration-hardening: do not distinguish unknown email vs bad password in the API contract. |
+| Malformed JSON / bad model (controller) | **400** | `invalid_request` or validation errors | |
+| O4: non-empty `Signature` / `SignatureAlgorithm` on token request | **400** | `invalid_request` | Body signing removed; use TLS + `client_secret`. |
+| Rate limit exceeded (ACL A21) | **429** | `{"error":"rate_limit",...}` | **`Retry-After`** header (seconds). Token and register use separate fixed-window policies per client IP. |
+| DB / infra failure on token path | **503** | `temporarily_unavailable` | |
 
 ### Diagram: token endpoint (password and refresh grants)
 
