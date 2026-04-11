@@ -4,11 +4,12 @@
 # Prerequisites: submodules checked out, Docker available for compose validation
 # is covered by separate workflow jobs; this script does not start containers.
 #
-# Usage: ./ci-local.sh
+# Usage: ./scripts/ci-local.sh (from repository root)
 
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 export SKIP_CYPRESS="${SKIP_CYPRESS:-1}"
 
@@ -18,15 +19,15 @@ echo "  SKIP_CYPRESS=$SKIP_CYPRESS"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-chmod +x lint-all.sh build-all.sh test-all.sh 2>/dev/null || true
+chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" 2>/dev/null || true
 for s in be_demo fe_demo admin_demo ai_demo; do
   [ -f "$s/lint.sh" ] && chmod +x "$s/lint.sh" || true
 done
 chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
 
-./lint-all.sh
-./build-all.sh
-./test-all.sh
+"$SCRIPTS_DIR/lint-all.sh"
+"$SCRIPTS_DIR/build-all.sh"
+"$SCRIPTS_DIR/test-all.sh"
 
 echo ""
 echo "✅ ci-local completed successfully"

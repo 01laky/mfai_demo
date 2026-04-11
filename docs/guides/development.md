@@ -122,19 +122,19 @@ flowchart TB
 
 On push/PR to `main` / `master`, with **submodules recursive**:
 
-| Job                   | What runs                                                                                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **be_demo**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                  |
-| **fe_demo**           | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`                                                   |
-| **admin_demo**        | Same pattern with `admin_demo/.nvmrc`                                                                                                                |
-| **ai_demo**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                     |
-| **infra_db_demo**     | `docker compose -f db_demo/docker-compose.yml config`                                                                                                |
-| **infra_redis_demo**  | `docker compose -f redis_demo/docker-compose.yml config`                                                                                             |
-| **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config`                                                                                        |
-| **docs_mermaid**      | Node from `fe_demo/.nvmrc`, runs **`./check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
-| **monorepo_scripts**  | Runs **`./ci-local.sh`**: `lint-all.sh` → `build-all.sh` → `test-all.sh` (with `SKIP_CYPRESS=1`)                                                     |
+| Job                   | What runs                                                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **be_demo**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                          |
+| **fe_demo**           | Node from `fe_demo/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`                                                           |
+| **admin_demo**        | Same pattern with `admin_demo/.nvmrc`                                                                                                                        |
+| **ai_demo**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                             |
+| **infra_db_demo**     | `docker compose -f db_demo/docker-compose.yml config`                                                                                                        |
+| **infra_redis_demo**  | `docker compose -f redis_demo/docker-compose.yml config`                                                                                                     |
+| **infra_logger_demo** | `docker compose -f logger_demo/docker-compose.dev.yml config`                                                                                                |
+| **docs_mermaid**      | Node from `fe_demo/.nvmrc`, runs **`./scripts/check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
+| **monorepo_scripts**  | Runs **`./scripts/ci-local.sh`**: `scripts/lint-all.sh` → `scripts/build-all.sh` → `scripts/test-all.sh` (with `SKIP_CYPRESS=1`)                             |
 
-The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `lint-all.sh` or `verify-ci.sh` drifts from CI.
+The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI.
 
 ### Diagram: root CI jobs (parallel)
 
@@ -148,7 +148,7 @@ flowchart TB
   RDJ[infra redis_demo config]
   LGJ[infra logger_demo config]
   DOCSJ[docs_mermaid Mermaid CLI]
-  MONO[monorepo_scripts ci-local.sh chain]
+  MONO[monorepo_scripts scripts/ci-local.sh]
   PARITY[Parity lint build test SKIP_CYPRESS]
   BEJ --- MONO
   FEJ --- MONO
@@ -160,19 +160,21 @@ flowchart TB
 
 Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipeline so every merge is validated against the checked-in submodule tree.
 
-## Root shell scripts (monorepo)
+## Monorepo scripts (`scripts/`)
 
-Run from repository root (submodules checked out). Make executable if needed: `chmod +x *.sh check-mermaid-docs.sh **/lint.sh ai_demo/verify-ci.sh`.
+Run from repository root (submodules checked out). Make executable if needed: `chmod +x scripts/*.sh **/lint.sh ai_demo/verify-ci.sh`.
 
-| Script                      | Purpose                                                                                                                                                                                                                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override.                                                                                                                 |
-| **`lint-all.sh`**           | Calls `fe_demo`, `be_demo`, `admin_demo`, `ai_demo` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff).                                                                                        |
-| **`build-all.sh`**          | `be_demo`: `dotnet build -c Release`; `fe_demo` / `admin_demo`: `yarn build`; `ai_demo`: `./verify-ci.sh`.                                                                                                              |
-| **`test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`ai_demo/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`.                                                                                                   |
-| **`status-all.sh`**         | Docker / HTTP status of dev containers (does not run builds).                                                                                                                                                           |
-| **`format-all-doc.sh`**     | Prettier over all `*.md` / `*.mdx` (respects **`.prettierignore`**). Use **`--check`** for a no-write verify. Does **not** validate Mermaid syntax inside fences.                                                       |
-| **`check-mermaid-docs.sh`** | Python walker + **`npx @mermaid-js/mermaid-cli`** (`mmdc`): each **mermaid** fence must render. Slower (Chromium); run before large doc merges. **`docs_mermaid`** CI job runs this. Not included in **`ci-local.sh`**. |
+| Script                              | Purpose                                                                                                                                                                                                                         |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override.                                                                                                                         |
+| **`scripts/lint-all.sh`**           | Calls `fe_demo`, `be_demo`, `admin_demo`, `ai_demo` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff).                                                                                                |
+| **`scripts/build-all.sh`**          | `be_demo`: `dotnet build -c Release`; `fe_demo` / `admin_demo`: `yarn build`; `ai_demo`: `./verify-ci.sh`.                                                                                                                      |
+| **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`ai_demo/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`.                                                                                                           |
+| **`scripts/status-all.sh`**         | Docker / HTTP status of dev containers (does not run builds).                                                                                                                                                                   |
+| **`scripts/format-all-doc.sh`**     | Prettier over all `*.md` / `*.mdx` (respects **`.prettierignore`**). Use **`--check`** for a no-write verify. Does **not** validate Mermaid syntax inside fences.                                                               |
+| **`scripts/check-mermaid-docs.sh`** | Python walker + **`npx @mermaid-js/mermaid-cli`** (`mmdc`): each **mermaid** fence must render. Slower (Chromium); run before large doc merges. **`docs_mermaid`** CI job runs this. Not included in **`scripts/ci-local.sh`**. |
+
+**Dev stack:** `scripts/start-all-dev.sh`, `scripts/stop-all-dev.sh`, `scripts/clear-all-dev.sh`, `scripts/rebuild-all-dev.sh`, `scripts/restart-all-dev.sh`, `scripts/start-missing-dev.sh`, `scripts/menu.sh`.
 
 **`ai_demo/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **ai_demo** GitHub Actions job (no PyTorch).
 
@@ -180,10 +182,10 @@ Run from repository root (submodules checked out). Make executable if needed: `c
 
 ```mermaid
 flowchart TB
-  CLI[ci-local.sh]
-  L[lint-all.sh]
-  B[build-all.sh]
-  T[test-all.sh]
+  CLI[scripts/ci-local.sh]
+  L[scripts/lint-all.sh]
+  B[scripts/build-all.sh]
+  T[scripts/test-all.sh]
   CY{SKIP_CYPRESS}
   CLI --> L --> B --> T
   T -->|default 1| SkipCy[Skip Cypress]

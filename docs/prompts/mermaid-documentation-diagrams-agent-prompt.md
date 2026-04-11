@@ -401,15 +401,15 @@
 
 - **Placement:** After CI jobs table.
 - **Type:** `flowchart TB`.
-- **Parallel jobs:** be_demo, fe_demo, admin_demo, ai_demo, infra\* as parallel nodes; `monorepo_scripts` runs `ci-local.sh` chain—show relationship “parity check”.
+- **Parallel jobs:** be_demo, fe_demo, admin_demo, ai_demo, infra\* as parallel nodes; `monorepo_scripts` runs `scripts/ci-local.sh` chain—show relationship “parity check”.
 
 ---
 
 ### D-DEV-04 — `docs/guides/development.md`
 
-- **Placement:** After root shell scripts table.
+- **Placement:** After monorepo `scripts/` table.
 - **Type:** `flowchart TB`.
-- **`ci-local` → lint-all → build-all → test-all`** with branch `SKIP_CYPRESS`.
+- **`scripts/ci-local.sh` → lint-all → build-all → test-all** with branch `SKIP_CYPRESS`.
 
 ---
 
@@ -455,7 +455,7 @@
 
 ### D-PROPOSAL-01 — `docs/guides/proposal-mfai-demo-state.md`
 
-- **Placement:** After root scripts / `start-all-dev` description.
+- **Placement:** After monorepo `scripts/` / `start-all-dev` description.
 - **Type:** `flowchart TB`.
 - **Ordered chain:** DB → backend+Seq → FE → AI → logger → admin + side note auto-restart monitor.
 

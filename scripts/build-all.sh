@@ -8,12 +8,13 @@
 # - admin_demo: yarn build (vite only, no tsc - see admin package.json)
 # - ai_demo: pip install + optional model download (Python, no traditional "build")
 #
-# Usage: ./build-all.sh
+# Usage: ./scripts/build-all.sh (from repository root)
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 FAILED=0
 

@@ -5,8 +5,9 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 echo "🔄 Restarting all development environments..."
 echo ""

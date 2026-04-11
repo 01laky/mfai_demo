@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="2" />
+  <title>Spúšťa sa FE dev server…</title>
+  <!-- mfai-fe-docker-wait-page -->
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 36rem;
+      margin: 15vh auto;
+      padding: 0 1.25rem;
+      line-height: 1.5;
+    }
+    code { font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  <h1>Spúšťa sa frontend</h1>
+  <p>
+    V kontajneri ešte beží <code>yarn install</code> alebo sa štartuje Vite.
+    Táto stránka sa <strong> sama obnoví každé 2 s</strong> — nemusíš nič klikať,
+    len nechaj otvorený tab.
+  </p>
+  <p>
+    Ak to trvá dlho, pozri logy: <code>docker logs -f fe-demo-dev</code>
+  </p>
+</body>
+</html>

@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # menu.sh - Norton Commander style interactive menu for dev scripts
-# Usage: ./menu.sh
+# Usage: ./scripts/menu.sh (from repository root)
 # Controls: ↑/↓ navigate  Enter go in / run  Backspace/←/Esc go back
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 if [ ! -t 0 ] || [ ! -t 1 ]; then
   echo "This script requires an interactive terminal."
@@ -185,7 +186,7 @@ main() {
 
     if [ "$level" = "ROOT" ]; then
       title="Dev Scripts"
-      items+=("FOLDER|All root scripts|.")
+      items+=("FOLDER|Monorepo scripts (scripts/)|.")
       local idx=0
       for c in $CONTAINER_ORDER; do
         if [ -d "$c" ]; then
@@ -195,10 +196,10 @@ main() {
       done
       items+=("EXIT|")
     elif [ "$level" = "." ]; then
-      title="All Root Scripts"
+      title="scripts/"
       items+=("BACK|")
       for s in $ROOT_SCRIPTS; do
-        [ -f "$s" ] && items+=("SCRIPT|.|$s")
+        [ -f "$SCRIPTS_DIR/$s" ] && items+=("SCRIPT|.|$s")
       done
     else
       local idx=$level

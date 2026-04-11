@@ -5,15 +5,16 @@
 #   reformatted as Markdown prose, so Mermaid syntax stays intact.
 #
 # Usage:
-#   ./format-all-doc.sh           # write fixes in place
-#   ./format-all-doc.sh --check   # exit 1 if any file would change (CI)
+#   ./scripts/format-all-doc.sh           # write fixes in place
+#   ./scripts/format-all-doc.sh --check   # exit 1 if any file would change (CI)
 #
 # Requires: Node.js + npx (downloads Prettier on first run).
 # Env: PRETTIER_VERSION (default 3.8.0, aligned with fe_demo/admin_demo)
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
 cd "$ROOT"
 
 PRETTIER_VERSION="${PRETTIER_VERSION:-3.8.0}"

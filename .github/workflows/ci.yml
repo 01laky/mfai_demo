@@ -151,8 +151,8 @@ jobs:
 
       - name: Validate fenced Mermaid blocks
         run: |
-          chmod +x check-mermaid-docs.sh
-          ./check-mermaid-docs.sh
+          chmod +x scripts/check-mermaid-docs.sh
+          ./scripts/check-mermaid-docs.sh
 
   monorepo_scripts:
     name: monorepo (ci-local.sh)
@@ -185,8 +185,8 @@ jobs:
 
       - name: Make scripts executable
         run: |
-          chmod +x ci-local.sh lint-all.sh build-all.sh test-all.sh
+          chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh
           chmod +x be_demo/lint.sh fe_demo/lint.sh admin_demo/lint.sh ai_demo/lint.sh ai_demo/verify-ci.sh
 
       - name: Run ci-local.sh (lint-all → build-all → test-all)
-        run: ./ci-local.sh
+        run: ./scripts/ci-local.sh

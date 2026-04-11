@@ -15,15 +15,16 @@
 # to ensure a completely clean build.
 #
 # NOTE: This script only builds images, it does NOT start containers.
-# Use ./start-all-dev.sh to start containers after rebuilding images.
+# Use ./scripts/start-all-dev.sh to start containers after rebuilding images.
 #
-# Usage: ./rebuild-all-dev.sh
+# Usage: ./scripts/rebuild-all-dev.sh (from repository root)
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 echo "🔨 Rebuilding all development Docker images (clean builds)..."
 echo ""
@@ -115,5 +116,5 @@ echo ""
 echo "💡 Note: db_demo and redis_demo use official images — no rebuild."
 echo ""
 echo "💡 Note: Images were built but containers were NOT started."
-echo "   Use ./start-all-dev.sh to start containers with the new images."
+echo "   Use ./scripts/start-all-dev.sh to start containers with the new images."
 echo "═══════════════════════════════════════════════════════════"

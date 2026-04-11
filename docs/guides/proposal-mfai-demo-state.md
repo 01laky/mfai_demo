@@ -12,19 +12,19 @@ A consolidated inventory of implemented areas. Use it as a baseline when decidin
 - Main `docker-compose.dev.yml` for backend, frontend, admin, Seq, AI demo; DB and logger have their own compose files.
 - Bash scripts for start, stop, status, clear, rebuild, test, lint.
 
-### Root scripts
+### Monorepo scripts (`scripts/`)
 
-| Script                 | Purpose                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **start-all-dev.sh**   | Start: DB → backend+Seq → frontend → AI demo → logger → admin; live status every 5s; auto-restart stopped containers.       |
-| **stop-all-dev.sh**    | Stop all services in reverse order.                                                                                         |
-| **status-all.sh**      | One-shot status: containers, HTTP/gRPC reachability, ports, links.                                                          |
-| **clear-all-dev.sh**   | Remove containers and volumes (**data loss**).                                                                              |
-| **restart-all-dev.sh** | Stop, rebuild images, start.                                                                                                |
-| **rebuild-all-dev.sh** | Rebuild all Docker images (no start).                                                                                       |
-| **test-all.sh**        | `be_demo` xUnit, `fe_demo` Vitest + Cypress e2e, `admin_demo` Vitest; summary pass/fail.                                    |
-| **lint-all.sh**        | Lint in `fe_demo`, `be_demo`, `admin_demo`, `ai_demo`.                                                                      |
-| **menu.sh**            | TUI menu (Norton Commander style): arrows, Enter = drill/run, Backspace/←/Esc = back; root scripts + per-container scripts. |
+| Script                         | Purpose                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| **scripts/start-all-dev.sh**   | Start: DB → backend+Seq → frontend → AI demo → logger → admin; live status every 5s; auto-restart stopped containers.           |
+| **scripts/stop-all-dev.sh**    | Stop all services in reverse order.                                                                                             |
+| **scripts/status-all.sh**      | One-shot status: containers, HTTP/gRPC reachability, ports, links.                                                              |
+| **scripts/clear-all-dev.sh**   | Remove containers and volumes (**data loss**).                                                                                  |
+| **scripts/restart-all-dev.sh** | Stop, rebuild images, start.                                                                                                    |
+| **scripts/rebuild-all-dev.sh** | Rebuild all Docker images (no start).                                                                                           |
+| **scripts/test-all.sh**        | `be_demo` xUnit, `fe_demo` Vitest + Cypress e2e, `admin_demo` Vitest; summary pass/fail.                                        |
+| **scripts/lint-all.sh**        | Lint in `fe_demo`, `be_demo`, `admin_demo`, `ai_demo`.                                                                          |
+| **scripts/menu.sh**            | TUI menu (Norton Commander style): arrows, Enter = drill/run, Backspace/←/Esc = back; monorepo scripts + per-container scripts. |
 
 ### Diagram: start-all-dev order
 
@@ -332,7 +332,7 @@ sequenceDiagram
 | **AI**              | `ai_demo` gRPC Health + Generate (DistilGPT-2); backend AiGrpcService; ChatHub SendToAi + history; error handling and keepalive.                                        |
 | **Database**        | PostgreSQL 16, EF Core migrations, Identity + FriendRequest, Friendship, Message, Notification, Face, Page, …                                                           |
 | **Multi-tenant**    | Face-based routing (backend middleware + FE face path); public/private faces.                                                                                           |
-| **DevOps**          | Docker Compose, start/stop/status/clear/rebuild/test/lint scripts, **menu.sh** (NC-style TUI).                                                                          |
+| **DevOps**          | Docker Compose, `scripts/*` start/stop/status/clear/rebuild/test/lint, **`scripts/menu.sh`** (NC-style TUI).                                                            |
 | **Logging**         | Serilog → Seq (backend); Dozzle (containers).                                                                                                                           |
 
 ---

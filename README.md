@@ -32,7 +32,7 @@ db_demo/       # PostgreSQL compose
 redis_demo/    # Redis (job queue)
 ai_demo/       # gRPC health / AI
 logger_demo/   # Dozzle
-*.sh           # start-all-dev, ci-local, test-all, …
+scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
 ```
 
 ## Quick start
@@ -41,7 +41,7 @@ logger_demo/   # Dozzle
 
 ```bash
 git submodule update --init --recursive
-./start-all-dev.sh
+./scripts/start-all-dev.sh
 ```
 
 **Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`. Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
@@ -50,7 +50,7 @@ git submodule update --init --recursive
 
 ```bash
 export SKIP_CYPRESS=1   # optional; without it FE may run e2e
-./ci-local.sh           # lint → build → test (same idea as monorepo_scripts in CI)
+./scripts/ci-local.sh   # lint → build → test (same idea as monorepo_scripts in CI)
 ```
 
 ## Other root files (archive / reference)

@@ -57,14 +57,14 @@ flowchart TB
 
 ### 🚀 Management Scripts
 
-- ✅ **Root-level scripts**:
-  - `start-all-dev.sh` - Start all services with live status
-  - `stop-all-dev.sh` - Stop all services
-  - `restart-all-dev.sh` - Restart all services with rebuild
-  - `clear-all-dev.sh` - Clear all containers and volumes
-  - `status-all.sh` - Show comprehensive status
-  - `rebuild-all-dev.sh` - Rebuild all Docker images
-  - `test-all.sh` - Run all tests
+- ✅ **Monorepo `scripts/`** (run from repository root):
+  - `scripts/start-all-dev.sh` - Start all services with live status
+  - `scripts/stop-all-dev.sh` - Stop all services
+  - `scripts/restart-all-dev.sh` - Restart all services with rebuild
+  - `scripts/clear-all-dev.sh` - Clear all containers and volumes
+  - `scripts/status-all.sh` - Show comprehensive status
+  - `scripts/rebuild-all-dev.sh` - Rebuild all Docker images
+  - `scripts/test-all.sh` - Run all tests
 - ✅ **Service-specific scripts** - Each service has start-dev.sh, stop-dev.sh, clear-dev.sh, rebuild-dev.sh
 
 ### 🐳 Docker Setup
@@ -80,7 +80,7 @@ flowchart TB
 - ✅ **Backend tests** - ASP.NET Core xUnit tests with test database
 - ✅ **Frontend tests** - Vitest tests in fe_demo
 - ✅ **Admin tests** - Vitest tests in admin_demo
-- ✅ **Test orchestration** - test-all.sh script for running all tests
+- ✅ **Test orchestration** - `scripts/test-all.sh` for running all tests
 
 ### 📦 Services & Modules
 

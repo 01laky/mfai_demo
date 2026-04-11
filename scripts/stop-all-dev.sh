@@ -2,12 +2,13 @@
 
 # Script to stop all development environments
 # Stops: logger, apps, redis_demo (Redis), db_demo (PostgreSQL), root compose
-# Usage: ./stop-all-dev.sh
+# Usage: ./scripts/stop-all-dev.sh (from repository root)
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 echo "🛑 Stopping all development environments..."
 echo ""
@@ -50,8 +51,8 @@ if [ -f "fe_demo/stop-dev.sh" ]; then
     cd ..
 else
     echo "  ⚠️  fe_demo/stop-dev.sh not found, trying docker-compose directly..."
-    docker-compose -f docker-compose.dev.yml stop fe-demo-dev 2>/dev/null || true
-    docker-compose -f docker-compose.dev.yml rm -f fe-demo-dev 2>/dev/null || true
+    docker-compose -f docker-compose.dev.yml stop fe-demo-dev fe-demo-proxy 2>/dev/null || true
+    docker-compose -f docker-compose.dev.yml rm -f fe-demo-dev fe-demo-proxy 2>/dev/null || true
 fi
 
 # Stop admin_demo
@@ -99,7 +100,7 @@ if [ -f "redis_demo/stop-redis.sh" ]; then
 else
     echo "  ⚠️  redis_demo/stop-redis.sh not found, trying docker-compose directly..."
     cd redis_demo 2>/dev/null && docker-compose down 2>/dev/null || true
-    cd "$SCRIPT_DIR" 2>/dev/null || true
+    cd "$ROOT" 2>/dev/null || true
 fi
 
 # Stop database (db_demo)
@@ -140,7 +141,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|admin-demo-dev|ai-demo-dev|postgres-dev|redis-dev|seq-dev|dozzle-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|redis-dev|seq-dev|dozzle-dev" || true)
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "✅ All containers are stopped"

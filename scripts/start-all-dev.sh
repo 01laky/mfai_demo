@@ -14,16 +14,42 @@
 # The script handles:
 # - Dependency ordering (database before backend, backend before frontend/admin)
 # - Port conflict resolution (removes old containers using same ports)
-# - After starting all services, displays a live status screen that refreshes every 5 seconds
-# 
-# Usage: ./start-all-dev.sh
-# Press Ctrl+C to exit the status screen
+# - docker compose runs synchronously (no background &) so builds/pulls finish before the status screen
+# - Live status screen until every expected container is running (not “subset == all existing”)
+#
+# Usage: ./scripts/start-all-dev.sh (from repository root)
+# Press Ctrl+C to exit the status screen early
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
+
+count_running_expected() {
+  local c=0
+  local n
+  for n in "${EXPECTED_CONTAINERS[@]}"; do
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$n"; then
+      c=$((c + 1))
+    fi
+  done
+  echo "$c"
+}
+
+count_stopped_expected() {
+  local c=0
+  local n
+  for n in "${EXPECTED_CONTAINERS[@]}"; do
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$n"; then
+      if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$n"; then
+        c=$((c + 1))
+      fi
+    fi
+  done
+  echo "$c"
+}
 
 echo "🚀 Starting all development environments..."
 echo ""
@@ -53,8 +79,54 @@ if [ -f "redis_demo/start-redis.sh" ]; then
     ./start-redis.sh > /dev/null 2>&1 &
     cd ..
     echo "    ✅ Redis startup launched"
+    _expect_redis=1
 else
     echo "  ⚠️  redis_demo/start-redis.sh not found, skipping Redis"
+    _expect_redis=0
+fi
+
+# Full stack checklist for the status screen exit condition (redis only if we start redis_demo)
+if [ "$_expect_redis" -eq 1 ]; then
+    EXPECTED_CONTAINERS=(
+        postgres-dev pgadmin-dev redis-dev be-demo-dev seq-dev
+        fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev dozzle-dev
+    )
+else
+    EXPECTED_CONTAINERS=(
+        postgres-dev pgadmin-dev be-demo-dev seq-dev
+        fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev dozzle-dev
+    )
+fi
+EXPECTED_TOTAL=${#EXPECTED_CONTAINERS[@]}
+
+echo "    Waiting for PostgreSQL (localhost:54320)..."
+_pg_ok=0
+for _i in {1..90}; do
+    if nc -z localhost 54320 2>/dev/null; then
+        _pg_ok=1
+        echo "    ✅ PostgreSQL is accepting connections"
+        break
+    fi
+    sleep 1
+done
+if [ "$_pg_ok" -eq 0 ]; then
+    echo "    ⚠️  PostgreSQL not ready after 90s — backend may retry until DB is up"
+fi
+
+_redis_ok=0
+if [ "$_expect_redis" -eq 1 ]; then
+    echo "    Waiting for redis-dev container..."
+    for _i in {1..90}; do
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'redis-dev'; then
+            _redis_ok=1
+            echo "    ✅ redis-dev is running"
+            break
+        fi
+        sleep 1
+    done
+    if [ "$_redis_ok" -eq 0 ]; then
+        echo "    ⚠️  redis-dev not found after 90s — ensure redis_demo is started"
+    fi
 fi
 
 # ============================================================================
@@ -67,11 +139,11 @@ docker rm -f be-demo-seq be-demo-api be-demo-dev seq seq-dev 2>/dev/null || true
 lsof -ti:8000,8001 | xargs kill -9 2>/dev/null || true
 sleep 1
 
-# Use root docker-compose to start backend and seq-dev together
+# Use root docker-compose to start backend and seq-dev together (synchronous — waits for pulls/build/health)
 # This ensures we use seq-dev from root docker-compose, not be-demo-seq from be_demo/docker-compose.dev.yml
-echo "    Starting backend and seq with root docker-compose..."
-docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq > /dev/null 2>&1 &
-echo "    ✅ Backend startup launched"
+echo "    Starting backend and seq with root docker-compose (this may take several minutes on first run)..."
+docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq
+echo "    ✅ Backend + Seq containers are up (compose finished)"
 
 # Redis (redis_demo) runs on its own bridge; BE uses hostname redis-dev on mfai_demo_dev-network.
 # Compose štartuje na pozadí — opakovane čakáme na sieť + redis-dev a skúšame connect, kým to nevyjde.
@@ -104,57 +176,34 @@ if [ "$_redis_net_ok" -eq 0 ]; then
 fi
 
 # ============================================================================
-# START FRONTEND (React + Vite)
+# START FE, PROXY, ADMIN, AI (root compose — single wait; depends_on orders services)
 # ============================================================================
-echo "📦 Starting frontend (fe_demo)..."
-docker-compose -f docker-compose.dev.yml up -d --no-deps fe-demo-dev > /dev/null 2>&1 &
-echo "    ✅ Frontend startup launched"
-
-# ============================================================================
-# START AI DEMO (Python gRPC Server)
-# ============================================================================
-echo "📦 Starting AI Demo (ai_demo)..."
-if [ -f "ai_demo/start-dev.sh" ]; then
-    cd ai_demo
-    ./start-dev.sh > /dev/null 2>&1 &
-    cd ..
-    echo "    ✅ AI Demo startup launched"
-else
-    echo "  ⚠️  ai_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f docker-compose.dev.yml up -d ai-demo-dev > /dev/null 2>&1 &
-fi
+echo "📦 Starting frontend, proxy, admin, AI (root docker-compose)..."
+docker stop be-demo-api be-demo-seq 2>/dev/null || true
+docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
+# fe-demo-proxy after fe-demo-dev; fe/admin wait on healthy be-demo-dev; ai-demo-dev is independent
+docker-compose -f docker-compose.dev.yml up -d fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev
+echo "    ✅ Frontend, proxy, admin, AI compose step finished"
 
 # ============================================================================
 # START LOGGER DEMO (Dozzle)
 # ============================================================================
 echo "📦 Starting Logger Demo (logger_demo)..."
 if ! docker network ls | grep -q "mfai_demo_dev-network"; then
-    docker-compose -f docker-compose.dev.yml up -d --no-deps seq > /dev/null 2>&1 || true
+    docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
     sleep 1
 fi
 
 if [ -f "logger_demo/start-dev.sh" ]; then
     cd logger_demo
-    ./start-dev.sh > /dev/null 2>&1 &
+    ./start-dev.sh > /dev/null 2>&1
     cd ..
-    echo "    ✅ Logger Demo startup launched"
+    echo "    ✅ Logger Demo startup finished (start-dev.sh)"
 else
     echo "  ⚠️  logger_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev > /dev/null 2>&1 &
+    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev
 fi
-
-# ============================================================================
-# START ADMIN (React + Vite)
-# ============================================================================
-echo "📦 Starting admin (admin_demo)..."
-docker stop be-demo-api be-demo-seq 2>/dev/null || true
-docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
-if ! docker network ls | grep -q "mfai_demo_dev-network"; then
-    docker-compose -f docker-compose.dev.yml up -d --no-deps seq > /dev/null 2>&1 || true
-    sleep 1
-fi
-docker-compose -f docker-compose.dev.yml up -d admin-demo-dev > /dev/null 2>&1 &
-echo "    ✅ Admin startup launched"
+echo "    ✅ Logger Demo (dozzle-dev) up"
 
 echo ""
 echo "✅ All services startup launched!"
@@ -173,7 +222,7 @@ trap 'echo ""; echo "👋 Status screen stopped. Services continue running."; ex
 # This runs until the user presses Ctrl+C
 
 while true; do
-    clear
+    clear 2>/dev/null || true
     echo "═══════════════════════════════════════════════════════════"
     echo "  Live Container Status (refreshing every 5 seconds)"
     echo "  Press Ctrl+C to exit"
@@ -188,7 +237,7 @@ while true; do
     # CHECK AND RESTART STOPPED CONTAINERS
     # ========================================================================
     # Check for stopped containers and attempt to restart them automatically
-    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
     
     if [ -n "$STOPPED" ]; then
         echo ""
@@ -303,11 +352,18 @@ while true; do
         echo "  Container: ✓ Running (fe-demo-dev)"
         echo "  Status: $STATUS"
         
-        HTTP_CODE=$(curl -sk -m 8 -o /dev/null -w "%{http_code}" https://localhost:9081/ 2>/dev/null || echo "000")
-        if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
-            echo "  App: ✓ Accessible (https://localhost:9081 — Docker maps host 9081 → Vite 8081)"
+        FE_PAGE=$(curl -sk -m 8 https://localhost:9081/ 2>/dev/null || true)
+        if echo "$FE_PAGE" | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+            echo "  App: ⏳ Čaká sa na Vite — https://localhost:9081 sa sám obnoví (nginx wait page)"
+        elif [ -n "$FE_PAGE" ]; then
+            echo "  App: ✓ Accessible (https://localhost:9081 — cez fe-demo-proxy → Vite)"
         else
-            echo "  App: ⚠ Not accessible (https://localhost:9081)"
+            echo "  App: ⚠ Not accessible (https://localhost:9081 — je spustený fe-demo-proxy?)"
+        fi
+        if docker ps --format '{{.Names}}' | grep -q "^fe-demo-proxy$"; then
+            echo "  Proxy: ✓ Running (fe-demo-proxy)"
+        else
+            echo "  Proxy: ○ fe-demo-proxy not running (port 9081 nebude fungovať)"
         fi
     elif docker ps -a --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=fe-demo-dev | head -1)
@@ -423,11 +479,13 @@ while true; do
     echo "  Summary"
     echo "═══════════════════════════════════════════════════════════"
     
-    RUNNING=$(docker ps --format '{{.Names}}' | grep -E 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | wc -l | xargs)
-    STOPPED=$(docker ps -a --format '{{.Names}}' | grep -E 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' | grep -v "$(docker ps --format '{{.Names}}')" | wc -l | xargs)
-    NOT_FOUND=$((8 - RUNNING - STOPPED))
+    RUNNING_EXPECTED=$(count_running_expected)
+    STOPPED_EXPECTED=$(count_stopped_expected)
     
-    echo "  Containers: $RUNNING running, $STOPPED stopped"
+    echo "  Expected stack: $RUNNING_EXPECTED / $EXPECTED_TOTAL containers running"
+    if [ "$STOPPED_EXPECTED" -gt 0 ]; then
+        echo "  ⚠️  $STOPPED_EXPECTED expected container(s) exist but are not running (see sections above)"
+    fi
     echo ""
     
     echo "  Quick Links:"
@@ -442,13 +500,12 @@ while true; do
     
     echo "═══════════════════════════════════════════════════════════"
     
-    # Stop refreshing when all existing project containers are running (none stopped)
-    # We check: at least 1 container running AND 0 containers stopped
-    ALL_PROJECT=$(docker ps -a --format '{{.Names}}' | grep -cE 'postgres-dev|pgadmin-dev|be-demo-dev|be-demo-api|fe-demo-dev|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev' || echo "0")
-    if [ "$RUNNING" -gt 0 ] && [ "$RUNNING" -eq "$ALL_PROJECT" ]; then
+    # Exit only when every expected container is up and none of them are stopped/exited
+    if [ "$RUNNING_EXPECTED" -eq "$EXPECTED_TOTAL" ] && [ "$STOPPED_EXPECTED" -eq 0 ]; then
         echo ""
-        echo "🎉 All $RUNNING containers are running! Status screen stopped."
-        echo "   Services continue running in the background."
+        echo "🎉 Full stack: all $EXPECTED_TOTAL expected containers are running."
+        echo "   (Apps may still be installing deps — watch FE/Admin URLs if health is starting.)"
+        echo "   Services continue in the background. Status screen stopped."
         echo ""
         exit 0
     fi

@@ -18,16 +18,17 @@
 # - For Cypress e2e tests: automatically starts DB, BE, FE if not running
 # 
 # Environment:
-#   SKIP_CYPRESS=1  Skip Cypress e2e (default in ci-local.sh / monorepo CI job)
+#   SKIP_CYPRESS=1  Skip Cypress e2e (default in scripts/ci-local.sh / monorepo CI job)
 #
-# Usage: ./test-all.sh
+# Usage: ./scripts/test-all.sh (from repository root)
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Get the directory where this script is located
 # This allows the script to be run from any directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 echo "🧪 Running tests in all subrepositories..."
 echo ""

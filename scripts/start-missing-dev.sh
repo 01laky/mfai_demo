@@ -1,11 +1,12 @@
 #!/bin/bash
 # Start only the dev containers that are not running.
 # Use when status shows "Not found" for postgres, backend, admin, seq, pgadmin.
-# Usage: ./start-missing-dev.sh
+# Usage: ./scripts/start-missing-dev.sh (from repository root)
 
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 echo "🔍 Checking which containers are missing..."
 MISSING=()
@@ -21,7 +22,7 @@ if [ ${#MISSING[@]} -eq 0 ]; then
   echo "✅ All required containers already exist. Starting any stopped ones..."
   docker start postgres-dev redis-dev pgadmin-dev 2>/dev/null || true
   docker start seq-dev be-demo-dev admin-demo-dev 2>/dev/null || true
-  echo "Done. Run ./status-all.sh to check."
+  echo "Done. Run ./scripts/status-all.sh to check."
   exit 0
 fi
 
@@ -96,4 +97,4 @@ if [[ " ${MISSING[*]} " =~ " admin " ]]; then
   echo ""
 fi
 
-echo "✅ Missing services started. Run ./status-all.sh to verify."
+echo "✅ Missing services started. Run ./scripts/status-all.sh to verify."

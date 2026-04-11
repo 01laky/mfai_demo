@@ -303,7 +303,7 @@ curl -sS "$BASE/api/stories?faceId=$FACE_ID" -H "Authorization: Bearer $TOK" | j
 From `mfai_demo` root:
 
 ```bash
-./lint-all.sh
+./scripts/lint-all.sh
 ```
 
 Backend tests (test project only):

@@ -18,7 +18,7 @@ cd redis_demo
 ./start-redis.sh
 ```
 
-Or from the root via `./start-all-dev.sh` (Redis starts after DB).
+Or from the root via `./scripts/start-all-dev.sh` (Redis starts after DB).
 
 ## Backend connection
 

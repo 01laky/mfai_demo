@@ -19,14 +19,15 @@
 # 
 # It also performs health checks by attempting to connect to each service.
 # 
-# Usage: ./status-all.sh
+# Usage: ./scripts/status-all.sh (from repository root)
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Get the directory where this script is located
 # This allows the script to be run from any directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 # ANSI color codes for terminal output
 # These colors are used to make the output more readable and visually distinct
@@ -100,6 +101,17 @@ check_service() {
     else
         return 1
     fi
+}
+
+# Docker FE on 9081 goes through fe-demo-proxy: wait page contains this marker until Vite is up.
+fe_docker_vite_ready() {
+    local body
+    body=$(curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null) || return 1
+    if echo "$body" | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+        return 1
+    fi
+    [[ -n "$body" ]] || return 1
+    return 0
 }
 
 # Function to get container status and start time
@@ -319,10 +331,12 @@ if check_container_exists "$FE_CONTAINER"; then
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
         
-        # Check if frontend is accessible
-        if check_service "https://localhost:9081/" "Frontend"; then
-            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 — Docker)"
+        # Check if frontend is accessible (not the nginx auto-refresh wait page)
+        if fe_docker_vite_ready; then
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 — Docker, Vite)"
             FE_ACCESSIBLE=true
+        elif curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+            echo -e "  App: ${YELLOW}⏳ Čaká sa na Vite${NC} (https://localhost:9081 — obnovuje sa samo)"
         else
             echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:9081)"
         fi

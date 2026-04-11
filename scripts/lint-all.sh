@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Lint all projects: fe_demo, be_demo, admin_demo, ai_demo
-# Usage: ./lint-all.sh
+# Usage: ./scripts/lint-all.sh (from repository root)
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+cd "$ROOT"
 
 FAILED=0
 
