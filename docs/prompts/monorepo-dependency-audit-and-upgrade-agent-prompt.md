@@ -4,15 +4,21 @@
 
 **Snapshot (human + tooling):** 2026-04-10. Re-run the commands in section 0 before executing upgrades — registry “latest” changes daily.
 
+### Monorepo layout (`git` submodules)
+
+`fe_demo`, `admin_demo`, `be_demo`, `ai_demo`, `db_demo`, `redis_demo`, and `logger_demo` are **git submodules** (see root `.gitmodules`). **Commits that bump dependencies** usually belong in the **submodule’s remote**; the parent `_mfai_demo` repo may only update the **submodule pointer** after those merges. Open or link PRs per submodule so CI runs where the manifest and lockfile live.
+
 ---
 
 ## 0. Reproduce the audit (commands)
 
-Run from monorepo root unless noted.
+Run from **monorepo root** (`_mfai_demo`) unless noted. Paths below assume that CWD.
 
 ```bash
 # .NET — outdated top-level packages (NuGet.org)
 cd be_demo && dotnet list package --outdated
+# Optional: include prerelease lines when evaluating betas (not default for “stable” audit)
+# dotnet list package --outdated --include-prerelease
 
 # Node — declared bumps suggested by npm-check-updates (does not modify files)
 cd ../fe_demo && npx --yes npm-check-updates
@@ -31,11 +37,32 @@ done
 grep packageManager fe_demo/package.json admin_demo/package.json
 ```
 
+**Security / transitive (add-on to version audit):** this prompt focuses on **direct** dependencies in manifests. Transitives live in `yarn.lock` / NuGet lock. After bumps, run e.g.:
+
+```bash
+cd fe_demo && yarn npm audit
+cd ../admin_demo && yarn npm audit
+cd ../be_demo && dotnet list package --vulnerable 2>/dev/null || true
+```
+
+Interpret audit output with judgment (dev-only vs runtime, accepted risk, upstream fixes).
+
 **Docker images** (not in registries above): compare `image:` tags in `db_demo/docker-compose.yml`, `redis_demo/docker-compose.yml`, `docker-compose.dev.yml`, `logger_demo/docker-compose.dev.yml` with [Docker Hub](https://hub.docker.com/) / upstream release notes. For **base images** (`node:22-slim`, `python:3.11-slim`, `mcr.microsoft.com/dotnet/sdk:10.0`), compare digests/tags on Docker Hub / MCR.
 
-### 0.1 Regenerate the **full npm** inventory table (section 2.4)
+**Concrete Docker checks (optional):**
 
-Runs `npm view <pkg> version` for the **union** of `dependencies` and `devDependencies` in `fe_demo/package.json` and `admin_demo/package.json`, then prints a Markdown table (paste into this doc under 2.4).
+```bash
+# Resolved compose images (tags after extends/env; good sanity check)
+docker compose -f docker-compose.dev.yml config 2>/dev/null | grep -E 'image:|build:' || true
+# Inspect local digest after pull (repeat for each service you care about)
+# docker pull nginx:1.27-alpine && docker image inspect nginx:1.27-alpine --format '{{.RepoDigests}}'
+```
+
+### 0.1 Regenerate the **full npm** inventory table (section 2.3)
+
+**Must run from monorepo root** — the script uses `pathlib.Path("fe_demo/package.json")` relative to CWD.
+
+Runs `npm view <pkg> version` for the **union** of `dependencies` and `devDependencies` in `fe_demo/package.json` and `admin_demo/package.json`, then prints a Markdown table. **Paste the output into this document** under **§2.3** (replace the existing pipe table body; keep the heading and legend).
 
 ```bash
 python3 <<'PY'
@@ -43,17 +70,21 @@ import json, pathlib, subprocess
 
 def load(path):
     d = json.loads(pathlib.Path(path).read_text())
-    names = set(d.get("dependencies", {})) | set(d.get("devDependencies", {}))
     decl = {**d.get("dependencies", {}), **d.get("devDependencies", {})}
-    return names, decl
+    return decl
 
 root = pathlib.Path(".")
-fe_n, fe_d = load(root / "fe_demo/package.json")
-ad_n, ad_d = load(root / "admin_demo/package.json")
-all_names = sorted(fe_n | ad_n)
+fe_d = load(root / "fe_demo/package.json")
+ad_d = load(root / "admin_demo/package.json")
+all_names = sorted(set(fe_d) | set(ad_d))
 
 def ver(pkg):
-    return subprocess.check_output(["npm", "view", pkg, "version"], text=True, timeout=90).strip()
+    try:
+        return subprocess.check_output(
+            ["npm", "view", pkg, "version"], text=True, timeout=90
+        ).strip()
+    except Exception as e:
+        return f"(error: {e})"
 
 print("| Package | `fe_demo` | `admin_demo` | Latest (npm) | Note |")
 print("| ------- | --------- | ------------ | ------------ | ---- |")
@@ -69,6 +100,8 @@ for name in all_names:
     print(f"| `{name}` | {fv} | {av} | **{lv}** | {note} |")
 PY
 ```
+
+**Performance:** the script invokes `npm view` once per package (~90 calls). For faster refresh, batch or parallelize with a small concurrency limit if your environment allows.
 
 ---
 
@@ -111,7 +144,7 @@ PY
 | Microsoft.EntityFrameworkCore.InMemory | 10.0.2 | **10.0.5** | Yes. |
 | Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.0 | **10.0.1** | Yes. |
 | Microsoft.NET.Test.Sdk | 17.14.1 | **18.4.0** | **Major** — usually safe; confirm test SDK with `dotnet test`. |
-| Moq | 4.20.72 | *(not in outdated list)* | At snapshot **no newer** top-level version reported — re-run after bump wave. |
+| Moq | 4.20.72 | *(not in outdated list)* | At snapshot **no newer stable** top-level version in default `dotnet list package --outdated`; re-run after bump wave. Use `--include-prerelease` only if you deliberately track prereleases. |
 | xunit | 2.9.3 | *(not in outdated list)* | Same. |
 | xunit.runner.visualstudio | 3.1.4 | **3.1.5** | Yes — patch. |
 
@@ -137,6 +170,10 @@ PY
 
 **`packageManager`:** `yarn@4.12.0` (both SPAs).  
 **Engines:** Node `>=22.14.0` (both).
+
+**How to read this section:** **§2.3** is the **authoritative per-package** list (declared ranges vs `npm view` “latest”). **§2.1–2.2** are **short NCU deltas** for a quick “what would widen first” — optional if you only refresh §2.3. After editing `package.json`, run `yarn install` and commit **`yarn.lock`** in the same submodule PR.
+
+**Yarn-native bumps (optional):** instead of only NCU, you can use `yarn up <package>` / `yarn up -R <package>` (Yarn 4) for interactive or recursive upgrades; still verify with `yarn validate` / tests.
 
 ### 2.1 `npm-check-updates` — `fe_demo` (snapshot)
 
@@ -215,7 +252,12 @@ Suggested bumps if you ran `npx npm-check-updates -u` (review breaking changes b
 
 ### 2.3 Complete npm registry snapshot — union of both `package.json` files
 
-**Legend:** **Latest (npm)** = `npm view <pkg> version` at snapshot. Where **Latest** equals the caret range’s ceiling (e.g. `^5.2.2` → 5.2.2), `yarn install` already resolves to latest **minor/patch** in that line unless you widen the range. `—` = not declared in that app.
+**Legend:** **Latest (npm)** = `npm view <pkg> version` at snapshot (the default **dist-tag**, usually `latest`).
+
+- **`^x.y.z`** (caret): allows compatible **minor** and **patch** updates within the same **major** (npm semver for `^1.2.3` → `<2.0.0`). A resolved install can sit below **Latest (npm)** until you widen the range or run a bump tool.
+- **`~x.y.z`** (tilde): allows **patch-only** bumps on the same **minor** (e.g. `~5.9.3` → `<5.10.0`). Stricter than `^` — **Latest** may be a newer **minor** you will not get until you change the range (e.g. TypeScript `~5.9.3` vs npm latest `6.x`).
+
+`—` = not declared in that app. This table does **not** list transitive packages from `yarn.lock`.
 
 | Package | `fe_demo` | `admin_demo` | Latest (npm) | Note |
 | ------- | --------- | ------------ | ------------ | ---- |
@@ -322,9 +364,13 @@ ESLint **10**, Vite **8**, TypeScript **6**, i18next **26**, `lucide-react` **1.
 
 **Process:** Prefer a **locked** `requirements.lock` or `uv.lock` for reproducible AI images after upgrades.
 
+**Alternatives to experimental `pip index versions`:** use **`uv lock`** / **`uv pip compile`** or **`pip-tools`** (`pip-compile`) to resolve the same constraints to concrete versions and diff against the lock output. That is often **more stable** in CI than relying on `pip index` long-term.
+
 ---
 
 ## 4. Infra subrepos — Docker image pins
+
+When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2) prefer **immutable references** (`image: repo:tag@sha256:…`) in a follow-up if your team policy allows; (3) re-run compose healthchecks locally. Submodule PRs for `db_demo`, `redis_demo`, `logger_demo` apply the same submodule commit rules as app repos.
 
 ### 4.1 `db_demo/docker-compose.yml`
 
@@ -367,7 +413,10 @@ ESLint **10**, Vite **8**, TypeScript **6**, i18next **26**, `lucide-react` **1.
 6. **Align @types/node:** `admin_demo` **^24.10.9** vs `fe_demo` **^25.0.9** — pick one major line for both SPAs.  
 7. **Python AI:** Pin compatible **grpcio / protobuf / grpcio-tools** triple from upstream docs; avoid mixing unpinned `torch`/`transformers` in production images.  
 8. **Docker:** Replace **`latest`** tags for Seq, pgAdmin, Dozzle with explicit versions in a dedicated infra PR.  
-9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.
+9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.  
+10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `_mfai_demo` submodule pointers if required by your release process.  
+11. **Security:** run **§0** audit commands plus `yarn npm audit` / `dotnet list package --vulnerable` where available; triage before and after bumps.  
+12. **Lockfiles:** any `package.json` / `requirements.txt` change should include updated **`yarn.lock`** or a **pinned lock** for Python where the team adopted one.
 
 ---
 
@@ -375,4 +424,92 @@ ESLint **10**, Vite **8**, TypeScript **6**, i18next **26**, `lucide-react` **1.
 
 - [ ] Updated tables (or this file replaced) with **new snapshot date** and command outputs (or links to CI logs).  
 - [ ] PR(s) per ecosystem (.NET / fe / admin / ai / docker) with green tests.  
-- [ ] Short **CHANGELOG** or release note listing major bumps and any intentional skips (with reason).
+- [ ] Short **CHANGELOG** or release note listing major bumps and any intentional skips (with reason).  
+- [ ] Submodule repos and parent pointer (if applicable) aligned; lockfiles committed.
+
+---
+
+## 7. Detailed upgrade checklist (what to touch)
+
+Use this as a **tick list** for a full dependency pass. Skip groups intentionally (document why in the PR). Order is suggested, not mandatory.
+
+### 7.1 Pre-flight
+
+- [ ] `git submodule update --init --recursive` (clean tree for audit).  
+- [ ] Re-run **§0** commands; refresh **§2.3** table via **§0.1** script if npm rows changed.  
+- [ ] Decide **PR strategy** (one mega-PR vs .NET / fe / admin / ai / infra split).
+
+### 7.2 `be_demo` — .NET (`BeDemo.Api`, `BeDemo.Api.Tests`)
+
+- [ ] **ASP.NET + EF Core + Npgsql** — align `Microsoft.AspNetCore.*`, `Microsoft.EntityFrameworkCore.*`, `Npgsql.EntityFrameworkCore.PostgreSQL` to the **same patch** (see §1.1 / §1.2).  
+- [ ] **OpenAPI** — `Microsoft.AspNetCore.OpenApi`.  
+- [ ] **Swashbuckle** — `Swashbuckle.AspNetCore`.  
+- [ ] **JWT** — `System.IdentityModel.Tokens.Jwt`.  
+- [ ] **gRPC stack** — `Google.Protobuf`, `Grpc.Net.Client`, `Grpc.Tools` **together**; regenerate proto if tooling requires.  
+- [ ] **Serilog** — `Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Sinks.Seq` (major coordination).  
+- [ ] **Redis** — `StackExchange.Redis`.  
+- [ ] **Enrichers** — `Serilog.Enrichers.Environment`, `Serilog.Enrichers.Thread` (re-check after other bumps).  
+- [ ] **Tests** — `coverlet.collector`, `FluentAssertions`, `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.AspNetCore.SignalR.Client`, `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.NET.Test.Sdk`, `Moq`, `xunit`, `xunit.runner.visualstudio`.  
+- [ ] Run `dotnet test` (and integration tests) in **be_demo** submodule.
+
+### 7.3 `be_demo` — Docker + Node tooling
+
+- [ ] **`BeDemo.Api/Dockerfile.dev`** — `dotnet-ef` tool version vs EF Core packages.  
+- [ ] **`be_demo/package.json`** — `@commitlint/cli`, `@commitlint/config-conventional`, `husky`; run `yarn install` if lockfile exists in submodule.  
+- [ ] Optional: **MCR** `mcr.microsoft.com/dotnet/sdk:10.0` digest pin.
+
+### 7.4 `fe_demo` — `package.json` + lockfile
+
+- [ ] **Commitlint / Husky** — `@commitlint/*`, `husky`, `lint-staged`.  
+- [ ] **Toolchain (high-risk bundle)** — `typescript`, `typescript-eslint`, `eslint`, `@eslint/js`, `eslint-config-prettier`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `globals`, `vite`, `@vitejs/plugin-react`, `@vitejs/plugin-basic-ssl`, `vitest`, `@vitest/ui`, `jsdom`, `@types/jsdom`, `cypress`.  
+- [ ] **React app** — `react`, `react-dom`, `react-router-dom`, `react-hook-form`, `@hookform/resolvers`, `yup`, `axios`, `react-bootstrap`, `bootstrap`, `@popperjs/core`, `sass`, `react-toastify`, `react-grid-layout`, `react-quill-new`, `quill-delta`, `lucide-react`, `i18next`, `i18next-browser-languagedetector`, `react-i18next`, `@tanstack/react-query`, `@microsoft/signalr` (**align to v10** with admin + BE).  
+- [ ] **Radix UI** — all `@radix-ui/react-*` entries (accordion through tooltip).  
+- [ ] **API client gen** — `openapi-typescript-codegen`.  
+- [ ] **Testing libs** — `@testing-library/*`, `@types/react`, `@types/react-dom`, `@types/node`.  
+- [ ] **Yarn** — `@yarnpkg/pnpify`.  
+- [ ] **`yarn.lock`** — committed after any `package.json` change.  
+- [ ] Run `yarn validate`, `yarn test`, and **Cypress** smoke where applicable.
+
+### 7.5 `admin_demo` — `package.json` + lockfile
+
+- [ ] Same **toolchain** group as `fe_demo` where shared (§7.4).  
+- [ ] **Admin-only / diffs** — `@tanstack/react-table`, `framer-motion`; **`@types/node`** — align major line with `fe_demo`.  
+- [ ] **`@microsoft/signalr`** — already on ^10; keep in sync with BE after fe bump.  
+- [ ] **Radix + React stack** — mirror `fe_demo` where packages overlap.  
+- [ ] **`yarn.lock`** — committed.  
+- [ ] Run `yarn validate` and `yarn test`.
+
+### 7.6 `fe_demo` / `admin_demo` — Docker
+
+- [ ] **`Dockerfile.dev`** — `node:22-slim`, `corepack prepare yarn@4.12.0` vs root `packageManager` field.
+
+### 7.7 `ai_demo` — Python
+
+- [ ] **gRPC** — `grpcio`, `grpcio-tools`, `grpcio-testing` in **one** bump.  
+- [ ] **protobuf** — only in a combination supported by grpc release notes / regenerated stubs.  
+- [ ] **ML stack** — `torch`, `transformers`, `accelerate` (evaluate majors together).  
+- [ ] **Dev** — `ruff`, `pytest`.  
+- [ ] Regenerate **proto** Python if proto or grpcio-tools changed; run Python tests.  
+- [ ] **`Dockerfile.dev`** — `python:3.11-slim` (or agreed bump); rebuild image.
+
+### 7.8 Infra compose (submodule repos)
+
+- [ ] **`db_demo/docker-compose.yml`** — `postgres:16-alpine`, `dpage/pgadmin4` (replace `latest` with pin when ready).  
+- [ ] **`redis_demo/docker-compose.yml`** — `redis:7-alpine` (legal review before **8.x**).  
+- [ ] **Root `docker-compose.dev.yml`** — `nginx`, `datalust/seq`, service build contexts.  
+- [ ] **`logger_demo/docker-compose.dev.yml`** — `amir20/dozzle` (pin tag).  
+- [ ] Smoke **compose up** paths affected by image changes.
+
+### 7.9 Security and docs
+
+- [ ] `yarn npm audit` in **fe_demo** and **admin_demo**; address or record accepted risks.  
+- [ ] `dotnet list package --vulnerable` in **be_demo** if supported.  
+- [ ] Update **this prompt** (§1–§4 tables) or attach CI logs + new snapshot date.  
+- [ ] **Parent `_mfai_demo`:** bump submodule SHAs + short release note / CHANGELOG as per §6.
+
+### 7.10 Explicit “do not forget” cross-cuts
+
+- [ ] **SignalR** — `fe_demo` client major aligned with `admin_demo` and **BeDemo.Api** SignalR.  
+- [ ] **Serilog majors** — Seq + console + AspNetCore tested together.  
+- [ ] **Redis 8+** — legal sign-off before image upgrade.  
+- [ ] **PostgreSQL 17/18** — major DB migration plan, not a silent tag bump.
