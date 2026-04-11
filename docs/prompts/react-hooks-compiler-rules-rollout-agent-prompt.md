@@ -19,24 +19,33 @@ From **`eslint-plugin-react-hooks` v7.x** ([npm readme](https://www.npmjs.com/pa
 
 The React docs describe the **compiler rules** family and the philosophy of **gradual** cleanup: [ESLint Plugin React Hooks — recommended rules](https://react.dev/reference/eslint-plugin-react-hooks#recommended-rules) (same content structure as `beta.reactjs.org` reference pages).
 
-**Agent rule:** Do **not** assume rule names or severities from memory. **(required)** For the **resolved** `eslint-plugin-react-hooks` version in each SPA, dump the preset’s rule table (see §3.1) and treat that as the source of truth for the PR.
+**Agent rule:** Do **not** assume rule names or severities from memory. **(required)** For the **resolved** `eslint-plugin-react-hooks` version in each SPA, dump the preset’s rule table (see §3.2) and treat that as the source of truth for the PR.
 
 ### 1.2 Relationship to React Compiler
 
 These rules surface patterns the **React Compiler** may flag or optimize around. The React team’s framing: you do **not** need to fix every violation immediately to ship; tightening lint is a **progressive** quality investment ([same reference section](https://react.dev/reference/eslint-plugin-react-hooks#recommended-rules)).
 
+### 1.3 `eslint-plugin-react-hooks` vs `eslint-plugin-react-compiler` (**required** awareness)
+
+**(required)** Treat **`eslint-plugin-react-hooks`** (`recommended` / compiler-aligned rules in that plugin) as **this prompt’s** primary scope.
+
+**(required)** Do **not** add **`eslint-plugin-react-compiler`** (or other compiler ESLint integrations) in the same PR series **unless** the task explicitly says so. If the team **does** add it: **(required)** read upstream docs ([React Compiler — Installation](https://react.dev/learn/react-compiler/installation) — ESLint plugin section, [npm: `eslint-plugin-react-compiler`](https://www.npmjs.com/package/eslint-plugin-react-compiler)) and **(required)** attach a **duplicate-rule matrix** (hooks plugin rule id ↔ compiler plugin rule id) so overlapping diagnostics are not configured twice at **`error`** without intent.
+
+**(required)** Default for this monorepo: finish **`eslint-plugin-react-hooks`** preset rollout **first**; any compiler-plugin adoption is a **separate** decision and PR.
+
 ---
 
 ## 2. Strategy matrix (pick one primary approach per PR series)
 
-Document the chosen row in the PR description.
+**(required)** Document the chosen row (**S1**, **S2**, **S2b**, **S3**, or **S4**) in the PR description. If the series mixes strategies (e.g. **S2** then converge to full preset), **(required)** state the sequence and the PR in which each phase ends.
 
-| Approach                                              | When to use                                            | Shape of work                                                                                                                                       |
-| ----------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **S1 — Big-bang preset**                              | Small codebase or few violations after a spike         | Flip config to `reactHooks.configs.flat.recommended` (or `recommended-latest`), fix all errors in one or few commits.                               |
-| **S2 — Rule-by-rule** (**default** for this monorepo) | Many violations; need reviewable PRs                   | Enable **one** new rule at a time (start **`warn`**, then **`error`**), merge, repeat. Optionally group related rules (e.g. purity + immutability). |
-| **S3 — Path-scoped rollout**                          | Violations concentrated in modules (e.g. `src/pages/`) | Base config uses full preset; **`files`/`ignores`** overrides downgrade or disable specific rules in legacy folders until cleaned.                  |
-| **S4 — Preset + selective disables**                  | Third-party patterns (tables, forms) need time         | Keep preset; **narrow** `eslint-disable-next-line` with **ticket ID** + **owner** (forbidden: file-wide disable of `react-hooks/*`).                |
+| Approach                                              | When to use                                             | Shape of work                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S1 — Big-bang preset**                              | Small codebase or few violations after a spike          | Flip config to `reactHooks.configs.flat.recommended` (or `recommended-latest`), fix all errors in one or few commits.                                                                                                                                                                                                                             |
+| **S2 — Rule-by-rule** (**default** for this monorepo) | Many violations; need reviewable PRs                    | Enable **one** new rule at a time (start **`warn`**, then **`error`**), merge, repeat. Optionally group related rules (e.g. purity + immutability).                                                                                                                                                                                               |
+| **S2b — Preset + temporary downgrades (inverse)**     | Many violations; want full picture fast, then peel away | **(required)** Enable **`flat.recommended`** (or target preset) **globally**, set the **noisiest** rules to **`warn`** or scoped **`off`** (with ticket + removal date per §5.3), merge, then **remove overrides** rule-by-rule. **(required)** Document in the PR that **S2b** is the primary strategy and attach the override list with owners. |
+| **S3 — Path-scoped rollout**                          | Violations concentrated in modules (e.g. `src/pages/`)  | Base config uses full preset; **`files`/`ignores`** overrides downgrade or disable specific rules in legacy folders until cleaned.                                                                                                                                                                                                                |
+| **S4 — Preset + selective disables**                  | Third-party patterns (tables, forms) need time          | Keep preset; **narrow** `eslint-disable-next-line` with **ticket ID** + **owner** (forbidden: file-wide disable of `react-hooks/*`).                                                                                                                                                                                                              |
 
 **Forbidden:** `eslint-disable` entire files for `react-hooks/*` without a linked issue and removal date. **Forbidden:** lowering `exhaustive-deps` to `off` “to unblock” the compiler rollout (fix deps or use documented `additionalHooks` / ref patterns).
 
@@ -44,7 +53,18 @@ Document the chosen row in the PR description.
 
 ## 3. Investigation (**required** before edits)
 
-### 3.1 Dump rules from the **installed** preset (**required**)
+### 3.1 CI and local lint parity (**required**)
+
+**(required)** For **each** of `fe_demo` and `admin_demo`, locate **every** place lint runs (not only `yarn lint`):
+
+- **(required)** Search monorepo and SPA roots: `.github/workflows/**/*.yml`, `package.json` scripts (`lint`, `validate`, `test`, husky / lint-staged if present), and any root orchestration scripts.
+- **(required)** Record the **exact** ESLint invocation CI uses (e.g. plain `eslint`, `eslint --max-warnings 0`, extra args, env vars).
+- **(required)** Record whether **warnings** fail CI (`--max-warnings 0` or equivalent). If yes, **(required)** treat **`warn`** on `react-hooks/*` the same as **`error`** for merge (or document a temporary team exception in the PR and in §6.2).
+- **(required)** Confirm the **same file globs** are linted in CI as locally (no CI-only `eslint src` while local lints `cypress` / tests unless that split is **documented** and intentional).
+
+**(required)** Attach a short **“Lint parity”** subsection to the PR (commands + warn policy + glob notes).
+
+### 3.2 Dump rules from the **installed** preset (**required**)
 
 From each SPA root:
 
@@ -70,7 +90,7 @@ console.log(JSON.stringify(rules(latest), null, 2));
 
 **(required)** Attach output to the PR. If `recommended-latest` is `undefined` or circular, **(required)** document that and do **not** use it without a workaround.
 
-### 3.2 Baseline violation counts (**required**)
+### 3.3 Baseline violation counts (**required**)
 
 **(required)** On a **throwaway branch** or locally (do not merge with thousands of unfixed errors):
 
@@ -81,11 +101,71 @@ console.log(JSON.stringify(rules(latest), null, 2));
 yarn lint 2>&1 | tee /tmp/eslint-full-react-hooks.txt
 ```
 
-**(required)** Produce a **table**: rule id → error count (parse from ESLint output or run `eslint . -f json` and aggregate with a small script). This table drives **S2** ordering (fix highest-signal or highest-count first, depending on team policy).
+**(required)** Produce a **table**: rule id → error count **and** rule id → warning count (if warnings appear). **(required)** Prefer the **machine-readable** path: run ESLint with **`-f json`**, save stdout to a file, then aggregate with **§3.7** (or an equivalent script you attach to the PR). **(required)** Attach the table to the PR. This table drives **S2** / **S2b** ordering (fix highest-signal or highest-count first, per team policy).
 
-### 3.3 Map hotspots (**required**)
+### 3.4 Map hotspots (**required**)
 
-**(required)** From the JSON or text report, list **top 10 files** by violation count for the **first** rule you plan to enable. This prevents random file hopping.
+**(required)** From the JSON or text report, list **top 10 files** by violation count for the **first** rule you plan to enable (or for the **largest-count** rule in **S2b**). This prevents random file hopping.
+
+### 3.5 Resolved flat config debugging (`eslint --print-config`) (**required**)
+
+**(required)** For **at least one** representative file per SPA (e.g. one `src/` screen, one test file if tests are linted), run:
+
+```bash
+yarn exec eslint --print-config path/to/File.tsx
+```
+
+**(required)** Skim the resolved **`rules`** (and their severities) for every `react-hooks/*` key to confirm **merge order** (e.g. Prettier last, overrides visible). **(required)** If a rule’s severity disagrees with `eslint.config.js`, fix config order **before** mass refactors.
+
+### 3.6 File-class coverage audit (`src` vs tests vs Storybook vs e2e) (**required**)
+
+**(required)** From each SPA’s `eslint.config.js` (and any imported flat configs), build a **table** (in the PR body or attachment):
+
+| File class (examples)                       | Included by lint? | Same `react-hooks/*` severity as `src/`? | Notes / ticket |
+| ------------------------------------------- | ----------------- | ---------------------------------------- | -------------- |
+| Application `src/**`                        |                   |                                          |                |
+| Unit / integration tests (`**/*.test.*`, …) |                   |                                          |                |
+| `__tests__/**`, `vitest` setup files        |                   |                                          |                |
+| Storybook / `.stories.*` (if present)       |                   |                                          |                |
+| Cypress / Playwright / e2e (if present)     |                   |                                          |                |
+
+**(required)** If a class is **excluded**, say so explicitly. **(required)** If a class is **included** but should temporarily use **lower** severity for `react-hooks/*`, document **S3**-style overrides with ticket + removal date — do **not** silently widen `ignores` on production code to hide violations.
+
+### 3.7 Appendix: aggregate `eslint -f json` by `ruleId` (**required** format)
+
+**(required)** Produce counts using **JSON** output (adjust paths to each SPA’s lint target if different from `.`):
+
+```bash
+yarn exec eslint . -f json --no-error-on-unmatched-pattern > /tmp/eslint-out.json 2>/tmp/eslint-stderr.txt || true
+node --input-type=module -e "
+import { readFileSync } from 'node:fs';
+const raw = readFileSync('/tmp/eslint-out.json', 'utf8');
+let results;
+try { results = JSON.parse(raw); } catch (e) {
+  console.error('Parse failed — ensure eslint printed a single JSON array to stdout');
+  process.exit(1);
+}
+const byRule = Object.create(null);
+const byFile = Object.create(null);
+for (const file of results) {
+  const fp = file.filePath || '';
+  for (const m of file.messages || []) {
+    const id = m.ruleId || '(no rule id)';
+    byRule[id] = (byRule[id] || 0) + 1;
+    byFile[fp] = (byFile[fp] || 0) + 1;
+  }
+}
+const rh = Object.entries(byRule).filter(([k]) => k.startsWith('react-hooks/'));
+rh.sort((a, b) => b[1] - a[1]);
+console.log('--- react-hooks/* counts ---');
+for (const [k, v] of rh) console.log(k + '\t' + v);
+const topFiles = Object.entries(byFile).sort((a, b) => b[1] - a[1]).slice(0, 15);
+console.log('--- top files (all rules) ---');
+for (const [k, v] of topFiles) console.log(v + '\t' + k);
+"
+```
+
+**(required)** If `eslint` exits non-zero because of errors, still capture **`eslint-out.json`** when possible (the `|| true` above is only to allow the shell pipeline to continue — fix the underlying config if JSON is empty). **(required)** Attach the **`react-hooks/*`** table (and top-files list) to the PR.
 
 ---
 
@@ -175,33 +255,48 @@ Keep the repo’s current explicit plugin registration **or** switch to `extends
 
 **(required)** Any `off` override must carry **`TRACK-*` / issue URL** and a **removal deadline** in the same PR or linked issue body.
 
+### 5.4 `eslint-plugin-react-hooks` version change — preset diff gate (**required**)
+
+**(required)** Any PR that **changes** the resolved version of `eslint-plugin-react-hooks` (canary bump, stable migration, yarn resolution change): **(required)** run **§3.2** (preset dump) on **old** and **new** version (two columns or two attached files). **(required)** Summarize in the PR: **added** rules, **removed** rules, **severity** changes in the preset. **(required)** Do **not** merge a version bump without that diff — silent preset drift breaks **S2** / **S2b** plans.
+
 ---
 
 ## 6. Implementation workflow (**required**)
 
-1. **(required)** Complete §3 investigations for **both** SPAs; attach tables.
-2. **(required)** Choose **S1–S4** (series may use **S2** then converge to full preset).
-3. **(required)** Implement in **`fe_demo`**, run **`yarn lint` → `yarn validate` → `yarn test` → `yarn build`**.
-4. **(required)** Mirror in **`admin_demo`** (same rule set and severities unless a **documented** SPA-specific exception exists).
-5. **(required)** Update **`docs/guides/development.md`** subsection on hooks if the **default** preset for new code changes.
-6. **(required)** Submodule commits + parent pointer bump per team rules.
+1. **(required)** Complete **§3** investigations for **both** SPAs; attach all §3 tables and dumps (including **§3.1** lint parity, **§3.7** JSON aggregates when used).
+2. **(required)** Choose **S1**, **S2**, **S2b**, **S3**, or **S4** (series may mix, e.g. **S2** then full preset — document the sequence in the PR).
+3. **(required)** **Operational PR constraints:** keep each PR **reviewable** — **(required)** state in the PR **maximum scope** the team used for that step (e.g. cap **~15 files** or **one rule family** per PR unless **S1** explicitly approved). **(required)** Define **rollback**: reverting the PR must restore the **previous** `eslint.config.js` hooks block (one revert = green CI).
+4. **(required)** **Lint cache / timing:** if the SPA uses **`eslint --cache`** or a committed/ignored `.eslintcache`, **(required)** delete the cache after **any** `eslint.config.js` change that affects `react-hooks/*`, then re-run lint. **(required)** Record **wall-clock** `yarn lint` duration **before** and **after** the rollout step in the PR (rough seconds is enough) so severe regressions are visible.
+5. **(required)** Implement in **`fe_demo`**, run **`yarn lint` → `yarn validate` → `yarn test` → `yarn build`** using the **same** warn/error policy as **§3.1** (if CI is `--max-warnings 0`, local validation **(required)** must match before merge).
+6. **(required)** Mirror in **`admin_demo`** (same rule set and severities unless a **documented** SPA-specific exception exists in the PR).
+7. **(required)** **`reportUnusedDisableDirectives`:** run a cleanup pass before declaring the series done — **(required)** enable ESLint’s **`reportUnusedDisableDirectives`** for at least one full `yarn lint` on a throwaway branch **or** run the supported CLI flag if the repo’s ESLint version exposes it, and **(required)** remove stale `eslint-disable` comments introduced or orphaned by refactors. **(required)** If the repo already sets this in config, **(required)** ensure the rollout PR leaves **zero** unused directive reports.
+8. **(required)** Update **`docs/guides/development.md`** subsection on hooks if the **default** preset for new code changes.
+9. **(required)** Submodule commits + parent pointer bump per team rules.
 
 ---
 
 ## 7. Verification (**required**)
 
-- [ ] **`yarn lint`** with **zero errors** (warnings policy: align with CI — if CI uses `--max-warnings 0`, **zero warnings** too).
+- [ ] **§3.1 lint parity:** CI vs local commands and **warnings** policy documented; no undocumented glob mismatch.
+- [ ] **`yarn lint`** with **zero errors** and warnings policy **matching §3.1** (**(required)** zero warnings if CI uses `--max-warnings 0` or equivalent).
 - [ ] **`yarn validate`**, **`yarn test`**, **`yarn build`** in **both** SPAs.
 - [ ] No new **blanket** `eslint-disable` for `react-hooks/*`.
-- [ ] **Preset dump** (§3.1) attached for the version you shipped.
+- [ ] **Preset dump** (**§3.2**) attached for the **`eslint-plugin-react-hooks`** version you shipped; if the version changed in the PR, **(required)** **§5.4** old vs new preset diff attached.
+- [ ] **§3.5** `--print-config` spot-check done for representative files (both SPAs if both touched).
+- [ ] **§3.6** file-class table present and matches `eslint.config.js`.
+- [ ] **§6.4** lint cache invalidated after config edits; before/after lint timing noted in the PR.
+- [ ] **§6.7** unused directive / `reportUnusedDisableDirectives` pass complete with no remaining unused-disable noise from this series.
 
 ---
 
 ## 8. Deliverables (**required**)
 
-- [ ] PR description states **S1–S4** choice and **rule rollout order** (for **S2**).
-- [ ] Baseline vs final violation table (or “N/A — S1 big-bang”).
+- [ ] PR description states **S1 / S2 / S2b / S3 / S4** choice, sequence if mixed, and **rule rollout order** (for **S2**) or **override list with tickets** (for **S2b** / **S3** / **S4**).
+- [ ] **§3.1** lint parity notes (commands, CI files referenced, warn policy).
+- [ ] Baseline vs final violation table from **§3.3** / **§3.7** (or “N/A — **S1** big-bang” with a single full-run attachment).
+- [ ] **§3.6** file-class coverage table.
 - [ ] Links to **react.dev** rule pages for the top 3 rules touched.
+- [ ] **§1.3:** explicit sentence “No `eslint-plugin-react-compiler` in this PR” **or** duplicate-rule matrix if compiler plugin was in scope.
 - [ ] Screenshots or notes only if UI behavior changed (most PRs will not need them).
 
 ---
@@ -215,6 +310,8 @@ Keep the repo’s current explicit plugin registration **or** switch to `extends
 - [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
 - [set-state-in-effect discussion](https://github.com/facebook/react/issues/34743)
 - Peer / canary context for this monorepo: [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md), `fe_demo/docs/eslint-plugin-react-hooks-peer.md`, `admin_demo/docs/eslint-plugin-react-hooks-peer.md`
+- [React Compiler — Installation](https://react.dev/learn/react-compiler/installation) — ESLint plugin vs **`eslint-plugin-react-hooks`** (**§1.3**).
+- [npm: `eslint-plugin-react-compiler`](https://www.npmjs.com/package/eslint-plugin-react-compiler)
 
 ---
 
@@ -228,5 +325,5 @@ Keep the repo’s current explicit plugin registration **or** switch to `extends
 6. **`react-refresh/only-export-components`:** contexts folder may stay special-cased — do not break the existing `eslint.config.js` second block when editing hooks rules.
 7. **Cypress / e2e:** if lint config `ignores` cypress, ensure new rules do not accidentally apply to files that should stay excluded.
 8. After full preset adoption, **re-evaluate** whether any **`eslint-disable-next-line react-hooks/incompatible-library`** added earlier are still needed (admin demo removed some when rules were off — they may return under full preset).
-9. **`recommended-latest`:** treat as **volatile**; pin plugin version already exact in this repo — still re-run §3.1 on every bump.
+9. **`recommended-latest`:** treat as **volatile**; pin plugin version already exact in this repo — still re-run **§3.2** (preset dump) on every bump (**§5.4**).
 10. If the team hits a **dead end** on a rule (plugin false positive), open an **upstream issue** with minimal repro before permanent disable.
