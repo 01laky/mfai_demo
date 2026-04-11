@@ -325,3 +325,4 @@ Use this section as the **merge gate**. **(required)** Every row below is satisf
 - npm: [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
 - Repo flat configs: `fe_demo/eslint.config.*`, `admin_demo/eslint.config.*`
 - Related audit prompt: [monorepo-dependency-audit-and-upgrade-agent-prompt.md](./monorepo-dependency-audit-and-upgrade-agent-prompt.md)
+- After peers are aligned: [react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) (full `recommended` / compiler rules rollout)

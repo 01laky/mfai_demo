@@ -52,6 +52,7 @@ Both SPAs use **ESLint 10** with **`@eslint/js` ^10** and **`typescript-eslint` 
 - **Submodule docs:** [`fe_demo/docs/eslint-plugin-react-hooks-peer.md`](../../fe_demo/docs/eslint-plugin-react-hooks-peer.md), [`admin_demo/docs/eslint-plugin-react-hooks-peer.md`](../../admin_demo/docs/eslint-plugin-react-hooks-peer.md) — removal trigger, risk, upstream links.
 - **Flat config:** `eslint.config.js` registers the plugin but enables only **`react-hooks/rules-of-hooks`** and **`react-hooks/exhaustive-deps`** (the canary `configs.flat.recommended` preset pulls in additional experimental rules the codebase has not adopted yet).
 - **Yarn:** after the pin, **`YN0060`** for the ESLint ↔ react-hooks conflict should be **gone**. A generic **`YN0086`** (“peer dependencies incorrectly met by **dependencies**”) may still appear from **transitive** trees (e.g. tooling); investigate with `yarn explain peer-requirements` if it blocks CI policy.
+- **Gradual rollout** of the full `eslint-plugin-react-hooks` `flat.recommended` preset (React Compiler–oriented rules): agent prompt [`docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md`](../prompts/react-hooks-compiler-rules-rollout-agent-prompt.md).
 
 ## Python (ai_demo)
 
