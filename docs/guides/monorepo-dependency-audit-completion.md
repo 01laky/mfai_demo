@@ -24,10 +24,13 @@ cd be_demo && dotnet list package --outdated
 
 Result at snapshot: only **Google.Protobuf**, **Grpc.Net.Client**, **Grpc.Tools** show newer **Latest** lines vs **Resolved**. The audit prompt keeps these on a **hold** until gRPC/protobuf bumps are validated (arm64 / Docker `protoc`).
 
-## Follow-up (not done in this pass)
+## Follow-up
 
-- Bump gRPC triplet with full `dotnet test` + any stub regeneration checks.
-- Optional: Docker image pin review per prompt §4.
+- Docker image pin review per prompt §4 (compose tags vs upstream).
+
+### gRPC / Google.Protobuf bump (validated)
+
+- **2026-04-11:** `BeDemo.Api` updated to **Google.Protobuf 3.34.1**, **Grpc.Net.Client 2.76.0**, **Grpc.Tools 2.80.0**; Microsoft.AspNetCore/EF packages **10.0.6**; test project aligned. `dotnet build` / `dotnet test` / `dotnet format --verify-no-changes` green on solution.
 
 ### SPA `yarn npm audit` (informational re-check)
 
