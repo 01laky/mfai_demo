@@ -6,6 +6,8 @@ The admin app manages the whole platform: users, faces (tenants), pages, and con
 
 Typical dev URL: **http://localhost:8082**.
 
+**Performance / TanStack Query / ACL notes** (for PRs and audits): [`admin_demo/docs/performance-and-query-appendix.md`](../../admin_demo/docs/performance-and-query-appendix.md).
+
 ---
 
 ## 1. Sign-in
