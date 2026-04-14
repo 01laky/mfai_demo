@@ -6,6 +6,8 @@ The frontend is a multi-face social-style SPA. Users work inside a selected **fa
 
 Typical dev URL: **http://localhost:8081**.
 
+**Performance / TanStack Query / ACL notes** (for PRs and audits): [`fe_demo/docs/performance-and-query-appendix.md`](../../fe_demo/docs/performance-and-query-appendix.md).
+
 ---
 
 ## 1. Sign-in and registration

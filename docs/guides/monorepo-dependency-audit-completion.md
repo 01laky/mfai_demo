@@ -27,4 +27,9 @@ Result at snapshot: only **Google.Protobuf**, **Grpc.Net.Client**, **Grpc.Tools*
 ## Follow-up (not done in this pass)
 
 - Bump gRPC triplet with full `dotnet test` + any stub regeneration checks.
-- Optional: `yarn npm audit` in each SPA; Docker image pin review per prompt §4.
+- Optional: Docker image pin review per prompt §4.
+
+### SPA `yarn npm audit` (informational re-check)
+
+- **2026-04-11:** From `fe_demo/` and `admin_demo/`, `yarn npm audit` reported **no audit suggestions** (Yarn 4 / registry advisory database at run time).
+
