@@ -50,6 +50,55 @@ flowchart LR
     docs -.-> ai
 ```
 
+## Frontend Route And Grid Rendering
+
+The user-facing frontend turns a face URL and backend-managed page schema into a responsive grid of reusable social components:
+
+```mermaid
+flowchart TD
+    url["Browser URL<br/>/:facePath/:locale/..."] --> router["React Router<br/>localized route elements"]
+    router --> guards["GuestRoute / ProtectedRoute"]
+    guards --> face["FaceConfigContext<br/>selectedFace + available faces"]
+
+    face --> api["Typed OpenAPI client<br/>face-aware API requests"]
+    api --> backend["Backend API<br/>page + grid schema"]
+    backend --> schema["gridSchema JSON<br/>items, breakpoints, cols, rowHeight"]
+
+    schema --> layout["PageGridLayout<br/>parse schema + build responsive layouts"]
+    layout --> block["ComponentBlock<br/>shared header, actions, footer, panels"]
+    block --> components["Grid components<br/>Album, Blog, Reel, Story, ChatRoom,<br/>UserProfile, Ad + grid/carousel variants"]
+
+    face --> block
+    block --> actions["Role/capability-aware actions<br/>create, list, sort/filter, settings"]
+```
+
+## Frontend Component Interaction Flow
+
+Grid blocks use the same wrapper and route contract, so list/detail/create behaviour stays consistent across content modules:
+
+```mermaid
+flowchart LR
+    block["ComponentBlock"] --> render["Render child component<br/>single, grid, or carousel"]
+
+    block --> listBtn["List action"]
+    listBtn --> listRoute["/list/:componentTypeId"]
+    listRoute --> listPage["ComponentListPage"]
+
+    render --> itemClick["User opens an item"]
+    itemClick --> detailRoute["/detail/:componentTypeId/:entityId<br/>or module detail route"]
+    detailRoute --> detailPage["ComponentDetailPage<br/>AlbumDetailPage / BlogDetailPage / ReelDetailPage"]
+
+    block --> createBtn["Create action"]
+    createBtn --> capabilities{"Allowed for this<br/>face and component?"}
+    capabilities -->|yes| topPanel["GridTopPanelContext<br/>openGridCreate"]
+    topPanel --> createBody["GridTopPanelContent"]
+    createBody --> forms["AlbumForm / BlogForm / ReelForm / ChatRoomForm"]
+    forms --> api["Typed API service"]
+    api --> refresh["Saved content reloads<br/>or navigates to detail"]
+
+    capabilities -->|no| disabled["Disabled action<br/>localized unavailable message"]
+```
+
 ## Architecture Overview
 
 | Layer | Path | Purpose |
