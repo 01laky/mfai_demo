@@ -99,6 +99,53 @@ flowchart LR
     capabilities -->|no| disabled["Disabled action<br/>localized unavailable message"]
 ```
 
+## Admin Configuration Flow
+
+The admin portal configures the structural data that the backend stores and the user-facing frontend later renders:
+
+```mermaid
+flowchart LR
+    operator["Admin / Operator"] --> admin["admin_demo<br/>React admin panel"]
+    admin --> auth["ProtectedRoute<br/>OAuth2 / JWT"]
+    auth --> caps["/me/capabilities<br/>role + permission state"]
+
+    admin --> users["Users<br/>CRUD + detail/edit"]
+    admin --> faces["Faces<br/>community spaces"]
+    admin --> pageTypes["Page Types<br/>page classification"]
+    admin --> pages["Pages<br/>metadata, paths, index"]
+
+    pages --> translations["Route translations<br/>en / sk / cz"]
+    pages --> grid["GridLayoutEditor<br/>responsive schema editing"]
+
+    users --> api["Backend API"]
+    faces --> api
+    pageTypes --> api
+    translations --> api
+    grid --> api
+    api --> db["PostgreSQL<br/>stored admin data"]
+```
+
+## Admin Grid Schema Lifecycle
+
+Admin page edits create and update the `gridSchema` consumed by the frontend as a read-only layout:
+
+```mermaid
+flowchart TD
+    editPage["EditPagePage"] --> load["Load page + route translations<br/>usePage / usePageRouteTranslations"]
+    load --> parse["Parse page.gridSchema JSON"]
+    parse --> editor["GridLayoutEditor"]
+
+    editor --> picker["ComponentPickerModal<br/>choose component type"]
+    picker --> item["Grid item<br/>componentType, title, icon, bound ids"]
+    item --> layout["react-grid-layout<br/>drag, resize, order"]
+    layout --> preserve["applyLayoutToSchema<br/>preserve metadata"]
+
+    preserve --> serialize["JSON.stringify(gridSchema)"]
+    serialize --> save["updatePage mutation"]
+    save --> invalidate["Invalidate page / pages / face queries"]
+    invalidate --> frontend["fe_demo reads schema<br/>PageGridLayout renders blocks"]
+```
+
 ## Architecture Overview
 
 | Layer | Path | Purpose |
