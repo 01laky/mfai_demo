@@ -146,6 +146,70 @@ flowchart TD
     invalidate --> frontend["fe_demo reads schema<br/>PageGridLayout renders blocks"]
 ```
 
+## Backend Request And Trust Boundary
+
+The backend is the main trust boundary: it resolves face scope, validates signed tokens, enforces roles/capabilities, persists data, and serves typed contracts to both React apps.
+
+```mermaid
+flowchart TD
+    client["fe_demo / admin_demo"] --> request["HTTP(S) request<br/>/{face-prefix}/api/... or /api/oauth2/..."]
+    request --> routing["RoutingMiddleware<br/>resolve face prefix + rewrite path"]
+    routing --> scope["Trusted face scope<br/>requestFaceID + HttpContext.Items"]
+    scope --> auth["JWT Bearer auth<br/>ES512 signature, issuer, audience, lifetime"]
+    auth --> session["Session version check<br/>token atv == AccessTokenVersion"]
+    session --> acl["Authorization + capabilities<br/>global role + face role"]
+    acl --> controllers["Controllers / SignalR hubs"]
+    controllers --> services["Domain services<br/>OAuth, faces, pages, social modules"]
+    services --> db["PostgreSQL via EF Core"]
+    services --> redis["Redis queue/cache infrastructure"]
+    services --> ai["Python gRPC AI service"]
+    controllers --> dto["Typed DTOs / OpenAPI contracts"]
+```
+
+## Backend Security And Token Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant Client as Frontend/Admin
+    participant OAuth as OAuth2Controller
+    participant Tokens as OAuth2Service
+    participant JWT as OAuthAccessTokenFactory
+    participant Refresh as OAuthRefreshTokenStore
+    participant DB as PostgreSQL
+
+    Client->>OAuth: password grant
+    OAuth->>Tokens: validate OAuth client + user credentials
+    Tokens->>JWT: issue ES512 access JWT with atv claim
+    JWT->>DB: read role + AccessTokenVersion
+    Tokens->>Refresh: create opaque refresh token
+    Refresh->>DB: store SHA-256 refresh hash
+    OAuth-->>Client: access token + refresh token + expiry
+
+    Client->>OAuth: refresh_token grant
+    OAuth->>Tokens: redeem refresh token
+    Tokens->>Refresh: rotate single-use refresh token
+    Refresh->>DB: revoke old hash + insert new hash
+    Tokens->>JWT: issue new signed access JWT
+    OAuth-->>Client: new access token + rotated refresh token
+```
+
+## Backend Face Scope And Grid Data
+
+```mermaid
+flowchart LR
+    admin["admin_demo<br/>page/grid editor"] --> pagesApi["PagesController<br/>save gridSchema"]
+    pagesApi --> db["PostgreSQL<br/>Pages, Faces, PageTypes"]
+    db --> facesApi["FacesController<br/>face config + pages"]
+    facesApi --> frontend["fe_demo<br/>PageGridLayout"]
+
+    userRequest["/{face-prefix}/api/..."] --> routing["RoutingMiddleware"]
+    routing --> trusted["Trusted FaceId<br/>strips spoofed faceId"]
+    trusted --> capabilities["/api/me/capabilities<br/>global + face roles"]
+    trusted --> social["Face-scoped social APIs<br/>albums, blogs, reels, stories, chats"]
+    capabilities --> frontend
+    social --> frontend
+```
+
 ## Architecture Overview
 
 | Layer | Path | Purpose |
