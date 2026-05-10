@@ -1,4 +1,4 @@
-# MFAI Demo — monorepo
+# Many Faces AI (MFAI) - monorepo
 
 MFAI Demo is a full-stack social platform demo built around the concept of **faces**: configurable community spaces with their own pages, roles, content, chats, stories, profiles, listings, albums, blogs, reels, and AI-assisted features.
 
