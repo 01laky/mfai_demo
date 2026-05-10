@@ -20,6 +20,36 @@ Security and trust boundaries are a high priority in the architecture: the demo 
 - A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, logging, and AI service up together.
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
 
+## System Overview
+
+```mermaid
+flowchart LR
+    visitor["Users / Members"] --> fe["fe_demo<br/>User-facing React SPA"]
+    adminUser["Admins / Operators"] --> admin["admin_demo<br/>Admin React SPA"]
+
+    fe --> api["be_demo<br/>ASP.NET Core API"]
+    admin --> api
+
+    api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
+    api --> db["db_demo<br/>PostgreSQL"]
+    api --> redis["redis_demo<br/>Redis"]
+    api --> realtime["SignalR<br/>real-time updates"]
+    api --> ai["ai_demo<br/>Python gRPC AI service"]
+
+    scripts["scripts/ + dev/<br/>local orchestration"] --> fe
+    scripts --> admin
+    scripts --> api
+    scripts --> db
+    scripts --> redis
+    scripts --> ai
+    scripts --> logs["logger_demo<br/>container logs"]
+
+    docs["docs/ + APP_CONTEXT.md<br/>guides, prompts, architecture notes"] -.-> fe
+    docs -.-> admin
+    docs -.-> api
+    docs -.-> ai
+```
+
 ## Architecture Overview
 
 | Layer | Path | Purpose |
