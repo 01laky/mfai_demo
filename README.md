@@ -1,6 +1,12 @@
 # MFAI Demo — monorepo
 
-Monorepo with **Docker**, **ASP.NET Core** API, **React (Vite)** FE and admin apps, **PostgreSQL**, **Redis**, a **Python gRPC** AI service, and log tooling. Each app is its own **git submodule**.
+MFAI Demo is a full-stack social platform demo built around the concept of **faces**: configurable community spaces with their own pages, roles, content, chats, stories, profiles, listings, albums, blogs, reels, and AI-assisted features.
+
+The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
+
+The monorepo includes the customer-facing frontend, the admin portal, the backend API, AI services, PostgreSQL and Redis infrastructure, Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+
+It is designed both as a runnable local demo and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
 ## Documentation (start here)
 
