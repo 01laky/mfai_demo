@@ -210,6 +210,35 @@ flowchart LR
     social --> frontend
 ```
 
+## AI-Assisted Content Approval
+
+Regular users can create albums, blogs, and reels from the user-facing frontend, but the planned workflow keeps that content out of public views until it is approved. The backend owns the approval status and public visibility rules, the AI service can provide structured moderation recommendations, and the admin portal provides moderation queues plus superadmin override. Detailed design: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+
+```mermaid
+flowchart TD
+    user["FE user creates<br/>album / blog / reel"] --> api["Backend create endpoint"]
+    api --> pending["Store as PendingApproval"]
+    pending --> hidden["Exclude from public<br/>grid/list/detail views"]
+    pending --> queue["Queue AI review job"]
+
+    queue --> ai["AI reviewer<br/>bounded queue + structured recommendation"]
+    ai --> policy["Backend policy<br/>validate confidence, risk, flags"]
+
+    policy --> admin["Admin moderation queues"]
+    admin --> approve["Approve<br/>publicly visible"]
+    admin --> reject["Reject<br/>creator sees safe reason"]
+    admin --> remove["Remove<br/>audit kept"]
+
+    super["SUPER_ADMIN"] --> admin
+    super --> remove
+
+    approve --> public["FE public content views"]
+    reject --> creator["Creator status views"]
+    remove --> audit["Moderation audit log"]
+    policy --> audit
+    admin --> audit
+```
+
 ## Architecture Overview
 
 | Layer | Path | Purpose |
