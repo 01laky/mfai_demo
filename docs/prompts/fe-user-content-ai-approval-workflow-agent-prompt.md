@@ -156,16 +156,17 @@ Suggested user copy:
 Initial recommendation:
 
 - Authenticated FE users may submit content if the face allows the relevant content type.
-- Review/approval permissions should be limited to trusted backend roles or a future AI review service.
+- Review/approval permissions are limited to `SUPER_ADMIN` for now.
 - FE clients should not be able to mark their own content as `Approved`.
+- `ADMIN` and `FACE_ADMIN` must not approve, reject, or remove this content in the first implementation.
 - Backend must enforce status transitions; UI gating is not sufficient.
 
-Decide and document which roles can approve/reject in the interim:
+Required role rule:
 
-- `SUPER_ADMIN`
-- `ADMIN`
-- possibly `FACE_ADMIN`
-- future internal AI reviewer/service identity
+- submit content: authenticated FE user, subject to normal face/content rules
+- review recommendation: future internal AI reviewer/service identity
+- approve/reject/remove: `SUPER_ADMIN` only
+- view moderation queues: start with `SUPER_ADMIN` only unless product explicitly expands visibility later
 
 ## 9. Data Migration
 
@@ -203,24 +204,30 @@ Frontend tests:
 
 Leave these unchecked in this canonical prompt. Tick them only in the implementation PR or a copied task list.
 
-- [ ] Audit current `Album`, `Blog`, and `Reel` backend models, DTOs, services, controllers, and migrations.
-- [ ] Identify current FE create paths for `AlbumForm`, `BlogForm`, and `ReelForm`.
-- [ ] Add or reuse approval status enum.
-- [ ] Add approval metadata fields to album/blog/reel entities.
-- [ ] Add EF Core migration with safe defaults for existing content.
-- [ ] Update create endpoints so regular FE-created content becomes `PendingApproval`.
-- [ ] Preserve or define admin-created content behaviour, recommended `Approved`.
-- [ ] Filter public/grid/list queries to approved content only.
-- [ ] Add intended author/private visibility path for pending/rejected content, or document why it is deferred.
-- [ ] Add protected approve/reject backend contracts or service methods.
-- [ ] Ensure FE users cannot approve their own content.
-- [ ] Update FE create success copy for albums.
-- [ ] Update FE create success copy for blogs.
-- [ ] Update FE create success copy for reels.
-- [ ] Add pending/rejected badges where author-owned content is shown, if that screen exists in scope.
-- [ ] Add backend tests for status defaults, visibility filtering, and transitions.
-- [ ] Add FE tests for user-facing create copy and pending behaviour.
-- [ ] Update docs/comments to mark AI review as a future integration point, not implemented decision logic.
+Every implementation checklist item includes the requirement to add or update complete unit tests for the changed behaviour. Do not mark an item complete if the implementation is present but the relevant unit coverage is missing.
+
+- [ ] Audit current `Album`, `Blog`, and `Reel` backend models, DTOs, services, controllers, and migrations, including complete unit-test gap notes.
+- [ ] Identify current FE create paths for `AlbumForm`, `BlogForm`, and `ReelForm`, including complete unit-test gap notes.
+- [ ] Add or reuse approval status enum, including complete unit tests for parsing, serialization, defaults, and invalid values where applicable.
+- [ ] Add approval metadata fields to album/blog/reel entities, including complete unit tests for defaults and mapping.
+- [ ] Add EF Core migration with safe defaults for existing content, including complete unit tests or narrow migration/model tests where applicable.
+- [ ] Update create endpoints so regular FE-created content becomes `PendingApproval`, including complete unit tests.
+- [ ] Preserve or define admin-created content behaviour, recommended `Approved`, including complete unit tests.
+- [ ] Filter public/grid/list queries to approved content only, including complete unit tests.
+- [ ] Add intended author/private visibility path for pending/rejected content, or document why it is deferred, including complete unit tests for whichever path is implemented.
+- [ ] Add protected approve/reject backend contracts or service methods, including complete unit tests.
+- [ ] Ensure FE users cannot approve their own content, including complete unit tests.
+- [ ] Ensure only `SUPER_ADMIN` can approve, reject, or remove submitted content, including complete unit tests.
+- [ ] Ensure `ADMIN` and `FACE_ADMIN` cannot approve, reject, or remove submitted content in this phase, including complete unit tests.
+- [ ] Regenerate OpenAPI clients for `fe_demo` and `admin_demo` after backend contract changes, including complete unit tests for updated generated-client usage.
+- [ ] Update FE create success copy for albums, including complete unit tests.
+- [ ] Update FE create success copy for blogs, including complete unit tests.
+- [ ] Update FE create success copy for reels, including complete unit tests.
+- [ ] Add pending/rejected badges where author-owned content is shown, if that screen exists in scope, including complete unit tests.
+- [ ] Decide whether creators may edit, delete, or resubmit pending/rejected content in phase 1, including complete unit tests for the chosen behaviour.
+- [ ] Add backend tests for status defaults, visibility filtering, and transitions, including complete unit tests for all new service/controller branches.
+- [ ] Add FE tests for user-facing create copy and pending behaviour, including complete unit tests for all changed pure logic and UI state helpers.
+- [ ] Update docs/comments to mark AI review as a future integration point, not implemented decision logic, including complete unit tests for any code touched by the doc-driven change.
 
 ## 12. Acceptance Criteria
 
@@ -395,6 +402,7 @@ Safe first policy:
 - `reject` recommendation → `RecommendedReject`, still visible in admin queue
 - `needs_human_review` → `NeedsHumanReview`
 - final `Approved`, `Rejected`, or `Removed` requires admin/superadmin action
+- in the first implementation, the human/admin action means `SUPER_ADMIN` only
 
 Optional future policy, only if product explicitly allows:
 
@@ -403,7 +411,7 @@ Optional future policy, only if product explicitly allows:
   - risk is `low`
   - flags are empty or only informational
   - author/face is not rate-limited or suspicious
-  - the face has AI auto-approval enabled
+  - auto-approval has been explicitly enabled by a future product decision
 - Never auto-approve when:
   - risk is `medium` or `high`
   - unsafe flags are present
@@ -420,6 +428,9 @@ Add an admin moderation area for album/blog/reel submissions.
 Recommended top-level section:
 
 - `Moderation`
+
+In the first implementation, moderation actions should be available to `SUPER_ADMIN` only.
+`ADMIN` and `FACE_ADMIN` should not approve, reject, or remove user-created albums/blogs/reels yet.
 
 Recommended lists/tabs:
 
@@ -443,6 +454,8 @@ Each list should support filters:
 - confidence range
 - date range
 - reviewer
+- queue age
+- moderation version
 
 Each row/card should show:
 
@@ -468,6 +481,7 @@ Detail view should show:
 - moderation history
 - approve/reject/remove controls
 - superadmin override controls where allowed
+- media/file preview and safety indicators where content includes uploads
 
 ## 20. Superadmin Powers
 
@@ -485,6 +499,8 @@ Detail view should show:
 - override AI recommendation with a required reason
 
 Do not hard-delete approved content as the normal moderation action. Prefer `Removed` so the system keeps auditability and can explain why content disappeared.
+
+`ADMIN` and `FACE_ADMIN` are intentionally excluded from approval, rejection, and removal in the first implementation. If product later wants delegated face-level moderation, add it as a separate explicit role/permission rollout.
 
 ## 21. Audit Log
 
@@ -520,8 +536,31 @@ Write audit events when:
 - superadmin overrides
 - approved content is removed
 - removed content is restored, if supported
+- creator edits, deletes, or resubmits pending/rejected content if those actions are allowed
 
-## 22. FE User Status Display
+## 22. Notifications
+
+Add or design for user/admin notifications around moderation status changes.
+
+Recommended creator notifications:
+
+- content submitted for approval
+- content moved into AI review
+- content approved
+- content rejected with safe user-facing reason
+- approved content removed
+- rejected content can be edited/resubmitted, if supported
+
+Recommended superadmin/admin notifications:
+
+- new pending content exists
+- AI review failed or needs human review
+- queue age exceeds threshold
+- suspicious spike in submissions for a user or face
+
+Do not block the core approval workflow on a full notification system if one does not exist yet. At minimum, keep response copy and future notification hooks explicit.
+
+## 23. FE User Status Display
 
 The user-facing app should eventually show the creator a clear status for their own submitted content.
 
@@ -544,12 +583,13 @@ FE should not expose internal-only AI details by default. Show safe messages:
 
 If rejected, show `AiReviewUserMessage` or `HumanDecisionReason` only if it is safe for end users. Internal flags like abuse heuristics, model trace ids, or policy internals should stay in admin.
 
-## 23. Resubmission And Versioning
+## 24. Creator Actions, Resubmission, And Versioning
 
-Decide whether rejected content can be edited and resubmitted.
+Decide whether pending/rejected content can be edited, deleted, or resubmitted by the creator.
 
 Recommended model:
 
+- User may delete their own `PendingApproval` content if product allows.
 - User may edit rejected content if product allows.
 - Editing rejected content creates a new moderation version or increments `ModerationVersion`.
 - Resubmission resets content status to `PendingApproval`.
@@ -558,7 +598,98 @@ Recommended model:
 
 Avoid overwriting old AI reasons or human decisions without history.
 
-## 24. Suggested Implementation Phases For Part 2
+## 25. Media And File Safety
+
+Albums and reels may include uploaded or linked media. The approval workflow must account for media safety, not just text metadata.
+
+Design for:
+
+- image/video thumbnail preview in moderation queues
+- file type and size validation
+- unsafe link detection
+- media availability failures
+- missing/broken media handling
+- future image/video moderation signals
+- safe display of media previews in admin UI
+
+Do not mark media content public until the content item is `Approved`.
+
+## 26. Concurrency And Idempotency
+
+Approval transitions must be safe under repeated clicks, retries, and duplicate jobs.
+
+Design for:
+
+- idempotent AI job creation per content moderation version
+- optimistic concurrency or row version checks on status transitions
+- no duplicate approve/reject/remove events for the same transition
+- repeated approve on already approved content returns a safe no-op or conflict
+- stale AI recommendation cannot override a newer moderation version
+- queue retries do not create duplicate public content
+
+## 27. Bulk Moderation
+
+Bulk moderation is not required for the first UI, but the API/design should not make it impossible.
+
+Future bulk operations may include:
+
+- bulk approve low-risk items
+- bulk reject obvious spam
+- bulk remove approved items after a policy incident
+- bulk requeue failed AI reviews
+
+Bulk actions must still write per-item audit events.
+
+## 28. Metrics And Observability
+
+Add or design for operational visibility:
+
+- count of pending submissions
+- count of AI queued/in-progress/failed jobs
+- oldest queue age
+- review latency
+- approve/reject/remove counts
+- AI confidence distribution
+- top AI flags
+- per-face submission spikes
+- per-user submission spikes
+- failed AI service calls
+
+These metrics can start as logs/queries, but the model should preserve enough data to build dashboards later.
+
+## 29. Retention And Privacy
+
+Rejected and removed content may contain unsafe or sensitive material. Decide retention rules before production use.
+
+Recommended questions:
+
+- how long rejected content is retained
+- how long removed content is retained
+- whether creators can delete rejected content
+- whether AI reasons are considered internal-only
+- whether media previews are stored after rejection/removal
+- what is included in audit logs vs redacted
+
+Keep auditability, but avoid storing more unsafe content than the product needs.
+
+## 30. API Client Regeneration
+
+Any backend DTO/endpoint changes must be reflected in generated clients.
+
+Required follow-up:
+
+- regenerate `fe_demo` OpenAPI client
+- regenerate `admin_demo` OpenAPI client
+- update affected TypeScript model usage
+- update FE/admin tests that depend on generated response shapes
+
+## 31. No Feature Flag Requirement
+
+Do not add a gradual feature flag rollout requirement for this workflow. The product decision is to implement the approval model as the default path for regular FE user-created albums, blogs, and reels.
+
+Optional future config may still exist for AI automation policy, but first implementation should not depend on feature flags to decide whether user-created content requires approval.
+
+## 32. Suggested Implementation Phases For Part 2
 
 Phase 2A — moderation queue foundation:
 
@@ -580,6 +711,7 @@ Phase 2C — admin review workflow:
 - Add approve/reject/remove actions.
 - Add superadmin override rules.
 - Add audit log UI.
+- Keep all final moderation actions restricted to `SUPER_ADMIN`.
 
 Phase 2D — real AI review:
 
@@ -591,42 +723,69 @@ Phase 2D — real AI review:
 Phase 2E — controlled automation:
 
 - Optional auto-approval for low-risk/high-confidence content.
-- Per-face/product config.
 - Superadmin kill switch.
 - Expanded audit reporting.
 
-## 25. Part 2 Checklist
+## 33. Part 2 Checklist
 
 Leave these unchecked in this canonical prompt. Tick them only in the implementation PR or a copied task list.
 
-- [ ] Add separate AI review status concept.
-- [ ] Add AI review metadata fields.
-- [ ] Add moderation audit event model.
-- [ ] Add AI review job model or queue abstraction.
-- [ ] Add queue backpressure limits and retry policy.
-- [ ] Add structured AI recommendation contract.
-- [ ] Add backend validation for AI recommendation responses.
-- [ ] Add policy layer that separates AI recommendation from final approval.
-- [ ] Add admin moderation section.
-- [ ] Add admin lists for pending, AI recommended approval, AI recommended rejection, needs human review, approved, rejected, removed.
-- [ ] Add moderation detail view with content preview and AI metadata.
-- [ ] Add approve/reject/remove actions.
-- [ ] Add superadmin override rules.
-- [ ] Add audit log writes for all moderation transitions.
-- [ ] Add safe FE creator-facing status labels.
-- [ ] Add rejected/resubmit/versioning decision.
-- [ ] Add backend tests for AI queue, recommendation handling, policy decisions, and superadmin override.
-- [ ] Add admin UI tests for moderation lists and actions.
-- [ ] Add FE tests for creator-facing status display.
+Every Part 2 checklist item includes the requirement to add or update complete unit tests for the changed behaviour. Do not mark an item complete if queue, policy, admin, AI, or FE code was changed without relevant unit coverage.
 
-## 26. Part 2 Acceptance Criteria
+- [ ] Add separate AI review status concept, including complete unit tests for defaults, transitions, parsing, and serialization.
+- [ ] Add AI review metadata fields, including complete unit tests for defaults, mapping, and update behaviour.
+- [ ] Add moderation audit event model, including complete unit tests for event creation and required fields.
+- [ ] Add AI review job model or queue abstraction, including complete unit tests for enqueue/dequeue/state changes.
+- [ ] Add queue backpressure limits and retry policy, including complete unit tests for limits, retry, and failure paths.
+- [ ] Add structured AI recommendation contract, including complete unit tests for valid and invalid payloads.
+- [ ] Add backend validation for AI recommendation responses, including complete unit tests for every validation branch.
+- [ ] Add policy layer that separates AI recommendation from final approval, including complete unit tests for each policy decision.
+- [ ] Add admin moderation section, including complete unit tests for routing/state helpers and permission guards.
+- [ ] Add admin lists for pending, AI recommended approval, AI recommended rejection, needs human review, approved, rejected, removed, including complete unit tests for filtering and status mapping.
+- [ ] Add moderation detail view with content preview and AI metadata, including complete unit tests for data shaping and safe display helpers.
+- [ ] Add approve/reject/remove actions restricted to `SUPER_ADMIN`, including complete unit tests.
+- [ ] Ensure `ADMIN` and `FACE_ADMIN` cannot approve, reject, or remove content, including complete unit tests.
+- [ ] Add superadmin override rules, including complete unit tests for required reasons and override transitions.
+- [ ] Add audit log writes for all moderation transitions, including complete unit tests for each transition event.
+- [ ] Add safe FE creator-facing status labels, including complete unit tests for status-to-copy mapping.
+- [ ] Add rejected/resubmit/versioning decision, including complete unit tests for the chosen behaviour.
+- [ ] Add creator edit/delete/resubmit decision for pending/rejected content, including complete unit tests for allowed and forbidden actions.
+- [ ] Add notification hooks or documented follow-up points, including complete unit tests for emitted events/hooks where code is added.
+- [ ] Add media/file safety handling for album/reel content, including complete unit tests for validators and safety metadata.
+- [ ] Add concurrency/idempotency protection for moderation transitions and AI jobs, including complete unit tests for duplicate/stale/retry scenarios.
+- [ ] Add bulk moderation design notes or API-safe constraints, including complete unit tests for any implemented bulk guards.
+- [ ] Add metrics/observability fields or logs for queue and moderation health, including complete unit tests for metric/log event helpers where code is added.
+- [ ] Add retention/privacy rules for rejected/removed content and AI reasons, including complete unit tests for retention decisions and redaction helpers.
+- [ ] Regenerate FE/admin OpenAPI clients after backend contract changes, including complete unit tests for updated generated-client usage.
+- [ ] Add backend tests for AI queue, recommendation handling, policy decisions, and superadmin override, including complete unit tests for all new backend branches.
+- [ ] Add admin UI tests for moderation lists and actions, including complete unit tests for all changed UI logic.
+- [ ] Add FE tests for creator-facing status display, including complete unit tests for all changed UI logic.
+
+## 34. Part 2 Acceptance Criteria
 
 - AI work is queued and rate-limited rather than processed unbounded.
 - AI returns structured recommendations.
 - AI recommendation does not bypass backend policy.
 - Admin can view pending, approved, rejected, removed, and AI-recommended queues.
-- Superadmin can override, reject, or remove approved content.
+- Only `SUPER_ADMIN` can approve, reject, override, or remove approved content.
+- `ADMIN` and `FACE_ADMIN` cannot perform moderation actions for this workflow.
 - Every moderation transition is auditable.
 - FE creator-facing status is clear and does not leak internal AI details.
+- Media/file safety is considered before public visibility.
+- Moderation transitions and AI jobs are safe against duplicate retries.
+- Generated FE/admin API clients are updated after backend contract changes.
 - The system can later enable carefully controlled AI auto-approval without redesigning the whole workflow.
+
+## 35. Implementation Notes From Current Branch
+
+This canonical prompt intentionally keeps checklist items unchecked. The current implementation branch covers
+the first concrete rollout by adding backend moderation status fields, AI review job/audit models, pending-by-default
+FE-created album/blog/reel submissions, approved-only public visibility, `SUPER_ADMIN` moderation endpoints,
+creator-facing FE pending copy, and a first admin Moderation screen.
+
+Known operational note:
+
+- EF migration generation via local `dotnet-ef` failed because the installed EF design tool/runtime combination
+  throws `MissingMethodException` against the repo's EF Core 10 packages. The migration file was therefore added
+  manually with existing-content defaults set to `Approved`; backend tests validate the runtime model and workflow.
 

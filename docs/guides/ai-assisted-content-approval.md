@@ -16,7 +16,22 @@ It does not cover admin page/grid configuration, chat room creation, stories, ad
 
 Users should be able to create useful content inside a face, but that content should not become public immediately. New user-created albums, blogs, and reels should enter an approval process first.
 
-The first implementation phase can store content as `PendingApproval` and keep it out of public lists. A later phase adds AI-assisted review, admin moderation queues, and superadmin override controls.
+The first implementation phase stores content as `PendingApproval`, keeps it out of public lists, creates an AI review job record, and exposes a superadmin-only moderation queue. A later phase can connect the queued work to a real AI reviewer service and richer operational dashboards.
+
+## Current Implementation Snapshot
+
+The current branch implements the foundation described in this guide:
+
+- `Album`, `Blog`, and `Reel` records include approval status, AI review status/metadata, moderation versioning, human decision metadata, and removal metadata.
+- Regular FE-created albums, blogs, and reels are saved as `PendingApproval` and are not returned by public list queries until approved.
+- Existing content is protected by migration defaults that keep migrated rows `Approved`.
+- Backend moderation APIs list moderation items and allow approve/reject/remove actions for `SUPER_ADMIN` only.
+- `ADMIN`, `FACE_ADMIN`, and regular FE users cannot approve, reject, or remove content through the moderation API.
+- `AiReviewJobs` and `ContentModerationEvents` provide the queue/audit foundation for future AI processing.
+- `fe_demo` shows creator-facing submitted-for-approval copy after album/blog/reel create.
+- `admin_demo` includes a first `Moderation` screen for superadmin review actions.
+
+The current AI integration is intentionally a queue/contract foundation. It does not make autonomous publish/remove decisions.
 
 ## Core Rule
 
@@ -34,7 +49,7 @@ Existing public content and admin-created content should not be accidentally hid
 
 Keep the final public lifecycle separate from AI processing state.
 
-Recommended content status:
+Implemented content status:
 
 - `PendingApproval` - created by a regular FE user and waiting for review
 - `Approved` - public and visible in normal grid/list/detail views
@@ -49,7 +64,7 @@ Optional:
 
 AI review is a processing/recommendation state, not the same thing as final publication.
 
-Recommended AI review status:
+Implemented AI review status:
 
 - `NotQueued`
 - `Queued`
@@ -78,7 +93,7 @@ flowchart TD
     policy --> rejectRec["RecommendedReject"]
     policy --> human["NeedsHumanReview"]
 
-    approveRec --> admin["Admin moderation queue"]
+    approveRec --> admin["SUPER_ADMIN<br/>moderation queue"]
     rejectRec --> admin
     human --> admin
 
@@ -101,22 +116,23 @@ Required responsibilities:
 - Store approval metadata and creator ownership.
 - Keep public queries filtered to `Approved`.
 - Prevent users from approving their own content through public APIs.
-- Expose protected review/moderation APIs.
+- Expose protected review/moderation APIs for `SUPER_ADMIN` only in this phase.
 - Store AI recommendation metadata separately from final status.
 - Apply backend policy before any auto-transition.
-- Write audit events for every transition.
+- Write audit events for submit, approve, reject, remove, and override-style transitions.
 
-Recommended approval metadata:
+Implemented approval metadata includes:
 
 - `ApprovalStatus`
 - `SubmittedAtUtc`
-- `ReviewedAtUtc`
-- `ReviewedByUserId`
-- `RejectionReason`
+- `HumanReviewedAtUtc`
+- `HumanReviewedByUserId`
+- `HumanDecisionReason`
 - `RemovedAtUtc`
 - `RemovedByUserId`
 - `RemovalReason`
-- `CreatedByUserId`
+- `CreatedByUserId` / creator ownership fields
+- `ModerationVersion`
 
 Recommended AI metadata:
 
@@ -139,7 +155,7 @@ Safe first rule:
 
 - AI recommends.
 - Backend policy validates.
-- Admin/superadmin finalizes.
+- `SUPER_ADMIN` finalizes in the current implementation.
 - Every decision is auditable.
 
 Target AI response shape:
@@ -195,9 +211,9 @@ If the queue is overloaded, content should remain `PendingApproval`; overload mu
 
 ## Admin Moderation
 
-The admin portal should expose a dedicated moderation area.
+The admin portal exposes a first dedicated moderation area.
 
-Recommended tabs:
+Target tabs/queues:
 
 - Pending
 - AI Recommended Approval
@@ -247,6 +263,12 @@ Allowed actions:
 - override AI recommendations with a reason
 
 Prefer `Removed` over hard delete for moderation removals. This keeps auditability and makes later review possible.
+
+Current phase rule:
+
+- `SUPER_ADMIN` may approve, reject, and remove content.
+- `ADMIN` and `FACE_ADMIN` may not approve, reject, or remove user-created albums/blogs/reels.
+- UI gating is for user experience only; backend enforcement is mandatory and covered by tests.
 
 ## Audit Log
 
