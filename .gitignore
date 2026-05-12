@@ -38,10 +38,19 @@ tmp/
 temp/
 *.tmp
 
-# Subrepositories - ignore their .git folders
-# Each subrepo (be_demo, fe_demo, admin_demo, db_demo, redis_demo, …) has its own git repo
+# Subrepositories - ignore nested .git (each submodule is its own repo)
+many_faces_backend/.git/
+many_faces_portal/.git/
+many_faces_admin/.git/
+many_faces_ai/.git/
+many_faces_database/.git/
+many_faces_redis/.git/
+many_faces_logger/.git/
+# Legacy checkout paths (folder rename before many_faces_*)
 be_demo/.git/
 fe_demo/.git/
 admin_demo/.git/
+ai_demo/.git/
 db_demo/.git/
 redis_demo/.git/
+logger_demo/.git/

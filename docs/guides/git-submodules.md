@@ -6,7 +6,7 @@
 
 Create **7+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
-1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [git-submodules.md](./guides/git-submodules.md).
+1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](../../.gitmodules) at the repo root.
 2. **Submodules** (remote repo names — **local paths** in the monorepo stay `many_faces_backend/`, `many_faces_portal/`, …):
    - `many_faces_backend` → path `many_faces_backend/`
    - `many_faces_portal` → path `many_faces_portal/`
