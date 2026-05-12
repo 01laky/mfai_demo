@@ -1,6 +1,7 @@
-# GitHub Actions — per-submodule jobs run in parallel. `yarn npm audit` / `audit-monorepo-deps.sh` are
+# GitHub Actions — per-submodule jobs run in parallel. Display names use many_faces_* repos;
+# working-directory paths remain be_demo/, fe_demo/, … `yarn npm audit` / `audit-monorepo-deps.sh` are
 # informational (`|| true`) so supply-chain noise does not block merges; fix advisories in follow-ups.
-name: Monorepo CI
+name: Many Faces CI
 
 on:
   push:
@@ -11,7 +12,7 @@ on:
 jobs:
   # .NET 10 API + xUnit integration suite (includes SignalR + OAuth regression tests).
   be_demo:
-    name: be_demo
+    name: many_faces_backend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,7 +33,7 @@ jobs:
 
   # Public Vite/React SPA: lint, unit tests, production build, optional Cypress smoke on `vite preview` (HTTP 4173).
   fe_demo:
-    name: fe_demo
+    name: many_faces_portal
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -70,7 +71,7 @@ jobs:
           wait $PID 2>/dev/null || true
 
   admin_demo:
-    name: admin_demo
+    name: many_faces_admin
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,7 +98,7 @@ jobs:
   # transformers) is required so test_server.py can import server.py (same as
   # ai_demo/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
   ai_demo:
-    name: ai_demo
+    name: many_faces_ai
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -135,7 +136,7 @@ jobs:
 
   # Compose syntax checks — catches invalid YAML/env interpolation without starting containers.
   infra_db_demo:
-    name: infra (db_demo compose)
+    name: infra (many_faces_database)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -147,7 +148,7 @@ jobs:
 
   # Redis compose file sanity (same pattern as db_demo).
   infra_redis_demo:
-    name: infra (redis_demo compose)
+    name: infra (many_faces_redis)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -159,7 +160,7 @@ jobs:
 
   # Seq / logger sidecar compose used in local dev stacks.
   infra_logger_demo:
-    name: infra (logger_demo compose)
+    name: infra (many_faces_logger)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -189,7 +190,7 @@ jobs:
 
   # Cross-language smoke: installs Yarn workspaces + runs scripts/ci-local.sh (lint/build/test matrix).
   monorepo_scripts:
-    name: monorepo (ci-local.sh)
+    name: many_faces_main (ci-local.sh)
     runs-on: ubuntu-latest
     env:
       SKIP_CYPRESS: '1'
