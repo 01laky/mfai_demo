@@ -1,6 +1,6 @@
 # Monorepo dependency audit and upgrade (agent prompt)
 
-**Purpose:** Single inventory of **all declared dependencies** per app/subrepo in `_mfai_demo`, with **observed “latest stable”** from registries or tooling at a fixed snapshot, plus **feasibility / risk** notes for upgrades. Use this as a **copy-paste agent brief** to refresh numbers, open a branch, bump packages, and run tests/CI.
+**Purpose:** Single inventory of **all declared dependencies** per app/subrepo in `many_faces_main`, with **observed “latest stable”** from registries or tooling at a fixed snapshot, plus **feasibility / risk** notes for upgrades. Use this as a **copy-paste agent brief** to refresh numbers, open a branch, bump packages, and run tests/CI.
 
 **Checklists:** Trailing `[ ]` sections are **PR / audit evidence templates**—tick them in the PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
 
@@ -8,13 +8,13 @@
 
 ### Monorepo layout (`git` submodules)
 
-`fe_demo`, `admin_demo`, `be_demo`, `ai_demo`, `db_demo`, `redis_demo`, and `logger_demo` are **git submodules** (see root `.gitmodules`). **Commits that bump dependencies** usually belong in the **submodule’s remote**; the parent `_mfai_demo` repo may only update the **submodule pointer** after those merges. Open or link PRs per submodule so CI runs where the manifest and lockfile live.
+`fe_demo`, `admin_demo`, `be_demo`, `ai_demo`, `db_demo`, `redis_demo`, and `logger_demo` are **git submodules** (see root `.gitmodules`). **Commits that bump dependencies** usually belong in the **submodule’s remote**; the parent `many_faces_main` repo may only update the **submodule pointer** after those merges. Open or link PRs per submodule so CI runs where the manifest and lockfile live.
 
 ---
 
 ## 0. Reproduce the audit (commands)
 
-Run from **monorepo root** (`_mfai_demo`) unless noted. Paths below assume that CWD.
+Run from **monorepo root** (`many_faces_main`) unless noted. Paths below assume that CWD.
 
 ```bash
 # .NET — outdated top-level packages (NuGet.org)
@@ -357,7 +357,7 @@ When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2
 7. **Python AI:** Pin compatible **grpcio / protobuf / grpcio-tools** triple from upstream docs; avoid mixing unpinned `torch`/`transformers` in production images.
 8. **Docker:** Replace **`latest`** tags for Seq, pgAdmin, Dozzle with explicit versions in a dedicated infra PR.
 9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.
-10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `_mfai_demo` submodule pointers if required by your release process.
+10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `many_faces_main` submodule pointers if required by your release process.
 11. **Security:** run **§0** audit commands plus `yarn npm audit` / `dotnet list package --vulnerable` where available; triage before and after bumps.
 12. **Lockfiles:** any `package.json` / `requirements.txt` change should include updated **`yarn.lock`** or a **pinned lock** for Python where the team adopted one.
 
@@ -449,7 +449,7 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 - [ ] `yarn npm audit` in **fe_demo** and **admin_demo**; address or record accepted risks.
 - [ ] `dotnet list package --vulnerable` in **be_demo** if supported.
 - [ ] Update **this prompt** (§1–§4 tables) or attach CI logs + new snapshot date.
-- [ ] **Parent `_mfai_demo`:** bump submodule SHAs + short release note / CHANGELOG as per §6.
+- [ ] **Parent `many_faces_main`:** bump submodule SHAs + short release note / CHANGELOG as per §6.
 
 ### 7.10 Explicit “do not forget” cross-cuts
 

@@ -23,7 +23,7 @@
 
 ## 1. Objectives
 
-1. **Analyze** cryptography, transport, authentication, authorization, and operational security across the **entire** `_mfai_demo` monorepo — including surfaces listed in **§2** (API, SignalR, SPAs, **ai_demo**, **db**/connection strings, **logger**, **uploads**, **jobs/Redis** if present, Docker, CI, OpenAPI).
+1. **Analyze** cryptography, transport, authentication, authorization, and operational security across the **entire** **`many_faces_main`** monorepo — including surfaces listed in **§2** (API, SignalR, SPAs, **ai_demo**, **db**/connection strings, **logger**, **uploads**, **jobs/Redis** if present, Docker, CI, OpenAPI).
 2. **Implement** all security improvements required by this document and **§17.2** for the current codebase state. **Deferral is not allowed** except: stop-the-world external dependency (e.g. corporate HSM not available in dev) — in that case you must **commit a written gap entry**, **open a tracked follow-up identifier** (issue ID or TODO with owner in docs), and still **test everything that can run locally**.
 3. **Add and maintain** comprehensive edge-case tests on **BE** (integration/unit), **fe_demo** (Vitest), **admin_demo** (Vitest), and **E2E** where the repo already defines them (**§7, §18**).
 4. **Document all touched logic in English** in source: XML/TSDoc and **non-trivial branches inside bodies** (**§14**).

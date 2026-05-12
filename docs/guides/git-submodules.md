@@ -4,16 +4,17 @@
 
 ### 1. Create repositories on GitHub
 
-Create **7+ private repositories** on GitHub (root + submodules):
+Create **7+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
-1. **Root repo**: `_mfai_demo` (or `mfai-demo`)
-2. **Submodules**:
-   - `be_demo`
-   - `fe_demo`
-   - `admin_demo`
-   - `ai_demo`
-   - `db_demo`
-   - `redis_demo`
+1. **Root repo**: `many_faces_main` (historically cloned as `_mfai_demo` / `mfai_demo` is fine locally)
+2. **Submodules** (remote repo names — **local paths** in the monorepo stay `be_demo/`, `fe_demo/`, …):
+   - `many_faces_backend` → path `be_demo/`
+   - `many_faces_portal` → path `fe_demo/`
+   - `many_faces_admin` → path `admin_demo/`
+   - `many_faces_ai` → path `ai_demo/`
+   - `many_faces_database` → path `db_demo/`
+   - `many_faces_redis` → path `redis_demo/`
+   - `many_faces_logger` → path `logger_demo/`
 
 ### 2. Set remote URL in each submodule
 
@@ -22,37 +23,43 @@ For each submodule, set the remote URL (replace `YOUR_USERNAME` with your GitHub
 ```bash
 # Backend
 cd be_demo
-git remote add origin https://github.com/YOUR_USERNAME/be_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_backend.git
 git branch -M main
 git push -u origin main
 
 # Frontend
 cd ../fe_demo
-git remote add origin https://github.com/YOUR_USERNAME/fe_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_portal.git
 git branch -M main
 git push -u origin main
 
 # Admin
 cd ../admin_demo
-git remote add origin https://github.com/YOUR_USERNAME/admin_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_admin.git
 git branch -M main
 git push -u origin main
 
 # AI Demo
 cd ../ai_demo
-git remote add origin https://github.com/YOUR_USERNAME/ai_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_ai.git
 git branch -M main
 git push -u origin main
 
 # Database
 cd ../db_demo
-git remote add origin https://github.com/YOUR_USERNAME/db_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_database.git
 git branch -M main
 git push -u origin main
 
 # Redis (job queue)
 cd ../redis_demo
-git remote add origin https://github.com/YOUR_USERNAME/redis_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_redis.git
+git branch -M main
+git push -u origin main
+
+# Logger (Seq / Dozzle stack)
+cd ../logger_demo
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_logger.git
 git branch -M main
 git push -u origin main
 ```
@@ -69,15 +76,16 @@ nano .gitmodules   # or use your editor
 ### 4. Register submodules in the root repository
 
 ```bash
-cd /Users/ladislavkostolny/Soft/_mfai_demo
+cd /path/to/many_faces_main
 
 # Add submodules
-git submodule add -f https://github.com/YOUR_USERNAME/be_demo.git be_demo
-git submodule add -f https://github.com/YOUR_USERNAME/fe_demo.git fe_demo
-git submodule add -f https://github.com/YOUR_USERNAME/admin_demo.git admin_demo
-git submodule add -f https://github.com/YOUR_USERNAME/ai_demo.git ai_demo
-git submodule add -f https://github.com/YOUR_USERNAME/db_demo.git db_demo
-git submodule add -f https://github.com/YOUR_USERNAME/redis_demo.git redis_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_backend.git be_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_portal.git fe_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_admin.git admin_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_ai.git ai_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_database.git db_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_redis.git redis_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_logger.git logger_demo
 
 # Or if they already exist, update .gitmodules and commit:
 git add .gitmodules
@@ -88,7 +96,7 @@ git commit -m "Add git submodules configuration"
 
 ```bash
 # From repo root
-git remote add origin https://github.com/YOUR_USERNAME/_mfai_demo.git
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_main.git
 git branch -M main
 git add .gitmodules
 git commit -m "Configure git submodules"
@@ -135,7 +143,7 @@ flowchart TB
 
 ```bash
 # Clone entire project with submodules
-git clone --recursive https://github.com/YOUR_USERNAME/_mfai_demo.git
+git clone --recursive https://github.com/YOUR_USERNAME/many_faces_main.git
 
 # Or if you already have the root:
 git submodule update --init --recursive

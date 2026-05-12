@@ -5,8 +5,9 @@ The Redis instance used for the backend **job queue** is a **standalone git subm
 ## Location
 
 ```
-_mfai_demo/redis_demo/
+<monorepo-root>/redis_demo/
 ```
+(GitHub root repo: **`many_faces_main`**; local folder name may still be `_mfai_demo`.)
 
 - Its own GitHub repository (see `.gitmodules` for the URL).
 - From the monorepo root: `git submodule update --init redis_demo`
@@ -75,8 +76,8 @@ git submodule update --init redis_demo
 
 ## First-time publish of `redis_demo` as its own repo
 
-1. Create an empty `redis_demo` repository on GitHub.
+1. Create an empty **`many_faces_redis`** repository on GitHub (submodule path stays `redis_demo/`).
 2. In `redis_demo/`: `git init`, `git add .`, commit, `remote add`, `push`.
-3. In root `_mfai_demo`: if you did not have the submodule yet, `git submodule add <url> redis_demo` (or commit `.gitmodules` + submodule pointer).
+3. In root **`many_faces_main`**: if you did not have the submodule yet, `git submodule add <url> redis_demo` (or commit `.gitmodules` + submodule pointer).
 
 For the full workflow, see **[git-submodules.md](../guides/git-submodules.md)** (treat `redis_demo` like `db_demo`).

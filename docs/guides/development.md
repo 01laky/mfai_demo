@@ -1,6 +1,6 @@
 # Development — monorepo, CI, Node, Python, errors
 
-This document covers **how we build and test** `_mfai_demo` (root repo with submodules / nested apps) and **contracts** shared by FE, admin, BE, and tooling.
+This document covers **how we build and test** the **`many_faces_main`** root repo (with submodules / nested apps) and **contracts** shared by FE, admin, BE, and tooling.
 
 ## Documentation layout
 

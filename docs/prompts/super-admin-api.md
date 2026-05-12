@@ -215,7 +215,7 @@ flowchart TB
 ## 10. AI AGENT PROMPT (copy the block below)
 
 ```
-You are implementing a SUPER_ADMIN-only HTTP API in the BeDemo .NET 10 solution (repo: _mfai_demo, project be_demo/BeDemo.Api).
+You are implementing a SUPER_ADMIN-only HTTP API in the BeDemo .NET 10 solution (monorepo root **`many_faces_main`**, project `be_demo/BeDemo.Api`).
 
 GOAL
 - Expose a secure endpoint to change an ApplicationUser’s GLOBAL role (UserRoleId) in UserRoles table.
