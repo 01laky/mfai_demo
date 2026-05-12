@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Validate every ```mermaid fenced block in repo Markdown via @mermaid-js/mermaid-cli.
 # Slower than Prettier: downloads Chromium on first run. Not part of scripts/ci-local.sh by default.
+# Linux CI (e.g. GitHub Actions): mmdc uses scripts/mermaid-puppeteer-ci.json so Chromium can start without a user namespace sandbox.
 #
 # Usage:
 #   ./scripts/check-mermaid-docs.sh

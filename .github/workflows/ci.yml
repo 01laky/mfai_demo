@@ -118,7 +118,7 @@ jobs:
           python -m pip install --upgrade pip wheel
           pip install "setuptools<82"
           pip install ruff pytest grpcio==1.68.1 grpcio-tools==1.68.1 protobuf==5.28.3 grpcio-testing==1.68.1
-          pip install numpy accelerate "transformers>=4.36" torch --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy accelerate "transformers>=4.36" torch --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Generate protobuf / gRPC stubs
         run: python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto

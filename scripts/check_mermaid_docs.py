@@ -6,6 +6,9 @@ Skips files that contain illustrative / non-renderable examples (see SKIP_FILES)
 
 Env:
   MERMAID_CLI_VERSION — pinned npm dist-tag for @mermaid-js/mermaid-cli (default: 11.4.1).
+
+Puppeteer / Chromium on Linux CI (GitHub Actions, Ubuntu 23.10+ AppArmor) cannot use the
+default sandbox; mmdc is invoked with scripts/mermaid-puppeteer-ci.json (--no-sandbox, etc.).
 """
 
 from __future__ import annotations
@@ -42,6 +45,9 @@ SKIP_FILES = frozenset(
 )
 
 DEFAULT_MERMAID_CLI_VERSION = "11.4.1"
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_PUPPETEER_CONFIG = _SCRIPT_DIR / "mermaid-puppeteer-ci.json"
 
 
 def should_skip_path(path: Path, root: Path) -> bool:
@@ -112,6 +118,8 @@ def run_mmdc(content: str, mmdc_version: str) -> tuple[int, str]:
             "-b",
             "transparent",
         ]
+        if _PUPPETEER_CONFIG.is_file():
+            cmd.extend(["-p", str(_PUPPETEER_CONFIG)])
         proc = subprocess.run(
             cmd,
             capture_output=True,
