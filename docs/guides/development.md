@@ -144,12 +144,13 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | **many_faces_backend**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                          |
 | **many_faces_portal**           | Node from `many_faces_portal/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`, **`yarn npm audit`** (informational, always exits 0 in CI), then **Cypress smoke**: `yarn preview` on **HTTP** `127.0.0.1:4173` + **`yarn test:e2e:ci`** |
 | **many_faces_admin**        | Same Node/Yarn gate as **many_faces_portal** through **`yarn build`**, plus informational **`yarn npm audit`**; **no** Cypress job in this workflow yet. |
+| **many_faces_mobile**       | Node from **`many_faces_mobile/.nvmrc`**, **`npm ci`**, **`npm run lint`**, **`npm run typecheck`**, **`npm test`**, **`npx expo-doctor`** (blocking), **`npm audit`** (informational, always exits 0). |
 | **many_faces_ai**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                             |
 | **infra_many_faces_database**     | `docker compose -f many_faces_database/docker-compose.yml config`                                                                                                        |
 | **infra_many_faces_redis**  | `docker compose -f many_faces_redis/docker-compose.yml config`                                                                                                     |
 | **infra_many_faces_logger** | `docker compose -f many_faces_logger/docker-compose.dev.yml config`                                                                                                |
 | **docs_mermaid**      | Node from `many_faces_portal/.nvmrc`, runs **`./scripts/check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
-| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin**, **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + `yarn npm audit` log), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
+| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin**, **`npm ci`** in **`many_faces_mobile`**, **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + `yarn npm audit` log), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
 
 The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI. Dependency-audit output is logged for triage but does not gate green by itself (`|| true` in the audit script and in **many_faces_portal** / **many_faces_admin** audit steps).
 
@@ -179,14 +180,14 @@ Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipe
 
 ## Monorepo scripts (`scripts/`)
 
-Run from repository root (submodules checked out). Make executable if needed: `chmod +x scripts/*.sh **/lint.sh many_faces_ai/verify-ci.sh`.
+Run from repository root (submodules checked out). Make executable if needed: `chmod +x scripts/*.sh **/lint.sh many_faces_ai/verify-ci.sh many_faces_mobile/lint.sh`.
 
 | Script                              | Purpose                                                                                                                                                                                                                         |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override.                                                                                                                         |
-| **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, `many_faces_ai` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff).                                                                                                |
+| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`npm` scripts after `npm ci` in CI; locally reuse `node_modules` if already installed). |
+| **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, **`many_faces_mobile`** (`./lint.sh`: ESLint + Prettier check + `tsc`), `many_faces_ai` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
 | **`scripts/build-all.sh`**          | `many_faces_backend`: `dotnet build -c Release`; `many_faces_portal` / `many_faces_admin`: `yarn build`; `many_faces_ai`: `./verify-ci.sh`.                                                                                                                      |
-| **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`many_faces_ai/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`.                                                                                                           |
+| **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`many_faces_mobile`** `npm test` (Jest / `jest-expo`), **`many_faces_ai/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`.                                                                                                           |
 | **`scripts/status-all.sh`**         | Docker / HTTP status of dev containers (does not run builds).                                                                                                                                                                   |
 | **`scripts/format-all-doc.sh`**     | Prettier over all `*.md` / `*.mdx` (respects **`.prettierignore`**). Use **`--check`** for a no-write verify. Does **not** validate Mermaid syntax inside fences.                                                               |
 | **`scripts/check-mermaid-docs.sh`** | Python walker + **`npx @mermaid-js/mermaid-cli`** (`mmdc`): each **mermaid** fence must render. Slower (Chromium); run before large doc merges. **`docs_mermaid`** CI job runs this. Not included in **`scripts/ci-local.sh`**. |
@@ -214,7 +215,7 @@ flowchart TB
 
 ### Submodule-only repos
 
-Each of `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger` includes its own **CI** workflow for development outside the monorepo.
+Each of `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, **`many_faces_mobile`**, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger` includes its own **CI** workflow for development outside the monorepo.
 
 ## Authentication, JWT, and “stay signed in” (`rememberMe`)
 

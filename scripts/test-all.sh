@@ -526,6 +526,42 @@ fi
 echo ""
 
 # ============================================================================
+# TEST MOBILE (many_faces_mobile)
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing Mobile (many_faces_mobile)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -d "many_faces_mobile" ] && [ -f "many_faces_mobile/package.json" ]; then
+    cd many_faces_mobile
+    if [ ! -d "node_modules" ]; then
+        echo "📦 Installing npm dependencies..."
+        npm ci --silent 2>/dev/null || npm ci
+    fi
+    echo "📦 Running Jest (jest-expo)..."
+    if npm test 2>&1; then
+        TEST_RESULTS+=("✅ many_faces_mobile: npm test passed")
+        echo "✅ many_faces_mobile: npm test passed"
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+    else
+        TEST_RESULTS+=("❌ many_faces_mobile: npm test failed")
+        echo "❌ many_faces_mobile: npm test failed"
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+    fi
+    cd ..
+else
+    TEST_RESULTS+=("⏭️  many_faces_mobile: not found, skipping")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  many_faces_mobile: not found, skipping"
+fi
+
+echo ""
+
+# ============================================================================
 # TEST AI (many_faces_ai) — same as CI: verify-ci.sh
 # ============================================================================
 

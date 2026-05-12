@@ -31,12 +31,14 @@ nvm use   # or: nvm install && nvm use
 npm install
 ```
 
-Copy environment template (once the repo adds `app.config` / `extra` — see prompt):
+Copy environment template:
 
 ```bash
 cp .env.example .env
-# Set EXPO_PUBLIC_API_BASE_URL to your local API, e.g. https://localhost:8001
+# Required: EXPO_PUBLIC_API_BASE_URL (and OAuth2 demo keys if you changed backend clients)
 ```
+
+`EXPO_PUBLIC_*` keys are read at bundle time via `app.config.ts` → `expo.extra` (see `src/config/env.ts`).
 
 Start Metro:
 
@@ -60,16 +62,17 @@ Implementers should mirror behaviour and data contracts, not necessarily file na
 
 ## 5. Quality gates (after phase-1 tooling lands)
 
-Run from `many_faces_mobile/`:
+From `many_faces_mobile/`:
 
 ```bash
 npm run lint
-npm run format:check   # if added
-npx tsc --noEmit
+npm run format:check
+npm run typecheck
 npm test
+npx expo-doctor
 ```
 
-Parent CI (once wired) runs the same steps in `many_faces_main/.github/workflows/ci.yml` under a `many_faces_mobile` job.
+Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration also calls **`./many_faces_mobile/lint.sh`** from **`scripts/lint-all.sh`** and **`npm test`** from **`scripts/test-all.sh`** when the directory exists.
 
 ## 6. Git / submodule workflow (short)
 

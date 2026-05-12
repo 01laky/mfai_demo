@@ -94,6 +94,31 @@ jobs:
       - name: Dependency audit (informational)
         run: yarn npm audit || true
 
+  many_faces_mobile:
+    name: many_faces_mobile
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: many_faces_mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: many_faces_mobile/.nvmrc
+          cache: npm
+          cache-dependency-path: many_faces_mobile/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx expo-doctor
+      - name: npm audit (informational)
+        run: npm audit || true
+
   # Python gRPC demo: protobuf generation, Ruff, pytest. ML stack (CPU torch +
   # transformers) is required so test_server.py can import server.py (same as
   # many_faces_ai/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
@@ -210,6 +235,9 @@ jobs:
           (cd many_faces_portal && yarn install --immutable)
           (cd many_faces_admin && yarn install --immutable)
 
+      - name: npm install (many_faces_mobile)
+        run: (cd many_faces_mobile && npm ci)
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -221,7 +249,7 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
-          chmod +x many_faces_backend/lint.sh many_faces_portal/lint.sh many_faces_admin/lint.sh many_faces_ai/lint.sh many_faces_ai/verify-ci.sh
+          chmod +x many_faces_backend/lint.sh many_faces_portal/lint.sh many_faces_admin/lint.sh many_faces_ai/lint.sh many_faces_mobile/lint.sh many_faces_ai/verify-ci.sh
 
       - name: Monorepo dependency audit (informational)
         run: ./scripts/audit-monorepo-deps.sh

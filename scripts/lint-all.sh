@@ -35,6 +35,7 @@ echo ""
 lint_project "many_faces_portal" "many_faces_portal (frontend)"
 lint_project "many_faces_backend" "many_faces_backend (backend)"
 lint_project "many_faces_admin" "many_faces_admin (admin)"
+lint_project "many_faces_mobile" "many_faces_mobile (Expo)"
 lint_project "many_faces_ai" "many_faces_ai (AI service)"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
