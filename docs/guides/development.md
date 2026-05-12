@@ -18,6 +18,7 @@ This document covers **how we build and test** the **`many_faces_main`** root re
 | PostgreSQL dev stack | `many_faces_database/`     | Docker Compose            |
 | Redis dev stack      | `many_faces_redis/`  | Docker Compose            |
 | Logger UI (Dozzle)   | `many_faces_logger/` | Docker Compose            |
+| Mobile app           | `many_faces_mobile/`   | Expo, React Native, npm  |
 
 ### Diagram: monorepo layout
 
@@ -53,6 +54,13 @@ Both SPAs use **ESLint 10** with **`@eslint/js` ^10** and **`typescript-eslint` 
 - **Flat config:** `eslint.config.js` extends **`reactHooks.configs.flat.recommended`** (full React Compiler–aligned hooks rules) with **`eslint-config-prettier` last**. Violations were cleared in both SPAs (`set-state-in-effect` refactors, TanStack Table / RHF **`react-hooks/incompatible-library`** remain at **`warn`** upstream).
 - **Yarn:** after the pin, **`YN0060`** for the ESLint ↔ react-hooks conflict should be **gone**. A generic **`YN0086`** (“peer dependencies incorrectly met by **dependencies**”) may still appear from **transitive** trees (e.g. tooling); investigate with `yarn explain peer-requirements` if it blocks CI policy.
 - **Gradual rollout** of the full `eslint-plugin-react-hooks` `flat.recommended` preset (React Compiler–oriented rules): agent prompt [`docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md`](../prompts/react-hooks-compiler-rules-rollout-agent-prompt.md).
+
+## Expo (`many_faces_mobile`)
+
+The mobile submodule uses **Expo**, **TypeScript**, and **`npm`** with `package-lock.json` (the SPAs use Yarn 4 — do not mix commands). Use Node from **`many_faces_mobile/.nvmrc`** (aligned with the monorepo, **22.14+**).
+
+- **Start here:** [`mobile-expo-development.md`](./mobile-expo-development.md) — prerequisites, `npm install`, `npm run start`, Expo Go, env vars, submodule pointer bumps.
+- **Implementation prompt:** [`mobile-phase1-foundation-agent-prompt.md`](../prompts/mobile-phase1-foundation-agent-prompt.md) — config/auth parity with `many_faces_portal`, README style, ESLint/Prettier, tests, gitflow, parent `ci.yml` job.
 
 ## Python (many_faces_ai)
 
