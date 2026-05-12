@@ -14,15 +14,16 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
 fi
 
 ROOT_SCRIPTS="start-all-dev.sh stop-all-dev.sh restart-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh status-all.sh test-all.sh lint-all.sh"
-CONTAINER_ORDER="many_faces_backend many_faces_portal many_faces_admin many_faces_ai many_faces_database many_faces_redis many_faces_logger"
+CONTAINER_ORDER="many_faces_backend many_faces_portal many_faces_admin many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_mobile"
 CONTAINER_SCRIPTS=(
-  "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh generate-diagram.sh"
-  "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh fix-editor.sh"
-  "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh fix-editor.sh"
-  "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh generate_proto.sh"
-  "start-db.sh stop-db.sh clear-db.sh"
-  "start-redis.sh stop-redis.sh clear-redis.sh"
-  "start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh"
+  "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/generate-diagram.sh"
+  "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/fix-editor.sh"
+  "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/fix-editor.sh"
+  "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/generate_proto.sh"
+  "scripts/start-db.sh scripts/stop-db.sh scripts/clear-db.sh scripts/create-bedemo-role.sh"
+  "scripts/start-redis.sh scripts/stop-redis.sh scripts/clear-redis.sh"
+  "scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh"
+  "scripts/lint.sh scripts/verify-ci.sh scripts/test.sh scripts/typecheck.sh scripts/build.sh"
 )
 
 NORMAL=$'\033[0m'

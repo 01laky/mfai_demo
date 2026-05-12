@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# build-all.sh - Build all projects (many_faces_backend, many_faces_portal, many_faces_admin, many_faces_ai)
+# build-all.sh - Build all projects (many_faces_backend, many_faces_portal, many_faces_admin,
+# many_faces_mobile, many_faces_ai)
 #
 # Runs build for each project without Docker.
 # - many_faces_backend: dotnet build
 # - many_faces_portal: yarn build
 # - many_faces_admin: yarn build (vite only, no tsc - see admin package.json)
+# - many_faces_mobile: TypeScript + expo-doctor (Phase 1; no EAS native binary)
 # - many_faces_ai: pip install + optional model download (Python, no traditional "build")
-#
 # Usage: ./scripts/build-all.sh (from repository root)
 
 set -e
@@ -54,13 +55,25 @@ else
 fi
 echo ""
 
+# Mobile (Expo) — static build gate
+echo "═══════════════════════════════════════════════════════════"
+echo "  Build check Mobile (many_faces_mobile)"
+echo "═══════════════════════════════════════════════════════════"
+if [ -d "many_faces_mobile" ] && [ -f "many_faces_mobile/scripts/build.sh" ]; then
+  chmod +x many_faces_mobile/scripts/build.sh 2>/dev/null || true
+  (cd many_faces_mobile && ./scripts/build.sh) || FAILED=1
+else
+  echo "⚠️  many_faces_mobile/scripts/build.sh not found, skipping"
+fi
+echo ""
+
 # AI Demo — same checks as CI (ruff + pytest, no full torch stack)
 echo "═══════════════════════════════════════════════════════════"
-echo "  Verifying AI Demo (many_faces_ai / verify-ci.sh)"
+echo "  Verifying AI Demo (many_faces_ai / scripts/verify-ci.sh)"
 echo "═══════════════════════════════════════════════════════════"
 if [ -d "many_faces_ai" ]; then
-  chmod +x many_faces_ai/verify-ci.sh 2>/dev/null || true
-  (cd many_faces_ai && ./verify-ci.sh) || FAILED=1
+  find many_faces_ai/scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
+  (cd many_faces_ai && ./scripts/verify-ci.sh) || FAILED=1
 else
   echo "⚠️  many_faces_ai not found, skipping"
 fi

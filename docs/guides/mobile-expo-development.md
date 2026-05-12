@@ -72,7 +72,7 @@ npm test
 npx expo-doctor
 ```
 
-Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration also calls **`./many_faces_mobile/lint.sh`** from **`scripts/lint-all.sh`** and **`npm test`** from **`scripts/test-all.sh`** when the directory exists.
+Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration calls **`./many_faces_mobile/lint.sh`** (which runs **`scripts/lint.sh`**) from **`scripts/lint-all.sh`**, **`./many_faces_mobile/scripts/build.sh`** from **`scripts/build-all.sh`**, and **`./many_faces_mobile/scripts/test.sh`** from **`scripts/test-all.sh`** when the directory exists. Locally you can run **`./scripts/verify-ci.sh`** or **`./scripts/verify-ci.sh --quick`** (skips `npm ci` when you set **`SKIP_NPM_CI=1`** or pass **`--quick`**) from the mobile repo root to mirror the mobile CI job.
 
 ## 6. Git / submodule workflow (short)
 

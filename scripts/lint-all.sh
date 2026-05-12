@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Lint all projects: many_faces_portal, many_faces_backend, many_faces_admin, many_faces_ai
+# Lint all projects: portal, backend, admin, mobile (Expo), AI
 # Usage: ./scripts/lint-all.sh (from repository root)
 
 set -e
@@ -14,18 +14,27 @@ FAILED=0
 lint_project() {
     local dir=$1
     local name=$2
+    local run=""
     if [ -f "$dir/lint.sh" ]; then
+        run="./lint.sh"
         chmod +x "$dir/lint.sh" 2>/dev/null || true
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "📦 $name"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        if (cd "$dir" && ./lint.sh); then
-            echo ""
-        else
-            FAILED=1
-        fi
+    elif [ -f "$dir/scripts/lint.sh" ]; then
+        run="./scripts/lint.sh"
+        chmod +x "$dir/scripts/lint.sh" 2>/dev/null || true
     else
-        echo "⚠️  $dir/lint.sh not found, skipping $name"
+        echo "⚠️  $dir/lint.sh (or scripts/lint.sh) not found, skipping $name"
+        return
+    fi
+    if [ -d "$dir/scripts" ]; then
+        find "$dir/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
+    fi
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 $name"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    if (cd "$dir" && $run); then
+        echo ""
+    else
+        FAILED=1
     fi
 }
 

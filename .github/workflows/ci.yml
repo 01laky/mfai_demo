@@ -112,16 +112,16 @@ jobs:
           cache-dependency-path: many_faces_mobile/package-lock.json
 
       - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npx expo-doctor
-      - name: npm audit (informational)
-        run: npm audit || true
+
+      - name: Make scripts executable
+        run: find scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
+
+      - name: Verify (lint + format check + typecheck + test + expo-doctor + audit)
+        run: ./scripts/verify-ci.sh --quick
 
   # Python gRPC demo: protobuf generation, Ruff, pytest. ML stack (CPU torch +
   # transformers) is required so test_server.py can import server.py (same as
-  # many_faces_ai/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
+  # many_faces_ai/scripts/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
   many_faces_ai:
     name: many_faces_ai
     runs-on: ubuntu-latest
@@ -249,7 +249,10 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
-          chmod +x many_faces_backend/lint.sh many_faces_portal/lint.sh many_faces_admin/lint.sh many_faces_ai/lint.sh many_faces_mobile/lint.sh many_faces_ai/verify-ci.sh
+          find many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_logger -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
+          for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_mobile; do
+            [ -d "$d/scripts" ] && find "$d/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
+          done
 
       - name: Monorepo dependency audit (informational)
         run: ./scripts/audit-monorepo-deps.sh
