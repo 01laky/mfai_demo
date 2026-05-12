@@ -119,6 +119,23 @@ Mirror `many_faces_portal` OAuth2 password grant and refresh behaviour at a **hi
 - Parse `selectedFace.gradientSettings` (JSON string from API — same as web). If parse fails, use a **default** gradient matching Many Faces branding (document hex stops).
 - Implement with `expo-linear-gradient`; animation is **optional** in phase 1 (if skipped, document as TODO).
 - Header: logo (use existing Expo asset or add a simple wordmark), app name “The Many Faces”, right-side **Guest** / user email.
+- **Footer (optional but recommended for FE parity):** a simple bottom bar or inset for static copy (e.g. copyright); keep it **safe-area** aware so it matches the web shell feel on tall phones.
+
+### 4.6 Mobile UX primitives
+
+- Wrap the app in **`react-native-safe-area-context`** so header, footer, and forms respect notches and home indicators.
+- Use **`KeyboardAvoidingView`** (or a justified scroll helper) on **Login** so fields and the primary button stay visible on small devices.
+- Primary actions: minimum touch target ~**44×44** pt; use `accessibilityRole` / `accessibilityLabel` on icon-only controls.
+
+### 4.7 HTTP client layer (thin wrapper)
+
+- Centralise **`fetch`** (or one axios instance) with: **timeout**, unified **JSON parse** errors, and **status → user-safe message** mapping (never show raw stack traces in UI).
+- **401 policy:** match portal token **refresh** behaviour **or** document an intentional deviation (e.g. “logout and return to login”) with a TODO to align later.
+- Keep all API calls under **`src/api/*`** — no ad-hoc `fetch` inside presentational screens.
+
+### 4.8 Locales vs route translations
+
+- The portal uses **translated URL segments** (`useLocalizedLink`, `routeTranslations`). Phase 1 mobile may ship **English-only UI strings** while still consuming the same API; document a **Phase 2** plan for mapping `routeTranslations` to navigator state without claiming full parity now.
 
 ---
 
@@ -212,6 +229,15 @@ Add to `.github/workflows/ci.yml` (same workflow file other jobs use):
 - **No flaky network in unit tests:** mock `fetch`.
 - **Snapshot tests:** use sparingly; prefer explicit assertions.
 
+### 8.1 Optional CI extras (document choice in README)
+
+- **`npx expo-doctor`** — run in CI as **blocking** once the repo is stable, or **informational** during bootstrap; state which.
+- **`npm audit`** — run like portal jobs: **informational** (`|| true`) and keep logs for supply-chain triage.
+
+### 8.2 Connectivity (optional Phase 1)
+
+- **`@react-native-community/netinfo`:** optional **offline banner** or disabled actions with copy when offline. If skipped, state **online-only** in README.
+
 ---
 
 ## 9. Security checklist (embed reasoning in README + code)
@@ -219,6 +245,8 @@ Add to `.github/workflows/ci.yml` (same workflow file other jobs use):
 - HTTPS base URL in production builds.
 - No tokens in AsyncStorage unless justified; prefer SecureStore.
 - Log redaction: never log full tokens.
+- **iOS ATS / cleartext:** document that **HTTP** dev URLs (e.g. `http://127.0.0.1:8000`) require **`NSAppTransportSecurity`** exceptions in dev client builds or use **HTTPS** / tunnel; production must stay HTTPS.
+- **Android cleartext:** if HTTP is used in dev only, document `usesCleartextTraffic` / network security config scope (dev vs release).
 - Certificate pinning: **out of scope** phase 1 — mention as future hardening.
 
 ---
@@ -230,10 +258,10 @@ Copy this section into your PR description and tick items there; **do not** mass
 ### 10.1 Documentation
 
 - [ ] `many_faces_mobile/README.md` — full portal-style narrative (§3.1).
-- [ ] `docs/guides/mobile-expo-development.md` — updated with **exact** commands and env vars after implementation.
-- [ ] `docs/README.md` — add row linking `mobile-expo-development.md` in the guides table.
-- [ ] `docs/prompts/README.md` — add this prompt file to the index table.
-- [ ] `README.md` (monorepo root) — optional one-line mention of mobile submodule in layout or GitHub section (if not already present).
+- [ ] `docs/guides/mobile-expo-development.md` — updated with **exact** commands and env vars after implementation (baseline may already exist — **verify** accuracy after code lands).
+- [ ] `docs/README.md` — ensure guides table links **`mobile-expo-development.md`** (add row if missing).
+- [ ] `docs/prompts/README.md` — ensure this prompt is indexed (add row if missing).
+- [ ] `README.md` (monorepo root) — optional one-line mention of **`many_faces_mobile/`** in layout / architecture if not already present.
 
 ### 10.2 Application code (Phase 1)
 
@@ -242,7 +270,10 @@ Copy this section into your PR description and tick items there; **do not** mass
 - [ ] `AuthProvider` + `useAuth()` hook (login/logout/refresh semantics documented).
 - [ ] React Navigation root + authenticated stack + guest stack.
 - [ ] Screens: `SplashOrLoading`, `ConfigError`, `Login`, `HomePlaceholder` (wired to config), `PlaceholderPage`.
+- [ ] **(Optional parity)** `Register` screen if `pageType` / path exposes register in config — mirror `many_faces_portal/src/pages/RegisterPage.tsx` at high level or document deferral.
 - [ ] App shell with gradient + brand + guest/user chip.
+- [ ] **Root `React` error boundary** (or Expo `ErrorBoundary` pattern): catch render errors, show fallback UI, log without leaking tokens.
+- [ ] **Accessibility:** form labels linked to inputs, login error text exposed to screen readers, sufficient contrast on gradient + buttons.
 - [ ] `.env.example` + `app.config` / `extra` wiring for `EXPO_PUBLIC_API_BASE_URL`.
 
 ### 10.3 Tooling
@@ -256,6 +287,7 @@ Copy this section into your PR description and tick items there; **do not** mass
 ### 10.4 CI / monorepo
 
 - [ ] `.github/workflows/ci.yml` includes `many_faces_mobile` job (`npm ci`, lint, typecheck, test).
+- [ ] (Optional) **`expo-doctor`** + informational **`npm audit`** in that job (see §8.1).
 - [ ] (Optional) `many_faces_mobile` standalone GitHub workflow.
 - [ ] (Optional) `scripts/ci-local.sh` (+ lint-all / test-all) extended to include mobile with clear echo banners.
 
@@ -280,6 +312,9 @@ Copy this section into your PR description and tick items there; **do not** mass
 - `many_faces_portal/src/api/config/getFacesConfig.ts`
 - `many_faces_portal/src/api/types/facesConfig.ts`
 - `many_faces_portal/src/routes/useFaceRouteEntries.ts`
+- `many_faces_portal/src/routes/facePagePaths.ts` (path expansion / translations)
+- `many_faces_portal/src/pages/RegisterPage.tsx` (if adding register parity)
+- `many_faces_portal/src/utils/jwtUtils.ts` (client-side `exp` / expiry helpers, if mirroring refresh UX)
 - `many_faces_portal/src/components/Header.tsx` (shell inspiration only)
 
 ---
