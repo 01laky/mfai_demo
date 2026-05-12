@@ -1,6 +1,6 @@
 # Documentation hub (`docs/`)
 
-Central documentation for the **`many_faces_main`** monorepo on GitHub lives here (local clones are often still named `_mfai_demo` or `mfai_demo`). **Per-submodule README** files remain under `be_demo/`, `fe_demo/`, … — see [`readmes/README.md`](./readmes/README.md) for an index.
+Central documentation for the **`many_faces_main`** monorepo on GitHub lives here. **Per-submodule README** files remain under `be_demo/`, `fe_demo/`, … — see [`readmes/README.md`](./readmes/README.md) for an index.
 
 **Why these folders:** [STRUCTURE.md](./STRUCTURE.md) (short rationale for `guides/` vs `components/` vs `prompts/` vs `readmes/`).
 

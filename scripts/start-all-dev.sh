@@ -145,12 +145,12 @@ echo "    Starting backend and seq with root docker-compose (this may take sever
 docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq
 echo "    ✅ Backend + Seq containers are up (compose finished)"
 
-# Redis (redis_demo) runs on its own bridge; BE uses hostname redis-dev on mfai_demo_dev-network.
+# Redis (redis_demo) runs on its own bridge; BE uses hostname redis-dev on many_faces_main_dev-network.
 # Compose štartuje na pozadí — opakovane čakáme na sieť + redis-dev a skúšame connect, kým to nevyjde.
-echo "    Attaching redis-dev to mfai_demo_dev-network (retry until ready)..."
+echo "    Attaching redis-dev to many_faces_main_dev-network (retry until ready)..."
 _redis_net_ok=0
 for _i in {1..90}; do
-    if ! docker network inspect mfai_demo_dev-network >/dev/null 2>&1; then
+    if ! docker network inspect many_faces_main_dev-network >/dev/null 2>&1; then
         sleep 1
         continue
     fi
@@ -158,7 +158,7 @@ for _i in {1..90}; do
         sleep 1
         continue
     fi
-    _out=$(docker network connect mfai_demo_dev-network redis-dev 2>&1) || true
+    _out=$(docker network connect many_faces_main_dev-network redis-dev 2>&1) || true
     if [ -z "$_out" ]; then
         _redis_net_ok=1
         echo "    ✅ redis-dev connected to dev network"
@@ -172,7 +172,7 @@ for _i in {1..90}; do
     sleep 1
 done
 if [ "$_redis_net_ok" -eq 0 ]; then
-    echo "    ⚠️  Could not attach redis-dev to mfai_demo_dev-network after 90s (is redis_demo running?)"
+    echo "    ⚠️  Could not attach redis-dev to many_faces_main_dev-network after 90s (is redis_demo running?)"
 fi
 
 # ============================================================================
@@ -189,7 +189,7 @@ echo "    ✅ Frontend, proxy, admin, AI compose step finished"
 # START LOGGER DEMO (Dozzle)
 # ============================================================================
 echo "📦 Starting Logger Demo (logger_demo)..."
-if ! docker network ls | grep -q "mfai_demo_dev-network"; then
+if ! docker network ls --format '{{.Name}}' 2>/dev/null | grep -qE '^(many_faces_main_dev-network|mfai_demo_dev-network)$'; then
     docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
     sleep 1
 fi
@@ -353,7 +353,7 @@ while true; do
         echo "  Status: $STATUS"
         
         FE_PAGE=$(curl -sk -m 8 https://localhost:9081/ 2>/dev/null || true)
-        if echo "$FE_PAGE" | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+        if echo "$FE_PAGE" | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
             echo "  App: ⏳ Čaká sa na Vite — https://localhost:9081 sa sám obnoví (nginx wait page)"
         elif [ -n "$FE_PAGE" ]; then
             echo "  App: ✓ Accessible (https://localhost:9081 — cez fe-demo-proxy → Vite)"

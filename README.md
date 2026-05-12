@@ -27,17 +27,17 @@ Security and trust boundaries are a high priority in the architecture: the demo 
 
 ```mermaid
 flowchart LR
-    visitor["Users / Members"] --> fe["fe_demo<br/>User-facing React SPA"]
-    adminUser["Admins / Operators"] --> admin["admin_demo<br/>Admin React SPA"]
+    visitor["Users / Members"] --> fe["many_faces_portal<br/>User-facing React SPA"]
+    adminUser["Admins / Operators"] --> admin["many_faces_admin<br/>Admin React SPA"]
 
-    fe --> api["be_demo<br/>ASP.NET Core API"]
+    fe --> api["many_faces_backend<br/>ASP.NET Core API"]
     admin --> api
 
     api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
-    api --> db["db_demo<br/>PostgreSQL"]
-    api --> redis["redis_demo<br/>Redis"]
+    api --> db["many_faces_database<br/>PostgreSQL"]
+    api --> redis["many_faces_redis<br/>Redis"]
     api --> realtime["SignalR<br/>real-time updates"]
-    api --> ai["ai_demo<br/>Python gRPC AI service"]
+    api --> ai["many_faces_ai<br/>Python gRPC AI service"]
 
     scripts["scripts/ + dev/<br/>local orchestration"] --> fe
     scripts --> admin
@@ -45,7 +45,7 @@ flowchart LR
     scripts --> db
     scripts --> redis
     scripts --> ai
-    scripts --> logs["logger_demo<br/>container logs"]
+    scripts --> logs["many_faces_logger<br/>container logs"]
 
     docs["docs/ + APP_CONTEXT.md<br/>guides, prompts, architecture notes"] -.-> fe
     docs -.-> admin
@@ -108,7 +108,7 @@ The admin portal configures the structural data that the backend stores and the 
 
 ```mermaid
 flowchart LR
-    operator["Admin / Operator"] --> admin["admin_demo<br/>React admin panel"]
+    operator["Admin / Operator"] --> admin["many_faces_admin<br/>React admin panel"]
     admin --> auth["ProtectedRoute<br/>OAuth2 / JWT"]
     auth --> caps["/me/capabilities<br/>role + permission state"]
 
@@ -146,7 +146,7 @@ flowchart TD
     preserve --> serialize["JSON.stringify(gridSchema)"]
     serialize --> save["updatePage mutation"]
     save --> invalidate["Invalidate page / pages / face queries"]
-    invalidate --> frontend["fe_demo reads schema<br/>PageGridLayout renders blocks"]
+    invalidate --> frontend["many_faces_portal reads schema<br/>PageGridLayout renders blocks"]
 ```
 
 ## Backend Request And Trust Boundary
@@ -155,7 +155,7 @@ The backend is the main trust boundary: it resolves face scope, validates signed
 
 ```mermaid
 flowchart TD
-    client["fe_demo / admin_demo"] --> request["HTTP(S) request<br/>/{face-prefix}/api/... or /api/oauth2/..."]
+    client["many_faces_portal / many_faces_admin"] --> request["HTTP(S) request<br/>/{face-prefix}/api/... or /api/oauth2/..."]
     request --> routing["RoutingMiddleware<br/>resolve face prefix + rewrite path"]
     routing --> scope["Trusted face scope<br/>requestFaceID + HttpContext.Items"]
     scope --> auth["JWT Bearer auth<br/>ES512 signature, issuer, audience, lifetime"]
@@ -200,10 +200,10 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    admin["admin_demo<br/>page/grid editor"] --> pagesApi["PagesController<br/>save gridSchema"]
+    admin["many_faces_admin<br/>page/grid editor"] --> pagesApi["PagesController<br/>save gridSchema"]
     pagesApi --> db["PostgreSQL<br/>Pages, Faces, PageTypes"]
     db --> facesApi["FacesController<br/>face config + pages"]
-    facesApi --> frontend["fe_demo<br/>PageGridLayout"]
+    facesApi --> frontend["many_faces_portal<br/>PageGridLayout"]
 
     userRequest["/{face-prefix}/api/..."] --> routing["RoutingMiddleware"]
     routing --> trusted["Trusted FaceId<br/>strips spoofed faceId"]
@@ -226,7 +226,7 @@ flowchart TD
     pending --> queue["Enqueue Redis job<br/>content.ai-review"]
 
     queue --> worker["Worker + ContentAiReviewService"]
-    worker --> ai["ai_demo ReviewContent<br/>classifier + boundary flags"]
+    worker --> ai["many_faces_ai ReviewContent<br/>classifier + boundary flags"]
     ai --> policy["Backend policy<br/>confidence, risk, flags, version"]
 
     policy --> admin["Admin moderation<br/>filters, metrics, bulk"]
@@ -248,12 +248,12 @@ flowchart TD
 
 | Layer | Path | Purpose |
 | --- | --- | --- |
-| User frontend | [`fe_demo/`](./fe_demo/) | React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
-| Admin portal | [`admin_demo/`](./admin_demo/) | React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
-| Backend API | [`be_demo/`](./be_demo/) | ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
-| AI service | [`ai_demo/`](./ai_demo/) | Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`db_demo/`](./db_demo/), [`redis_demo/`](./redis_demo/) | PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
-| Logging | [`logger_demo/`](./logger_demo/) | Local log viewing with Dozzle / container log tooling. |
+| User frontend | [`fe_demo/`](./fe_demo/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
+| Admin portal | [`admin_demo/`](./admin_demo/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
+| Backend API | [`be_demo/`](./be_demo/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
+| AI service | [`ai_demo/`](./ai_demo/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
+| Data stores | [`db_demo/`](./db_demo/), [`redis_demo/`](./redis_demo/) | **many_faces_database** + **many_faces_redis** — PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
+| Logging | [`logger_demo/`](./logger_demo/) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./scripts/), [`dev/`](./dev/) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
 
@@ -312,13 +312,13 @@ Backend details: [`be_demo/README.md`](./be_demo/README.md). Other services — 
 ## Layout (short)
 
 ```
-be_demo/       # API (OAuth2, JWT, SignalR, EF Core)
-fe_demo/       # User-facing SPA
-admin_demo/    # Admin SPA
-db_demo/       # PostgreSQL compose
-redis_demo/    # Redis (job queue)
-ai_demo/       # gRPC health / AI
-logger_demo/   # Dozzle
+be_demo/       # many_faces_backend — API (OAuth2, JWT, SignalR, EF Core)
+fe_demo/       # many_faces_portal — user-facing SPA
+admin_demo/    # many_faces_admin — admin SPA
+db_demo/       # many_faces_database — PostgreSQL compose
+redis_demo/    # many_faces_redis — job queue
+ai_demo/       # many_faces_ai — gRPC health / AI
+logger_demo/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
 ```
 

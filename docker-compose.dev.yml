@@ -20,7 +20,7 @@ services:
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
       - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password
       # Redis z redis_demo (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
-      #   docker network connect mfai_demo_dev-network redis-dev
+      #   docker network connect many_faces_main_dev-network redis-dev
       - Redis__Configuration=redis-dev:6379,abortConnect=false
     depends_on:
       seq:
@@ -186,5 +186,5 @@ volumes:
 
 networks:
   dev-network:
-    name: mfai_demo_dev-network
+    name: many_faces_main_dev-network
     driver: bridge

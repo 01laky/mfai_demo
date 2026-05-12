@@ -7,7 +7,7 @@ The Redis instance used for the backend **job queue** is a **standalone git subm
 ```
 <monorepo-root>/redis_demo/
 ```
-(GitHub root repo: **`many_faces_main`**; local folder name may still be `_mfai_demo`.)
+(GitHub root repo: **`many_faces_main`**.)
 
 - Its own GitHub repository (see `.gitmodules` for the URL).
 - From the monorepo root: `git submodule update --init redis_demo`

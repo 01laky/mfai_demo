@@ -127,7 +127,7 @@ flowchart TB
 
 ## Continuous integration
 
-### Root `mfai_demo` — workflow `.github/workflows/ci.yml`
+### Root `many_faces_main` — workflow `.github/workflows/ci.yml`
 
 On push/PR to `main` / `master`, with **submodules recursive**:
 

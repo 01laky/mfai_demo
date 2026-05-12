@@ -242,7 +242,7 @@ packageExtensions:
 4. **(required)** If **A2**: satisfy **§4.1.2** item-for-item in the PR text.
 5. **(required)** If **C**: satisfy **§4.3** item-for-item including README/docs and issue ID.
 6. **(required)** Commit in **`fe_demo`** and **`admin_demo`** per submodule rules.
-7. **(required)** Parent **`_mfai_demo`:** if this work must publish new submodule tips, **(required)** commit updated submodule SHAs **in the same delivery** as documented by the team. **(required)** If parent pointers **do not** change, **(required)** state **“parent submodule SHAs unchanged”** in the PR with the reason (e.g. “docs-only parent”, “release train next week”).
+7. **(required)** Parent **`many_faces_main`:** if this work must publish new submodule tips, **(required)** commit updated submodule SHAs **in the same delivery** as documented by the team. **(required)** If parent pointers **do not** change, **(required)** state **“parent submodule SHAs unchanged”** in the PR with the reason (e.g. “docs-only parent”, “release train next week”).
 
 ---
 
@@ -306,7 +306,7 @@ Use this section as the **merge gate**. **(required)** Every row below is satisf
 - [ ] **`yarn.lock`** — Committed in **every** SPA where `package.json` or `.yarnrc.yml` changed; if no lockfile change, PR states why (e.g. “no resolution delta”).
 - [ ] **§6 — CI workflow parity** — PR lists the workflow **file paths or job names** (e.g. under `.github/workflows/`) for **`fe_demo`** and **`admin_demo`** that run `yarn install --immutable`, `yarn validate`, `yarn test`, and `yarn build`; **(required)** confirm those steps are still present after the change **or** include the **same PR** updating the workflow when a step was renamed/removed.
 - [ ] **§5 — submodule commits** — Links or commit SHAs for **`fe_demo`** and **`admin_demo`** containing the dependency/config changes.
-- [ ] **§5.7 — parent repo** — Either parent **`_mfai_demo`** submodule pointer commit in this delivery **or** exact sentence **“parent submodule SHAs unchanged”** with reason from §5.7.
+- [ ] **§5.7 — parent repo** — Either parent **`many_faces_main`** submodule pointer commit in this delivery **or** exact sentence **“parent submodule SHAs unchanged”** with reason from §5.7.
 - [ ] **§6 — CI / grep** — `grep -E 'YN0060|YN0086'` (or project-equivalent) run on **post-fix** install log for **each** SPA; **exit code** recorded; outcome **clean** vs **residual** with §6 rules satisfied (including every **`yarn explain`** for residual lines).
 - [ ] **§6 — `.yarnrc.yml` audit stanzas** — Verbatim copy in PR of **every** key in each SPA’s `.yarnrc.yml` whose key name contains **`peer`**, **`pnp`**, **`install`**, or **`nodeLinker`** (full key + value); if none, PR states **“no such keys”** per SPA.
 - [ ] **§8 — References consulted** — PR section lists **every** §8 URL the agent opened for the chosen strategy (titles allowed); list **must** match what was actually used (cross-check against strategy: e.g. **C** requires Yarn `packageExtensions` doc link present).

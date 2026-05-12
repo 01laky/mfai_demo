@@ -6,7 +6,7 @@
 
 Create **7+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
-1. **Root repo**: `many_faces_main` (historically cloned as `_mfai_demo` / `mfai_demo` is fine locally)
+1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `be_demo/`, `fe_demo/`, … — see [git-submodules.md](./guides/git-submodules.md).
 2. **Submodules** (remote repo names — **local paths** in the monorepo stay `be_demo/`, `fe_demo/`, …):
    - `many_faces_backend` → path `be_demo/`
    - `many_faces_portal` → path `fe_demo/`

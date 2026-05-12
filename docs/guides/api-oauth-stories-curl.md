@@ -300,7 +300,7 @@ curl -sS "$BASE/api/stories?faceId=$FACE_ID" -H "Authorization: Bearer $TOK" | j
 
 ## 9. Lint and tests in the monorepo
 
-From `mfai_demo` root:
+From `many_faces_main` root:
 
 ```bash
 ./scripts/lint-all.sh

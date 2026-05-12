@@ -107,7 +107,7 @@ check_service() {
 fe_docker_vite_ready() {
     local body
     body=$(curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null) || return 1
-    if echo "$body" | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+    if echo "$body" | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
         return 1
     fi
     [[ -n "$body" ]] || return 1
@@ -335,7 +335,7 @@ if check_container_exists "$FE_CONTAINER"; then
         if fe_docker_vite_ready; then
             echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 — Docker, Vite)"
             FE_ACCESSIBLE=true
-        elif curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null | grep -qF '<!-- mfai-fe-docker-wait-page -->'; then
+        elif curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
             echo -e "  App: ${YELLOW}⏳ Čaká sa na Vite${NC} (https://localhost:9081 — obnovuje sa samo)"
         else
             echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:9081)"

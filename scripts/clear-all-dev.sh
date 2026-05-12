@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # clear-all-dev.sh — remove all monorepo dev containers, named volumes, and project networks.
 #
-# Handles Docker Compose v2 volume names (e.g. mfai_demo_seq-data), legacy short names,
+# Handles Docker Compose v2 volume names (e.g. many_faces_main_seq-data; legacy mfai_demo_*), legacy short names,
 # and leaves no known demo volumes behind when Docker allows removal.
 #
 # WARNING: Destructive (DB, Redis, Seq, FE/Admin node_modules caches, …).
@@ -141,6 +141,7 @@ for net in \
 done
 # Root dev network: ai-demo-dev stays attached unless --clean-ai or container absent.
 if [[ "$CLEAN_AI" -eq 1 ]] || ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx 'ai-demo-dev'; then
+  docker network rm many_faces_main_dev-network 2>/dev/null || true
   docker network rm mfai_demo_dev-network 2>/dev/null || true
 fi
 
@@ -160,12 +161,12 @@ done
 # -----------------------------------------------------------------------------
 # Phase 5 — Compose v2 prefixed volumes (project_volume)
 # -----------------------------------------------------------------------------
-echo "  📦 Phase 5: remove Compose v2–prefixed volumes (mfai_demo_, db_demo_, …)"
+echo "  📦 Phase 5: remove Compose v2–prefixed volumes (many_faces_main_ / legacy mfai_demo_, db_demo_, …)"
 
 remove_prefixed_volumes() {
   # grep can exit 1 when no volumes match — must not trip set -e
   local candidates
-  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
+  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|many_faces_main_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
   [[ -z "$candidates" ]] && return 0
   if [[ "$CLEAN_AI" -ne 1 ]]; then
     candidates=$(echo "$candidates" | grep -vF 'ai-demo-hf-cache' | grep -vE '^ai_demo_' || true)
@@ -232,7 +233,7 @@ else
   echo "✅ Demo containers removed on retry"
 fi
 
-_BAD_VOL_GREP='^(mfai_demo_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
+_BAD_VOL_GREP='^(mfai_demo_|many_faces_main_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
 BAD_VOLUMES_RAW=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "$_BAD_VOL_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   BAD_VOLUMES=$BAD_VOLUMES_RAW
@@ -269,16 +270,16 @@ else
   fi
 fi
 
-_NET_GREP='^(mfai_demo_dev-network|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
+_NET_GREP='^(many_faces_main_dev-network|mfai_demo_dev-network|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
 BAD_NETS_RAW=$(docker network ls --format '{{.Name}}' 2>/dev/null | grep -E "$_NET_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]] || ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx 'ai-demo-dev'; then
   BAD_NETS=$BAD_NETS_RAW
 else
-  BAD_NETS=$(echo "$BAD_NETS_RAW" | grep -vx 'mfai_demo_dev-network' || true)
+  BAD_NETS=$(echo "$BAD_NETS_RAW" | grep -vE '^(many_faces_main_dev-network|mfai_demo_dev-network)$' || true)
 fi
 
 if [[ -z "$BAD_NETS" ]]; then
-  echo "✅ No blocking demo networks remain (mfai_demo_dev-network may stay for AI)"
+  echo "✅ No blocking demo networks remain (many_faces_main_dev-network or legacy mfai_demo_dev-network may stay for AI)"
 else
   echo "⚠️  Networks still present (remove after containers are gone):"
   echo "$BAD_NETS"

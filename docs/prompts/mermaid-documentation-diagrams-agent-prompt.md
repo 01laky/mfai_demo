@@ -47,7 +47,7 @@
 
 ## 1. Repository context (do not skip—ground truth for labels)
 
-- Monorepo root: `_mfai_demo`.
+- Monorepo root: `many_faces_main`.
 - Backend: `be_demo/BeDemo.Api` — ASP.NET Core, OAuth2 (`OAuth2Controller`, `OAuth2Middleware`, `OAuth2Service`), JWT (`ECDSAKeyService`), refresh store (`OAuthRefreshTokenStore`), face routing (`RoutingMiddleware`), SignalR hubs (`ChatHub`, `MessengerHub`, chat room hub), EF Core, PostgreSQL.
 - Frontends: `fe_demo`, `admin_demo` — Vite/React, axios interceptors for `/{face}/` prefix, `localStorage` keys `auth_token`, `auth_refresh_token`, `auth_user`, JWT utils, React Query, SignalR clients.
 - Job queue: Redis lists / ZSET (`bedemo:jobs:ready`, `bedemo:jobs:delayed`), worker `RedisJobWorkerService`, job types e.g. `wall.ticket-delete`, `chatroom.idle-check`, `reel.postprocess`.
@@ -651,7 +651,7 @@
 
 ## 5. Master checklist (every requirement in this prompt)
 
-**Status:** **Done** for the current `_mfai_demo` documentation tree — all subsections **5.1–5.7** use **[x]** below. If you rerun the agent from scratch, reset relevant lines to **[ ]** before execution. **Convention:** this file is the **exception** where `[x]` records a completed diagram pass; most other prompts keep `[ ]` as PR-only templates—see [docs/prompts/README.md](./README.md).
+**Status:** **Done** for the current `many_faces_main` documentation tree — all subsections **5.1–5.7** use **[x]** below. If you rerun the agent from scratch, reset relevant lines to **[ ]** before execution. **Convention:** this file is the **exception** where `[x]` records a completed diagram pass; most other prompts keep `[ ]` as PR-only templates—see [docs/prompts/README.md](./README.md).
 
 Work through **top to bottom** when executing a **new** pass; this copy reflects a **completed** pass you can diff against.
 
@@ -687,7 +687,7 @@ Work through **top to bottom** when executing a **new** pass; this copy reflects
 
 ### 5.3 §1 — Repository context (ground truth)
 
-- [x] Used **`_mfai_demo`** layout and submodule names when labeling.
+- [x] Used **`many_faces_main`** layout and submodule paths when labeling.
 - [x] Backend labels match **OAuth2 / JWT / refresh / RoutingMiddleware / hubs / EF / PostgreSQL** as in repo.
 - [x] Frontend labels match **`fe_demo` / `admin_demo`**, `/{face}/`, **`localStorage`** keys, interceptors.
 - [x] Queue labels match **Redis keys**, **`RedisJobWorkerService`**, example job types where relevant.

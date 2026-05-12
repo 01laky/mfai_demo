@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-1. **Analyze** current `SUPER_ADMIN` vs `ADMIN` authorization in `_mfai_demo`.
+1. **Analyze** current `SUPER_ADMIN` vs `ADMIN` authorization in `many_faces_main`.
 2. **Define** what “super-admin-only API” means for security, routing, and the data model.
 3. **Provide a detailed AI-agent prompt** (section 10) you can paste into a new chat to implement changes consistently with existing code.
 

@@ -7,7 +7,7 @@
 
 **Worksheet vs git:** The `[ ]` lists in **this** markdown file are **copy-paste templates** for each engagement. Tick items in the **agent report / PR body** (and attach evidence). **Do not** assume the repo’s prompt file must become all `[x]` in git after a run—only update this file if the team explicitly uses it as a living completion log (same idea as [docs/prompts/README.md](./README.md) “Checklist conventions”).
 
-**Repo evidence (2026-04-11 pass, updated v6):** A full **§15–§18**-style closure for the current `_mfai_demo` tree (gap analysis, hub matrix, dependency snapshot, §18 test evidence, new Mermaid diagrams with `mmdc` render check, **Cypress CI smoke**, optional **OAuth API chain** spec, **`scripts/audit-monorepo-deps.sh`**, SignalR JWT connect test) is committed under **[`docs/guides/security-crypto-sockets.md`](../guides/security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11)** — use that section as the canonical checklist attachment for audits; keep **this** prompt file’s `[ ]` rows as templates for future engagements.
+**Repo evidence (2026-04-11 pass, updated v6):** A full **§15–§18**-style closure for the current `many_faces_main` tree (gap analysis, hub matrix, dependency snapshot, §18 test evidence, new Mermaid diagrams with `mmdc` render check, **Cypress CI smoke**, optional **OAuth API chain** spec, **`scripts/audit-monorepo-deps.sh`**, SignalR JWT connect test) is committed under **[`docs/guides/security-crypto-sockets.md`](../guides/security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11)** — use that section as the canonical checklist attachment for audits; keep **this** prompt file’s `[ ]` rows as templates for future engagements.
 
 **Related docs (read in full before coding):**
 
@@ -294,7 +294,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 ## 17. COPY-PASTE — Master instructions for the AI agent
 
-You are working in **`_mfai_demo`**. **Every requirement in this file is mandatory.** Your final message **must** include a **checklist copy** with **every item from §16, §17 (all subsections that contain requirements), and §18** marked **done** or **blocked** with **tracking id** and **owner**.
+You are working in **`many_faces_main`**. **Every requirement in this file is mandatory.** Your final message **must** include a **checklist copy** with **every item from §16, §17 (all subsections that contain requirements), and §18** marked **done** or **blocked** with **tracking id** and **owner**.
 
 ### 17.1 Rules
 
