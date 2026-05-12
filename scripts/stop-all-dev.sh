@@ -141,16 +141,24 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|redis-dev|seq-dev|dozzle-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev" || true)
+
+if [ -n "$RUNNING_CONTAINERS" ]; then
+    echo "⚠️  Some containers still running — force-stopping:"
+    echo "$RUNNING_CONTAINERS"
+    # shellcheck disable=SC2086
+    docker stop $RUNNING_CONTAINERS 2>/dev/null || true
+    sleep 2
+    RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev" || true)
+fi
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "✅ All containers are stopped"
     exit 0
 else
-    echo "⚠️  Some containers are still running:"
+    echo "❌ Containers still running after force-stop:"
     echo "$RUNNING_CONTAINERS"
     echo ""
-    echo "💡 To force stop, run:"
-    echo "   docker stop $RUNNING_CONTAINERS"
+    echo "💡 Try: docker stop $RUNNING_CONTAINERS"
     exit 1
 fi
