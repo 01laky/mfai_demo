@@ -3,8 +3,8 @@
 # audit-monorepo-deps.sh — aggregate **security / vulnerability signals** across first-party manifests.
 #
 # What it does:
-#   - be_demo: `dotnet list package --vulnerable` (NuGet advisory data; may print nothing when clean).
-#   - fe_demo / admin_demo: `yarn npm audit` (Yarn Berry/npm audit format; includes transitive findings).
+#   - many_faces_backend: `dotnet list package --vulnerable` (NuGet advisory data; may print nothing when clean).
+#   - many_faces_portal / many_faces_admin: `yarn npm audit` (Yarn Berry/npm audit format; includes transitive findings).
 #
 # Why `|| true` per sub-command: CI calls this script in informational mode first; individual tools can
 # exit non-zero when advisories exist, but we still want the full matrix printed (security-hardening §11).
@@ -16,16 +16,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-echo "=== be_demo: dotnet list package --vulnerable ==="
-(cd be_demo && dotnet list package --vulnerable) || true
+echo "=== many_faces_backend: dotnet list package --vulnerable ==="
+(cd many_faces_backend && dotnet list package --vulnerable) || true
 
 echo ""
-echo "=== fe_demo: yarn npm audit ==="
-(cd fe_demo && yarn npm audit) || true
+echo "=== many_faces_portal: yarn npm audit ==="
+(cd many_faces_portal && yarn npm audit) || true
 
 echo ""
-echo "=== admin_demo: yarn npm audit ==="
-(cd admin_demo && yarn npm audit) || true
+echo "=== many_faces_admin: yarn npm audit ==="
+(cd many_faces_admin && yarn npm audit) || true
 
 echo ""
 echo "Done. Use exit codes from individual tools in CI if you want a hard gate."

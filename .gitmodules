@@ -1,21 +1,21 @@
-[submodule "be_demo"]
-	path = be_demo
+[submodule "many_faces_backend"]
+	path = many_faces_backend
 	url = https://github.com/01laky/many_faces_backend.git
-[submodule "fe_demo"]
-	path = fe_demo
+[submodule "many_faces_portal"]
+	path = many_faces_portal
 	url = https://github.com/01laky/many_faces_portal.git
-[submodule "admin_demo"]
-	path = admin_demo
+[submodule "many_faces_admin"]
+	path = many_faces_admin
 	url = https://github.com/01laky/many_faces_admin.git
-[submodule "ai_demo"]
-	path = ai_demo
+[submodule "many_faces_ai"]
+	path = many_faces_ai
 	url = https://github.com/01laky/many_faces_ai.git
-[submodule "db_demo"]
-	path = db_demo
+[submodule "many_faces_database"]
+	path = many_faces_database
 	url = https://github.com/01laky/many_faces_database.git
-[submodule "redis_demo"]
-	path = redis_demo
+[submodule "many_faces_redis"]
+	path = many_faces_redis
 	url = https://github.com/01laky/many_faces_redis.git
-[submodule "logger_demo"]
-	path = logger_demo
+[submodule "many_faces_logger"]
+	path = many_faces_logger
 	url = https://github.com/01laky/many_faces_logger.git

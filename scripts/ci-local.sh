@@ -20,10 +20,10 @@ echo "════════════════════════�
 echo ""
 
 chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" 2>/dev/null || true
-for s in be_demo fe_demo admin_demo ai_demo; do
+for s in many_faces_backend many_faces_portal many_faces_admin many_faces_ai; do
   [ -f "$s/lint.sh" ] && chmod +x "$s/lint.sh" || true
 done
-chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
+chmod +x many_faces_ai/verify-ci.sh 2>/dev/null || true
 
 "$SCRIPTS_DIR/lint-all.sh"
 "$SCRIPTS_DIR/build-all.sh"

@@ -40,7 +40,7 @@ Do not weaken the existing safety boundary:
 ## 3. Required Operating Rules For The Agent
 
 - Read the existing code before editing.
-- Prefer existing patterns in `be_demo`, `fe_demo`, `admin_demo`, and `ai_demo`.
+- Prefer existing patterns in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, and `many_faces_ai`.
 - Keep public visibility backend-enforced.
 - Do not add feature flags for whether FE user-created content requires approval.
 - Do not introduce autonomous AI publishing.
@@ -52,21 +52,21 @@ Do not weaken the existing safety boundary:
 
 The agent should verify the current implementation before changing it:
 
-- `be_demo`
+- `many_faces_backend`
   - `ContentApprovalStatus`, `AiReviewStatus`, `AiReviewJob`, `ContentModerationEvent`
   - `ContentAiReviewService`
   - `ContentModerationController`
   - album/blog/reel create/update/delete moderation behaviour
   - Redis job worker handling `content.ai-review`
-- `ai_demo`
+- `many_faces_ai`
   - `HealthService.ReviewContent`
   - local Qwen model configuration
   - deterministic fallback/safety heuristics
-- `admin_demo`
+- `many_faces_admin`
   - `ContentModerationPage`
   - moderation API hooks
   - `SUPER_ADMIN` UI gating
-- `fe_demo`
+- `many_faces_portal`
   - album/blog/reel create forms
   - content moderation helpers
   - creator-safe badges
@@ -348,7 +348,7 @@ Leave these unchecked in this canonical prompt. Tick them only in the implementa
 
 Implementation progress with checked items lives next to this prompt in [user-content-approval-extensions-implementation-checklist.md](user-content-approval-extensions-implementation-checklist.md).
 
-- [ ] Audit current moderation implementation across `be_demo`, `ai_demo`, `admin_demo`, and `fe_demo`, including complete unit-test gap notes.
+- [ ] Audit current moderation implementation across `many_faces_backend`, `many_faces_ai`, `many_faces_admin`, and `many_faces_portal`, including complete unit-test gap notes.
 - [ ] Add or complete creator-owned listing APIs for albums, blogs, and reels, including complete unit/integration tests for ownership, moderation fields, and non-owner access denial.
 - [ ] Add a unified FE “My submissions” experience or equivalent creator-owned moderation surface, including complete unit tests for grouping, labels, safe messages, and empty states.
 - [ ] Add creator edit/delete/resubmit UI where backend allows it, including complete unit tests for allowed and forbidden actions.
@@ -388,9 +388,9 @@ Implementation progress with checked items lives next to this prompt in [user-co
 
 The current branch implements the extension baseline while preserving the core safety boundary:
 
-- `be_demo` adds `GET /api/my/content-submissions` for creator-owned albums, blogs, and reels with safe moderation fields only.
-- `be_demo` adds `POST /api/contentmoderation/bulk` for `SUPER_ADMIN` bulk approve/reject/remove/requeue, per-item results, per-item audit events, required reasons for reject/remove, Redis requeue integration, creator notifications, richer metrics, and retention/media helper coverage.
-- `fe_demo` adds the protected `/my-submissions` creator page, data hook, grouping helpers, safe reason display, empty states, and tests for grouping/status behaviour.
-- `admin_demo` extends moderation filters, metrics widgets, queue warnings, bulk selection, bulk shared reason payloads, and unit tests for hook/helper behaviour.
-- `ai_demo` keeps Qwen as the advisory model path and strengthens the deterministic classifier fallback used by `ReviewContent` for policy text categories, unsafe links, unsupported media metadata, and low-quality submissions.
+- `many_faces_backend` adds `GET /api/my/content-submissions` for creator-owned albums, blogs, and reels with safe moderation fields only.
+- `many_faces_backend` adds `POST /api/contentmoderation/bulk` for `SUPER_ADMIN` bulk approve/reject/remove/requeue, per-item results, per-item audit events, required reasons for reject/remove, Redis requeue integration, creator notifications, richer metrics, and retention/media helper coverage.
+- `many_faces_portal` adds the protected `/my-submissions` creator page, data hook, grouping helpers, safe reason display, empty states, and tests for grouping/status behaviour.
+- `many_faces_admin` extends moderation filters, metrics widgets, queue warnings, bulk selection, bulk shared reason payloads, and unit tests for hook/helper behaviour.
+- `many_faces_ai` keeps Qwen as the advisory model path and strengthens the deterministic classifier fallback used by `ReviewContent` for policy text categories, unsafe links, unsupported media metadata, and low-quality submissions.
 - Real image/video model inference remains a documented integration boundary; this branch implements URL/file metadata safety signals and tests rather than downloading or running a heavyweight media model by default.

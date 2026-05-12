@@ -1,15 +1,15 @@
 services:
-  # Backend API (be_demo)
+  # Backend API (many_faces_backend)
   be-demo-dev:
     build:
-      context: ./be_demo/BeDemo.Api
+      context: ./many_faces_backend/BeDemo.Api
       dockerfile: Dockerfile.dev
     container_name: be-demo-dev
     ports:
       - "8000:8000"
       - "8001:8001"
     volumes:
-      - ./be_demo/BeDemo.Api:/app
+      - ./many_faces_backend/BeDemo.Api:/app
       - ./dev/certs:/https-certs:ro
     # Redis beží v samostatnom repozitári / compose; na hostiteľovi publikuj port 6379 (alebo použi spoločnú Docker sieť).
     extra_hosts:
@@ -19,7 +19,7 @@ services:
       - ASPNETCORE_DEV_HTTPS_PFX=/https-certs/localhost.pfx
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
       - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password
-      # Redis z redis_demo (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
+      # Redis z many_faces_redis (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
       #   docker network connect many_faces_main_dev-network redis-dev
       - Redis__Configuration=redis-dev:6379,abortConnect=false
     depends_on:
@@ -35,17 +35,17 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend (fe_demo)
+  # Frontend (many_faces_portal)
   fe-demo-dev:
     build:
-      context: ./fe_demo
+      context: ./many_faces_portal
       dockerfile: Dockerfile.dev
     container_name: fe-demo-dev
     # Vite listens on 8081 only inside the network; host uses fe-demo-proxy → 9081 (wait page until Vite is up).
     expose:
       - "8081"
     volumes:
-      - ./fe_demo:/app
+      - ./many_faces_portal:/app
       - ./dev/certs:/certs:ro
       - fe-demo-node-modules:/app/node_modules
       - fe-demo-yarn-cache:/app/.yarn/cache
@@ -58,7 +58,7 @@ services:
       - VITE_DEV_CERT_DIR=/certs
       - VITE_SEQ_PROXY_TARGET=http://seq:5341
     env_file:
-      - ./fe_demo/.env
+      - ./many_faces_portal/.env
     depends_on:
       be-demo-dev:
         condition: service_healthy
@@ -89,16 +89,16 @@ services:
       - dev-network
     restart: unless-stopped
 
-  # Admin Demo (admin_demo)
+  # Admin Demo (many_faces_admin)
   admin-demo-dev:
     build:
-      context: ./admin_demo
+      context: ./many_faces_admin
       dockerfile: Dockerfile.dev
     container_name: admin-demo-dev
     ports:
       - "8082:8081"
     volumes:
-      - ./admin_demo:/app
+      - ./many_faces_admin:/app
       - ./dev/certs:/certs:ro
       - admin-demo-node-modules:/app/node_modules
       - admin-demo-yarn-cache:/app/.yarn/cache
@@ -110,7 +110,7 @@ services:
       - VITE_PORT=8081
       - VITE_DEV_CERT_DIR=/certs
     env_file:
-      - ./admin_demo/.env
+      - ./many_faces_admin/.env
     depends_on:
       be-demo-dev:
         condition: service_healthy
@@ -151,7 +151,7 @@ services:
   # AI Demo gRPC Server (independent - no dependency on backend)
   ai-demo-dev:
     build:
-      context: ./ai_demo
+      context: ./many_faces_ai
       dockerfile: Dockerfile.dev
     container_name: ai-demo-dev
     ports:

@@ -121,7 +121,7 @@ sequenceDiagram
   Life-->>Worker: ticket removed
 ```
 
-## Frontend (`fe_demo`)
+## Frontend (`many_faces_portal`)
 
 - Pages with **`pageType.index === 'wall'`** render the wall list inside `FacePageView`, optional grid below if configured.
 - **Header** “+” on wall routes opens **`WallTicketCreateTopPanel`** (same pattern as stories).
@@ -129,7 +129,7 @@ sequenceDiagram
 - **i18n**: `wallTickets.*` and extra `common.cancel|save|delete|close` in **en / sk / cz**.
 - Path detection uses **`pathnameMatchesWallPage`** so translated page routes still match.
 
-## Admin UI (`admin_demo`)
+## Admin UI (`many_faces_admin`)
 
 - From **Face detail**, button **Wall tickets (moderation)** → `/:lang/.../faces/:id/wall-tickets`.
 - Table: approve / deny / delete ticket; open title for full text and comments; delete individual comments.
@@ -159,7 +159,7 @@ Apply with EF (non-Testing): migration **`AddFaceWallTickets`**. Testing uses `E
 
 `BeDemo.Api.Tests/FaceWallTicketsControllerTests.cs` covers host create forbidden, create/like/comment + approve freeze, deny + hard delete service, admin comment delete, 20-ticket cap, non-admin forbidden on admin list, author vs approved edit/delete, long comment, double approve, **list when face not found (404)**, **deny then like frozen (400)**.
 
-Frontends: Vitest tests for `parseApiErrorBody` / `getApiErrorMessage` in `fe_demo` and `admin_demo` (`src/utils/apiErrorMessage.test.ts`).
+Frontends: Vitest tests for `parseApiErrorBody` / `getApiErrorMessage` in `many_faces_portal` and `many_faces_admin` (`src/utils/apiErrorMessage.test.ts`).
 
 ## Client error display (FE / admin)
 

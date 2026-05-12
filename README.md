@@ -8,7 +8,7 @@ The monorepo includes the customer-facing frontend, the admin portal, the backen
 
 It is designed both as a runnable local demo and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
-**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, ai, database, redis, logger). Local directory names stay `be_demo/`, `fe_demo/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
+**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, ai, database, redis, logger). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
 Security and trust boundaries are a high priority in the architecture: the demo uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
@@ -248,12 +248,12 @@ flowchart TD
 
 | Layer | Path | Purpose |
 | --- | --- | --- |
-| User frontend | [`fe_demo/`](./fe_demo/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
-| Admin portal | [`admin_demo/`](./admin_demo/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
-| Backend API | [`be_demo/`](./be_demo/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
-| AI service | [`ai_demo/`](./ai_demo/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`db_demo/`](./db_demo/), [`redis_demo/`](./redis_demo/) | **many_faces_database** + **many_faces_redis** — PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
-| Logging | [`logger_demo/`](./logger_demo/) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
+| User frontend | [`many_faces_portal/`](./many_faces_portal/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
+| Admin portal | [`many_faces_admin/`](./many_faces_admin/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
+| Backend API | [`many_faces_backend/`](./many_faces_backend/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
+| AI service | [`many_faces_ai/`](./many_faces_ai/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
+| Data stores | [`many_faces_database/`](./many_faces_database/), [`many_faces_redis/`](./many_faces_redis/) | **many_faces_database** + **many_faces_redis** — PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
+| Logging | [`many_faces_logger/`](./many_faces_logger/) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./scripts/), [`dev/`](./dev/) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
 
@@ -307,18 +307,18 @@ Development, CI, scripts: [`docs/guides/development.md`](./docs/guides/developme
 | TLS / crypto backlog      | [`docs/guides/security-crypto-sockets.md`](./docs/guides/security-crypto-sockets.md)         |
 | Submodule README index    | [`docs/readmes/README.md`](./docs/readmes/README.md)                                         |
 
-Backend details: [`be_demo/README.md`](./be_demo/README.md). Other services — see the table in [`docs/readmes/README.md`](./docs/readmes/README.md).
+Backend details: [`many_faces_backend/README.md`](./many_faces_backend/README.md). Other services — see the table in [`docs/readmes/README.md`](./docs/readmes/README.md).
 
 ## Layout (short)
 
 ```
-be_demo/       # many_faces_backend — API (OAuth2, JWT, SignalR, EF Core)
-fe_demo/       # many_faces_portal — user-facing SPA
-admin_demo/    # many_faces_admin — admin SPA
-db_demo/       # many_faces_database — PostgreSQL compose
-redis_demo/    # many_faces_redis — job queue
-ai_demo/       # many_faces_ai — gRPC health / AI
-logger_demo/   # many_faces_logger — Dozzle
+many_faces_backend/       # many_faces_backend — API (OAuth2, JWT, SignalR, EF Core)
+many_faces_portal/       # many_faces_portal — user-facing SPA
+many_faces_admin/    # many_faces_admin — admin SPA
+many_faces_database/       # many_faces_database — PostgreSQL compose
+many_faces_redis/    # many_faces_redis — job queue
+many_faces_ai/       # many_faces_ai — gRPC health / AI
+many_faces_logger/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
 ```
 

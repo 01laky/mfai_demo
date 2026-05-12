@@ -145,7 +145,7 @@ get_container_status() {
 }
 
 # ============================================================================
-# CHECK DATABASE (db_demo)
+# CHECK DATABASE (many_faces_database)
 # ============================================================================
 
 echo "📦 Database (PostgreSQL)"
@@ -187,10 +187,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK REDIS (redis_demo)
+# CHECK REDIS (many_faces_redis)
 # ============================================================================
 
-echo "📦 Redis (redis_demo)"
+echo "📦 Redis (many_faces_redis)"
 echo "───────────────────────────────────────────────────────────"
 
 REDIS_CONTAINER="redis-dev"
@@ -221,7 +221,7 @@ if check_container_exists "$REDIS_CONTAINER"; then
     echo "  Port: 6379 (localhost)"
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($REDIS_CONTAINER)"
-    echo "  Status: Does not exist (run redis_demo/start-redis.sh)"
+    echo "  Status: Does not exist (run many_faces_redis/start-redis.sh)"
     echo "  Port: 6379 (localhost)"
 fi
 
@@ -270,10 +270,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK BACKEND (be_demo)
+# CHECK BACKEND (many_faces_backend)
 # ============================================================================
 
-echo "📦 Backend API (be_demo)"
+echo "📦 Backend API (many_faces_backend)"
 echo "───────────────────────────────────────────────────────────"
 
 BE_CONTAINER="be-demo-dev"
@@ -313,10 +313,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK FRONTEND (fe_demo)
+# CHECK FRONTEND (many_faces_portal)
 # ============================================================================
 
-echo "📦 Frontend (fe_demo)"
+echo "📦 Frontend (many_faces_portal)"
 echo "───────────────────────────────────────────────────────────"
 
 FE_CONTAINER="fe-demo-dev"
@@ -372,10 +372,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK ADMIN (admin_demo)
+# CHECK ADMIN (many_faces_admin)
 # ============================================================================
 
-echo "📦 Admin (admin_demo)"
+echo "📦 Admin (many_faces_admin)"
 echo "───────────────────────────────────────────────────────────"
 
 ADMIN_CONTAINER="admin-demo-dev"
@@ -456,10 +456,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK AI DEMO (ai_demo)
+# CHECK AI DEMO (many_faces_ai)
 # ============================================================================
 
-echo "📦 AI Demo (ai_demo)"
+echo "📦 AI Demo (many_faces_ai)"
 echo "───────────────────────────────────────────────────────────"
 
 AI_DEMO_CONTAINER="ai-demo-dev"
@@ -495,10 +495,10 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK LOGGER DEMO (logger_demo)
+# CHECK LOGGER DEMO (many_faces_logger)
 # ============================================================================
 
-echo "📦 Logger Demo (logger_demo)"
+echo "📦 Logger Demo (many_faces_logger)"
 echo "───────────────────────────────────────────────────────────"
 
 LOGGER_DEMO_CONTAINER="dozzle-dev"

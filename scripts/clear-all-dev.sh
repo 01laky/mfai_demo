@@ -80,8 +80,8 @@ compose() {
 # -----------------------------------------------------------------------------
 echo "  📦 Phase 1: docker compose down -v (per stack)"
 
-if [ -f logger_demo/docker-compose.dev.yml ]; then
-  (cd "$ROOT/logger_demo" && compose -f docker-compose.dev.yml down --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_logger/docker-compose.dev.yml ]; then
+  (cd "$ROOT/many_faces_logger" && compose -f docker-compose.dev.yml down --remove-orphans 2>/dev/null) || true
 fi
 
 if [ -f docker-compose.dev.yml ]; then
@@ -94,24 +94,24 @@ if [ -f docker-compose.dev.yml ]; then
   fi
 fi
 
-if [ -f db_demo/docker-compose.yml ]; then
-  (cd "$ROOT/db_demo" && compose down -v --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_database/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_database" && compose down -v --remove-orphans 2>/dev/null) || true
 fi
 
-if [ -f redis_demo/docker-compose.yml ]; then
-  (cd "$ROOT/redis_demo" && compose down -v --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_redis/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_redis" && compose down -v --remove-orphans 2>/dev/null) || true
 fi
 
-if [ -f be_demo/docker-compose.dev.yml ]; then
-  (cd "$ROOT/be_demo" && compose -f docker-compose.dev.yml down -v --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_backend/docker-compose.dev.yml ]; then
+  (cd "$ROOT/many_faces_backend" && compose -f docker-compose.dev.yml down -v --remove-orphans 2>/dev/null) || true
 fi
 
-if [ -f fe_demo/docker-compose.yml ]; then
-  (cd "$ROOT/fe_demo" && compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_portal/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_portal" && compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null) || true
 fi
 
-if [ -f admin_demo/docker-compose.yml ]; then
-  (cd "$ROOT/admin_demo" && compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null) || true
+if [ -f many_faces_admin/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_admin" && compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null) || true
 fi
 
 # -----------------------------------------------------------------------------
@@ -132,6 +132,11 @@ docker rm -f "${_AI_RM[@]}" 2>/dev/null || true
 echo "  📦 Phase 3: remove project networks"
 
 for net in \
+  many_faces_database_db-network \
+  many_faces_redis_redis-network \
+  many_faces_backend_be-demo-network \
+  many_faces_portal_fe-demo-network \
+  many_faces_admin_admin-demo-network \
   db_demo_db-network \
   redis_demo_redis-network \
   be_demo_be-demo-network \
@@ -161,15 +166,15 @@ done
 # -----------------------------------------------------------------------------
 # Phase 5 — Compose v2 prefixed volumes (project_volume)
 # -----------------------------------------------------------------------------
-echo "  📦 Phase 5: remove Compose v2–prefixed volumes (many_faces_main_ / legacy mfai_demo_, db_demo_, …)"
+echo "  📦 Phase 5: remove Compose v2–prefixed volumes (many_faces_* + legacy *_demo_* / mfai_demo_ / many_faces_main_)"
 
 remove_prefixed_volumes() {
   # grep can exit 1 when no volumes match — must not trip set -e
   local candidates
-  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|many_faces_main_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
+  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
   [[ -z "$candidates" ]] && return 0
   if [[ "$CLEAN_AI" -ne 1 ]]; then
-    candidates=$(echo "$candidates" | grep -vF 'ai-demo-hf-cache' | grep -vE '^ai_demo_' || true)
+    candidates=$(echo "$candidates" | grep -vF 'ai-demo-hf-cache' | grep -vE '^many_faces_ai_' || true)
   fi
   while IFS= read -r vol; do
     [[ -z "$vol" ]] && continue
@@ -233,12 +238,12 @@ else
   echo "✅ Demo containers removed on retry"
 fi
 
-_BAD_VOL_GREP='^(mfai_demo_|many_faces_main_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
+_BAD_VOL_GREP='^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
 BAD_VOLUMES_RAW=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "$_BAD_VOL_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   BAD_VOLUMES=$BAD_VOLUMES_RAW
 else
-  BAD_VOLUMES=$(echo "$BAD_VOLUMES_RAW" | grep -vF 'ai-demo-hf-cache' | grep -vE '^ai_demo_' || true)
+  BAD_VOLUMES=$(echo "$BAD_VOLUMES_RAW" | grep -vF 'ai-demo-hf-cache' | grep -vE '^many_faces_ai_' || true)
 fi
 
 _LEGACY_GREP='^(be-demo-https|be-demo-data|seq-data|fe-demo-node-modules|fe-demo-yarn-cache|admin-demo-node-modules|admin-demo-yarn-cache|ai-demo-hf-cache|postgres-data|pgadmin-data|redis-data)$'
@@ -270,7 +275,7 @@ else
   fi
 fi
 
-_NET_GREP='^(many_faces_main_dev-network|mfai_demo_dev-network|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
+_NET_GREP='^(many_faces_main_dev-network|mfai_demo_dev-network|many_faces_database_db-network|many_faces_redis_redis-network|many_faces_backend_be-demo-network|many_faces_portal_fe-demo-network|many_faces_admin_admin-demo-network|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
 BAD_NETS_RAW=$(docker network ls --format '{{.Name}}' 2>/dev/null | grep -E "$_NET_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]] || ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx 'ai-demo-dev'; then
   BAD_NETS=$BAD_NETS_RAW
@@ -297,7 +302,7 @@ STILL_PREFIXED_RAW=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   STILL_PREFIXED=$STILL_PREFIXED_RAW
 else
-  STILL_PREFIXED=$(echo "$STILL_PREFIXED_RAW" | grep -vF 'ai-demo-hf-cache' | grep -vE '^ai_demo_' || true)
+  STILL_PREFIXED=$(echo "$STILL_PREFIXED_RAW" | grep -vF 'ai-demo-hf-cache' | grep -vE '^many_faces_ai_' || true)
 fi
 STILL_LEGACY_RAW=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "$_LEGACY_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]]; then

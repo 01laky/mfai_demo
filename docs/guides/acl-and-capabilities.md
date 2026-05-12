@@ -1,6 +1,6 @@
 # ACL, capabilities API, and frontend permission helpers
 
-Language: **English**. Audience: implementers maintaining **BE / fe_demo / admin_demo**.
+Language: **English**. Audience: implementers maintaining **BE / many_faces_portal / many_faces_admin**.
 
 **Auth / JWT / storage:** [authentication-and-sessions.md](./authentication-and-sessions.md).
 
@@ -146,7 +146,7 @@ flowchart LR
 
 ---
 
-## 4. Frontend (`fe_demo`) and admin (`admin_demo`)
+## 4. Frontend (`many_faces_portal`) and admin (`many_faces_admin`)
 
 | Path                                 | Role                                                                                                                                                                                                                                                    |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -198,7 +198,7 @@ Password: `Test123!@#` (see `IntegrationTestSeed.Password`).
 
 ## 6. Tests (where to look)
 
-### Backend (`be_demo/BeDemo.Api.Tests`)
+### Backend (`many_faces_backend/BeDemo.Api.Tests`)
 
 | File                                                     | Focus                                                                              |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -219,8 +219,8 @@ Password: `Test123!@#` (see `IntegrationTestSeed.Password`).
 
 | App            | Files (non-exhaustive)                                                                                                                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **fe_demo**    | `src/acl/__tests__/*`, `src/api/__tests__/meCapabilitiesClient.test.ts`, `src/api/__tests__/facePathRouting.test.ts` (includes `/api/me/capabilities` paths), `src/hooks/api/__tests__/useMeCapabilities.test.ts`. |
-| **admin_demo** | Same ACL tests + `src/api/__tests__/faceApiRouting_acl.test.ts`, `meCapabilitiesClient.test.ts`, `useMeCapabilities.test.ts`.                                                                                      |
+| **many_faces_portal**    | `src/acl/__tests__/*`, `src/api/__tests__/meCapabilitiesClient.test.ts`, `src/api/__tests__/facePathRouting.test.ts` (includes `/api/me/capabilities` paths), `src/hooks/api/__tests__/useMeCapabilities.test.ts`. |
+| **many_faces_admin** | Same ACL tests + `src/api/__tests__/faceApiRouting_acl.test.ts`, `meCapabilitiesClient.test.ts`, `useMeCapabilities.test.ts`.                                                                                      |
 
 ---
 

@@ -1,5 +1,5 @@
 # GitHub Actions — per-submodule jobs run in parallel. Display names use many_faces_* repos;
-# working-directory paths remain be_demo/, fe_demo/, … `yarn npm audit` / `audit-monorepo-deps.sh` are
+# working-directory paths remain many_faces_backend/, many_faces_portal/, … `yarn npm audit` / `audit-monorepo-deps.sh` are
 # informational (`|| true`) so supply-chain noise does not block merges; fix advisories in follow-ups.
 name: Many Faces CI
 
@@ -11,12 +11,12 @@ on:
 
 jobs:
   # .NET 10 API + xUnit integration suite (includes SignalR + OAuth regression tests).
-  be_demo:
+  many_faces_backend:
     name: many_faces_backend
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: be_demo
+        working-directory: many_faces_backend
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,12 +32,12 @@ jobs:
       - run: dotnet test BeDemo.sln --no-build -c Release --verbosity minimal
 
   # Public Vite/React SPA: lint, unit tests, production build, optional Cypress smoke on `vite preview` (HTTP 4173).
-  fe_demo:
+  many_faces_portal:
     name: many_faces_portal
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: fe_demo
+        working-directory: many_faces_portal
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +45,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: 'fe_demo/.nvmrc'
+          node-version-file: 'many_faces_portal/.nvmrc'
 
       - run: corepack enable
       - run: yarn install --immutable
@@ -70,12 +70,12 @@ jobs:
           kill $PID || true
           wait $PID 2>/dev/null || true
 
-  admin_demo:
+  many_faces_admin:
     name: many_faces_admin
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: admin_demo
+        working-directory: many_faces_admin
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,7 +83,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: 'admin_demo/.nvmrc'
+          node-version-file: 'many_faces_admin/.nvmrc'
 
       - run: corepack enable
       - run: yarn install --immutable
@@ -96,13 +96,13 @@ jobs:
 
   # Python gRPC demo: protobuf generation, Ruff, pytest. ML stack (CPU torch +
   # transformers) is required so test_server.py can import server.py (same as
-  # ai_demo/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
-  ai_demo:
+  # many_faces_ai/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
+  many_faces_ai:
     name: many_faces_ai
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ai_demo
+        working-directory: many_faces_ai
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,7 +112,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-          cache-dependency-path: ai_demo/requirements.txt
+          cache-dependency-path: many_faces_ai/requirements.txt
 
       - name: Install tooling, gRPC deps, and CPU ML stack for tests
         run: |
@@ -131,11 +131,11 @@ jobs:
 
       - name: Unit tests
         env:
-          PYTHONPATH: ${{ github.workspace }}/ai_demo
+          PYTHONPATH: ${{ github.workspace }}/many_faces_ai
         run: pytest test_server.py -q
 
   # Compose syntax checks — catches invalid YAML/env interpolation without starting containers.
-  infra_db_demo:
+  infra_many_faces_database:
     name: infra (many_faces_database)
     runs-on: ubuntu-latest
     steps:
@@ -144,10 +144,10 @@ jobs:
           submodules: recursive
 
       - name: Validate docker compose
-        run: docker compose -f db_demo/docker-compose.yml config
+        run: docker compose -f many_faces_database/docker-compose.yml config
 
-  # Redis compose file sanity (same pattern as db_demo).
-  infra_redis_demo:
+  # Redis compose file sanity (same pattern as many_faces_database).
+  infra_many_faces_redis:
     name: infra (many_faces_redis)
     runs-on: ubuntu-latest
     steps:
@@ -156,10 +156,10 @@ jobs:
           submodules: recursive
 
       - name: Validate docker compose
-        run: docker compose -f redis_demo/docker-compose.yml config
+        run: docker compose -f many_faces_redis/docker-compose.yml config
 
   # Seq / logger sidecar compose used in local dev stacks.
-  infra_logger_demo:
+  infra_many_faces_logger:
     name: infra (many_faces_logger)
     runs-on: ubuntu-latest
     steps:
@@ -168,7 +168,7 @@ jobs:
           submodules: recursive
 
       - name: Validate docker compose
-        run: docker compose -f logger_demo/docker-compose.dev.yml config
+        run: docker compose -f many_faces_logger/docker-compose.dev.yml config
 
   # Documentation guard: fenced ```mermaid blocks must parse (see scripts/check-mermaid-docs.sh).
   docs_mermaid:
@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: fe_demo/.nvmrc
+          node-version-file: many_faces_portal/.nvmrc
 
       - name: Validate fenced Mermaid blocks
         run: |
@@ -201,14 +201,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: fe_demo/.nvmrc
+          node-version-file: many_faces_portal/.nvmrc
 
       - run: corepack enable
 
-      - name: Yarn install (fe_demo + admin_demo)
+      - name: Yarn install (many_faces_portal + many_faces_admin)
         run: |
-          (cd fe_demo && yarn install --immutable)
-          (cd admin_demo && yarn install --immutable)
+          (cd many_faces_portal && yarn install --immutable)
+          (cd many_faces_admin && yarn install --immutable)
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -221,7 +221,7 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
-          chmod +x be_demo/lint.sh fe_demo/lint.sh admin_demo/lint.sh ai_demo/lint.sh ai_demo/verify-ci.sh
+          chmod +x many_faces_backend/lint.sh many_faces_portal/lint.sh many_faces_admin/lint.sh many_faces_ai/lint.sh many_faces_ai/verify-ci.sh
 
       - name: Monorepo dependency audit (informational)
         run: ./scripts/audit-monorepo-deps.sh

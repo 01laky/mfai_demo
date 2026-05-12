@@ -37,7 +37,7 @@
     - `dbFill:#e8f5e9,stroke:#2e7d32`
     - `queueFill:#fce4ec,stroke:#c2185b`
     - `extFill:#f3e5f5,stroke:#7b1fa2`
-15. **Verify names against code before finalizing:** **`grep` / read `be_demo/BeDemo.Api`** for **`MapHub`**, hub **class names** (e.g. `ChatHub`, `MessengerHub`, `ChatRoomHub`), and **URL path segments** (`/hubs/...`). Diagram labels must match **current** code, not guesses.
+15. **Verify names against code before finalizing:** **`grep` / read `many_faces_backend/BeDemo.Api`** for **`MapHub`**, hub **class names** (e.g. `ChatHub`, `MessengerHub`, `ChatRoomHub`), and **URL path segments** (`/hubs/...`). Diagram labels must match **current** code, not guesses.
 16. **`docs/guides/security-crypto-sockets.md`:** The **“Current baseline”** table may lag behind code. Before any diagram that states “current” behaviour, **cross-check** `Program.cs`, `OAuth2Service`, `JwtBearerOptions`, and refresh-token handling. Prefer labeling diagrams **“target architecture”** vs **verified current** explicitly.
 17. **Validation tooling:** If **`mmdc`** (Mermaid CLI) or IDE Mermaid preview is available, validate a **sample** of diagrams. At minimum verify each **mermaid** fenced block has a **closing fence** (pair-count sanity check).
 18. **Duplication / single source of truth:** **`D-COMP-ACL-01`** must **not** fully duplicate **`D-ACL-03`**—use a **small** high-level diagram plus a **markdown link** to the section in `guides/acl-and-capabilities.md` that contains the canonical file-flow diagram (anchor or heading text).
@@ -48,10 +48,10 @@
 ## 1. Repository context (do not skip—ground truth for labels)
 
 - Monorepo root: `many_faces_main`.
-- Backend: `be_demo/BeDemo.Api` — ASP.NET Core, OAuth2 (`OAuth2Controller`, `OAuth2Middleware`, `OAuth2Service`), JWT (`ECDSAKeyService`), refresh store (`OAuthRefreshTokenStore`), face routing (`RoutingMiddleware`), SignalR hubs (`ChatHub`, `MessengerHub`, chat room hub), EF Core, PostgreSQL.
-- Frontends: `fe_demo`, `admin_demo` — Vite/React, axios interceptors for `/{face}/` prefix, `localStorage` keys `auth_token`, `auth_refresh_token`, `auth_user`, JWT utils, React Query, SignalR clients.
+- Backend: `many_faces_backend/BeDemo.Api` — ASP.NET Core, OAuth2 (`OAuth2Controller`, `OAuth2Middleware`, `OAuth2Service`), JWT (`ECDSAKeyService`), refresh store (`OAuthRefreshTokenStore`), face routing (`RoutingMiddleware`), SignalR hubs (`ChatHub`, `MessengerHub`, chat room hub), EF Core, PostgreSQL.
+- Frontends: `many_faces_portal`, `many_faces_admin` — Vite/React, axios interceptors for `/{face}/` prefix, `localStorage` keys `auth_token`, `auth_refresh_token`, `auth_user`, JWT utils, React Query, SignalR clients.
 - Job queue: Redis lists / ZSET (`bedemo:jobs:ready`, `bedemo:jobs:delayed`), worker `RedisJobWorkerService`, job types e.g. `wall.ticket-delete`, `chatroom.idle-check`, `reel.postprocess`.
-- Submodules: `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `redis_demo`, `logger_demo`.
+- Submodules: `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`.
 - When docs disagree with code, **prefer code** and update diagram labels to match code; optionally file a separate doc fix (out of scope unless asked).
 
 ---
@@ -143,7 +143,7 @@
 
 ### D-AUTH-04 — `docs/guides/authentication-and-sessions.md`
 
-- **Placement:** After `## 3. Main frontend (fe_demo)` intro, before storage table.
+- **Placement:** After `## 3. Main frontend (many_faces_portal)` intro, before storage table.
 - **Type:** `sequenceDiagram`.
 - **Participants:** `LoginPage`, `useAuthApi`, `OpenAPIClient`, `API`, `localStorage`, `AxiosDefault`.
 - **Flow:** login form → buildPasswordGrantTokenRequest (strict boolean rememberMe) → POST token → store keys → set default Authorization header → subsequent API calls.
@@ -258,7 +258,7 @@
 
 - **Placement:** After `### 1.4 SignalR`.
 - **Type:** `sequenceDiagram`.
-- **Participants:** `Client`, `ChatRoomHub` (or exact class name from `be_demo`), `OtherClients`, `MessengerHub`.
+- **Participants:** `Client`, `ChatRoomHub` (or exact class name from `many_faces_backend`), `OtherClients`, `MessengerHub`.
 - **Before drawing:** confirm **hub class name** and **URL path** (e.g. `/hubs/chatroom` vs other) via **`MapHub`** / hub registration in **`Program.cs`**.
 - **Messages:** JoinRoom, SendRoomMessage, ReceiveRoomMessage; idle close → ChatRoomClosed; notification path to MessengerHub ReceiveNotification. Use **`Note`** for transport details; avoid relying on `classDef` for sequence participants.
 
@@ -401,7 +401,7 @@
 
 - **Placement:** After CI jobs table.
 - **Type:** `flowchart TB`.
-- **Parallel jobs:** be_demo, fe_demo, admin_demo, ai_demo, infra\* as parallel nodes; `monorepo_scripts` runs `scripts/ci-local.sh` chain—show relationship “parity check”.
+- **Parallel jobs:** many_faces_backend, many_faces_portal, many_faces_admin, many_faces_ai, infra\* as parallel nodes; `monorepo_scripts` runs `scripts/ci-local.sh` chain—show relationship “parity check”.
 
 ---
 
@@ -441,7 +441,7 @@
 
 - **Placement:** After `## Day-to-day usage`.
 - **Type:** `sequenceDiagram`.
-- **Developer:** commit in `be_demo` → push submodule → cd root → `git add be_demo` → commit pointer → push root.
+- **Developer:** commit in `many_faces_backend` → push submodule → cd root → `git add many_faces_backend` → commit pointer → push root.
 
 ---
 
@@ -507,7 +507,7 @@
 
 - **Placement:** After AI service section.
 - **Type:** `sequenceDiagram`.
-- **be_demo** startup HealthCheck → **ai_demo**; **ChatHub SendToAi** → gRPC Generate → streaming/error handling note.
+- **many_faces_backend** startup HealthCheck → **many_faces_ai**; **ChatHub SendToAi** → gRPC Generate → streaming/error handling note.
 
 ---
 
@@ -615,7 +615,7 @@
 
 - **Placement:** After the intro paragraph or after the submodule README table.
 - **Type:** `flowchart TB`.
-- **Content:** Each submodule (`be_demo`, `fe_demo`, …) as a node → its **`README.md`** path (as in the table). Show hub role of this index file.
+- **Content:** Each submodule (`many_faces_backend`, `many_faces_portal`, …) as a node → its **`README.md`** path (as in the table). Show hub role of this index file.
 
 ---
 
@@ -632,7 +632,7 @@
 - [x] **Every** diagram ID **`D-*`** from §2 is **added** in the target file **or** listed as **`skipped`** with reason (e.g. missing file). None may be omitted from the report.
 - [x] No broken markdown fences: every fenced **`mermaid`** block has a matching closing fence (e.g. search for triple-backtick pairs per file). Prefer **`grep`** or a small script if no Mermaid CLI.
 - [x] Mermaid parses without syntax errors—use **`mmdc`** or IDE preview **on a sample** of diagrams if available.
-- [x] Labels match **current** code and doc terms; **SignalR** paths and hub names verified via **`be_demo`** search.
+- [x] Labels match **current** code and doc terms; **SignalR** paths and hub names verified via **`many_faces_backend`** search.
 - [x] **Diagram coverage (heuristic):** For each `docs/**/*.md` file you modified, skim the longest **process-heavy** section; if it still has **no** visual after your pass, consider one diagram **or** document in the report why text-only is sufficient (edge case). Do **not** treat “400 lines” as a hard automated metric.
 - [x] **Accessibility:** do not rely on color alone—use distinct **node shapes** / **subgraphs** / **text prefixes** (`API:`, `DB:`). For **sequence** diagrams, prefer **Notes** over participant coloring.
 - [x] **`security-crypto-sockets.md`:** Any “current state” claim in a diagram was **verified** against code **or** explicitly labeled target/roadmap only.
@@ -679,7 +679,7 @@ Work through **top to bottom** when executing a **new** pass; this copy reflects
 - [x] **0.12** Node IDs: **alphanumeric + underscore** only.
 - [x] **0.13** `mindmap`: fallback to `flowchart TB` + subgraphs if renderer fails.
 - [x] **0.14** Flowchart styling: used the **WCAG palette** from §0 where `classDef` applies (`clientFill`, `apiFill`, `dbFill`, `queueFill`, `extFill`).
-- [x] **0.15** **Hub names and `/hubs/...` paths** verified in **`be_demo`** (`MapHub`, hub classes).
+- [x] **0.15** **Hub names and `/hubs/...` paths** verified in **`many_faces_backend`** (`MapHub`, hub classes).
 - [x] **0.16** **`security-crypto-sockets.md`**: “current” vs **target/roadmap** explicit; cross-checked **`Program.cs`**, **`OAuth2Service`**, **`JwtBearerOptions`**, refresh storage when claiming current behaviour.
 - [x] **0.17** **Closing fences**: every opening mermaid fence has a matching closing fence; optional **`mmdc`** / IDE sample validation.
 - [x] **0.18** **`D-COMP-ACL-01`**: small diagram + **link** to canonical **`D-ACL-03`** section—**not** a full duplicate of the file-flow graph.
@@ -689,7 +689,7 @@ Work through **top to bottom** when executing a **new** pass; this copy reflects
 
 - [x] Used **`many_faces_main`** layout and submodule paths when labeling.
 - [x] Backend labels match **OAuth2 / JWT / refresh / RoutingMiddleware / hubs / EF / PostgreSQL** as in repo.
-- [x] Frontend labels match **`fe_demo` / `admin_demo`**, `/{face}/`, **`localStorage`** keys, interceptors.
+- [x] Frontend labels match **`many_faces_portal` / `many_faces_admin`**, `/{face}/`, **`localStorage`** keys, interceptors.
 - [x] Queue labels match **Redis keys**, **`RedisJobWorkerService`**, example job types where relevant.
 - [x] Where doc and **code** disagreed, diagram follows **code** (and noted doc drift in report only if helpful).
 
@@ -743,7 +743,7 @@ Check each row: **`added`** / **`updated`** / **`skipped` + reason**.
 
 - [x] Final report lists **every** ID above—none omitted.
 - [x] All mermaid fenced blocks closed; optional **`mmdc`** / IDE parse sample.
-- [x] **SignalR** / hub / path labels verified against **`be_demo`**.
+- [x] **SignalR** / hub / path labels verified against **`many_faces_backend`**.
 - [x] For each edited doc: longest process-heavy section either has a diagram **or** report explains text-only (edge case).
 - [x] **A11y:** meaning not by color alone; sequence diagrams use **Notes** over participant colors.
 - [x] **`security-crypto-sockets.md`:** no unverified “current” claims in diagrams.

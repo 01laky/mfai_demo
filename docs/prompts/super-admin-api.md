@@ -22,7 +22,7 @@ This document **does not** implement code; it is input for a follow-up implement
 - Global role: `ApplicationUser.UserRoleId` → `UserRoles` (`Name`, `Scope` = `Global` | `Face`).
 - Name constants: `UserRole.GlobalRoleNames` — `SuperAdmin` = `"SUPER_ADMIN"`, `Admin` = `"ADMIN"`, `User`, `Host`.
 - When issuing an access token, `OAuth2Service.BuildAccessJwtAsync` loads the current role name from the DB and adds a single `ClaimTypes.Role` claim (thin token, A1/A9).
-- After `UserRoleId` changes in the DB, **an old JWT still carries the old role** until expiry; the new role appears after **token refresh** (`refresh_token` grant) or a new **password** login — see XML on [`OAuth2Service`](../be_demo/BeDemo.Api/Services/OAuth2Service.cs) (`BuildAccessJwtAsync`).
+- After `UserRoleId` changes in the DB, **an old JWT still carries the old role** until expiry; the new role appears after **token refresh** (`refresh_token` grant) or a new **password** login — see XML on [`OAuth2Service`](../many_faces_backend/BeDemo.Api/Services/OAuth2Service.cs) (`BuildAccessJwtAsync`).
 
 ### 2.2 Who can do what today (platform vs super)
 
@@ -51,13 +51,13 @@ flowchart TB
 ### 2.3 Capabilities and frontend
 
 - `AccessCapabilitiesService`: `platform:super` (`AclPermissionKeys.PlatformSuper`) only if `IsGlobalSuperAdmin(principal)`; `platform:admin` if `CanManageAllFaces`.
-- FE: `fe_demo/src/acl/permissions.ts` — `canSuperAdmin(caps)` exists; key catalog must stay aligned with `BeDemo.Api.Security.AclPermissionKeys` (Vitest).
+- FE: `many_faces_portal/src/acl/permissions.ts` — `canSuperAdmin(caps)` exists; key catalog must stay aligned with `BeDemo.Api.Security.AclPermissionKeys` (Vitest).
 
 ### 2.4 Test infrastructure
 
 - `IntegrationTestSeed`: `integration-superadmin@test.com` + `GetSuperAdminAccessTokenAsync`; `integration-admin@test.com` + `GetAdminAccessTokenAsync`.
 - `AclTestClients`: `GetPlatformSuperAdminTokenAsync`, `GetPlatformAdminTokenAsync`; OAuth via `CreateUnscopedClient()`, API via `CreateFaceClient("admin")` for platform scope.
-- Test pattern: [`PageTypesControllerTests.cs`](../be_demo/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 by token and face client).
+- Test pattern: [`PageTypesControllerTests.cs`](../many_faces_backend/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 by token and face client).
 
 ### 2.5 Audit
 
@@ -202,20 +202,20 @@ flowchart TB
 
 | Action                                                         | Path (relative to monorepo root)               |
 | -------------------------------------------------------------- | ---------------------------------------------- |
-| New controller                                                 | `be_demo/BeDemo.Api/Controllers/...`           |
-| DTO                                                            | `be_demo/BeDemo.Api/Models/DTOs/...`           |
-| `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `be_demo/BeDemo.Api/Utils/`, `Services/`       |
-| `SecurityAuditLog`                                             | `be_demo/BeDemo.Api/Utils/SecurityAuditLog.cs` |
-| Tests                                                          | `be_demo/BeDemo.Api.Tests/...`                 |
+| New controller                                                 | `many_faces_backend/BeDemo.Api/Controllers/...`           |
+| DTO                                                            | `many_faces_backend/BeDemo.Api/Models/DTOs/...`           |
+| `PlatformAccessRules` + `IAccessEvaluator` + `AccessEvaluator` | `many_faces_backend/BeDemo.Api/Utils/`, `Services/`       |
+| `SecurityAuditLog`                                             | `many_faces_backend/BeDemo.Api/Utils/SecurityAuditLog.cs` |
+| Tests                                                          | `many_faces_backend/BeDemo.Api.Tests/...`                 |
 | Docs                                                           | `docs/guides/acl-and-capabilities.md`          |
-| Optional FE                                                    | `admin_demo/src/...`, `fe_demo/src/acl/...`    |
+| Optional FE                                                    | `many_faces_admin/src/...`, `many_faces_portal/src/acl/...`    |
 
 ---
 
 ## 10. AI AGENT PROMPT (copy the block below)
 
 ```
-You are implementing a SUPER_ADMIN-only HTTP API in the BeDemo .NET 10 solution (monorepo root **`many_faces_main`**, project `be_demo/BeDemo.Api`).
+You are implementing a SUPER_ADMIN-only HTTP API in the BeDemo .NET 10 solution (monorepo root **`many_faces_main`**, project `many_faces_backend/BeDemo.Api`).
 
 GOAL
 - Expose a secure endpoint to change an ApplicationUser’s GLOBAL role (UserRoleId) in UserRoles table.
@@ -262,7 +262,7 @@ CONSTRAINTS
 - Do not use AspNetRoles for authorization.
 - Match existing code style, naming, and patterns (IAccessEvaluator, PlatformAccessRules, Forbid vs NotFound policy as in other controllers).
 - Keep the diff focused; no unrelated refactors.
-- Run: dotnet test be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj and fix failures.
+- Run: dotnet test many_faces_backend/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj and fix failures.
 
 DELIVERABLE
 - All tests green; endpoint documented; audit log called on success.

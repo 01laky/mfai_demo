@@ -1,12 +1,12 @@
 # AI-Assisted Content Approval
 
-This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current demo implementation** in `be_demo`, `fe_demo`, `admin_demo`, and `ai_demo`, plus optional roadmap items.
+This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current demo implementation** in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, and `many_faces_ai`, plus optional roadmap items.
 
 **Related:** implementation task checklist (ticked items) — [`../prompts/user-content-approval-extensions-implementation-checklist.md`](../prompts/user-content-approval-extensions-implementation-checklist.md).
 
 ## Scope
 
-The workflow applies to content created by **regular users** from the user-facing frontend (`fe_demo`):
+The workflow applies to content created by **regular users** from the user-facing frontend (`many_faces_portal`):
 
 - Albums
 - Blogs
@@ -31,13 +31,13 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **Persistence** | `Album`, `Blog`, `Reel` carry `ApprovalStatus`, AI fields, moderation version, human/removal metadata, `SubmittedAtUtc`. |
 | **Defaults** | Regular FE creates → `PendingApproval`. Migrated / admin-created paths default to `Approved` where applicable. |
 | **Public API** | List/grid/detail queries return **only `Approved`** content for non-owners; owners may load their own pending/rejected items for detail/edit flows. |
-| **AI pipeline** | Redis job type `content.ai-review`; `ContentAiReviewService` calls `ai_demo` `ReviewContent`, validates response, retries with backoff, escalates to `NeedsHumanReview` after max attempts. |
+| **AI pipeline** | Redis job type `content.ai-review`; `ContentAiReviewService` calls `many_faces_ai` `ReviewContent`, validates response, retries with backoff, escalates to `NeedsHumanReview` after max attempts. |
 | **AI service** | Deterministic classifier (text + media URL metadata) + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
 | **Admin** | `ContentModerationController`: queue with filters (type, status, AI status, face, author, risk, flags substring, confidence band, submitted window, reviewer, queue age, moderation version), metrics `{ metrics, alerts }`, per-item actions, **bulk** approve/reject/remove/requeue, audit events. |
 | **Creator FE** | `GET /api/my/content-submissions`, **My submissions** page (`/my-submissions`), grouping helpers, safe reasons, links to detail with optional `?edit=1`, edit/delete gated on owner + pending/rejected. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
-| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `ai_demo/test_server.py`. |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `many_faces_ai/test_server.py`. |
 
 ## Core Rule
 
@@ -69,18 +69,18 @@ Implemented values: `NotQueued`, `Queued`, `InProgress`, `RecommendedApprove`, `
 
 ```mermaid
 flowchart TD
-    subgraph fe["fe_demo"]
+    subgraph fe["many_faces_portal"]
         U["User creates album / blog / reel"]
         MS["My submissions page<br/>GET /api/my/content-submissions"]
         D["Detail + optional ?edit=1<br/>owner-gated edit/delete"]
     end
 
-    subgraph be["be_demo"]
+    subgraph be["many_faces_backend"]
         C["Create endpoint<br/>PendingApproval"]
         N["Notifications<br/>creator + super-admins"]
         J["Enqueue Redis job<br/>content.ai-review"]
         W["RedisJobWorkerService<br/>ContentAiReviewService"]
-        G["gRPC ReviewContent → ai_demo"]
+        G["gRPC ReviewContent → many_faces_ai"]
         V["Validate AI response<br/>policy + version"]
         M["GET /api/contentmoderation/metrics<br/>alerts + structured logs"]
         A["SUPER_ADMIN decisions<br/>single + bulk + requeue"]
@@ -88,7 +88,7 @@ flowchart TD
         R["Optional retention worker<br/>redact AI trace fields"]
     end
 
-    subgraph ai["ai_demo"]
+    subgraph ai["many_faces_ai"]
         RC["ReviewContent<br/>classifier + boundary flags"]
     end
 
@@ -138,7 +138,7 @@ Invalid or high-risk combinations are forced to **`NeedsHumanReview`** after val
 - Worker respects **retry delay**, **max attempts**, **stale moderation version** (ignored jobs), and terminal states.
 - Overload must **never** auto-publish: worst case content stays `PendingApproval` with AI in `Queued` / `Failed` / `NeedsHumanReview`.
 
-## Admin Moderation UI (`admin_demo`)
+## Admin Moderation UI (`many_faces_admin`)
 
 The **Moderation** area (superadmin-gated in UI; backend enforces the same):
 
@@ -148,7 +148,7 @@ The **Moderation** area (superadmin-gated in UI; backend enforces the same):
 - **Bulk** selection, shared reason, confirmation for destructive actions, per-item result summary.
 - **Detail drawer** with audit timeline.
 
-## Creator Experience (`fe_demo`)
+## Creator Experience (`many_faces_portal`)
 
 - After create: submitted-for-approval copy (existing success paths).
 - **My submissions:** grouped cards (pending, under AI review, needs review, approved, rejected, removed) with safe truncated reasons.
@@ -158,7 +158,7 @@ Internal AI diagnostics (raw model reason, trace IDs, flag dumps) are **not** sh
 
 ## Retention And Privacy (demo policy)
 
-Configured under **`Retention`** in `be_demo` `appsettings` (see submodule README):
+Configured under **`Retention`** in `many_faces_backend` `appsettings` (see submodule README):
 
 - `Enabled` — run hosted loop (default off in many dev profiles).
 - `Execute` — `false` = dry-run counts only; `true` = persist redactions.

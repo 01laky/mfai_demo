@@ -6,21 +6,21 @@ This document describes the Husky and pre-commit hooks configuration for all sub
 
 Each subrepository has its own git hooks configuration:
 
-- **React projects** (fe_demo, admin_demo): Husky with lint-staged and commitlint
-- **Python project** (ai_demo): pre-commit framework with Black and Ruff
-- **Other projects** (be_demo, db_demo, redis_demo, logger_demo): No hooks (Docker/infrastructure only)
+- **React projects** (many_faces_portal, many_faces_admin): Husky with lint-staged and commitlint
+- **Python project** (many_faces_ai): pre-commit framework with Black and Ruff
+- **Other projects** (many_faces_backend, many_faces_database, many_faces_redis, many_faces_logger): No hooks (Docker/infrastructure only)
 
 ### Diagram: hooks by repo (this document)
 
 ```mermaid
 flowchart LR
-  subgraph FE["fe_demo admin_demo"]
+  subgraph FE["many_faces_portal many_faces_admin"]
     PC[pre-commit hook]
     CM[commit-msg hook]
     PC --> LS[lint-staged ESLint Prettier]
     CM --> CL[commitlint conventional]
   end
-  subgraph AI["ai_demo"]
+  subgraph AI["many_faces_ai"]
     PRE[pre-commit framework]
     PRE --> BR[Black Ruff checks]
   end
@@ -29,7 +29,7 @@ flowchart LR
   end
 ```
 
-## React Projects: fe_demo & admin_demo
+## React Projects: many_faces_portal & many_faces_admin
 
 ### Tools Used
 
@@ -46,7 +46,7 @@ Husky is automatically installed when you run `yarn install` (via `prepare` scri
 Manual setup:
 
 ```bash
-cd fe_demo  # or admin_demo
+cd many_faces_portal  # or many_faces_admin
 yarn install  # This will run 'prepare' script which sets up Husky
 ```
 
@@ -105,7 +105,7 @@ Skip hooks for a single commit:
 git commit --no-verify -m "your message"
 ```
 
-## Python Project: ai_demo
+## Python Project: many_faces_ai
 
 ### Tools Used
 
@@ -116,7 +116,7 @@ git commit --no-verify -m "your message"
 ### Installation
 
 ```bash
-cd ai_demo
+cd many_faces_ai
 
 # Install pre-commit
 pip install pre-commit
@@ -169,7 +169,7 @@ git commit --no-verify -m "your message"
 
 ## Configuration Files
 
-### fe_demo & admin_demo
+### many_faces_portal & many_faces_admin
 
 - `.husky/pre-commit` - Pre-commit hook script
 - `.husky/commit-msg` - Commit message validation hook
@@ -177,7 +177,7 @@ git commit --no-verify -m "your message"
 - `commitlint.config.js` - Commitlint configuration
 - `package.json` - Contains `prepare` script and dependencies
 
-### ai_demo
+### many_faces_ai
 
 - `.pre-commit-config.yaml` - Pre-commit hooks configuration
 - `pyproject.toml` - Black and Ruff configuration
@@ -224,10 +224,10 @@ Examples: `feat(auth): add login`, `fix(api): resolve bug`
 
 | Repository  | Hook Tool  | Linting | Formatting | Commit Msg |
 | ----------- | ---------- | ------- | ---------- | ---------- |
-| fe_demo     | Husky      | ESLint  | Prettier   | commitlint |
-| admin_demo  | Husky      | ESLint  | Prettier   | commitlint |
-| ai_demo     | pre-commit | Ruff    | Black      | -          |
-| be_demo     | -          | -       | -          | -          |
-| db_demo     | -          | -       | -          | -          |
-| redis_demo  | -          | -       | -          | -          |
-| logger_demo | -          | -       | -          | -          |
+| many_faces_portal     | Husky      | ESLint  | Prettier   | commitlint |
+| many_faces_admin  | Husky      | ESLint  | Prettier   | commitlint |
+| many_faces_ai     | pre-commit | Ruff    | Black      | -          |
+| many_faces_backend     | -          | -       | -          | -          |
+| many_faces_database     | -          | -       | -          | -          |
+| many_faces_redis  | -          | -       | -          | -          |
+| many_faces_logger | -          | -       | -          | -          |

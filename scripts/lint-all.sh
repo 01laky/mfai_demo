@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Lint all projects: fe_demo, be_demo, admin_demo, ai_demo
+# Lint all projects: many_faces_portal, many_faces_backend, many_faces_admin, many_faces_ai
 # Usage: ./scripts/lint-all.sh (from repository root)
 
 set -e
@@ -32,10 +32,10 @@ lint_project() {
 echo "🔍 Linting all projects..."
 echo ""
 
-lint_project "fe_demo" "fe_demo (frontend)"
-lint_project "be_demo" "be_demo (backend)"
-lint_project "admin_demo" "admin_demo (admin)"
-lint_project "ai_demo" "ai_demo (AI service)"
+lint_project "many_faces_portal" "many_faces_portal (frontend)"
+lint_project "many_faces_backend" "many_faces_backend (backend)"
+lint_project "many_faces_admin" "many_faces_admin (admin)"
+lint_project "many_faces_ai" "many_faces_ai (AI service)"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ $FAILED -eq 0 ]; then

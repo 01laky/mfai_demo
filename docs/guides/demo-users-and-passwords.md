@@ -1,6 +1,6 @@
 # Demo users and passwords (local development)
 
-Accounts match the backend code in `be_demo`: `Scripts/InitializeDatabase.cs` (bootstrap super-admin), `Scripts/DatabaseSeeder.cs` → `SeedUsersAsync` (demo admins and users), and `BeDemo.Api.Tests/IntegrationTestSeed.cs` (integration tests only).
+Accounts match the backend code in `many_faces_backend`: `Scripts/InitializeDatabase.cs` (bootstrap super-admin), `Scripts/DatabaseSeeder.cs` → `SeedUsersAsync` (demo admins and users), and `BeDemo.Api.Tests/IntegrationTestSeed.cs` (integration tests only).
 
 **Typical local PostgreSQL after the API starts:** rows below reference the initializer, `SeedUsersAsync`, or test seeding. Rows marked **tests only** are not created by `docker compose` / normal API startup — they exist only when the test host runs `IntegrationTestSeed`.
 

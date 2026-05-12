@@ -4,11 +4,11 @@
 
 **Checklists:** Trailing `[ ]` sections are **PR / audit evidence templates**—tick them in the PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
 
-**Snapshot (human + tooling):** 2026-04-10 (`fe_demo` / `admin_demo` §2.3 union table + NCU re-run; `be_demo` NuGet unchanged vs prior note — re-run §0 before upgrades — registry “latest” changes daily). Completion log: [docs/guides/monorepo-dependency-audit-completion.md](../guides/monorepo-dependency-audit-completion.md).
+**Snapshot (human + tooling):** 2026-04-10 (`many_faces_portal` / `many_faces_admin` §2.3 union table + NCU re-run; `many_faces_backend` NuGet unchanged vs prior note — re-run §0 before upgrades — registry “latest” changes daily). Completion log: [docs/guides/monorepo-dependency-audit-completion.md](../guides/monorepo-dependency-audit-completion.md).
 
 ### Monorepo layout (`git` submodules)
 
-`fe_demo`, `admin_demo`, `be_demo`, `ai_demo`, `db_demo`, `redis_demo`, and `logger_demo` are **git submodules** (see root `.gitmodules`). **Commits that bump dependencies** usually belong in the **submodule’s remote**; the parent `many_faces_main` repo may only update the **submodule pointer** after those merges. Open or link PRs per submodule so CI runs where the manifest and lockfile live.
+`many_faces_portal`, `many_faces_admin`, `many_faces_backend`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, and `many_faces_logger` are **git submodules** (see root `.gitmodules`). **Commits that bump dependencies** usually belong in the **submodule’s remote**; the parent `many_faces_main` repo may only update the **submodule pointer** after those merges. Open or link PRs per submodule so CI runs where the manifest and lockfile live.
 
 ---
 
@@ -18,14 +18,14 @@ Run from **monorepo root** (`many_faces_main`) unless noted. Paths below assume 
 
 ```bash
 # .NET — outdated top-level packages (NuGet.org)
-cd be_demo && dotnet list package --outdated
+cd many_faces_backend && dotnet list package --outdated
 # Optional: include prerelease lines when evaluating betas (not default for “stable” audit)
 # dotnet list package --outdated --include-prerelease
 
 # Node — declared bumps suggested by npm-check-updates (does not modify files)
-cd ../fe_demo && npx --yes npm-check-updates
-cd ../admin_demo && npx --yes npm-check-updates
-cd ../be_demo && npx --yes npm-check-updates
+cd ../many_faces_portal && npx --yes npm-check-updates
+cd ../many_faces_admin && npx --yes npm-check-updates
+cd ../many_faces_backend && npx --yes npm-check-updates
 
 # Node — optional: exact latest on registry for one package
 npm view <name> version
@@ -36,20 +36,20 @@ for p in grpcio grpcio-tools protobuf transformers torch accelerate ruff pytest 
 done
 
 # Yarn CLI version (both SPAs)
-grep packageManager fe_demo/package.json admin_demo/package.json
+grep packageManager many_faces_portal/package.json many_faces_admin/package.json
 ```
 
 **Security / transitive (add-on to version audit):** this prompt focuses on **direct** dependencies in manifests. Transitives live in `yarn.lock` / NuGet lock. After bumps, run e.g.:
 
 ```bash
-cd fe_demo && yarn npm audit
-cd ../admin_demo && yarn npm audit
-cd ../be_demo && dotnet list package --vulnerable 2>/dev/null || true
+cd many_faces_portal && yarn npm audit
+cd ../many_faces_admin && yarn npm audit
+cd ../many_faces_backend && dotnet list package --vulnerable 2>/dev/null || true
 ```
 
 Interpret audit output with judgment (dev-only vs runtime, accepted risk, upstream fixes).
 
-**Docker images** (not in registries above): compare `image:` tags in `db_demo/docker-compose.yml`, `redis_demo/docker-compose.yml`, `docker-compose.dev.yml`, `logger_demo/docker-compose.dev.yml` with [Docker Hub](https://hub.docker.com/) / upstream release notes. For **base images** (`node:22-slim`, `python:3.11-slim`, `mcr.microsoft.com/dotnet/sdk:10.0`), compare digests/tags on Docker Hub / MCR.
+**Docker images** (not in registries above): compare `image:` tags in `many_faces_database/docker-compose.yml`, `many_faces_redis/docker-compose.yml`, `docker-compose.dev.yml`, `many_faces_logger/docker-compose.dev.yml` with [Docker Hub](https://hub.docker.com/) / upstream release notes. For **base images** (`node:22-slim`, `python:3.11-slim`, `mcr.microsoft.com/dotnet/sdk:10.0`), compare digests/tags on Docker Hub / MCR.
 
 **Concrete Docker checks (optional):**
 
@@ -62,9 +62,9 @@ docker compose -f docker-compose.dev.yml config 2>/dev/null | grep -E 'image:|bu
 
 ### 0.1 Regenerate the **full npm** inventory table (section 2.3)
 
-**Must run from monorepo root** — the script uses `pathlib.Path("fe_demo/package.json")` relative to CWD.
+**Must run from monorepo root** — the script uses `pathlib.Path("many_faces_portal/package.json")` relative to CWD.
 
-Runs `npm view <pkg> version` for the **union** of `dependencies` and `devDependencies` in `fe_demo/package.json` and `admin_demo/package.json`, then prints a Markdown table. **Paste the output into this document** under **§2.3** (replace the existing pipe table body; keep the heading and legend).
+Runs `npm view <pkg> version` for the **union** of `dependencies` and `devDependencies` in `many_faces_portal/package.json` and `many_faces_admin/package.json`, then prints a Markdown table. **Paste the output into this document** under **§2.3** (replace the existing pipe table body; keep the heading and legend).
 
 ```bash
 python3 <<'PY'
@@ -76,8 +76,8 @@ def load(path):
     return decl
 
 root = pathlib.Path(".")
-fe_d = load(root / "fe_demo/package.json")
-ad_d = load(root / "admin_demo/package.json")
+fe_d = load(root / "many_faces_portal/package.json")
+ad_d = load(root / "many_faces_admin/package.json")
 all_names = sorted(set(fe_d) | set(ad_d))
 
 def ver(pkg):
@@ -88,7 +88,7 @@ def ver(pkg):
     except Exception as e:
         return f"(error: {e})"
 
-print("| Package | `fe_demo` | `admin_demo` | Latest (npm) | Note |")
+print("| Package | `many_faces_portal` | `many_faces_admin` | Latest (npm) | Note |")
 print("| ------- | --------- | ------------ | ------------ | ---- |")
 for name in all_names:
     fv = fe_d.get(name, "—")
@@ -109,7 +109,7 @@ PY
 
 ---
 
-## 1. `be_demo` — NuGet (`BeDemo.Api`, `BeDemo.Api.Tests`)
+## 1. `many_faces_backend` — NuGet (`BeDemo.Api`, `BeDemo.Api.Tests`)
 
 **Target framework:** `net10.0`  
 **Base SDK image (Dockerfile.dev):** `mcr.microsoft.com/dotnet/sdk:10.0` (floating; consider pinning digest for reproducibility).
@@ -162,7 +162,7 @@ PY
 | ----------------------- | --------------------------------- | --------------------------------------------------------------------- |
 | `dotnet-ef` global tool | **10.0.5** (pinned in Dockerfile) | Keep aligned with `Microsoft.EntityFrameworkCore.*` package versions. |
 
-### 1.4 `be_demo/package.json` (Node — Husky / Commitlint only)
+### 1.4 `many_faces_backend/package.json` (Node — Husky / Commitlint only)
 
 **`packageManager`:** `yarn@4.12.0` (pinned hash in repo).
 
@@ -174,7 +174,7 @@ PY
 
 ---
 
-## 2. `fe_demo` and `admin_demo` — Yarn 4 / npm (`package.json`)
+## 2. `many_faces_portal` and `many_faces_admin` — Yarn 4 / npm (`package.json`)
 
 **`packageManager`:** `yarn@4.12.0` (both SPAs).  
 **Engines:** Node `>=22.14.0` (both).
@@ -183,13 +183,13 @@ PY
 
 **Yarn-native bumps (optional):** instead of only NCU, you can use `yarn up <package>` / `yarn up -R <package>` (Yarn 4) for interactive or recursive upgrades; still verify with `yarn validate` / tests.
 
-### 2.1 `npm-check-updates` — `fe_demo` (snapshot **2026-04-10**)
+### 2.1 `npm-check-updates` — `many_faces_portal` (snapshot **2026-04-10**)
 
 `npx npm-check-updates` (no `-u`): **All dependencies match the latest package versions** — NCU proposes no manifest edits. Use **§2.3** for per-package `npm view` vs declared ranges.
 
-### 2.2 `npm-check-updates` — `admin_demo` (snapshot **2026-04-10**)
+### 2.2 `npm-check-updates` — `many_faces_admin` (snapshot **2026-04-10**)
 
-Same as `fe_demo`: **no bumps proposed** by NCU at this snapshot.
+Same as `many_faces_portal`: **no bumps proposed** by NCU at this snapshot.
 
 **Admin-only runtime packages:** `@tanstack/react-table` **^8.21.3** (NCU / `npm view` — no newer line at snapshot). `@microsoft/signalr` **^10.0.0** on both SPAs (aligned with BE SignalR).
 
@@ -202,7 +202,7 @@ Same as `fe_demo`: **no bumps proposed** by NCU at this snapshot.
 
 `—` = not declared in that app. This table does **not** list transitive packages from `yarn.lock`.
 
-| Package                           | `fe_demo`                     | `admin_demo`                  | Latest (npm) | Note |
+| Package                           | `many_faces_portal`                     | `many_faces_admin`                  | Latest (npm) | Note |
 | -------------------------------- | ---------------------------- | ---------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
 | `@commitlint/cli`                  | ^20.5.0                        | ^20.5.0                        | **20.5.0** |  |
 | `@commitlint/config-conventional`  | ^20.5.0                        | ^20.5.0                        | **20.5.0** |  |
@@ -291,7 +291,7 @@ At snapshot **2026-04-10**, the big SPA toolchain moves (ESLint **10**, Vite **8
 
 ---
 
-## 3. `ai_demo` — Python (`requirements.txt`)
+## 3. `many_faces_ai` — Python (`requirements.txt`)
 
 | Package        | Pinned / constrained in repo | Latest on PyPI (`pip index versions`, first line, snapshot) | Notes                                                                                                                               |
 | -------------- | ---------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -313,16 +313,16 @@ At snapshot **2026-04-10**, the big SPA toolchain moves (ESLint **10**, Vite **8
 
 ## 4. Infra subrepos — Docker image pins
 
-When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2) prefer **immutable references** (`image: repo:tag@sha256:…`) in a follow-up if your team policy allows; (3) re-run compose healthchecks locally. Submodule PRs for `db_demo`, `redis_demo`, `logger_demo` apply the same submodule commit rules as app repos.
+When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2) prefer **immutable references** (`image: repo:tag@sha256:…`) in a follow-up if your team policy allows; (3) re-run compose healthchecks locally. Submodule PRs for `many_faces_database`, `many_faces_redis`, `many_faces_logger` apply the same submodule commit rules as app repos.
 
-### 4.1 `db_demo/docker-compose.yml`
+### 4.1 `many_faces_database/docker-compose.yml`
 
 | Image          | Current tag   | Latest stable context (snapshot)                                     | Notes                                                                                                                                                    |
 | -------------- | ------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | postgres       | **16-alpine** | PostgreSQL **16.x** (and **17.x**, **18.x** lines exist on Hub)      | Moving **16 → 17/18** is a **major** DB upgrade — follow PostgreSQL upgrade docs + backup. Minor **16.x** updates: refresh `16-alpine` digest regularly. |
 | dpage/pgadmin4 | **latest**    | Unpinned — prefer **specific tag** (e.g. `9.x`) for reproducibility. |
 
-### 4.2 `redis_demo/docker-compose.yml`
+### 4.2 `many_faces_redis/docker-compose.yml`
 
 | Image | Current tag  | Latest stable context               | Notes                                                                                                                                                      |
 | ----- | ------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -334,11 +334,11 @@ When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2
 | ------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------- |
 | nginx (fe-demo-proxy)                | **nginx:1.27-alpine**                 | Compare with current stable **1.28.x** / `alpine` on Docker Hub; patch bumps low risk. |
 | datalust/seq                         | **latest**                            | Pin to explicit Seq version for reproducible dev/ops.                                  |
-| `fe_demo` / `admin_demo` Dockerfiles | **node:22-slim** + `yarn@4.12.0`      | Refresh when Node 22 LTS security updates ship.                                        |
-| `ai_demo` Dockerfile                 | **python:3.11-slim**                  | Consider 3.12+ only with explicit test pass for torch/transformers wheels.             |
-| `be_demo` Dockerfile                 | **mcr.microsoft.com/dotnet/sdk:10.0** | Pin digest for reproducibility in CI.                                                  |
+| `many_faces_portal` / `many_faces_admin` Dockerfiles | **node:22-slim** + `yarn@4.12.0`      | Refresh when Node 22 LTS security updates ship.                                        |
+| `many_faces_ai` Dockerfile                 | **python:3.11-slim**                  | Consider 3.12+ only with explicit test pass for torch/transformers wheels.             |
+| `many_faces_backend` Dockerfile                 | **mcr.microsoft.com/dotnet/sdk:10.0** | Pin digest for reproducibility in CI.                                                  |
 
-### 4.4 `logger_demo/docker-compose.dev.yml`
+### 4.4 `many_faces_logger/docker-compose.dev.yml`
 
 | Image         | Current tag | Notes                                |
 | ------------- | ----------- | ------------------------------------ |
@@ -352,11 +352,11 @@ When upgrading tags: (1) check **release notes** on Docker Hub / vendor docs; (2
 2. **Serilog:** Treat **Serilog.AspNetCore 10** + **Seq sink 9** as one migration task (read release notes).
 3. **gRPC / Protobuf:** Upgrade **Google.Protobuf + Grpc.Net.Client + Grpc.Tools** together; regenerate proto if tooling requires. On **Docker arm64** (`linux_arm64`), **`Grpc.Tools` 2.80** has been observed to crash **`protoc` (exit 139)** inside **`mcr.microsoft.com/dotnet/sdk:10.0`** — validate in **be-demo-dev** before merging; see §1.1.
 4. **FE/admin:** Use section **2.3** as the authoritative per-package row set; section **2.1–2.2** highlights what NCU would widen.
-5. **Align SignalR client:** `fe_demo` **^8** vs `admin_demo` **^10** — plan unification with backend SignalR version.
-6. **Align @types/node:** `admin_demo` **^24.10.9** vs `fe_demo` **^25.0.9** — pick one major line for both SPAs.
+5. **Align SignalR client:** `many_faces_portal` **^8** vs `many_faces_admin` **^10** — plan unification with backend SignalR version.
+6. **Align @types/node:** `many_faces_admin` **^24.10.9** vs `many_faces_portal` **^25.0.9** — pick one major line for both SPAs.
 7. **Python AI:** Pin compatible **grpcio / protobuf / grpcio-tools** triple from upstream docs; avoid mixing unpinned `torch`/`transformers` in production images.
 8. **Docker:** Replace **`latest`** tags for Seq, pgAdmin, Dozzle with explicit versions in a dedicated infra PR.
-9. **be_demo Node:** Bump **@commitlint/\*** to **20.x** in line with `fe_demo` / `admin_demo`.
+9. **many_faces_backend Node:** Bump **@commitlint/\*** to **20.x** in line with `many_faces_portal` / `many_faces_admin`.
 10. **Submodules:** merge dependency PRs in **submodule** repos first; then update **parent** `many_faces_main` submodule pointers if required by your release process.
 11. **Security:** run **§0** audit commands plus `yarn npm audit` / `dotnet list package --vulnerable` where available; triage before and after bumps.
 12. **Lockfiles:** any `package.json` / `requirements.txt` change should include updated **`yarn.lock`** or a **pinned lock** for Python where the team adopted one.
@@ -382,7 +382,7 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 - [ ] Re-run **§0** commands; refresh **§2.3** table via **§0.1** script if npm rows changed.
 - [ ] Decide **PR strategy** (one mega-PR vs .NET / fe / admin / ai / infra split).
 
-### 7.2 `be_demo` — .NET (`BeDemo.Api`, `BeDemo.Api.Tests`)
+### 7.2 `many_faces_backend` — .NET (`BeDemo.Api`, `BeDemo.Api.Tests`)
 
 - [ ] **ASP.NET + EF Core + Npgsql** — align `Microsoft.AspNetCore.*`, `Microsoft.EntityFrameworkCore.*`, `Npgsql.EntityFrameworkCore.PostgreSQL` to the **same patch** (see §1.1 / §1.2).
 - [ ] **OpenAPI** — `Microsoft.AspNetCore.OpenApi`.
@@ -393,15 +393,15 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 - [ ] **Redis** — `StackExchange.Redis`.
 - [ ] **Enrichers** — `Serilog.Enrichers.Environment`, `Serilog.Enrichers.Thread` (re-check after other bumps).
 - [ ] **Tests** — `coverlet.collector`, `FluentAssertions`, `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.AspNetCore.SignalR.Client`, `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.NET.Test.Sdk`, `Moq`, `xunit`, `xunit.runner.visualstudio`.
-- [ ] Run `dotnet test` (and integration tests) in **be_demo** submodule.
+- [ ] Run `dotnet test` (and integration tests) in **many_faces_backend** submodule.
 
-### 7.3 `be_demo` — Docker + Node tooling
+### 7.3 `many_faces_backend` — Docker + Node tooling
 
 - [ ] **`BeDemo.Api/Dockerfile.dev`** — `dotnet-ef` tool version vs EF Core packages.
-- [ ] **`be_demo/package.json`** — `@commitlint/cli`, `@commitlint/config-conventional`, `husky`; run `yarn install` if lockfile exists in submodule.
+- [ ] **`many_faces_backend/package.json`** — `@commitlint/cli`, `@commitlint/config-conventional`, `husky`; run `yarn install` if lockfile exists in submodule.
 - [ ] Optional: **MCR** `mcr.microsoft.com/dotnet/sdk:10.0` digest pin.
 
-### 7.4 `fe_demo` — `package.json` + lockfile
+### 7.4 `many_faces_portal` — `package.json` + lockfile
 
 - [ ] **Commitlint / Husky** — `@commitlint/*`, `husky`, `lint-staged`.
 - [ ] **Toolchain (high-risk bundle)** — `typescript`, `typescript-eslint`, `eslint`, `@eslint/js`, `eslint-config-prettier`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `globals`, `vite`, `@vitejs/plugin-react`, `@vitejs/plugin-basic-ssl`, `vitest`, `@vitest/ui`, `jsdom`, `@types/jsdom`, `cypress`.
@@ -413,20 +413,20 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 - [ ] **`yarn.lock`** — committed after any `package.json` change.
 - [ ] Run `yarn validate`, `yarn test`, and **Cypress** smoke where applicable.
 
-### 7.5 `admin_demo` — `package.json` + lockfile
+### 7.5 `many_faces_admin` — `package.json` + lockfile
 
-- [ ] Same **toolchain** group as `fe_demo` where shared (§7.4).
-- [ ] **Admin-only / diffs** — `@tanstack/react-table`, `framer-motion`; **`@types/node`** — align major line with `fe_demo`.
+- [ ] Same **toolchain** group as `many_faces_portal` where shared (§7.4).
+- [ ] **Admin-only / diffs** — `@tanstack/react-table`, `framer-motion`; **`@types/node`** — align major line with `many_faces_portal`.
 - [ ] **`@microsoft/signalr`** — already on ^10; keep in sync with BE after fe bump.
-- [ ] **Radix + React stack** — mirror `fe_demo` where packages overlap.
+- [ ] **Radix + React stack** — mirror `many_faces_portal` where packages overlap.
 - [ ] **`yarn.lock`** — committed.
 - [ ] Run `yarn validate` and `yarn test`.
 
-### 7.6 `fe_demo` / `admin_demo` — Docker
+### 7.6 `many_faces_portal` / `many_faces_admin` — Docker
 
 - [ ] **`Dockerfile.dev`** — `node:22-slim`, `corepack prepare yarn@4.12.0` vs root `packageManager` field.
 
-### 7.7 `ai_demo` — Python
+### 7.7 `many_faces_ai` — Python
 
 - [ ] **gRPC** — `grpcio`, `grpcio-tools`, `grpcio-testing` in **one** bump.
 - [ ] **.NET gRPC in Docker (arm64)** — after bumping `Grpc.Tools`, run **`docker compose … up -d --build be-demo-dev`** and confirm **`dotnet watch` / `protoc`** does not exit **139** on **`linux_arm64`**.
@@ -438,22 +438,22 @@ Use this as a **tick list** for a full dependency pass. Skip groups intentionall
 
 ### 7.8 Infra compose (submodule repos)
 
-- [ ] **`db_demo/docker-compose.yml`** — `postgres:16-alpine`, `dpage/pgadmin4` (replace `latest` with pin when ready).
-- [ ] **`redis_demo/docker-compose.yml`** — `redis:7-alpine` (legal review before **8.x**).
+- [ ] **`many_faces_database/docker-compose.yml`** — `postgres:16-alpine`, `dpage/pgadmin4` (replace `latest` with pin when ready).
+- [ ] **`many_faces_redis/docker-compose.yml`** — `redis:7-alpine` (legal review before **8.x**).
 - [ ] **Root `docker-compose.dev.yml`** — `nginx`, `datalust/seq`, service build contexts.
-- [ ] **`logger_demo/docker-compose.dev.yml`** — `amir20/dozzle` (pin tag).
+- [ ] **`many_faces_logger/docker-compose.dev.yml`** — `amir20/dozzle` (pin tag).
 - [ ] Smoke **compose up** paths affected by image changes.
 
 ### 7.9 Security and docs
 
-- [ ] `yarn npm audit` in **fe_demo** and **admin_demo**; address or record accepted risks.
-- [ ] `dotnet list package --vulnerable` in **be_demo** if supported.
+- [ ] `yarn npm audit` in **many_faces_portal** and **many_faces_admin**; address or record accepted risks.
+- [ ] `dotnet list package --vulnerable` in **many_faces_backend** if supported.
 - [ ] Update **this prompt** (§1–§4 tables) or attach CI logs + new snapshot date.
 - [ ] **Parent `many_faces_main`:** bump submodule SHAs + short release note / CHANGELOG as per §6.
 
 ### 7.10 Explicit “do not forget” cross-cuts
 
-- [ ] **SignalR** — `fe_demo` client major aligned with `admin_demo` and **BeDemo.Api** SignalR.
+- [ ] **SignalR** — `many_faces_portal` client major aligned with `many_faces_admin` and **BeDemo.Api** SignalR.
 - [ ] **Serilog majors** — Seq + console + AspNetCore tested together.
 - [ ] **Redis 8+** — legal sign-off before image upgrade.
 - [ ] **PostgreSQL 17/18** — major DB migration plan, not a silent tag bump.

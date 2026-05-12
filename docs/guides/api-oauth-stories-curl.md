@@ -181,7 +181,7 @@ curl -sS -X PUT "$BASE/api/faces/$FACE_ID/my-role" \
 
 ## 7. Stories — full curl flow
 
-Short endpoint overview in **`be_demo`**: [`STORIES_API.md`](../be_demo/STORIES_API.md).
+Short endpoint overview in **`many_faces_backend`**: [`STORIES_API.md`](../many_faces_backend/STORIES_API.md).
 
 ### 7.1 Create draft
 
@@ -309,17 +309,17 @@ From `many_faces_main` root:
 Backend tests (test project only):
 
 ```bash
-cd be_demo && dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
+cd many_faces_backend && dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
 ```
 
 Frontend:
 
 ```bash
-cd fe_demo && yarn lint && yarn format:check && yarn test && yarn build
+cd many_faces_portal && yarn lint && yarn format:check && yarn test && yarn build
 ```
 
 ## 10. Related documentation
 
-- [Stories API (endpoint table)](../be_demo/STORIES_API.md)
+- [Stories API (endpoint table)](../many_faces_backend/STORIES_API.md)
 - [Docker dev stack](../docker-compose.dev.yml) — FE/BE/admin ports
 - [README](../../README.md) — monorepo overview

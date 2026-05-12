@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to restart all development environments
-# Stops and starts: be_demo (backend), fe_demo (frontend), admin_demo (admin)
+# Stops and starts: many_faces_backend (backend), many_faces_portal (frontend), many_faces_admin (admin)
 
 set -e
 
@@ -20,33 +20,33 @@ echo "🛑 Stopping all applications..."
 echo ""
 
 # Stop backend
-if [ -f "be_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping backend (be_demo)..."
-    cd be_demo
+if [ -f "many_faces_backend/stop-dev.sh" ]; then
+    echo "  📦 Stopping backend (many_faces_backend)..."
+    cd many_faces_backend
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  be_demo/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_backend/stop-dev.sh not found"
 fi
 
-# Stop frontend (fe_demo)
-if [ -f "fe_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping frontend (fe_demo)..."
-    cd fe_demo
+# Stop frontend (many_faces_portal)
+if [ -f "many_faces_portal/stop-dev.sh" ]; then
+    echo "  📦 Stopping frontend (many_faces_portal)..."
+    cd many_faces_portal
     ./stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  fe_demo/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_portal/stop-dev.sh not found"
 fi
 
-# Stop admin_demo
-if [ -f "admin_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping admin_demo..."
-    cd admin_demo
+# Stop many_faces_admin
+if [ -f "many_faces_admin/stop-dev.sh" ]; then
+    echo "  📦 Stopping many_faces_admin..."
+    cd many_faces_admin
     ./stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  admin_demo/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_admin/stop-dev.sh not found"
 fi
 
 # Kill any remaining processes
@@ -68,23 +68,23 @@ echo "🚀 Starting all applications..."
 echo ""
 
 # Start backend
-if [ -f "be_demo/start-dev.sh" ]; then
-    echo "  📦 Starting backend (be_demo)..."
-    cd be_demo
+if [ -f "many_faces_backend/start-dev.sh" ]; then
+    echo "  📦 Starting backend (many_faces_backend)..."
+    cd many_faces_backend
     ./start-dev.sh > /dev/null 2>&1 &
     BACKEND_PID=$!
     echo "    ✅ Backend started (PID: $BACKEND_PID)"
     cd ..
 else
-    echo "  ⚠️  be_demo/start-dev.sh not found"
+    echo "  ⚠️  many_faces_backend/start-dev.sh not found"
 fi
 
 sleep 3
 
-# Start frontend (fe_demo)
-if [ -f "fe_demo/start-dev.sh" ]; then
-    echo "  📦 Starting frontend (fe_demo)..."
-    cd fe_demo
+# Start frontend (many_faces_portal)
+if [ -f "many_faces_portal/start-dev.sh" ]; then
+    echo "  📦 Starting frontend (many_faces_portal)..."
+    cd many_faces_portal
     
     # Check if node_modules exists, if not install dependencies
     if [ ! -d "node_modules" ]; then
@@ -103,15 +103,15 @@ if [ -f "fe_demo/start-dev.sh" ]; then
     echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
     cd ..
 else
-    echo "  ⚠️  fe_demo/start-dev.sh not found"
+    echo "  ⚠️  many_faces_portal/start-dev.sh not found"
 fi
 
 sleep 3
 
-# Start admin_demo
-if [ -f "admin_demo/package.json" ]; then
-    echo "  📦 Starting admin_demo..."
-    cd admin_demo
+# Start many_faces_admin
+if [ -f "many_faces_admin/package.json" ]; then
+    echo "  📦 Starting many_faces_admin..."
+    cd many_faces_admin
     
     # Check if node_modules exists, if not install dependencies
     if [ ! -d "node_modules" ]; then
@@ -131,7 +131,7 @@ if [ -f "admin_demo/package.json" ]; then
     echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
     cd ..
 else
-    echo "  ⚠️  admin_demo/package.json not found"
+    echo "  ⚠️  many_faces_admin/package.json not found"
 fi
 
 echo ""
@@ -162,15 +162,15 @@ if curl -s http://localhost:8082 > /dev/null 2>&1; then
     ADMIN_STATUS="✅"
 fi
 
-echo "$BACKEND_STATUS Backend (be_demo): http://localhost:8000"
-echo "$FRONTEND_STATUS Frontend (fe_demo): http://localhost:8081"
+echo "$BACKEND_STATUS Backend (many_faces_backend): http://localhost:8000"
+echo "$FRONTEND_STATUS Frontend (many_faces_portal): http://localhost:8081"
 echo "$ADMIN_STATUS Admin Demo: http://localhost:8082"
 echo ""
 
 echo "📋 Application URLs:"
 echo "   Backend API: http://localhost:8000"
 echo "   Backend Swagger: http://localhost:8000/swagger"
-echo "   Frontend (fe_demo): http://localhost:8081"
+echo "   Frontend (many_faces_portal): http://localhost:8081"
 echo "   Admin Demo: http://localhost:8082"
 echo ""
 
@@ -181,8 +181,8 @@ else
     echo "⚠️  Some applications may still be starting. Please check logs if needed."
     echo ""
     echo "💡 To check logs:"
-    echo "   - Backend: cd be_demo && docker-compose logs -f"
-    echo "   - Frontend: cd fe_demo && docker-compose logs -f"
+    echo "   - Backend: cd many_faces_backend && docker-compose logs -f"
+    echo "   - Frontend: cd many_faces_portal && docker-compose logs -f"
     echo "   - Admin Demo: Check terminal or browser console"
     exit 1
 fi

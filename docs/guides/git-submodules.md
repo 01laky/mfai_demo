@@ -6,15 +6,15 @@
 
 Create **7+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
-1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `be_demo/`, `fe_demo/`, … — see [git-submodules.md](./guides/git-submodules.md).
-2. **Submodules** (remote repo names — **local paths** in the monorepo stay `be_demo/`, `fe_demo/`, …):
-   - `many_faces_backend` → path `be_demo/`
-   - `many_faces_portal` → path `fe_demo/`
-   - `many_faces_admin` → path `admin_demo/`
-   - `many_faces_ai` → path `ai_demo/`
-   - `many_faces_database` → path `db_demo/`
-   - `many_faces_redis` → path `redis_demo/`
-   - `many_faces_logger` → path `logger_demo/`
+1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [git-submodules.md](./guides/git-submodules.md).
+2. **Submodules** (remote repo names — **local paths** in the monorepo stay `many_faces_backend/`, `many_faces_portal/`, …):
+   - `many_faces_backend` → path `many_faces_backend/`
+   - `many_faces_portal` → path `many_faces_portal/`
+   - `many_faces_admin` → path `many_faces_admin/`
+   - `many_faces_ai` → path `many_faces_ai/`
+   - `many_faces_database` → path `many_faces_database/`
+   - `many_faces_redis` → path `many_faces_redis/`
+   - `many_faces_logger` → path `many_faces_logger/`
 
 ### 2. Set remote URL in each submodule
 
@@ -22,43 +22,43 @@ For each submodule, set the remote URL (replace `YOUR_USERNAME` with your GitHub
 
 ```bash
 # Backend
-cd be_demo
+cd many_faces_backend
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_backend.git
 git branch -M main
 git push -u origin main
 
 # Frontend
-cd ../fe_demo
+cd ../many_faces_portal
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_portal.git
 git branch -M main
 git push -u origin main
 
 # Admin
-cd ../admin_demo
+cd ../many_faces_admin
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_admin.git
 git branch -M main
 git push -u origin main
 
 # AI Demo
-cd ../ai_demo
+cd ../many_faces_ai
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_ai.git
 git branch -M main
 git push -u origin main
 
 # Database
-cd ../db_demo
+cd ../many_faces_database
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_database.git
 git branch -M main
 git push -u origin main
 
 # Redis (job queue)
-cd ../redis_demo
+cd ../many_faces_redis
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_redis.git
 git branch -M main
 git push -u origin main
 
 # Logger (Seq / Dozzle stack)
-cd ../logger_demo
+cd ../many_faces_logger
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_logger.git
 git branch -M main
 git push -u origin main
@@ -79,13 +79,13 @@ nano .gitmodules   # or use your editor
 cd /path/to/many_faces_main
 
 # Add submodules
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_backend.git be_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_portal.git fe_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_admin.git admin_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_ai.git ai_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_database.git db_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_redis.git redis_demo
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_logger.git logger_demo
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_backend.git many_faces_backend
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_portal.git many_faces_portal
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_admin.git many_faces_admin
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_ai.git many_faces_ai
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_database.git many_faces_database
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_redis.git many_faces_redis
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_logger.git many_faces_logger
 
 # Or if they already exist, update .gitmodules and commit:
 git add .gitmodules
@@ -152,13 +152,13 @@ git submodule update --init --recursive
 git submodule update --remote
 
 # Commit changes inside a submodule
-cd be_demo
+cd many_faces_backend
 git add .
 git commit -m "Changes"
 git push
 cd ..
-git add be_demo
-git commit -m "Update be_demo submodule"
+git add many_faces_backend
+git commit -m "Update many_faces_backend submodule"
 git push
 ```
 
@@ -167,7 +167,7 @@ git push
 ```mermaid
 sequenceDiagram
   participant Dev as Developer
-  participant Sub as Submodule be_demo
+  participant Sub as Submodule many_faces_backend
   participant RemoteSub as Submodule remote
   participant Root as Root repo
   participant RemoteRoot as Root remote

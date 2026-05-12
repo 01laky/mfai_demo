@@ -11,7 +11,7 @@ This document covers **face chat rooms** (API, SignalR, FE routing), **automated
 Recommended for **quick manual checks** without Docker (Swagger, Postman, one-off curl):
 
 ```bash
-cd be_demo/BeDemo.Api
+cd many_faces_backend/BeDemo.Api
 ASPNETCORE_ENVIRONMENT=Testing dotnet run --urls http://127.0.0.1:17778 --no-launch-profile
 ```
 
@@ -140,7 +140,7 @@ flowchart TB
 ## 2. Automated tests — Backend (`BeDemo.Api.Tests`)
 
 ```bash
-cd be_demo
+cd many_faces_backend
 dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
 ```
 
@@ -186,10 +186,10 @@ Helper: `PromoteUserToGlobalAdminAsync` sets `ApplicationUser.UserRoleId` to glo
 
 ---
 
-## 3. Frontend (`fe_demo`)
+## 3. Frontend (`many_faces_portal`)
 
 ```bash
-cd fe_demo
+cd many_faces_portal
 yarn test
 ```
 
@@ -216,10 +216,10 @@ flowchart LR
 
 ---
 
-## 4. Admin (`admin_demo`)
+## 4. Admin (`many_faces_admin`)
 
 ```bash
-cd admin_demo
+cd many_faces_admin
 yarn test
 ```
 
@@ -233,7 +233,7 @@ _(You can add a UI checkbox in the face edit form separately—API and types are
 ## 5. Manual checklist (OAuth + UI)
 
 1. Run API (`Testing` or Postgres dev).
-2. Run `fe_demo`, sign in (same OAuth password flow as the app).
+2. Run `many_faces_portal`, sign in (same OAuth password flow as the app).
 3. In face settings pick a **non-host** role if you need to create rooms.
 4. Turn **chat rooms create** on for the face (admin API or future admin UI).
 5. Open the page with the chat grid → click a card → `/detail/4/{id}`.
@@ -245,7 +245,7 @@ _(You can add a UI checkbox in the face edit form separately—API and types are
 ```mermaid
 flowchart TB
   N1[1 Run API Testing or Postgres]
-  N2[2 Run fe_demo sign in]
+  N2[2 Run many_faces_portal sign in]
   N3[3 Non-host role if creating rooms]
   N4[4 Enable chatRoomsCreate on face]
   N5[5 Open chat grid to detail 4 id]
@@ -262,8 +262,8 @@ flowchart TB
 | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | BE seed Testing | `BeDemo.Api/Program.cs`                                                                                                   |
 | BE tests        | `BeDemo.Api.Tests/FaceChatRoomsControllerTests.cs`, `ChatRoomLifecycleServiceTests.cs`, `FaceRoleParticipationTests.cs`   |
-| FE tests        | `fe_demo/src/api/services/__tests__/ChatRoomsService.test.ts`, `fe_demo/src/constants/__tests__/componentTypeIds.test.ts` |
-| Admin           | `admin_demo/src/hooks/api/useFacesApi.ts`, `.../__tests__/useFacesApi.test.ts`                                            |
+| FE tests        | `many_faces_portal/src/api/services/__tests__/ChatRoomsService.test.ts`, `many_faces_portal/src/constants/__tests__/componentTypeIds.test.ts` |
+| Admin           | `many_faces_admin/src/hooks/api/useFacesApi.ts`, `.../__tests__/useFacesApi.test.ts`                                            |
 | Docs            | `docs/guides/chat-rooms-testing-and-operations.md`                                                                        |
 
 ---
@@ -271,7 +271,7 @@ flowchart TB
 ## 7. Verification in this repo (2026-04-07)
 
 - `dotnet test BeDemo.Api.Tests` — **296 passed**, 1 skipped (pre-existing).
-- `fe_demo` `yarn test` — **58 passed**.
-- `admin_demo` `yarn test` — **24 passed** (some files skipped as before).
+- `many_faces_portal` `yarn test` — **58 passed**.
+- `many_faces_admin` `yarn test` — **24 passed** (some files skipped as before).
 
 If something fails, check API URL, environment (`Testing` vs Postgres), and OAuth `clientId` / `clientSecret` in `appsettings`.

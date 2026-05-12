@@ -3,12 +3,12 @@
 # test-all.sh - Script to run tests in all subrepositories
 # 
 # This script orchestrates test execution across all subrepositories in the monorepo:
-# - Backend (be_demo) - runs .NET xUnit tests using 'dotnet test'
-# - Frontend (fe_demo) - runs Vitest tests using 'yarn test --run' and Cypress e2e tests
-# - Admin (admin_demo) - runs Vitest tests using 'yarn test --run'
-# - Database (db_demo) - infrastructure only, no tests
-# - Redis (redis_demo) - infrastructure only, no tests
-# - AI Demo (ai_demo) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
+# - Backend (many_faces_backend) - runs .NET xUnit tests using 'dotnet test'
+# - Frontend (many_faces_portal) - runs Vitest tests using 'yarn test --run' and Cypress e2e tests
+# - Admin (many_faces_admin) - runs Vitest tests using 'yarn test --run'
+# - Database (many_faces_database) - infrastructure only, no tests
+# - Redis (many_faces_redis) - infrastructure only, no tests
+# - AI Demo (many_faces_ai) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
 # 
 # The script:
 # - Parses test output from different test frameworks (.NET, Vitest, Cypress)
@@ -45,17 +45,17 @@ SKIPPED_REPOS=0    # Number of repositories that don't have tests
 declare -a TEST_RESULTS
 
 # ============================================================================
-# TEST BACKEND (be_demo)
+# TEST BACKEND (many_faces_backend)
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing Backend (be_demo)"
+echo "  Testing Backend (many_faces_backend)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
 # Check if backend directory exists and has test project
-if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
-    cd be_demo
+if [ -d "many_faces_backend" ] && [ -f "many_faces_backend/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
+    cd many_faces_backend
     
     echo "📦 Running .NET tests..."
     # Run tests from the test project directory or use solution/project file
@@ -104,13 +104,13 @@ if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]
             TOTAL="0"
             PASSED="0"
             FAILED="0"
-            TEST_RESULTS+=("⚠️  be_demo: Tests completed but no count found")
+            TEST_RESULTS+=("⚠️  many_faces_backend: Tests completed but no count found")
             echo "⚠️  Backend tests completed but no count found"
         else
             TOTAL="0"
             PASSED="0"
             FAILED="1"
-            TEST_RESULTS+=("❌ be_demo: Tests failed (exit code: $TEST_EXIT_CODE)")
+            TEST_RESULTS+=("❌ many_faces_backend: Tests failed (exit code: $TEST_EXIT_CODE)")
             echo "❌ Backend tests failed (exit code: $TEST_EXIT_CODE)"
         fi
     else
@@ -119,17 +119,17 @@ if [ -d "be_demo" ] && [ -f "be_demo/BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]
         FAILED_TESTS=$((FAILED_TESTS + ${FAILED:-0}))
         
         if [ $TEST_EXIT_CODE -eq 0 ] && [ "${FAILED:-0}" = "0" ]; then
-            TEST_RESULTS+=("✅ be_demo: $PASSED/$TOTAL passed")
+            TEST_RESULTS+=("✅ many_faces_backend: $PASSED/$TOTAL passed")
             echo "✅ Backend tests: $PASSED/$TOTAL passed"
         else
-            TEST_RESULTS+=("❌ be_demo: $FAILED failed, $PASSED/$TOTAL passed")
+            TEST_RESULTS+=("❌ many_faces_backend: $FAILED failed, $PASSED/$TOTAL passed")
             echo "❌ Backend tests: $FAILED failed, $PASSED/$TOTAL passed"
         fi
     fi
     
     cd ..
 else
-    TEST_RESULTS+=("⏭️  be_demo: No tests found")
+    TEST_RESULTS+=("⏭️  many_faces_backend: No tests found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Backend: No tests found, skipping"
 fi
@@ -137,16 +137,16 @@ fi
 echo ""
 
 # ============================================================================
-# TEST FRONTEND (fe_demo)
+# TEST FRONTEND (many_faces_portal)
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing Frontend (fe_demo)"
+echo "  Testing Frontend (many_faces_portal)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-if [ -d "fe_demo" ] && [ -f "fe_demo/package.json" ]; then
-    cd fe_demo
+if [ -d "many_faces_portal" ] && [ -f "many_faces_portal/package.json" ]; then
+    cd many_faces_portal
     
     # Check if dependencies are installed
     if [ ! -d "node_modules" ] && [ ! -f ".yarn/cache/.gitignore" ]; then
@@ -229,11 +229,11 @@ print(f'{total}|{passed}|{failed}')
             DB_RUNNING=true
         else
             echo "📦 Starting database..."
-            if [ -d "../db_demo" ]; then
-                cd ../db_demo
+            if [ -d "../many_faces_database" ]; then
+                cd ../many_faces_database
                 docker-compose up -d > /dev/null 2>&1 || true
                 sleep 3
-                cd ../fe_demo
+                cd ../many_faces_portal
                 E2E_SERVICES_STARTED=true
                 DB_RUNNING=true
             else
@@ -248,11 +248,11 @@ print(f'{total}|{passed}|{failed}')
             BACKEND_RUNNING=true
         else
             echo "📦 Starting backend..."
-            if [ -d "../be_demo" ]; then
-                cd ../be_demo
+            if [ -d "../many_faces_backend" ]; then
+                cd ../many_faces_backend
                 # Try start-dev.sh, fallback to docker-compose
                 ./start-dev.sh > /dev/null 2>&1 || docker-compose -f docker-compose.dev.yml up -d > /dev/null 2>&1 || true
-                cd ../fe_demo
+                cd ../many_faces_portal
                 E2E_SERVICES_STARTED=true
                 
                 # Wait for backend to be ready (it can take 30-60s)
@@ -423,27 +423,27 @@ else:
     
     if [ $VITEST_EXIT_CODE -eq 0 ] && [ "${VITEST_FAILED:-0}" = "0" ] && [ "$E2E_FAILED" = "0" ]; then
         if [ "$E2E_TOTAL" -gt 0 ]; then
-            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, $E2E_TOTAL e2e)")
+            TEST_RESULTS+=("✅ many_faces_portal: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, $E2E_TOTAL e2e)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, $E2E_TOTAL e2e)"
         elif [ "${SKIP_CYPRESS:-}" = "1" ] && { [ -f "cypress.config.ts" ] || [ -f "cypress.config.mjs" ] || [ -d "cypress" ]; }; then
-            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped via SKIP_CYPRESS)")
+            TEST_RESULTS+=("✅ many_faces_portal: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped via SKIP_CYPRESS)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped via SKIP_CYPRESS)"
         elif [ -f "cypress.config.ts" ] || [ -f "cypress.config.mjs" ] || [ -d "cypress" ]; then
             # Cypress is installed but tests were skipped (frontend not running)
-            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped - frontend not running)")
+            TEST_RESULTS+=("✅ many_faces_portal: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files, e2e skipped - frontend not running)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit, e2e skipped - frontend not running)"
         else
-            TEST_RESULTS+=("✅ fe_demo: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files)")
+            TEST_RESULTS+=("✅ many_faces_portal: $COMBINED_PASSED/$COMBINED_TOTAL passed ($TEST_FILES test files)")
             echo "✅ Frontend tests: $COMBINED_PASSED/$COMBINED_TOTAL passed ($VITEST_TOTAL unit)"
         fi
     else
-        TEST_RESULTS+=("❌ fe_demo: $COMBINED_FAILED failed, $COMBINED_PASSED/$COMBINED_TOTAL passed")
+        TEST_RESULTS+=("❌ many_faces_portal: $COMBINED_FAILED failed, $COMBINED_PASSED/$COMBINED_TOTAL passed")
         echo "❌ Frontend tests: $COMBINED_FAILED failed, $COMBINED_PASSED/$COMBINED_TOTAL passed"
     fi
     
     cd ..
 else
-    TEST_RESULTS+=("⏭️  fe_demo: No tests found")
+    TEST_RESULTS+=("⏭️  many_faces_portal: No tests found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Frontend: No tests found, skipping"
 fi
@@ -451,16 +451,16 @@ fi
 echo ""
 
 # ============================================================================
-# TEST ADMIN (admin_demo)
+# TEST ADMIN (many_faces_admin)
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing Admin (admin_demo)"
+echo "  Testing Admin (many_faces_admin)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-if [ -d "admin_demo" ] && [ -f "admin_demo/package.json" ]; then
-    cd admin_demo
+if [ -d "many_faces_admin" ] && [ -f "many_faces_admin/package.json" ]; then
+    cd many_faces_admin
     
     # Check if dependencies are installed
     if [ ! -d "node_modules" ] && [ ! -f ".yarn/cache/.gitignore" ]; then
@@ -509,16 +509,16 @@ print(f'{total}|{passed}|{failed}')
     FAILED_TESTS=$((FAILED_TESTS + ${FAILED:-0}))
     
     if [ $TEST_EXIT_CODE -eq 0 ] && [ "${FAILED:-0}" = "0" ]; then
-        TEST_RESULTS+=("✅ admin_demo: $PASSED/$TOTAL passed ($TEST_FILES test files)")
+        TEST_RESULTS+=("✅ many_faces_admin: $PASSED/$TOTAL passed ($TEST_FILES test files)")
         echo "✅ Admin tests: $PASSED/$TOTAL passed ($TEST_FILES test files)"
     else
-        TEST_RESULTS+=("❌ admin_demo: $FAILED failed, $PASSED/$TOTAL passed")
+        TEST_RESULTS+=("❌ many_faces_admin: $FAILED failed, $PASSED/$TOTAL passed")
         echo "❌ Admin tests: $FAILED failed, $PASSED/$TOTAL passed"
     fi
     
     cd ..
 else
-    TEST_RESULTS+=("⏭️  admin_demo: No tests found")
+    TEST_RESULTS+=("⏭️  many_faces_admin: No tests found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Admin: No tests found, skipping"
 fi
@@ -526,57 +526,57 @@ fi
 echo ""
 
 # ============================================================================
-# TEST AI (ai_demo) — same as CI: verify-ci.sh
+# TEST AI (many_faces_ai) — same as CI: verify-ci.sh
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing AI service (ai_demo)"
+echo "  Testing AI service (many_faces_ai)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-if [ -d "ai_demo" ] && [ -f "ai_demo/verify-ci.sh" ]; then
-    chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
-    if (cd ai_demo && ./verify-ci.sh); then
+if [ -d "many_faces_ai" ] && [ -f "many_faces_ai/verify-ci.sh" ]; then
+    chmod +x many_faces_ai/verify-ci.sh 2>/dev/null || true
+    if (cd many_faces_ai && ./verify-ci.sh); then
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         PASSED_TESTS=$((PASSED_TESTS + 1))
-        TEST_RESULTS+=("✅ ai_demo: verify-ci (ruff + pytest) passed")
-        echo "✅ ai_demo: verify-ci passed"
+        TEST_RESULTS+=("✅ many_faces_ai: verify-ci (ruff + pytest) passed")
+        echo "✅ many_faces_ai: verify-ci passed"
     else
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
-        TEST_RESULTS+=("❌ ai_demo: verify-ci failed")
-        echo "❌ ai_demo: verify-ci failed"
+        TEST_RESULTS+=("❌ many_faces_ai: verify-ci failed")
+        echo "❌ many_faces_ai: verify-ci failed"
     fi
 else
-    TEST_RESULTS+=("⏭️  ai_demo: verify-ci.sh not found, skipping")
+    TEST_RESULTS+=("⏭️  many_faces_ai: verify-ci.sh not found, skipping")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
-    echo "⏭️  ai_demo: not found or no verify-ci.sh, skipping"
+    echo "⏭️  many_faces_ai: not found or no verify-ci.sh, skipping"
 fi
 
 echo ""
 
 # ============================================================================
-# TEST DATABASE (db_demo)
+# TEST DATABASE (many_faces_database)
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing Database (db_demo)"
+echo "  Testing Database (many_faces_database)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-if [ -d "db_demo" ]; then
+if [ -d "many_faces_database" ]; then
     # Database setup doesn't have tests, just verify it's configured correctly
-    if [ -f "db_demo/docker-compose.yml" ]; then
-        TEST_RESULTS+=("⏭️  db_demo: No tests (infrastructure only)")
+    if [ -f "many_faces_database/docker-compose.yml" ]; then
+        TEST_RESULTS+=("⏭️  many_faces_database: No tests (infrastructure only)")
         SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
         echo "⏭️  Database: No tests (infrastructure only)"
     else
-        TEST_RESULTS+=("⏭️  db_demo: No tests found")
+        TEST_RESULTS+=("⏭️  many_faces_database: No tests found")
         SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
         echo "⏭️  Database: No tests found, skipping"
     fi
 else
-    TEST_RESULTS+=("⏭️  db_demo: Not found")
+    TEST_RESULTS+=("⏭️  many_faces_database: Not found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Database: Not found, skipping"
 fi
@@ -584,26 +584,26 @@ fi
 echo ""
 
 # ============================================================================
-# TEST REDIS (redis_demo)
+# TEST REDIS (many_faces_redis)
 # ============================================================================
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  Testing Redis (redis_demo)"
+echo "  Testing Redis (many_faces_redis)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-if [ -d "redis_demo" ]; then
-    if [ -f "redis_demo/docker-compose.yml" ]; then
-        TEST_RESULTS+=("⏭️  redis_demo: No tests (infrastructure only)")
+if [ -d "many_faces_redis" ]; then
+    if [ -f "many_faces_redis/docker-compose.yml" ]; then
+        TEST_RESULTS+=("⏭️  many_faces_redis: No tests (infrastructure only)")
         SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
         echo "⏭️  Redis: No tests (infrastructure only)"
     else
-        TEST_RESULTS+=("⏭️  redis_demo: No compose file")
+        TEST_RESULTS+=("⏭️  many_faces_redis: No compose file")
         SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
         echo "⏭️  Redis: No compose file, skipping"
     fi
 else
-    TEST_RESULTS+=("⏭️  redis_demo: Not found")
+    TEST_RESULTS+=("⏭️  many_faces_redis: Not found")
     SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
     echo "⏭️  Redis: Not found, skipping"
 fi

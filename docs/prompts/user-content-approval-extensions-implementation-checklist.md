@@ -2,7 +2,7 @@
 
 This file tracks completion of the items from [user-content-approval-extensions-agent-prompt.md](user-content-approval-extensions-agent-prompt.md) §16. The canonical prompt file keeps those boxes unchecked by design.
 
-- [x] Audit current moderation implementation across `be_demo`, `ai_demo`, `admin_demo`, and `fe_demo`, including complete unit-test gap notes (see §18 of the canonical prompt and tests added on this branch).
+- [x] Audit current moderation implementation across `many_faces_backend`, `many_faces_ai`, `many_faces_admin`, and `many_faces_portal`, including complete unit-test gap notes (see §18 of the canonical prompt and tests added on this branch).
 - [x] Add or complete creator-owned listing APIs for albums, blogs, and reels, including complete unit/integration tests for ownership, moderation fields, and non-owner access denial.
 - [x] Add a unified FE “My submissions” experience or equivalent creator-owned moderation surface, including complete unit tests for grouping, labels, safe messages, and empty states.
 - [x] Add creator edit/delete/resubmit UI where backend allows it, including complete unit tests for allowed and forbidden actions (detail pages gate edit/delete; helpers tested).

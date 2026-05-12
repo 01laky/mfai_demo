@@ -1,12 +1,12 @@
 # React Hooks plugin — full `recommended` / compiler rules rollout (agent prompt) (**required** brief — see body for **`(required)`** items)
 
-**Purpose:** Move **`fe_demo`** and **`admin_demo`** from the **minimal** ESLint hooks surface (`react-hooks/rules-of-hooks` + `react-hooks/exhaustive-deps` only) toward the **full** `eslint-plugin-react-hooks` **`flat.recommended`** (or **`flat['recommended-latest']`**) preset **safely**, in controlled phases, with measurable violation counts, refactors, and green **`yarn validate` / `yarn test` / `yarn build`**. Use this document as a **copy-paste agent brief**.
+**Purpose:** Move **`many_faces_portal`** and **`many_faces_admin`** from the **minimal** ESLint hooks surface (`react-hooks/rules-of-hooks` + `react-hooks/exhaustive-deps` only) toward the **full** `eslint-plugin-react-hooks` **`flat.recommended`** (or **`flat['recommended-latest']`**) preset **safely**, in controlled phases, with measurable violation counts, refactors, and green **`yarn validate` / `yarn test` / `yarn build`**. Use this document as a **copy-paste agent brief**.
 
 **Checklists:** Trailing `[ ]` deliverable lists are **PR templates**—tick there, not by default in this file ([docs/prompts/README.md](./README.md)).
 
 **(required)** Any agent run using this brief must satisfy **every** **`(required)`** item in **§§3–8** (and **§1.3**, **§2**, **§5** where they apply) before merge unless the task owner explicitly waives a bullet **in writing** in the same PR.
 
-**Scope:** `fe_demo`, `admin_demo` only (Yarn 4, ESLint 10, flat config). **(required)** Stay inside this scope unless the task expands it. Out of scope: `be_demo`, `ai_demo`, changing the **canary vs stable** pin for `eslint-plugin-react-hooks` unless a separate task explicitly upgrades peers (see [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md)).
+**Scope:** `many_faces_portal`, `many_faces_admin` only (Yarn 4, ESLint 10, flat config). **(required)** Stay inside this scope unless the task expands it. Out of scope: `many_faces_backend`, `many_faces_ai`, changing the **canary vs stable** pin for `eslint-plugin-react-hooks` unless a separate task explicitly upgrades peers (see [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md)).
 
 **Prerequisite context (repo today):** Both SPAs pin an **exact** `eslint-plugin-react-hooks` **canary** for ESLint **10** peer alignment; `eslint.config.js` registers the plugin but **does not** extend `reactHooks.configs.flat.recommended`, because that preset enables **many** React Compiler–oriented rules at once (e.g. `react-hooks/set-state-in-effect`), which previously produced **dozens** of errors on this codebase. This prompt is the **migration path** from that intentional subset to full coverage. **(required)** Do not contradict this baseline in a PR without documenting the new target preset and re-running **§3**.
 
@@ -63,7 +63,7 @@ These rules surface patterns the **React Compiler** may flag or optimize around.
 
 ### 3.1 CI and local lint parity (**required**)
 
-**(required)** For **each** of `fe_demo` and `admin_demo`, locate **every** place lint runs (not only `yarn lint`):
+**(required)** For **each** of `many_faces_portal` and `many_faces_admin`, locate **every** place lint runs (not only `yarn lint`):
 
 - **(required)** Search monorepo and SPA roots: `.github/workflows/**/*.yml`, `package.json` scripts (`lint`, `validate`, `test`, husky / lint-staged if present), and any root orchestration scripts.
 - **(required)** Record the **exact** ESLint invocation CI uses (e.g. plain `eslint`, `eslint --max-warnings 0`, extra args, env vars).
@@ -277,8 +277,8 @@ When introducing `reactHooks.configs.flat.recommended`:
 2. **(required)** Choose **S1**, **S2**, **S2b**, **S3**, or **S4** (series may mix, e.g. **S2** then full preset — document the sequence in the PR).
 3. **(required)** **Operational PR constraints:** keep each PR **reviewable** — **(required)** state in the PR **maximum scope** the team used for that step (e.g. cap **~15 files** or **one rule family** per PR unless **S1** explicitly approved). **(required)** Define **rollback**: reverting the PR must restore the **previous** `eslint.config.js` hooks block (one revert = green CI).
 4. **(required)** **Lint cache / timing:** if the SPA uses **`eslint --cache`** or a committed/ignored `.eslintcache`, **(required)** delete the cache after **any** `eslint.config.js` change that affects `react-hooks/*`, then re-run lint. **(required)** Record **wall-clock** `yarn lint` duration **before** and **after** the rollout step in the PR (rough seconds is enough) so severe regressions are visible.
-5. **(required)** Implement in **`fe_demo`**, run **`yarn lint` → `yarn validate` → `yarn test` → `yarn build`** using the **same** warn/error policy as **§3.1** (if CI is `--max-warnings 0`, local validation **(required)** must match before merge).
-6. **(required)** Mirror in **`admin_demo`** (same rule set and severities unless a **documented** SPA-specific exception exists in the PR).
+5. **(required)** Implement in **`many_faces_portal`**, run **`yarn lint` → `yarn validate` → `yarn test` → `yarn build`** using the **same** warn/error policy as **§3.1** (if CI is `--max-warnings 0`, local validation **(required)** must match before merge).
+6. **(required)** Mirror in **`many_faces_admin`** (same rule set and severities unless a **documented** SPA-specific exception exists in the PR).
 7. **(required)** **`reportUnusedDisableDirectives`:** run a cleanup pass before declaring the series done — **(required)** enable ESLint’s **`reportUnusedDisableDirectives`** for at least one full `yarn lint` on a throwaway branch **or** run the supported CLI flag if the repo’s ESLint version exposes it, and **(required)** remove stale `eslint-disable` comments introduced or orphaned by refactors. **(required)** If the repo already sets this in config, **(required)** ensure the rollout PR leaves **zero** unused directive reports.
 8. **(required)** Update **`docs/guides/development.md`** subsection on hooks if the **default** preset for new code changes.
 9. **(required)** Submodule commits + parent pointer bump per team rules.
@@ -321,7 +321,7 @@ When introducing `reactHooks.configs.flat.recommended`:
 - **(required)** Per-rule docs: `https://react.dev/reference/eslint-plugin-react-hooks/lints/<rule-name>`
 - **(required)** [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
 - **(required)** [set-state-in-effect discussion](https://github.com/facebook/react/issues/34743)
-- **(required)** Peer / canary context for this monorepo: [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md), `fe_demo/docs/eslint-plugin-react-hooks-peer.md`, `admin_demo/docs/eslint-plugin-react-hooks-peer.md`
+- **(required)** Peer / canary context for this monorepo: [eslint10-react-hooks-peer-yarn-agent-prompt.md](./eslint10-react-hooks-peer-yarn-agent-prompt.md), `many_faces_portal/docs/eslint-plugin-react-hooks-peer.md`, `many_faces_admin/docs/eslint-plugin-react-hooks-peer.md`
 - **(required)** [React Compiler — Installation](https://react.dev/learn/react-compiler/installation) — ESLint plugin vs **`eslint-plugin-react-hooks`** (**§1.3**).
 - **(required)** [npm: `eslint-plugin-react-compiler`](https://www.npmjs.com/package/eslint-plugin-react-compiler)
 

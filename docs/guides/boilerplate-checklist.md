@@ -38,8 +38,8 @@ flowchart TB
 ### 📚 Documentation
 
 - ✅ **Root README.md** - Comprehensive overview with quick start guide
-- ✅ **Service-specific READMEs** - Each module (be_demo, fe_demo, admin_demo, etc.) has detailed README
-- ✅ **Docker documentation** - DOCKER.md files in fe_demo and admin_demo
+- ✅ **Service-specific READMEs** - Each module (many_faces_backend, many_faces_portal, many_faces_admin, etc.) has detailed README
+- ✅ **Docker documentation** - DOCKER.md files in many_faces_portal and many_faces_admin
 - ✅ **Setup guides** - YARN_PNP.md, SEQ_LOGGING.md, INSTALL_HTTPS_CERT.md
 - ✅ **API documentation** - Auto-generated Swagger/OpenAPI docs
 - ✅ **i18n documentation** - Internationalization setup guides
@@ -47,10 +47,10 @@ flowchart TB
 ### 🔧 Configuration Files
 
 - ✅ **.env.example files** - Environment variable templates in:
-  - `be_demo/.env.example`
-  - `fe_demo/.env.example`
-  - `admin_demo/.env.example`
-  - `ai_demo/.env.example`
+  - `many_faces_backend/.env.example`
+  - `many_faces_portal/.env.example`
+  - `many_faces_admin/.env.example`
+  - `many_faces_ai/.env.example`
 - ✅ **Docker Compose files** - docker-compose.dev.yml in root and service-specific
 - ✅ **.gitignore** - Properly configured for all services
 - ✅ **.gitmodules** - Git submodules configuration
@@ -78,8 +78,8 @@ flowchart TB
 ### 🧪 Testing
 
 - ✅ **Backend tests** - ASP.NET Core xUnit tests with test database
-- ✅ **Frontend tests** - Vitest tests in fe_demo
-- ✅ **Admin tests** - Vitest tests in admin_demo
+- ✅ **Frontend tests** - Vitest tests in many_faces_portal
+- ✅ **Admin tests** - Vitest tests in many_faces_admin
 - ✅ **Test orchestration** - `scripts/test-all.sh` for running all tests
 
 ### 📦 Services & Modules

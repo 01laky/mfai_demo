@@ -1,6 +1,6 @@
 # Many Faces demo — application context
 
-Single place to answer **what this system is**, **who uses which surface**, and **how the pieces hang together**. GitHub monorepo: **`many_faces_main`** (submodules `many_faces_portal`, `many_faces_backend`, …; working-tree paths `fe_demo/`, `be_demo/`, …). For deep mechanics, use [`docs/README.md`](./docs/README.md). Submodules retain their own READMEs.
+Single place to answer **what this system is**, **who uses which surface**, and **how the pieces hang together**. GitHub monorepo: **`many_faces_main`** (submodules `many_faces_portal`, `many_faces_backend`, …; working-tree paths `many_faces_portal/`, `many_faces_backend/`, …). For deep mechanics, use [`docs/README.md`](./docs/README.md). Submodules retain their own READMEs.
 
 ---
 
@@ -22,13 +22,13 @@ So in one sentence: **one shared platform, many branded “sites” (faces), one
 | **Face** | Tenant anchor: slug (`index`), title, gradient/branding knobs, visibility (public vs private), seeded/default pages (`home`, maybe `wall`), optional profile directory visibility. Middleware rewrites requests so `/api/{face}/...` resolves in the backend. |
 | **Page** | A route segment under that face (`/home`, `/lab`, …) with a **page type** (`home`, `static`, `wall`, …). **Static** pages carry an optional **`gridSchema`**: responsive layout + **typed component placeholders** rendered on the Frontend. Translations define localized path aliases. |
 | **User / roles** | **Global roles** (`SUPER_ADMIN`, `ADMIN`, `USER`, …) and **per-face roles** (`FACE_ADMIN`, `FACE_HOST`, …). Capability checks drive what API and hubs allow. Demo seeds give you known accounts (`docs/guides/demo-users-and-passwords.md`). |
-| **Realtime + AI** | SignalR hubs (chat, messenger, notifications, …); optional **SendToAi** flows through **`many_faces_ai`** (`ai_demo/`) over gRPC. |
+| **Realtime + AI** | SignalR hubs (chat, messenger, notifications, …); optional **SendToAi** flows through **`many_faces_ai`** (`many_faces_ai/`) over gRPC. |
 
 The Frontend’s job is **not** to redefine business rules: it reflects **backend config + auth + realtime**. The Admin’s job is to **safely mutate** that config and moderation state.
 
 ---
 
-## 3. Frontend (`many_faces_portal` / path `fe_demo/`) — what it’s for
+## 3. Frontend (`many_faces_portal` / path `many_faces_portal/`) — what it’s for
 
 - **Primary users:** Visitors and authenticated members of faces.
 - **Responsibilities:** Auth (OAuth2 + JWT session), localized routing (`/:lang/...`), **face-aware navigation**, rendering **CMS-like pages from API** (`FacePageView`, grid system), social surfaces (friends, messenger, settings), **My submissions** for pending user-created albums/blogs/reels, and optional richer features (stories wall, reels, albums, profiles) backed by REST + hubs.
@@ -37,7 +37,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 ---
 
-## 4. Admin (`many_faces_admin` / path `admin_demo/`) — what it’s for
+## 4. Admin (`many_faces_admin` / path `many_faces_admin/`) — what it’s for
 
 - **Primary users:** Super admins / admins managing the estate; tenant admins scoped to faces where policy allows.
 - **Responsibilities:** OAuth login against the API (often **`admin` face prefix** in dev), dashboards, **Users** CRUD, **Faces** CRUD, **Pages** CRUD (+ **route translations**), **`Page Types`**, grid layout authoring (`GridLayoutEditor` + component picker), **user content moderation** (superadmin queue, metrics, bulk, audit) for albums/blogs/reels from the Frontend, wall ticket moderation hooks where enabled, optional AI Chat page depending on deployment.
@@ -49,9 +49,9 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 | Piece | Role |
 |-------|------|
-| **`many_faces_backend`** (`be_demo/`) | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC client to AI. |
-| **`many_faces_database`** (`db_demo/`) / **`many_faces_redis`** (`redis_demo/`) | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides). |
-| **`many_faces_ai`** (`ai_demo/`) | gRPC `Health`, local Qwen `Generate`, and **`ReviewContent`** — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes). |
+| **`many_faces_backend`** (`many_faces_backend/`) | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC client to AI. |
+| **`many_faces_database`** (`many_faces_database/`) / **`many_faces_redis`** (`many_faces_redis/`) | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides). |
+| **`many_faces_ai`** (`many_faces_ai/`) | gRPC `Health`, local Qwen `Generate`, and **`ReviewContent`** — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes). |
 
 ---
 
@@ -79,7 +79,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 ### 8.1 Face scope (how data reads must behave)
 
-Every **meaningful REST read/write** on **`many_faces_portal`** (`fe_demo/`) for tenant content MUST be coherent with **`FaceConfigProvider.selectedFace`**, which MUST stay aligned with the URL **`/:lang/:faceIndex/...`** whenever the segment is an actual face index (see hooks that sync pathname → face selection).
+Every **meaningful REST read/write** on **`many_faces_portal`** (`many_faces_portal/`) for tenant content MUST be coherent with **`FaceConfigProvider.selectedFace`**, which MUST stay aligned with the URL **`/:lang/:faceIndex/...`** whenever the segment is an actual face index (see hooks that sync pathname → face selection).
 
 Practically:
 
@@ -91,7 +91,7 @@ Admin remains the place to **provision** structure (`gridSchema`) and moderation
 
 ### 8.2 Page grid ↔ component contract
 
-`gridSchema.items[]` carries **`componentType`** (string enum mirrored in **`many_faces_admin`** / `admin_demo/` `GridComponentType`).
+`gridSchema.items[]` carries **`componentType`** (string enum mirrored in **`many_faces_admin`** / `many_faces_admin/` `GridComponentType`).
 
 For EACH type the Frontend registers a **known implementation** (`PageGridLayout` router / grid index): it MUST
 
@@ -117,7 +117,7 @@ When adding new grid types **copy patterns from finished siblings**: mount ref o
 
 | Source | Policy |
 |--------|--------|
-| **PostgreSQL seed / demo tenants** (`many_faces_backend` / `be_demo/` seeders, seeded users/faces, `demo-users-and-passwords.md`) | **Keep** while we need scripted demos until product says drop them. Coordinate removal with docs + teardown scripts. |
+| **PostgreSQL seed / demo tenants** (`many_faces_backend` / `many_faces_backend/` seeders, seeded users/faces, `demo-users-and-passwords.md`) | **Keep** while we need scripted demos until product says drop them. Coordinate removal with docs + teardown scripts. |
 | **Hard-coded Frontend placeholders** (e.g. Lorem ipsum, **picsum.photos** stand-ins, fictitious carousel slides) | **Treat as transitional**: once real media URLs/API fields arrive, strip placeholders so empties reflect **truth** (“no uploads yet”). If a placeholder confuses testers, remove it outright. |
 
 **Rule of thumb:** if there is **no persisted entity**, the UI shows **scoped empty/error** states — never fake sibling-face content.

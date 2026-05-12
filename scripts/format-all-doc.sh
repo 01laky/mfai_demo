@@ -9,7 +9,7 @@
 #   ./scripts/format-all-doc.sh --check   # exit 1 if any file would change (CI)
 #
 # Requires: Node.js + npx (downloads Prettier on first run).
-# Env: PRETTIER_VERSION (default 3.8.0, aligned with fe_demo/admin_demo)
+# Env: PRETTIER_VERSION (default 3.8.0, aligned with many_faces_portal/many_faces_admin)
 
 set -euo pipefail
 

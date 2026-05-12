@@ -2,7 +2,7 @@
 
 ## 1. Mission
 
-Design and implement the first phase of a moderation workflow for **content created by regular users from the user-facing frontend (`fe_demo`)**.
+Design and implement the first phase of a moderation workflow for **content created by regular users from the user-facing frontend (`many_faces_portal`)**.
 
 Scope for this first phase:
 
@@ -28,7 +28,7 @@ The experience should feel simple to the user:
 
 ## 3. Important Distinction
 
-This is about **regular user-created content in `fe_demo`**, not admin-created content in `admin_demo`.
+This is about **regular user-created content in `many_faces_portal`**, not admin-created content in `many_faces_admin`.
 
 Recommended rule:
 
@@ -137,7 +137,7 @@ Keep this future path explicit in comments/docs where useful, but avoid fake AI 
 
 ## 7. Frontend Behaviour
 
-For `AlbumForm`, `BlogForm`, and `ReelForm` create flows in `fe_demo`:
+For `AlbumForm`, `BlogForm`, and `ReelForm` create flows in `many_faces_portal`:
 
 - After successful create, show a success message that says the content was submitted for approval.
 - Do not imply that the content is already public.
@@ -219,7 +219,7 @@ Every implementation checklist item includes the requirement to add or update co
 - [ ] Ensure FE users cannot approve their own content, including complete unit tests.
 - [ ] Ensure only `SUPER_ADMIN` can approve, reject, or remove submitted content, including complete unit tests.
 - [ ] Ensure `ADMIN` and `FACE_ADMIN` cannot approve, reject, or remove submitted content in this phase, including complete unit tests.
-- [ ] Regenerate OpenAPI clients for `fe_demo` and `admin_demo` after backend contract changes, including complete unit tests for updated generated-client usage.
+- [ ] Regenerate OpenAPI clients for `many_faces_portal` and `many_faces_admin` after backend contract changes, including complete unit tests for updated generated-client usage.
 - [ ] Update FE create success copy for albums, including complete unit tests.
 - [ ] Update FE create success copy for blogs, including complete unit tests.
 - [ ] Update FE create success copy for reels, including complete unit tests.
@@ -678,8 +678,8 @@ Any backend DTO/endpoint changes must be reflected in generated clients.
 
 Required follow-up:
 
-- regenerate `fe_demo` OpenAPI client
-- regenerate `admin_demo` OpenAPI client
+- regenerate `many_faces_portal` OpenAPI client
+- regenerate `many_faces_admin` OpenAPI client
 - update affected TypeScript model usage
 - update FE/admin tests that depend on generated response shapes
 
@@ -715,7 +715,7 @@ Phase 2C — admin review workflow:
 
 Phase 2D — real AI review:
 
-- Connect `ai_demo` or chosen AI service.
+- Connect `many_faces_ai` or chosen AI service.
 - Add backpressure/rate limits.
 - Add retry/circuit breaker.
 - Add model/version tracing.
@@ -785,10 +785,10 @@ creator-facing FE pending copy, and a first admin Moderation screen.
 
 The follow-up rollout also covers the Part 2 foundation:
 
-- `ai_demo` exposes a typed `ReviewContent` gRPC method with a deterministic baseline moderation recommendation and tests.
-- `be_demo` processes `content.ai-review` Redis jobs through `ContentAiReviewService`, stores AI recommendation metadata, retries transient AI failures, falls back to human review after retry exhaustion, ignores stale moderation versions, preserves final publish/remove authority for `SUPER_ADMIN`, and exposes moderation metrics.
-- `admin_demo` expands the Moderation page with AI status filtering, operational counters, item detail, and audit history.
-- `fe_demo` adds reusable creator-safe moderation badges/helpers for pending/rejected/removed content returned to creator-owned views.
+- `many_faces_ai` exposes a typed `ReviewContent` gRPC method with a deterministic baseline moderation recommendation and tests.
+- `many_faces_backend` processes `content.ai-review` Redis jobs through `ContentAiReviewService`, stores AI recommendation metadata, retries transient AI failures, falls back to human review after retry exhaustion, ignores stale moderation versions, preserves final publish/remove authority for `SUPER_ADMIN`, and exposes moderation metrics.
+- `many_faces_admin` expands the Moderation page with AI status filtering, operational counters, item detail, and audit history.
+- `many_faces_portal` adds reusable creator-safe moderation badges/helpers for pending/rejected/removed content returned to creator-owned views.
 - Backend, admin, FE, and AI unit tests were added or updated for the new queue, policy, API hook, helper, and service behaviours.
 
 Known operational note:

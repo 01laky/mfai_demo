@@ -14,7 +14,7 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
 fi
 
 ROOT_SCRIPTS="start-all-dev.sh stop-all-dev.sh restart-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh status-all.sh test-all.sh lint-all.sh"
-CONTAINER_ORDER="be_demo fe_demo admin_demo ai_demo db_demo redis_demo logger_demo"
+CONTAINER_ORDER="many_faces_backend many_faces_portal many_faces_admin many_faces_ai many_faces_database many_faces_redis many_faces_logger"
 CONTAINER_SCRIPTS=(
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh generate-diagram.sh"
   "lint.sh start-dev.sh stop-dev.sh clear-dev.sh rebuild-dev.sh fix-editor.sh"

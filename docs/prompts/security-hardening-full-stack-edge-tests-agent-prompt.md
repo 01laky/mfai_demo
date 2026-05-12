@@ -17,15 +17,15 @@
 - [super-admin-api.md](./super-admin-api.md) — **required** whenever global role or `SUPER_ADMIN`-only HTTP surface is added or changed.
 - [mermaid-documentation-diagrams-agent-prompt.md](./mermaid-documentation-diagrams-agent-prompt.md) — **required** for Mermaid style, diagram types, and repo conventions.
 
-**Important:** Treat the “current baseline” table inside `security-crypto-sockets.md` as **untrusted until verified** against `be_demo/BeDemo.Api/Program.cs`, `OAuth2Service`, `JwtBearerOptions`, and tests. **You must reconcile** that table with code during **§15**.
+**Important:** Treat the “current baseline” table inside `security-crypto-sockets.md` as **untrusted until verified** against `many_faces_backend/BeDemo.Api/Program.cs`, `OAuth2Service`, `JwtBearerOptions`, and tests. **You must reconcile** that table with code during **§15**.
 
 ---
 
 ## 1. Objectives
 
-1. **Analyze** cryptography, transport, authentication, authorization, and operational security across the **entire** **`many_faces_main`** monorepo — including surfaces listed in **§2** (API, SignalR, SPAs, **ai_demo**, **db**/connection strings, **logger**, **uploads**, **jobs/Redis** if present, Docker, CI, OpenAPI).
+1. **Analyze** cryptography, transport, authentication, authorization, and operational security across the **entire** **`many_faces_main`** monorepo — including surfaces listed in **§2** (API, SignalR, SPAs, **many_faces_ai**, **db**/connection strings, **logger**, **uploads**, **jobs/Redis** if present, Docker, CI, OpenAPI).
 2. **Implement** all security improvements required by this document and **§17.2** for the current codebase state. **Deferral is not allowed** except: stop-the-world external dependency (e.g. corporate HSM not available in dev) — in that case you must **commit a written gap entry**, **open a tracked follow-up identifier** (issue ID or TODO with owner in docs), and still **test everything that can run locally**.
-3. **Add and maintain** comprehensive edge-case tests on **BE** (integration/unit), **fe_demo** (Vitest), **admin_demo** (Vitest), and **E2E** where the repo already defines them (**§7, §18**).
+3. **Add and maintain** comprehensive edge-case tests on **BE** (integration/unit), **many_faces_portal** (Vitest), **many_faces_admin** (Vitest), and **E2E** where the repo already defines them (**§7, §18**).
 4. **Document all touched logic in English** in source: XML/TSDoc and **non-trivial branches inside bodies** (**§14**).
 5. **Close with a full documentation audit** (**§15**): fix stale prose, document every new behavior in detail, **canonical Mermaid** per topic (**§15.2**), **validated diagram syntax** (**§15.2** last bullet).
 
@@ -35,19 +35,19 @@
 
 | Layer                       | Paths (typical)                                                                                                                                                                                                                  | Focus                                                                                 |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **API host**                | `be_demo/BeDemo.Api/Program.cs`, middlewares, `Services/OAuth2Service.cs`, `Services/ECDSAKeyService.cs`, `Middlewares/OAuth2Middleware.cs`, `Middlewares/RoutingMiddleware.cs`, `Middlewares/FaceScopeEnforcementMiddleware.cs` | JWT, OAuth2, face scope, CORS, headers, Swagger exposure                              |
-| **Controllers / hubs**      | `be_demo/BeDemo.Api/Controllers/**/*.cs`, `Hubs/**/*.cs`                                                                                                                                                                         | Authz, `IAccessEvaluator`, `IFaceScopeContext`; **every hub file** listed in **§8.1** |
+| **API host**                | `many_faces_backend/BeDemo.Api/Program.cs`, middlewares, `Services/OAuth2Service.cs`, `Services/ECDSAKeyService.cs`, `Middlewares/OAuth2Middleware.cs`, `Middlewares/RoutingMiddleware.cs`, `Middlewares/FaceScopeEnforcementMiddleware.cs` | JWT, OAuth2, face scope, CORS, headers, Swagger exposure                              |
+| **Controllers / hubs**      | `many_faces_backend/BeDemo.Api/Controllers/**/*.cs`, `Hubs/**/*.cs`                                                                                                                                                                         | Authz, `IAccessEvaluator`, `IFaceScopeContext`; **every hub file** listed in **§8.1** |
 | **ACL / capabilities**      | `Utils/PlatformAccessRules.cs`, `Services/AccessEvaluator.cs`, `Services/AccessCapabilitiesService.cs`, `Controllers/MeController.cs`, `Security/AclPermissionKeys.cs`                                                           | Platform vs tenant, `SUPER_ADMIN` vs `ADMIN`, parity with FE/admin `acl/`             |
-| **FE**                      | `fe_demo/src` — auth, API clients, `acl/**`, SignalR                                                                                                                                                                             | Tokens, refresh, 401, face-prefixed base URL                                          |
-| **Admin SPA**               | `admin_demo/src`                                                                                                                                                                                                                 | Same as FE + admin face prefix                                                        |
-| **ai_demo**                 | gRPC server/client config, TLS/trust to AI from BE                                                                                                                                                                               | Channel security, timeouts, error handling; document threat model                     |
-| **db_demo / database**      | Connection strings, compose, migrations docs                                                                                                                                                                                     | **No secrets in git**; document env vars and rotation                                 |
+| **FE**                      | `many_faces_portal/src` — auth, API clients, `acl/**`, SignalR                                                                                                                                                                             | Tokens, refresh, 401, face-prefixed base URL                                          |
+| **Admin SPA**               | `many_faces_admin/src`                                                                                                                                                                                                                 | Same as FE + admin face prefix                                                        |
+| **many_faces_ai**                 | gRPC server/client config, TLS/trust to AI from BE                                                                                                                                                                               | Channel security, timeouts, error handling; document threat model                     |
+| **many_faces_database / database**      | Connection strings, compose, migrations docs                                                                                                                                                                                     | **No secrets in git**; document env vars and rotation                                 |
 | **Redis / background jobs** | If present: queue, workers                                                                                                                                                                                                       | Auth to Redis, sensitive payloads, rate-limit storage — document and test             |
-| **logger_demo / logging**   | Serilog, Seq, log helpers                                                                                                                                                                                                        | **No passwords/tokens/full JWT** in logs; document redaction rules                    |
+| **many_faces_logger / logging**   | Serilog, Seq, log helpers                                                                                                                                                                                                        | **No passwords/tokens/full JWT** in logs; document redaction rules                    |
 | **Uploads / static**        | `wwwroot/uploads`, exempt routes in `Routing`                                                                                                                                                                                    | Size limits, content types, path traversal, abuse — document + tests where applicable |
 | **Infra / dev**             | `docker-compose*.yml`, `dev/generate-https-certs.sh`, `.github/**` if present                                                                                                                                                    | TLS, HSTS, WSS; **dependency / secret scanning in CI** if pipeline exists             |
 | **Submodules**              | `.gitmodules` → each linked repo README touched by security changes                                                                                                                                                              | Must appear in **§15.1** inventory when relevant                                      |
-| **Tests**                   | `BeDemo.Api.Tests`, `fe_demo`/`admin_demo` `*.test.*`, **Cypress/e2e** if in `scripts/test-all.sh`                                                                                                                               | All **§17.3** and **§18**                                                             |
+| **Tests**                   | `BeDemo.Api.Tests`, `many_faces_portal`/`many_faces_admin` `*.test.*`, **Cypress/e2e** if in `scripts/test-all.sh`                                                                                                                               | All **§17.3** and **§18**                                                             |
 
 ---
 
@@ -120,7 +120,7 @@
 
 ### 8.1 Hub inventory (required)
 
-The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g. `ChatHub`, `MessengerHub`, `ChatRoomHub`, and any other present). For **each** hub file:
+The agent must **enumerate every** `*.cs` under `many_faces_backend/BeDemo.Api/Hubs/` (e.g. `ChatHub`, `MessengerHub`, `ChatRoomHub`, and any other present). For **each** hub file:
 
 - Document JWT/face-scope rules.
 - Add or extend **automated tests** **or** a **test matrix table in docs** with **manual verification steps** if automation is impossible — the matrix is **mandatory**, not optional.
@@ -164,7 +164,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 - Structured auth-failure logs — **no** passwords, refresh tokens, or full JWTs.
 - **Audit templates** for key rotation, client secret change, global role change, sensitive hub ops — **documented**; implement logging hooks where the codebase has patterns.
 - **Swagger / OpenAPI UI in production:** **must** be disabled, auth-gated, or restricted by environment — document exact behavior in `docs/` and **verify** in config.
-- **Dependency audit:** run **`dotnet list package --vulnerable`** (or project-standard) and **`npm audit`** (or **yarn npm audit**) for `fe_demo` and `admin_demo`; **record results** in `docs/guides/security-crypto-sockets.md` (baseline / deferred) or the agent report (**§15**); **fix** or **document accepted risk + tracking id** for each high/critical finding.
+- **Dependency audit:** run **`dotnet list package --vulnerable`** (or project-standard) and **`npm audit`** (or **yarn npm audit**) for `many_faces_portal` and `many_faces_admin`; **record results** in `docs/guides/security-crypto-sockets.md` (baseline / deferred) or the agent report (**§15**); **fix** or **document accepted risk + tracking id** for each high/critical finding.
 
 **Required docs:** **Canonical** Mermaid for audit event flow (auth failure → log fields → optional audit store).
 
@@ -182,7 +182,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 ---
 
-## 13. Frontend and admin_demo — UX and tests
+## 13. Frontend and many_faces_admin — UX and tests
 
 **Required goals:**
 
@@ -192,7 +192,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 **Required Vitest:** `parseMeCapabilities`, permission helpers, auth hooks, face prefix on API base, **wss** guard where testable.
 
-**Required admin_demo:** capabilities + admin prefix + loading/error states.
+**Required many_faces_admin:** capabilities + admin prefix + loading/error states.
 
 **Required docs:** **Canonical** Mermaid SPA auth + capabilities warmup (FE **and** admin).
 
@@ -200,7 +200,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 ## 14. English code documentation (mandatory)
 
-**Language:** **English only** for every **new** or **materially changed** comment in **be_demo**, **fe_demo**, **admin_demo**, and **security-related test code** (`BeDemo.Api.Tests` and Vitest files that assert auth/security).
+**Language:** **English only** for every **new** or **materially changed** comment in **many_faces_backend**, **many_faces_portal**, **many_faces_admin**, and **security-related test code** (`BeDemo.Api.Tests` and Vitest files that assert auth/security).
 
 ### 14.1 Backend (C#)
 
@@ -222,7 +222,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 - [ ] **BE:** XML on security-related public/internal APIs; **private** security helpers documented; **inline English** in non-obvious branches.
 - [ ] **BE tests:** Each **new** security test class/method has **English** summary of scenario and expected outcome.
 - [ ] **FE:** TSDoc + inline English per **§14.2**.
-- [ ] **admin_demo:** Same as FE.
+- [ ] **many_faces_admin:** Same as FE.
 - [ ] **FE/admin tests:** Security scenarios documented in English.
 
 ---
@@ -233,14 +233,14 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 
 ### 15.1 Full audit (required)
 
-1. Inventory **`docs/**`**, **`docs/guides/`**, **`docs/readmes/`**, **`docs/components/`**, **root `README.md`**, **`docs/README.md`**, **`be_demo/README.md`**, **`fe_demo/README.md`**, **`admin_demo/README.md`**, **`ai_demo/README.md`** (if present), paths from **`.gitmodules`**, and any **CI workflow** under `.github/workflows/` that touches build/test/security.
+1. Inventory **`docs/**`**, **`docs/guides/`**, **`docs/readmes/`**, **`docs/components/`**, **root `README.md`**, **`docs/README.md`**, **`many_faces_backend/README.md`**, **`many_faces_portal/README.md`**, **`many_faces_admin/README.md`**, **`many_faces_ai/README.md`** (if present), paths from **`.gitmodules`**, and any **CI workflow** under `.github/workflows/` that touches build/test/security.
 2. Compare each to **current code**; **fix all stale** content (paths, baseline tables, endpoints, env vars).
 3. **Add detailed prose** for **every** new config key, endpoint, middleware, operational procedure, and threat note introduced.
 
 ### 15.2 Mermaid — canonical diagrams (required)
 
 - Follow **[mermaid-documentation-diagrams-agent-prompt.md](./mermaid-documentation-diagrams-agent-prompt.md)** for style and diagram choice.
-- **One canonical diagram per topic** (keys, JWT+refresh+J6, OAuth2, TLS/WSS, SignalR, headers/CORS, ACL, audit, SPA auth, ai_demo trust if applicable). **Other sections link** to the canonical section — **no redundant copies** of the same diagram.
+- **One canonical diagram per topic** (keys, JWT+refresh+J6, OAuth2, TLS/WSS, SignalR, headers/CORS, ACL, audit, SPA auth, many_faces_ai trust if applicable). **Other sections link** to the canonical section — **no redundant copies** of the same diagram.
 - **Syntax validation (required):** Before completion, **render-check** every new/changed Mermaid block (e.g. `@mermaid-js/mermaid-cli` locally, VS Code preview, or GitHub/GitLab render). **Fix** invalid diagrams — “looks fine” without render check is **not** acceptable.
 
 ### 15.3 Checklist (documentation closure)
@@ -263,7 +263,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 - [ ] **`scripts/test-all.sh`** (or documented project equivalent) **passes**, **or** failing commands are listed with **cause** and **tracking id**.
 - [ ] **No secrets** in git; examples use **placeholders** and **env var names**.
 - [ ] **OpenAPI/Swagger** schemes and **production Swagger policy** documented and implemented.
-- [ ] **Operations runbook** (key rotation, emergency revocation, dependency audit cadence) in **`be_demo/README.md`** or **`docs/guides/`** — **required**, not conditional on user ask.
+- [ ] **Operations runbook** (key rotation, emergency revocation, dependency audit cadence) in **`many_faces_backend/README.md`** or **`docs/guides/`** — **required**, not conditional on user ask.
 
 **English comments (**§14**)**
 
@@ -280,7 +280,7 @@ The agent must **enumerate every** `*.cs` under `be_demo/BeDemo.Api/Hubs/` (e.g.
 - [ ] ACL / platform / tenant / `SUPER_ADMIN` — **canonical** diagram + link (**always** reconciled).
 - [ ] Audit / auth-failure logging — **canonical** diagram + link.
 - [ ] SPA auth + capabilities (FE **and** admin) — **canonical** diagram + link.
-- [ ] **ai_demo** / gRPC trust path — diagram + prose **if** BE talks to AI in this repo.
+- [ ] **many_faces_ai** / gRPC trust path — diagram + prose **if** BE talks to AI in this repo.
 
 **Tests (see §17.3 and §18)**
 
@@ -309,7 +309,7 @@ You are working in **`many_faces_main`**. **Every requirement in this file is ma
 - **Super-admin / global role API:** if touched, **super-admin-api.md** is **normative**.
 - **Swagger in production:** restricted per **§11**.
 - **Dependencies:** audited per **§11**; results in `docs/guides/security-crypto-sockets.md` or agent report.
-- **Uploads, ai_demo gRPC, E2E, contracts, CSRF doc, IDOR tests:** per **§12**.
+- **Uploads, many_faces_ai gRPC, E2E, contracts, CSRF doc, IDOR tests:** per **§12**.
 
 ### 17.3 Testing requirements (all mandatory)
 
@@ -338,7 +338,7 @@ You are working in **`many_faces_main`**. **Every requirement in this file is ma
 ### 17.6 Process
 
 1. Inventory vs **§2** and **K/J/O/T/S/H/D/M**.
-2. Implement in dependency order (keys → validate → refresh/J6 → OAuth → SignalR → TLS/docs scripts → headers → ACL → audit → SPAs → ai_demo/uploads/E2E).
+2. Implement in dependency order (keys → validate → refresh/J6 → OAuth → SignalR → TLS/docs scripts → headers → ACL → audit → SPAs → many_faces_ai/uploads/E2E).
 3. **Run full test suite** after each logical chunk; fix failures.
 4. Final report: tests list, files list, **§16 + §17 + §18** checklist **fully** addressed.
 5. **Never** mark optional — use **blocked + tracking id** only when **§1** allows.
@@ -362,7 +362,7 @@ These boundaries **do not** relax **§16** — they **narrow scope of rewrite**,
 - [ ] **FE:** `acl/permissions` + `parseMeCapabilities` exhaustive edge cases.
 - [ ] **FE:** Auth refresh + 401 + no infinite loop.
 - [ ] **FE:** Face prefix on **all** scoped API calls in tests.
-- [ ] **admin_demo:** Admin prefix + capabilities + error states.
+- [ ] **many_faces_admin:** Admin prefix + capabilities + error states.
 - [ ] **E2E:** Cypress (or repo E2E) auth path **or** manual script in docs + tracking id.
 - [ ] **Dependencies:** `dotnet` + `npm`/`yarn` audit logged in `docs/guides/security-crypto-sockets.md` or agent report; highs addressed or tracked.
 
@@ -372,4 +372,4 @@ These boundaries **do not** relax **§16** — they **narrow scope of rewrite**,
 
 - **v1** — Initial combined prompt.
 - **v2** — English comments + docs audit + Mermaid expansion.
-- **v3** — **Strict mode:** no optional items; full monorepo scope (ai_demo, db, logger, uploads, Redis/jobs, CI); hub inventory; OAuth error policy; Swagger prod; dependency audit; E2E/contract/IDOR/CSRF doc; canonical Mermaid + render validation; private-method and test comments; **§16/§17/§18** master checklists; super-admin + mermaid-style prompt cross-links.
+- **v3** — **Strict mode:** no optional items; full monorepo scope (many_faces_ai, db, logger, uploads, Redis/jobs, CI); hub inventory; OAuth error policy; Swagger prod; dependency audit; E2E/contract/IDOR/CSRF doc; canonical Mermaid + render validation; private-method and test comments; **§16/§17/§18** master checklists; super-admin + mermaid-style prompt cross-links.

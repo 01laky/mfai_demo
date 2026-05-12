@@ -1,10 +1,10 @@
 # ESLint 10 × `eslint-plugin-react-hooks` peer mismatch — investigation & fix (agent prompt)
 
-**Purpose:** Remove **Yarn peer-resolution warnings** (and future hard failures) in **`fe_demo`** and **`admin_demo`** after upgrading to **ESLint 10**, while keeping **`eslint-plugin-react-hooks`** and the **flat config** working. Use this document as a **copy-paste agent brief**: investigate, pick a strategy, implement in **both** SPAs, run **`yarn validate`** / **`yarn test`** / **`yarn build`**, commit in **submodule repos**, bump parent submodule pointers per team rules.
+**Purpose:** Remove **Yarn peer-resolution warnings** (and future hard failures) in **`many_faces_portal`** and **`many_faces_admin`** after upgrading to **ESLint 10**, while keeping **`eslint-plugin-react-hooks`** and the **flat config** working. Use this document as a **copy-paste agent brief**: investigate, pick a strategy, implement in **both** SPAs, run **`yarn validate`** / **`yarn test`** / **`yarn build`**, commit in **submodule repos**, bump parent submodule pointers per team rules.
 
 **Checklists:** The `[ ]` rows in **§7** (and similar) are **PR / audit evidence templates**—tick in the PR or issue, not by default in this canonical file ([docs/prompts/README.md](./README.md)).
 
-**Scope:** `fe_demo`, `admin_demo` (Yarn **4.12**). Out of scope: `be_demo` (dotnet), `ai_demo` (Python).
+**Scope:** `many_faces_portal`, `many_faces_admin` (Yarn **4.12**). Out of scope: `many_faces_backend` (dotnet), `many_faces_ai` (Python).
 
 ---
 
@@ -30,7 +30,7 @@
 - React issue: [facebook/react#35758 — ESLint 10 not in `eslint-plugin-react-hooks` peers](https://github.com/facebook/react/issues/35758)
 - Landed fix (peer + tests/fixtures): [facebook/react#35720 — Add ESLint v10 support](https://github.com/facebook/react/pull/35720) (merge subject **can** differ; **published** tags are decided by **`npm view`**, not by PR title alone).
 
-**Repos today (`fe_demo` / `admin_demo` — verify with each `package.json` and §2.2):** ESLint **10**, `@eslint/js` **^10.0.x**, `typescript-eslint` **^8.58.x**, and an **exact** **`eslint-plugin-react-hooks` canary** pin (**strategy A2** shipped in submodules) until stable `@latest` lists **`^10.0.0`** for `eslint` in peers. Submodule rationale: `docs/eslint-plugin-react-hooks-peer.md` in each SPA.
+**Repos today (`many_faces_portal` / `many_faces_admin` — verify with each `package.json` and §2.2):** ESLint **10**, `@eslint/js` **^10.0.x**, `typescript-eslint` **^8.58.x**, and an **exact** **`eslint-plugin-react-hooks` canary** pin (**strategy A2** shipped in submodules) until stable `@latest` lists **`^10.0.0`** for `eslint` in peers. Submodule rationale: `docs/eslint-plugin-react-hooks-peer.md` in each SPA.
 
 - Flat config **can** live in `eslint.config.js`, `eslint.config.mjs`, `eslint.config.cjs`, `eslint.config.ts`, `eslint.config.mts`, or `eslint.config.cts` — **(required)** apply **§2.6** to **whichever filename exists** in each SPA. **(required)** After any `eslint-plugin-react-hooks` version change, align plugin registration and rules with that version’s published API — **§2.6** (today: explicit **`rules-of-hooks`** + **`exhaustive-deps`** instead of full canary `flat.recommended`).
 
@@ -59,8 +59,8 @@
 ### 2.1 Reproduce Yarn peer diagnostics (**required**)
 
 ```bash
-cd fe_demo && yarn install --immutable 2>&1 | tee /tmp/yarn-fe-peer.txt
-cd ../admin_demo && yarn install --immutable 2>&1 | tee /tmp/yarn-admin-peer.txt
+cd many_faces_portal && yarn install --immutable 2>&1 | tee /tmp/yarn-fe-peer.txt
+cd ../many_faces_admin && yarn install --immutable 2>&1 | tee /tmp/yarn-admin-peer.txt
 ```
 
 **(required)** In **both** log files, search and record:
@@ -83,10 +83,10 @@ yarn explain peer-requirements <pXXXXXX>
 
 **Do not** use the invalid literal `npm view eslint@version`. **(required)** Use the **semver range strings** from each SPA’s `package.json` inside quoted `npm view` selectors.
 
-**(required)** From **`fe_demo`** (repeat the entire block from **`admin_demo`**):
+**(required)** From **`many_faces_portal`** (repeat the entire block from **`many_faces_admin`**):
 
 ```bash
-cd fe_demo
+cd many_faces_portal
 npm view eslint-plugin-react-hooks@latest version peerDependencies
 npm view eslint-plugin-react-hooks@canary version peerDependencies
 ESLINT_RANGE=$(node -p "require('./package.json').devDependencies.eslint || require('./package.json').dependencies?.eslint || ''")
@@ -107,7 +107,7 @@ npm view "typescript-eslint@${TS_ESLINT_RANGE}" peerDependencies
 
 ### 2.3 Scan the whole ESLint peer graph in both SPAs (**required**)
 
-**(required)** For **`fe_demo/package.json`** and **`admin_demo/package.json`**:
+**(required)** For **`many_faces_portal/package.json`** and **`many_faces_admin/package.json`**:
 
 1. **(required)** List **every** `devDependency` and **`dependency`** whose **name** is `eslint`, starts with `@eslint/`, equals `typescript-eslint`, starts with `@typescript-eslint/`, **contains** the substring `eslint-plugin`, or matches `eslint-config-*`.
 2. **(required)** For **each** listed package that declares or inherits a peer on `eslint`, run `npm view` for its **workspace range**:
@@ -146,8 +146,8 @@ npm view "<pkg>@<range-from-package.json>" peerDependencies
 ### 2.7 Confirm ESLint runs (**required**)
 
 ```bash
-cd fe_demo && yarn lint 2>&1 | tee /tmp/yarn-fe-lint.txt
-cd ../admin_demo && yarn lint 2>&1 | tee /tmp/yarn-admin-lint.txt
+cd many_faces_portal && yarn lint 2>&1 | tee /tmp/yarn-fe-lint.txt
+cd ../many_faces_admin && yarn lint 2>&1 | tee /tmp/yarn-admin-lint.txt
 ```
 
 **(required)** If a rule or engine crashes, **(required)** capture the **full** stack trace and **(required)** either pivot to **B** or adjust plugin versions per matrix — **(required)** do not merge green `yarn install` with red **`yarn lint`**.
@@ -155,8 +155,8 @@ cd ../admin_demo && yarn lint 2>&1 | tee /tmp/yarn-admin-lint.txt
 ### 2.8 Full SPA gates (**required**)
 
 ```bash
-cd fe_demo && yarn validate && yarn test && yarn build
-cd ../admin_demo && yarn validate && yarn test && yarn build
+cd many_faces_portal && yarn validate && yarn test && yarn build
+cd ../many_faces_admin && yarn validate && yarn test && yarn build
 ```
 
 ---
@@ -187,7 +187,7 @@ cd ../admin_demo && yarn validate && yarn test && yarn build
 #### 4.1.1 **A1 — Stable upgrade** (**required** when the matrix assigns A1)
 
 - **When:** §2.2 shows `@latest` peers include ESLint **10**.
-- **(required)** Bump `eslint-plugin-react-hooks` in **`fe_demo/package.json`** and **`admin_demo/package.json`** to that stable; **(required)** `yarn install`; **(required)** re-run **§§2.1, 2.4–2.8**.
+- **(required)** Bump `eslint-plugin-react-hooks` in **`many_faces_portal/package.json`** and **`many_faces_admin/package.json`** to that stable; **(required)** `yarn install`; **(required)** re-run **§§2.1, 2.4–2.8**.
 
 #### 4.1.2 **A2 — Canary bridge** (**required** details when the matrix assigns A2)
 
@@ -230,18 +230,18 @@ packageExtensions:
 - **Do not** combine **B** with **C** without a **PR-thread** stakeholder exception sentence.
 - **Do not** combine **A2** with **C** for the **same** `react-hooks` ↔ `eslint` gap.
 - **Do not** leave **`eslint-plugin-react-hooks`** on a **floating** `canary` / `next` / `latest` **range** that resolves to different digests over time.
-- **Do not** change **only one** SPA — **`fe_demo`** and **`admin_demo`** **must** share the **same** primary strategy and **compatible** version pins.
+- **Do not** change **only one** SPA — **`many_faces_portal`** and **`many_faces_admin`** **must** share the **same** primary strategy and **compatible** version pins.
 
 ---
 
 ## 5. Implementation steps (**required** — after matrix choice)
 
-1. **(required)** Apply changes in **`fe_demo`**; **(required)** run **`yarn install`** locally so **`yarn.lock`** matches CI’s **`yarn install --immutable`**.
-2. **(required)** Mirror **identical policy** in **`admin_demo`** (`eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `.yarnrc.yml` / absence thereof).
+1. **(required)** Apply changes in **`many_faces_portal`**; **(required)** run **`yarn install`** locally so **`yarn.lock`** matches CI’s **`yarn install --immutable`**.
+2. **(required)** Mirror **identical policy** in **`many_faces_admin`** (`eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `.yarnrc.yml` / absence thereof).
 3. **(required)** Execute **§§2.6–2.8** after edits.
 4. **(required)** If **A2**: satisfy **§4.1.2** item-for-item in the PR text.
 5. **(required)** If **C**: satisfy **§4.3** item-for-item including README/docs and issue ID.
-6. **(required)** Commit in **`fe_demo`** and **`admin_demo`** per submodule rules.
+6. **(required)** Commit in **`many_faces_portal`** and **`many_faces_admin`** per submodule rules.
 7. **(required)** Parent **`many_faces_main`:** if this work must publish new submodule tips, **(required)** commit updated submodule SHAs **in the same delivery** as documented by the team. **(required)** If parent pointers **do not** change, **(required)** state **“parent submodule SHAs unchanged”** in the PR with the reason (e.g. “docs-only parent”, “release train next week”).
 
 ---
@@ -249,7 +249,7 @@ packageExtensions:
 ## 6. Verification & CI (**required**)
 
 - **(required)** Local **§2.8** **green** in **both** SPAs.
-- **(required)** Confirm CI workflows for `fe_demo` / `admin_demo` still run `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`.
+- **(required)** Confirm CI workflows for `many_faces_portal` / `many_faces_admin` still run `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`.
 - **(required)** On the **post-fix** `yarn install --immutable` log (CI artifact or local `tee` file), run:
 
 ```bash
@@ -275,13 +275,13 @@ Use this section as the **merge gate**. **(required)** Every row below is satisf
 - [ ] **§1.1 — matrix & rationale** — Chosen cell (**A1** / **A2** / **B** / **C**) **or** **Escalation — stop**; **minimum one-sentence** rationale in the PR description; **or** Escalation row: pasted **§2.2** `npm view` outputs + stakeholder or **B** decision **quoted or linked** from the PR thread.
 - [ ] **§1.1 — matrix coverage** — If the situation was ambiguous, PR contains the **Matrix coverage rule** outcome (Escalation until policy in thread, or the row chosen after stakeholder text).
 
-### 7.2 Investigation artifacts (**both** `fe_demo` and `admin_demo` unless **N/A**)
+### 7.2 Investigation artifacts (**both** `many_faces_portal` and `many_faces_admin` unless **N/A**)
 
 - [ ] **§2 (shell logs)** — For **each** SPA, attachments or repo paths proving stdout/stderr for: **`yarn install --immutable`** (§2.1), full **§2.2** `npm view` block (same script as in §2.2), **`yarn lint`** (§2.7), **`yarn validate && yarn test && yarn build`** (§2.8).
 - [ ] **§2.1 — `YN*` inventory** — Every peer-related **`YN00xx`** line from both install logs copied into the PR (or appendix file); plus the **summary table**: Yarn code → requesting package → requested peer → subject (as log exposes).
 - [ ] **§2.1 — `yarn explain peer-requirements` (no hash)** — Full stdout from **each** SPA root after install; if the command **errors** or is empty, PR contains the **verbatim** error/empty output **and** the sentence required by §2.1.
 - [ ] **§2.1 — `yarn explain peer-requirements` (per hash)** — Full tree output for **every** hash used in conclusions, from the correct SPA root; **plus** explicit PR conclusion: **only** `eslint-plugin-react-hooks` vs **list of other** packages mis-declaring `eslint` for v10.
-- [ ] **§2.2 — registry** — Complete pasted output of the §2.2 shell block for **`fe_demo`** and again for **`admin_demo`** (two blocks); prose answers for `@latest` / `@canary` ESLint 10 inclusion and **exact** version strings; if `ESLINT_RANGE` / `TS_ESLINT_RANGE` was empty, PR documents the fix before merge **or** **Escalation** with blocker text.
+- [ ] **§2.2 — registry** — Complete pasted output of the §2.2 shell block for **`many_faces_portal`** and again for **`many_faces_admin`** (two blocks); prose answers for `@latest` / `@canary` ESLint 10 inclusion and **exact** version strings; if `ESLINT_RANGE` / `TS_ESLINT_RANGE` was empty, PR documents the fix before merge **or** **Escalation** with blocker text.
 - [ ] **§2.3 — dependency list** — Table or bullet list: **every** package name matching §2.3 rules from each `package.json` (fe + admin); **every** `npm view "<pkg>@<range>" peerDependencies` line run (scoped names quoted); **per-package** note whether ESLint 10 is allowed by peers while SPA pins ESLint 10; **remediation** row (upgrade / B / C / already OK) for each exclusion.
 - [ ] **§2.4 — linker record** — For each SPA: `.yarnrc.yml` path or **“absent”**; verbatim `nodeLinker`, `pnpMode`, every key whose name contains **`peer`**; **plus** the **one sentence** linking linker mode to install strictness (PnP vs `node-modules`).
 - [ ] **§2.5 — lockfile** — Count of distinct resolved `eslint` versions (from `yarn why eslint` or `yarn.lock` grep) + explanation; **Branch A** (dedupe command + lockfile diff summary) **or** **Branch B** (explicit “no documented dedupe” + duplicate analysis) for **each** SPA.
@@ -304,8 +304,8 @@ Use this section as the **merge gate**. **(required)** Every row below is satisf
 ### 7.5 Repo / CI / references
 
 - [ ] **`yarn.lock`** — Committed in **every** SPA where `package.json` or `.yarnrc.yml` changed; if no lockfile change, PR states why (e.g. “no resolution delta”).
-- [ ] **§6 — CI workflow parity** — PR lists the workflow **file paths or job names** (e.g. under `.github/workflows/`) for **`fe_demo`** and **`admin_demo`** that run `yarn install --immutable`, `yarn validate`, `yarn test`, and `yarn build`; **(required)** confirm those steps are still present after the change **or** include the **same PR** updating the workflow when a step was renamed/removed.
-- [ ] **§5 — submodule commits** — Links or commit SHAs for **`fe_demo`** and **`admin_demo`** containing the dependency/config changes.
+- [ ] **§6 — CI workflow parity** — PR lists the workflow **file paths or job names** (e.g. under `.github/workflows/`) for **`many_faces_portal`** and **`many_faces_admin`** that run `yarn install --immutable`, `yarn validate`, `yarn test`, and `yarn build`; **(required)** confirm those steps are still present after the change **or** include the **same PR** updating the workflow when a step was renamed/removed.
+- [ ] **§5 — submodule commits** — Links or commit SHAs for **`many_faces_portal`** and **`many_faces_admin`** containing the dependency/config changes.
 - [ ] **§5.7 — parent repo** — Either parent **`many_faces_main`** submodule pointer commit in this delivery **or** exact sentence **“parent submodule SHAs unchanged”** with reason from §5.7.
 - [ ] **§6 — CI / grep** — `grep -E 'YN0060|YN0086'` (or project-equivalent) run on **post-fix** install log for **each** SPA; **exit code** recorded; outcome **clean** vs **residual** with §6 rules satisfied (including every **`yarn explain`** for residual lines).
 - [ ] **§6 — `.yarnrc.yml` audit stanzas** — Verbatim copy in PR of **every** key in each SPA’s `.yarnrc.yml` whose key name contains **`peer`**, **`pnp`**, **`install`**, or **`nodeLinker`** (full key + value); if none, PR states **“no such keys”** per SPA.
@@ -325,6 +325,6 @@ Use this section as the **merge gate**. **(required)** Every row below is satisf
 - React issue: [facebook/react#35758](https://github.com/facebook/react/issues/35758)
 - React PR: [facebook/react#35720](https://github.com/facebook/react/pull/35720)
 - npm: [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
-- Repo flat configs: `fe_demo/eslint.config.*`, `admin_demo/eslint.config.*`
+- Repo flat configs: `many_faces_portal/eslint.config.*`, `many_faces_admin/eslint.config.*`
 - Related audit prompt: [monorepo-dependency-audit-and-upgrade-agent-prompt.md](./monorepo-dependency-audit-and-upgrade-agent-prompt.md)
 - After peers are aligned: [react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) (full `recommended` / compiler rules rollout)

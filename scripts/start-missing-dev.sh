@@ -32,7 +32,7 @@ echo ""
 # 1. Database first (postgres + pgadmin)
 if [[ " ${MISSING[*]} " =~ " postgres " ]] || [[ " ${MISSING[*]} " =~ " pgadmin " ]]; then
   echo "📦 Starting database (postgres + pgadmin)..."
-  (cd db_demo && docker-compose up -d)
+  (cd many_faces_database && docker-compose up -d)
   echo "   Waiting for PostgreSQL to be ready..."
   for i in {1..30}; do
     if docker exec postgres-dev pg_isready -U bedemo_user -d bedemo 2>/dev/null; then
@@ -47,11 +47,11 @@ fi
 
 # 1b. Redis
 if [[ " ${MISSING[*]} " =~ " redis " ]]; then
-  echo "📦 Starting Redis (redis_demo)..."
-  if [ -f "redis_demo/start-redis.sh" ]; then
-    (cd redis_demo && ./start-redis.sh)
+  echo "📦 Starting Redis (many_faces_redis)..."
+  if [ -f "many_faces_redis/start-redis.sh" ]; then
+    (cd many_faces_redis && ./start-redis.sh)
   else
-    (cd redis_demo && docker-compose up -d)
+    (cd many_faces_redis && docker-compose up -d)
   fi
   echo ""
 fi

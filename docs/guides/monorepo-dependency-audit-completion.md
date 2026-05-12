@@ -9,17 +9,17 @@ From monorepo root unless noted.
 
 ### Node — `npm-check-updates` (no manifest changes)
 
-- `fe_demo`: `npx --yes npm-check-updates` → *All dependencies match the latest package versions.*
-- `admin_demo`: same.
+- `many_faces_portal`: `npx --yes npm-check-updates` → *All dependencies match the latest package versions.*
+- `many_faces_admin`: same.
 
 ### Node — §2.3 union table
 
-- Regenerated via `npm view <pkg> version` for the union of `fe_demo` and `admin_demo` direct dependencies (see §0.1 script in the prompt). Output is pasted under **§2.3** in the prompt file.
+- Regenerated via `npm view <pkg> version` for the union of `many_faces_portal` and `many_faces_admin` direct dependencies (see §0.1 script in the prompt). Output is pasted under **§2.3** in the prompt file.
 
 ### .NET — outdated top-level packages
 
 ```text
-cd be_demo && dotnet list package --outdated
+cd many_faces_backend && dotnet list package --outdated
 ```
 
 Result at snapshot: only **Google.Protobuf**, **Grpc.Net.Client**, **Grpc.Tools** show newer **Latest** lines vs **Resolved**. The audit prompt keeps these on a **hold** until gRPC/protobuf bumps are validated (arm64 / Docker `protoc`).
@@ -34,5 +34,5 @@ Result at snapshot: only **Google.Protobuf**, **Grpc.Net.Client**, **Grpc.Tools*
 
 ### SPA `yarn npm audit` (informational re-check)
 
-- **2026-04-11:** From `fe_demo/` and `admin_demo/`, `yarn npm audit` reported **no audit suggestions** (Yarn 4 / registry advisory database at run time).
+- **2026-04-11:** From `many_faces_portal/` and `many_faces_admin/`, `yarn npm audit` reported **no audit suggestions** (Yarn 4 / registry advisory database at run time).
 

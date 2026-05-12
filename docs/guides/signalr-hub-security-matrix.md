@@ -1,4 +1,4 @@
-# SignalR hub security matrix (`be_demo`)
+# SignalR hub security matrix (`many_faces_backend`)
 
 Language: English. **Automation:** where an automated test exists, it is referenced; otherwise manual verification steps are listed (security-hardening prompt, hub inventory).
 

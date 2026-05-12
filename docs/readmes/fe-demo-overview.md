@@ -1,4 +1,4 @@
-# Frontend application (`fe_demo`) — functional overview
+# Frontend application (`many_faces_portal`) — functional overview
 
 ## Overview
 
@@ -6,7 +6,7 @@ The frontend is a multi-face social-style SPA. Users work inside a selected **fa
 
 Typical dev URL: **http://localhost:8081**.
 
-**Performance / TanStack Query / ACL notes** (for PRs and audits): [`fe_demo/docs/performance-and-query-appendix.md`](../../fe_demo/docs/performance-and-query-appendix.md).
+**Performance / TanStack Query / ACL notes** (for PRs and audits): [`many_faces_portal/docs/performance-and-query-appendix.md`](../../many_faces_portal/docs/performance-and-query-appendix.md).
 
 ---
 
@@ -302,7 +302,7 @@ Single video with title, description, comments, likes; grid components like albu
 
 **Detail** `/reel/{id}` with `?faceId=` where required.
 
-**Redis queue:** after POST, jobs `reel.postprocess` (immediate + delayed ~1 min). **StackExchange.Redis** lists `bedemo:jobs:ready` and sorted set `bedemo:jobs:delayed`; `RedisJobWorkerService` drains them (currently logging). Submodule **`redis_demo`**; `be-demo-dev` uses `host.docker.internal:6379`. See [**redis-subrepo.md**](./redis-subrepo.md). If Redis is down or config empty / **Testing**, **NoOp** queue is used.
+**Redis queue:** after POST, jobs `reel.postprocess` (immediate + delayed ~1 min). **StackExchange.Redis** lists `bedemo:jobs:ready` and sorted set `bedemo:jobs:delayed`; `RedisJobWorkerService` drains them (currently logging). Submodule **`many_faces_redis`**; `be-demo-dev` uses `host.docker.internal:6379`. See [**redis-subrepo.md**](./redis-subrepo.md). If Redis is down or config empty / **Testing**, **NoOp** queue is used.
 
 **API (summary)**
 

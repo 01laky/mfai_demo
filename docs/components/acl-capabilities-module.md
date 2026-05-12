@@ -8,11 +8,11 @@ Server-driven **permission strings** and **`GET /{face}/api/me/capabilities`** s
 
 | Layer                 | Location                                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------------------- |
-| Permission catalog    | `be_demo/BeDemo.Api/Security/AclPermissionKeys.cs`                                                |
-| Capabilities response | `be_demo/BeDemo.Api/Services/AccessCapabilitiesService.cs`, `Models/DTOs/CapabilitiesResponse.cs` |
-| HTTP                  | `be_demo/BeDemo.Api/Controllers/MeController.cs`                                                  |
-| FE (mirror)           | `fe_demo/src/acl/*`, `src/api/meCapabilitiesClient.ts`, `src/hooks/api/useMeCapabilities.ts`      |
-| Admin (mirror)        | `admin_demo/src/acl/*`, same client/hook pattern                                                  |
+| Permission catalog    | `many_faces_backend/BeDemo.Api/Security/AclPermissionKeys.cs`                                                |
+| Capabilities response | `many_faces_backend/BeDemo.Api/Services/AccessCapabilitiesService.cs`, `Models/DTOs/CapabilitiesResponse.cs` |
+| HTTP                  | `many_faces_backend/BeDemo.Api/Controllers/MeController.cs`                                                  |
+| FE (mirror)           | `many_faces_portal/src/acl/*`, `src/api/meCapabilitiesClient.ts`, `src/hooks/api/useMeCapabilities.ts`      |
+| Admin (mirror)        | `many_faces_admin/src/acl/*`, same client/hook pattern                                                  |
 
 ### Diagram: capabilities data path (high level)
 
@@ -21,8 +21,8 @@ flowchart LR
   Keys[AclPermissionKeys.cs]
   Me[MeController]
   Svc[AccessCapabilitiesService]
-  FE[fe_demo src acl]
-  AD[admin_demo src acl]
+  FE[many_faces_portal src acl]
+  AD[many_faces_admin src acl]
   Me --> Svc
   Keys -.-> Svc
   Svc -.-> FE

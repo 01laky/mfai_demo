@@ -1,7 +1,7 @@
 # Frontend grid — face-scoped data & rollout agent prompt
 
 **Language:** English  
-**Scope:** `fe_demo` page grid (`PageGridLayout`, `fe_demo/src/components/grid/*`) and related API services.  
+**Scope:** `many_faces_portal` page grid (`PageGridLayout`, `many_faces_portal/src/components/grid/*`) and related API services.  
 **North star:** Root [`APP_CONTEXT.md`](../../APP_CONTEXT.md) sections 8–9 (face-scoped reads, grid contracts, responsiveness, demo/placeholder policy).
 
 **How to use:** Paste this file (or sections 2–5 plus **section 7** below) into an AI agent chat. Leave `[ ]` checklists **unchecked** in the canonical file; tick copies in PR/issue. Re-run when APIs or components change. **Section 7** is the single flat list of **all remaining work** — use it for sprint planning and PR descriptions.
@@ -22,11 +22,11 @@
 
 Shared infrastructure:
 
-- [x] **`PageGridLayout`** ([`fe_demo/src/components/PageGridLayout.tsx`](../../fe_demo/src/components/PageGridLayout.tsx)) — parses `gridSchema` JSON, renders `ResponsiveGridLayout`, maps `componentType` → React component, carousel/grid **pagination sync** with footer, **only `chatRoom` supports `boundChatRoomId`** in schema today.
+- [x] **`PageGridLayout`** ([`many_faces_portal/src/components/PageGridLayout.tsx`](../../many_faces_portal/src/components/PageGridLayout.tsx)) — parses `gridSchema` JSON, renders `ResponsiveGridLayout`, maps `componentType` → React component, carousel/grid **pagination sync** with footer, **only `chatRoom` supports `boundChatRoomId`** in schema today.
 - [x] **`FacePageView`** mounts grid when `page.gridSchema` exists.
 - [x] **`ComponentBlock`** wraps each item (header, footer, autoplay localStorage).
 - [x] **`gridDisplayHelpers.ts`** — centralized **neutral SVG fallbacks** (`albumCoverPlaceholderUrl`, `albumThumbnailPlaceholderUrl`, `blogCoverPlaceholderUrl`, `wallTicketListingImageUrl`, `storyRingImageUrl`, `profileAvatarUrl`); external `picsum.photos` placeholders have been removed from FE runtime code.
-- [x] **List pages** — [`ComponentListView`](../../fe_demo/src/components/ComponentListView.tsx) reuses grids by numeric `componentTypeId` for `/list/:id` style routes.
+- [x] **List pages** — [`ComponentListView`](../../many_faces_portal/src/components/ComponentListView.tsx) reuses grids by numeric `componentTypeId` for `/list/:id` style routes.
 - [x] **`FaceConfigContext`** — logged-in users see **public + private** faces; pathname can **select face** (deep links).
 - [ ] **TanStack Query** — most grid components still use **manual `useEffect` + fetch**; optional future unification (see performance prompt).
 - [ ] **i18n** — many user-visible strings in grid components are **hard-coded English** (`"Sign in to see…"`).
@@ -45,11 +45,11 @@ Face-scoped reads (high level):
 
 Forms (create flows exist in repo; wire to capabilities & face scope when extending):
 
-- [`AlbumForm.tsx`](../../fe_demo/src/components/grid/AlbumForm.tsx), [`BlogForm.tsx`](../../fe_demo/src/components/grid/BlogForm.tsx), [`ChatRoomForm.tsx`](../../fe_demo/src/components/grid/ChatRoomForm.tsx), [`ReelForm.tsx`](../../fe_demo/src/components/grid/ReelForm.tsx) (+ Quill for blog).
-- [`GridTopPanelContent.tsx`](../../fe_demo/src/components/GridTopPanelContent.tsx) opens real forms for **album / blog / reel / chat rooms**. Today **`ad` / `story` / `userProfile` fall through to a generic placeholder create panel**, so the `+` action is not product-complete for those types. Existing dedicated panels — [`WallTicketCreateTopPanel.tsx`](../../fe_demo/src/components/WallTicketCreateTopPanel.tsx) and [`StoriesCreateTopPanel.tsx`](../../fe_demo/src/components/StoriesCreateTopPanel.tsx) — are likely reuse candidates for `ad` and `story`.
+- [`AlbumForm.tsx`](../../many_faces_portal/src/components/grid/AlbumForm.tsx), [`BlogForm.tsx`](../../many_faces_portal/src/components/grid/BlogForm.tsx), [`ChatRoomForm.tsx`](../../many_faces_portal/src/components/grid/ChatRoomForm.tsx), [`ReelForm.tsx`](../../many_faces_portal/src/components/grid/ReelForm.tsx) (+ Quill for blog).
+- [`GridTopPanelContent.tsx`](../../many_faces_portal/src/components/GridTopPanelContent.tsx) opens real forms for **album / blog / reel / chat rooms**. Today **`ad` / `story` / `userProfile` fall through to a generic placeholder create panel**, so the `+` action is not product-complete for those types. Existing dedicated panels — [`WallTicketCreateTopPanel.tsx`](../../many_faces_portal/src/components/WallTicketCreateTopPanel.tsx) and [`StoriesCreateTopPanel.tsx`](../../many_faces_portal/src/components/StoriesCreateTopPanel.tsx) — are likely reuse candidates for `ad` and `story`.
 - Current forms are not uniformly “current-face only”: **album** defaults to all faces, **blog** defaults to the first face in `allFaces`, **reel** can mean all faces when none are selected, while **chat room** uses `selectedFace.id`. This must be a deliberate product decision, not an accidental cross-face write.
-- [`ComponentBlock.tsx`](../../fe_demo/src/components/ComponentBlock.tsx) still has placeholder header actions (**report**, **favorite**, **sort/filter rank**) and local-only block settings (**autoplay**). Treat these as UX/API integration backlog, not finished capability-backed behavior.
-- Admin grid types mirror the same `componentType` union, but [`GridLayoutEditor.tsx`](../../admin_demo/src/components/GridLayoutEditor.tsx) currently keeps only layout coordinates, `label`, and `componentType`. It does **not** model/preserve FE-only fields such as `boundChatRoomId`, `title`, or `icon`; any binding/header metadata added to `gridSchema` must be represented and preserved in Admin too.
+- [`ComponentBlock.tsx`](../../many_faces_portal/src/components/ComponentBlock.tsx) still has placeholder header actions (**report**, **favorite**, **sort/filter rank**) and local-only block settings (**autoplay**). Treat these as UX/API integration backlog, not finished capability-backed behavior.
+- Admin grid types mirror the same `componentType` union, but [`GridLayoutEditor.tsx`](../../many_faces_admin/src/components/GridLayoutEditor.tsx) currently keeps only layout coordinates, `label`, and `componentType`. It does **not** model/preserve FE-only fields such as `boundChatRoomId`, `title`, or `icon`; any binding/header metadata added to `gridSchema` must be represented and preserved in Admin too.
 
 ---
 
@@ -164,7 +164,7 @@ Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by
 - [ ] Create album/blog/reel/chat-room from a face page; resulting entity belongs to the intended face(s), with no accidental all-face or first-face default.
 - [ ] In Admin, edit and save a page grid containing `boundChatRoomId` / header metadata; verify drag/resize does **not** drop those fields from `gridSchema`.
 - [ ] Click header actions (List, Report, Favorite, Sort/filter, Block settings); unsupported actions are not presented as working product features.
-- [x] `./scripts/ci-local.sh` (or `fe_demo` lint + test subset) passes.
+- [x] `./scripts/ci-local.sh` (or `many_faces_portal` lint + test subset) passes.
 - [ ] Update this prompt’s section 2 snapshot **only after** a deliberate re-audit (optional line in PR: “audit ref: yyyy-mm-dd”).
 
 ---
@@ -242,7 +242,7 @@ Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by
 - [ ] Manual: create album/blog/reel/chat-room from a face page; resulting entity belongs to the intended face(s), with no accidental all-face or first-face default.
 - [ ] Manual: edit and save a page grid in Admin; verify existing `boundChatRoomId`, `title`, `icon`, and future metadata are not dropped by drag/resize/save.
 - [ ] Manual: click header actions (List, Report, Favorite, Sort/filter, Block settings); unsupported actions are not presented as working product features.
-- [x] CI: `./scripts/ci-local.sh` or **`fe_demo` lint + targeted tests** green for touched paths.
+- [x] CI: `./scripts/ci-local.sh` or **`many_faces_portal` lint + targeted tests** green for touched paths.
 - [ ] After deliberate re-audit only: refresh **section 2** snapshot in this file; note optional PR line `audit ref: yyyy-mm-dd`.
 
 ---

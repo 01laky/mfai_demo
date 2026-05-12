@@ -45,7 +45,7 @@ flowchart LR
 | FE (`yarn dev` on host)                | —    | 8081            |
 | Admin (Vite)                           | —    | 8082            |
 
-Set `VITE_API_URL=https://localhost:8001` in `fe_demo/.env` and `admin_demo/.env` (see `.env.example`).
+Set `VITE_API_URL=https://localhost:8001` in `many_faces_portal/.env` and `many_faces_admin/.env` (see `.env.example`).
 
 ### Diagram: default HTTPS ports
 

@@ -1,4 +1,4 @@
-# Admin application (`admin_demo`) — functional overview
+# Admin application (`many_faces_admin`) — functional overview
 
 ## Overview
 
@@ -6,7 +6,7 @@ The admin app manages the whole platform: users, faces (tenants), pages, and con
 
 Typical dev URL: **http://localhost:8082**.
 
-**Performance / TanStack Query / ACL notes** (for PRs and audits): [`admin_demo/docs/performance-and-query-appendix.md`](../../admin_demo/docs/performance-and-query-appendix.md).
+**Performance / TanStack Query / ACL notes** (for PRs and audits): [`many_faces_admin/docs/performance-and-query-appendix.md`](../../many_faces_admin/docs/performance-and-query-appendix.md).
 
 ---
 
@@ -16,7 +16,7 @@ Fields:
 
 - **Email** (required)
 - **Password** (min 4 characters)
-- **“Stay signed in”** — optional; longer JWT when checked (same mechanism as `fe_demo`). See [**authentication-and-sessions.md**](../guides/authentication-and-sessions.md).
+- **“Stay signed in”** — optional; longer JWT when checked (same mechanism as `many_faces_portal`). See [**authentication-and-sessions.md**](../guides/authentication-and-sessions.md).
 - **Sign in** button
 
 Success → Dashboard. Failure → error toast.
@@ -258,13 +258,13 @@ Endpoints mirror [`fe-demo-overview.md`](./fe-demo-overview.md) album table (`/a
 
 ## 11. Reels (API) and Redis
 
-Reel, ReelFace (no rows = global across faces), ReelComment, ReelLike. POST enqueues Redis jobs. Submodule **`redis_demo`**, `Redis__Configuration=host.docker.internal:6379`. Keys `bedemo:jobs:ready`, `bedemo:jobs:delayed`. See [**redis-subrepo.md**](./redis-subrepo.md) and `redis_demo/README.md`.
+Reel, ReelFace (no rows = global across faces), ReelComment, ReelLike. POST enqueues Redis jobs. Submodule **`many_faces_redis`**, `Redis__Configuration=host.docker.internal:6379`. Keys `bedemo:jobs:ready`, `bedemo:jobs:delayed`. See [**redis-subrepo.md**](./redis-subrepo.md) and `many_faces_redis/README.md`.
 
 ---
 
 ## 12. Blog (API)
 
-Blog bound to one Face; HTML content; max 3 images; comments/likes. Endpoints under `/api/blogs` (see `fe_demo` overview for pattern).
+Blog bound to one Face; HTML content; max 3 images; comments/likes. Endpoints under `/api/blogs` (see `many_faces_portal` overview for pattern).
 
 ---
 

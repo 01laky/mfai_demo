@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to stop all development environments
-# Stops: logger, apps, redis_demo (Redis), db_demo (PostgreSQL), root compose
+# Stops: logger, apps, many_faces_redis (Redis), many_faces_database (PostgreSQL), root compose
 # Usage: ./scripts/stop-all-dev.sh (from repository root)
 
 set -e
@@ -16,13 +16,13 @@ echo ""
 # ============================================================================
 # STOP LOGGER DEMO (Dozzle)
 # ============================================================================
-echo "📦 Stopping Logger Demo (logger_demo)..."
-if [ -f "logger_demo/stop-dev.sh" ]; then
-    cd logger_demo
+echo "📦 Stopping Logger Demo (many_faces_logger)..."
+if [ -f "many_faces_logger/stop-dev.sh" ]; then
+    cd many_faces_logger
     ./stop-dev.sh > /dev/null 2>&1
     cd ..
 else
-    docker-compose -f logger_demo/docker-compose.dev.yml stop 2>/dev/null || true
+    docker-compose -f many_faces_logger/docker-compose.dev.yml stop 2>/dev/null || true
 fi
 echo "    ✅ Logger Demo stopped"
 echo ""
@@ -31,87 +31,87 @@ echo ""
 # STOP ALL APPLICATIONS
 # ============================================================================
 
-# Stop backend (be_demo)
-if [ -f "be_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping backend (be_demo)..."
-    cd be_demo
+# Stop backend (many_faces_backend)
+if [ -f "many_faces_backend/stop-dev.sh" ]; then
+    echo "  📦 Stopping backend (many_faces_backend)..."
+    cd many_faces_backend
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  be_demo/stop-dev.sh not found, trying docker-compose directly..."
+    echo "  ⚠️  many_faces_backend/stop-dev.sh not found, trying docker-compose directly..."
     docker-compose -f docker-compose.dev.yml stop be-demo-dev seq-dev 2>/dev/null || true
     docker-compose -f docker-compose.dev.yml rm -f be-demo-dev seq-dev 2>/dev/null || true
 fi
 
-# Stop frontend (fe_demo)
-if [ -f "fe_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping frontend (fe_demo)..."
-    cd fe_demo
+# Stop frontend (many_faces_portal)
+if [ -f "many_faces_portal/stop-dev.sh" ]; then
+    echo "  📦 Stopping frontend (many_faces_portal)..."
+    cd many_faces_portal
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  fe_demo/stop-dev.sh not found, trying docker-compose directly..."
+    echo "  ⚠️  many_faces_portal/stop-dev.sh not found, trying docker-compose directly..."
     docker-compose -f docker-compose.dev.yml stop fe-demo-dev fe-demo-proxy 2>/dev/null || true
     docker-compose -f docker-compose.dev.yml rm -f fe-demo-dev fe-demo-proxy 2>/dev/null || true
 fi
 
-# Stop admin_demo
-if [ -f "admin_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping admin (admin_demo)..."
-    cd admin_demo
+# Stop many_faces_admin
+if [ -f "many_faces_admin/stop-dev.sh" ]; then
+    echo "  📦 Stopping admin (many_faces_admin)..."
+    cd many_faces_admin
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  admin_demo/stop-dev.sh not found, trying docker-compose directly..."
+    echo "  ⚠️  many_faces_admin/stop-dev.sh not found, trying docker-compose directly..."
     docker-compose -f docker-compose.dev.yml stop admin-demo-dev 2>/dev/null || true
     docker-compose -f docker-compose.dev.yml rm -f admin-demo-dev 2>/dev/null || true
 fi
 
-# Stop AI Demo (ai_demo)
-if [ -f "ai_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping AI Demo (ai_demo)..."
-    cd ai_demo
+# Stop AI Demo (many_faces_ai)
+if [ -f "many_faces_ai/stop-dev.sh" ]; then
+    echo "  📦 Stopping AI Demo (many_faces_ai)..."
+    cd many_faces_ai
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  ai_demo/stop-dev.sh not found, trying docker-compose directly..."
+    echo "  ⚠️  many_faces_ai/stop-dev.sh not found, trying docker-compose directly..."
     docker-compose -f docker-compose.dev.yml stop ai-demo-dev 2>/dev/null || true
     docker-compose -f docker-compose.dev.yml rm -f ai-demo-dev 2>/dev/null || true
 fi
 
-# Stop Logger Demo (logger_demo)
-if [ -f "logger_demo/stop-dev.sh" ]; then
-    echo "  📦 Stopping Logger Demo (logger_demo)..."
-    cd logger_demo
+# Stop Logger Demo (many_faces_logger)
+if [ -f "many_faces_logger/stop-dev.sh" ]; then
+    echo "  📦 Stopping Logger Demo (many_faces_logger)..."
+    cd many_faces_logger
     ./stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  logger_demo/stop-dev.sh not found, trying docker-compose directly..."
-    docker-compose -f logger_demo/docker-compose.dev.yml stop dozzle-dev 2>/dev/null || true
-    docker-compose -f logger_demo/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
+    echo "  ⚠️  many_faces_logger/stop-dev.sh not found, trying docker-compose directly..."
+    docker-compose -f many_faces_logger/docker-compose.dev.yml stop dozzle-dev 2>/dev/null || true
+    docker-compose -f many_faces_logger/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
 fi
 
-# Stop Redis (redis_demo)
-if [ -f "redis_demo/stop-redis.sh" ]; then
-    echo "  📦 Stopping Redis (redis_demo)..."
-    cd redis_demo
+# Stop Redis (many_faces_redis)
+if [ -f "many_faces_redis/stop-redis.sh" ]; then
+    echo "  📦 Stopping Redis (many_faces_redis)..."
+    cd many_faces_redis
     ./stop-redis.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  redis_demo/stop-redis.sh not found, trying docker-compose directly..."
-    cd redis_demo 2>/dev/null && docker-compose down 2>/dev/null || true
+    echo "  ⚠️  many_faces_redis/stop-redis.sh not found, trying docker-compose directly..."
+    cd many_faces_redis 2>/dev/null && docker-compose down 2>/dev/null || true
     cd "$ROOT" 2>/dev/null || true
 fi
 
-# Stop database (db_demo)
-if [ -f "db_demo/stop-db.sh" ]; then
-    echo "  📦 Stopping database (db_demo)..."
-    cd db_demo
+# Stop database (many_faces_database)
+if [ -f "many_faces_database/stop-db.sh" ]; then
+    echo "  📦 Stopping database (many_faces_database)..."
+    cd many_faces_database
     ./stop-db.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  db_demo/stop-db.sh not found, trying docker-compose directly..."
-    cd db_demo
+    echo "  ⚠️  many_faces_database/stop-db.sh not found, trying docker-compose directly..."
+    cd many_faces_database
     docker-compose down 2>/dev/null || true
     cd ..
 fi

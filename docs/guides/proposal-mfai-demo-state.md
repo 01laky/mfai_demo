@@ -8,7 +8,7 @@ A consolidated inventory of implemented areas. Use it as a baseline when decidin
 
 ### Layout
 
-- Monorepo: `be_demo`, `fe_demo`, `admin_demo`, `ai_demo`, `db_demo`, `logger_demo`.
+- Monorepo: `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, `many_faces_database`, `many_faces_logger`.
 - Main `docker-compose.dev.yml` for backend, frontend, admin, Seq, AI demo; DB and logger have their own compose files.
 - Bash scripts for start, stop, status, clear, rebuild, test, lint.
 
@@ -22,8 +22,8 @@ A consolidated inventory of implemented areas. Use it as a baseline when decidin
 | **scripts/clear-all-dev.sh**   | Remove containers and volumes (**data loss**).                                                                                  |
 | **scripts/restart-all-dev.sh** | Stop, rebuild images, start.                                                                                                    |
 | **scripts/rebuild-all-dev.sh** | Rebuild all Docker images (no start).                                                                                           |
-| **scripts/test-all.sh**        | `be_demo` xUnit, `fe_demo` Vitest + Cypress e2e, `admin_demo` Vitest; summary pass/fail.                                        |
-| **scripts/lint-all.sh**        | Lint in `fe_demo`, `be_demo`, `admin_demo`, `ai_demo`.                                                                          |
+| **scripts/test-all.sh**        | `many_faces_backend` xUnit, `many_faces_portal` Vitest + Cypress e2e, `many_faces_admin` Vitest; summary pass/fail.                                        |
+| **scripts/lint-all.sh**        | Lint in `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, `many_faces_ai`.                                                                          |
 | **scripts/menu.sh**            | TUI menu (Norton Commander style): arrows, Enter = drill/run, Backspace/←/Esc = back; monorepo scripts + per-container scripts. |
 
 ### Diagram: start-all-dev order
@@ -48,7 +48,7 @@ flowchart LR
 
 ---
 
-## 2. Backend (`be_demo`)
+## 2. Backend (`many_faces_backend`)
 
 ### Stack
 
@@ -99,7 +99,7 @@ flowchart TB
 - **OAuth2Service**, **ECDSAKeyService** (JWT signing).
 - **FaceService** — resolve face by index (kebab-case), cache.
 - **UserService** — users.
-- **AiGrpcService** — gRPC client to `ai_demo` (Health, Generate); keepalive 60s/30s; handles MODEL_LOADING and errors.
+- **AiGrpcService** — gRPC client to `many_faces_ai` (Health, Generate); keepalive 60s/30s; handles MODEL_LOADING and errors.
 
 ### Middleware
 
@@ -190,7 +190,7 @@ sequenceDiagram
 
 ---
 
-## 3. Frontend (`fe_demo`)
+## 3. Frontend (`many_faces_portal`)
 
 ### Stack
 
@@ -247,7 +247,7 @@ sequenceDiagram
 
 ---
 
-## 4. Admin (`admin_demo`)
+## 4. Admin (`many_faces_admin`)
 
 ### Stack
 
@@ -267,7 +267,7 @@ sequenceDiagram
 
 ---
 
-## 5. AI service (`ai_demo`)
+## 5. AI service (`many_faces_ai`)
 
 ### Stack
 
@@ -284,8 +284,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-  participant BE as be_demo startup
-  participant AI as ai_demo gRPC
+  participant BE as many_faces_backend startup
+  participant AI as many_faces_ai gRPC
   participant Hub as ChatHub
   participant User as Connected user
 
@@ -303,7 +303,7 @@ sequenceDiagram
 
 ---
 
-## 6. Database (`db_demo`)
+## 6. Database (`many_faces_database`)
 
 - PostgreSQL 16 (`postgres:16-alpine`), pgAdmin 4.
 - Ports: 54320 (PostgreSQL), 5050 (pgAdmin).
@@ -313,7 +313,7 @@ sequenceDiagram
 
 ---
 
-## 7. Logger (`logger_demo`)
+## 7. Logger (`many_faces_logger`)
 
 - Dozzle — realtime logs from all containers.
 - Port 8080; discovery via Docker socket; filter by container.
@@ -329,7 +329,7 @@ sequenceDiagram
 | **Users**           | GetUsers with **pagination and search**, **forAddFriend** for Add Friend; UsersPage, UserDetailPage.                                                                    |
 | **Friend requests** | Backend: FriendRequestsController; FE: FriendRequestsTab, **backend pagination + search**, **dynamic row count from height**, debounce, optimistic UI.                  |
 | **Realtime**        | SignalR: **ChatHub** (broadcast, private, **SendToAi**), **MessengerHub** (chat, message requests, notifications); FE MessengerContext, MessengerTab, NotificationsTab. |
-| **AI**              | `ai_demo` gRPC Health + Generate (DistilGPT-2); backend AiGrpcService; ChatHub SendToAi + history; error handling and keepalive.                                        |
+| **AI**              | `many_faces_ai` gRPC Health + Generate (DistilGPT-2); backend AiGrpcService; ChatHub SendToAi + history; error handling and keepalive.                                        |
 | **Database**        | PostgreSQL 16, EF Core migrations, Identity + FriendRequest, Friendship, Message, Notification, Face, Page, …                                                           |
 | **Multi-tenant**    | Face-based routing (backend middleware + FE face path); public/private faces.                                                                                           |
 | **DevOps**          | Docker Compose, `scripts/*` start/stop/status/clear/rebuild/test/lint, **`scripts/menu.sh`** (NC-style TUI).                                                            |

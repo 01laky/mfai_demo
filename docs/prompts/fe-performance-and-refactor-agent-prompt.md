@@ -1,16 +1,16 @@
-# `fe_demo` — performance audit and refactor (agent prompt)
+# `many_faces_portal` — performance audit and refactor (agent prompt)
 
-**Purpose:** Single agent brief to **measure**, **prioritize**, and **implement** frontend performance work and **structural refactors** in **`fe_demo` only** (Vite + React 19 + TanStack Query + React Router + SignalR + i18n). Use this as a copy-paste spec; tick evidence in a PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
+**Purpose:** Single agent brief to **measure**, **prioritize**, and **implement** frontend performance work and **structural refactors** in **`many_faces_portal` only** (Vite + React 19 + TanStack Query + React Router + SignalR + i18n). Use this as a copy-paste spec; tick evidence in a PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
 
-**Out of scope unless explicitly added:** `admin_demo`, `be_demo`, Docker, CDN, HTTP/2 tuning, Lighthouse budgets as CI gates (recommend documenting thresholds first).
+**Out of scope unless explicitly added:** `many_faces_admin`, `many_faces_backend`, Docker, CDN, HTTP/2 tuning, Lighthouse budgets as CI gates (recommend documenting thresholds first).
 
 ---
 
 ### Engagement exit rule (NON-NEGOTIABLE)
 
-- **English:** Every `- [ ]` item in **§0 through §6** is **mandatory**. The agent **MUST NOT** stop, hand off, declare success, close the task, or end the engagement until **every** such item is **DONE**: implemented in `fe_demo` **and** verified (commands, tests, metrics as specified), **or** explicitly **waived in the PR** with measurement evidence where a code change is intentionally skipped. Sub-bullets labelled **Action** belong to the parent `- [ ]` — they inherit the same rule until that parent is satisfied.
+- **English:** Every `- [ ]` item in **§0 through §6** is **mandatory**. The agent **MUST NOT** stop, hand off, declare success, close the task, or end the engagement until **every** such item is **DONE**: implemented in `many_faces_portal` **and** verified (commands, tests, metrics as specified), **or** explicitly **waived in the PR** with measurement evidence where a code change is intentionally skipped. Sub-bullets labelled **Action** belong to the parent `- [ ]` — they inherit the same rule until that parent is satisfied.
 
-- **Slovak:** **Agent nesmie skončiť**, kým **nie je hotové všetko povinné** podľa `- [ ]` v **§0 až §6** — buď je to **dorobené v `fe_demo` a overené**, alebo je v **PR výslovne odmietnuté** (waiver) **s dátami z meraní**. Kým to nie je splnené, **žiadne ukončenie úlohy** (žiadny „hotovo“, žiadny predčasný handoff).
+- **Slovak:** **Agent nesmie skončiť**, kým **nie je hotové všetko povinné** podľa `- [ ]` v **§0 až §6** — buď je to **dorobené v `many_faces_portal` a overené**, alebo je v **PR výslovne odmietnuté** (waiver) **s dátami z meraní**. Kým to nie je splnené, **žiadne ukončenie úlohy** (žiadny „hotovo“, žiadny predčasný handoff).
 
 **§1 inventory table** (each *Area* row) and the **Quick wins** table below: **same rule** — no exit until that row is **closed in code** or **waived with proof in the PR**.
 
@@ -22,9 +22,9 @@
 
 | Signal | Why it matters | **Exit gate** |
 | ------ | -------------- | ------------- |
-| **`logger.info` inside `AppRoutes` render path** | Runs **on every React commit** that touches `AppRoutes` — sync serialization + console I/O; skews Profiler and fills Seq/browser logs in prod if left enabled. **Guard** with `env.debugMode`, **sample**, or **remove** from render; keep navigation/face changes in **`useEffect`** with explicit deps if telemetry is required. | **REQUIRED.** Agent MUST NOT finish until addressed in `fe_demo` or waived with Profiler/network proof in PR. |
-| **`AppContext` provider value** | Inline `value={{ currentLanguage, changeLanguage, t }}` and **`changeLanguage` not wrapped in `useCallback`** → **new function identity every render** → every `useApp()` consumer re-renders. Same class of bug as unstable context objects (§2.3). | **REQUIRED.** Agent MUST NOT finish until addressed in `fe_demo` or waived with Profiler proof in PR. |
-| **`ApiContext` wrapper object** | `api` is correctly `useMemo`’d, but **`{ api }` context model is reallocated every render** before passing to `Provider` — subscribers still see a **new `value` reference**. Memoize the model object or pass `api` directly if the context type allows. | **REQUIRED.** Agent MUST NOT finish until addressed in `fe_demo` or waived with Profiler proof in PR. |
+| **`logger.info` inside `AppRoutes` render path** | Runs **on every React commit** that touches `AppRoutes` — sync serialization + console I/O; skews Profiler and fills Seq/browser logs in prod if left enabled. **Guard** with `env.debugMode`, **sample**, or **remove** from render; keep navigation/face changes in **`useEffect`** with explicit deps if telemetry is required. | **REQUIRED.** Agent MUST NOT finish until addressed in `many_faces_portal` or waived with Profiler/network proof in PR. |
+| **`AppContext` provider value** | Inline `value={{ currentLanguage, changeLanguage, t }}` and **`changeLanguage` not wrapped in `useCallback`** → **new function identity every render** → every `useApp()` consumer re-renders. Same class of bug as unstable context objects (§2.3). | **REQUIRED.** Agent MUST NOT finish until addressed in `many_faces_portal` or waived with Profiler proof in PR. |
+| **`ApiContext` wrapper object** | `api` is correctly `useMemo`’d, but **`{ api }` context model is reallocated every render** before passing to `Provider` — subscribers still see a **new `value` reference**. Memoize the model object or pass `api` directly if the context type allows. | **REQUIRED.** Agent MUST NOT finish until addressed in `many_faces_portal` or waived with Profiler proof in PR. |
 
 ---
 
@@ -40,7 +40,7 @@
 
 Use this section as a **checklist of files/areas** the agent must re-open; line counts drift — re-run `wc -l` when starting work.
 
-**Each table row is REQUIRED** under the **Engagement exit rule** (see above): close it in `fe_demo` **with verification**, or **waive in the PR with measurement evidence**.
+**Each table row is REQUIRED** under the **Engagement exit rule** (see above): close it in `many_faces_portal` **with verification**, or **waive in the PR with measurement evidence**.
 
 | Area | Path(s) | Notes |
 | ---- | ------- | ----- |
@@ -194,7 +194,7 @@ Record numbers in the PR description (table: before → after).
 - [ ] **[REQUIRED — no agent exit until done]** Move settings shell to feature folder with lazy tabs.
 
 **Phase D — Deeper optimizations (REQUIRED: decide + implement or waive)**  
-After Phases A–C, **re-measure**. Each item below is **still mandatory** — either land the change in `fe_demo`, or **explicitly waive in the PR** with before/after metrics showing no benefit or product rejection.
+After Phases A–C, **re-measure**. Each item below is **still mandatory** — either land the change in `many_faces_portal`, or **explicitly waive in the PR** with before/after metrics showing no benefit or product rejection.
 
 - [ ] **[REQUIRED — no agent exit until done]** i18n lazy loading **or** documented waiver (e.g. locale JSON size below threshold with bundle table).  
 - [ ] **[REQUIRED — no agent exit until done]** Interceptor / face-prefix memoization **or** documented waiver with request-count / CPU evidence.  
@@ -225,7 +225,7 @@ These bullets are **not** deliverables and **do not** use the `[ ]` / exit rule 
 ## 8. Related documentation
 
 - [docs/guides/development.md](../guides/development.md) — CI and local scripts (`yarn validate`, Cypress smoke).  
-- [docs/readmes/fe-demo-overview.md](../readmes/fe-demo-overview.md) — high-level `fe_demo` architecture (keep in sync if routing shell moves).  
+- [docs/readmes/fe-demo-overview.md](../readmes/fe-demo-overview.md) — high-level `many_faces_portal` architecture (keep in sync if routing shell moves).  
 - [docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) — compiler / hook lint alignment after refactors.  
 - [docs/prompts/unit-test-gap-fill-agent-prompt.md](./unit-test-gap-fill-agent-prompt.md) — tests for extracted pure modules.
 
@@ -244,7 +244,7 @@ Use this as a **single closing pass** over the entire prompt. **Same rules as ab
 ### 10.0 Read first
 
 - [ ] **Engagement exit rule** (EN + SK): understood; agent will not exit until §0–§6 + tables below are satisfied or waived with PR evidence.
-- [ ] **Out of scope** (Purpose paragraph): no unscoped work in `admin_demo` / `be_demo` / etc. unless explicitly added to the task.
+- [ ] **Out of scope** (Purpose paragraph): no unscoped work in `many_faces_admin` / `many_faces_backend` / etc. unless explicitly added to the task.
 
 ### 10.1 Quick wins table (three signals)
 
@@ -410,4 +410,4 @@ Use this as a **single closing pass** over the entire prompt. **Same rules as ab
 
 ### 10.10 Prompt maintenance (optional meta)
 
-- [ ] If **this prompt file** was edited for `fe_demo` paths: **§1** line counts / **§ Quick wins** text updated; PR references [prompts/README.md](./README.md) policy for canonical file ticks.
+- [ ] If **this prompt file** was edited for `many_faces_portal` paths: **§1** line counts / **§ Quick wins** text updated; PR references [prompts/README.md](./README.md) policy for canonical file ticks.

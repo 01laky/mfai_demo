@@ -1,10 +1,10 @@
-# `admin_demo` — performance audit and refactor (agent prompt)
+# `many_faces_admin` — performance audit and refactor (agent prompt)
 
-**Purpose:** Single agent brief to **measure**, **prioritize**, and **implement** admin-panel performance work and **structural refactors** in **`admin_demo` only** (Vite + React 19 + TanStack Query + React Router + SignalR on chat + i18n + OpenAPI axios). Use this as a copy-paste spec; tick evidence in a PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
+**Purpose:** Single agent brief to **measure**, **prioritize**, and **implement** admin-panel performance work and **structural refactors** in **`many_faces_admin` only** (Vite + React 19 + TanStack Query + React Router + SignalR on chat + i18n + OpenAPI axios). Use this as a copy-paste spec; tick evidence in a PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
 
 **Pre AI:** Každý riadok začínajúci `- [ ]` a každý riadok tabuľky so stĺpcom **Pre AI** končí odkazom **[REQ · AI · no exit](#ai-req-exit)** — ten odkaz smeruje na [kotvu pravidla ukončenia](#ai-req-exit): ide o **povinnú implementáciu alebo waiver v PR**; **bez splnenia všetkých takýchto bodov v rozsahu úlohy agent nesmie úlohu ukončiť** (žiadny handoff, žiadne predčasné „hotovo“).
 
-**Out of scope unless explicitly added:** `fe_demo`, `be_demo`, Docker, CDN, HTTP/2 tuning, Lighthouse budgets as CI gates (recommend documenting thresholds first).
+**Out of scope unless explicitly added:** `many_faces_portal`, `many_faces_backend`, Docker, CDN, HTTP/2 tuning, Lighthouse budgets as CI gates (recommend documenting thresholds first).
 
 ## Checklist
 
@@ -28,11 +28,11 @@
 
 ### Engagement exit rule (NON-NEGOTIABLE)
 
-**Pre AI (povinná implementácia — bez ukončenia skôr):** Každý odkaz **[REQ · AI · no exit](#ai-req-exit)** v tomto dokumente znamená to isté ako *Engagement exit rule*: bod je **povinný** — treba ho **implementovať v `admin_demo` a overiť** (príkazy, testy, metriky podľa textu), alebo ho **výslovne waivernúť v PR s dôkazom z meraní**. Agent **nesmie** úlohu **ukončiť** (žiadny handoff, žiadne „hotovo“, žiadne uzavretie engagementu), kým **nie sú** všetky takéto body v zadanom rozsahu **splnené alebo waivernuté**. Riadky v tabuľkách (Quick wins, §1 inventár) majú rovnakú povinnosť.
+**Pre AI (povinná implementácia — bez ukončenia skôr):** Každý odkaz **[REQ · AI · no exit](#ai-req-exit)** v tomto dokumente znamená to isté ako *Engagement exit rule*: bod je **povinný** — treba ho **implementovať v `many_faces_admin` a overiť** (príkazy, testy, metriky podľa textu), alebo ho **výslovne waivernúť v PR s dôkazom z meraní**. Agent **nesmie** úlohu **ukončiť** (žiadny handoff, žiadne „hotovo“, žiadne uzavretie engagementu), kým **nie sú** všetky takéto body v zadanom rozsahu **splnené alebo waivernuté**. Riadky v tabuľkách (Quick wins, §1 inventár) majú rovnakú povinnosť.
 
-- **English:** Every `- [ ]` item in **§0 through §6** is **mandatory**. The agent **MUST NOT** stop, hand off, declare success, close the task, or end the engagement until **every** such item is **DONE**: implemented in `admin_demo` **and** verified (commands, tests, metrics as specified), **or** explicitly **waived in the PR** with measurement evidence where a code change is intentionally skipped. Sub-bullets labelled **Action** belong to the parent `- [ ]` — they inherit the same rule until that parent is satisfied.
+- **English:** Every `- [ ]` item in **§0 through §6** is **mandatory**. The agent **MUST NOT** stop, hand off, declare success, close the task, or end the engagement until **every** such item is **DONE**: implemented in `many_faces_admin` **and** verified (commands, tests, metrics as specified), **or** explicitly **waived in the PR** with measurement evidence where a code change is intentionally skipped. Sub-bullets labelled **Action** belong to the parent `- [ ]` — they inherit the same rule until that parent is satisfied.
 
-- **Slovak:** **Agent nesmie skončiť**, kým **nie je hotové všetko povinné** podľa `- [ ]` v **§0 až §6** — buď je to **dorobené v `admin_demo` a overené**, alebo je v **PR výslovne odmietnuté** (waiver) **s dátami z meraní**. Kým to nie je splnené, **žiadne ukončenie úlohy** (žiadny „hotovo“, žiadny predčasný handoff).
+- **Slovak:** **Agent nesmie skončiť**, kým **nie je hotové všetko povinné** podľa `- [ ]` v **§0 až §6** — buď je to **dorobené v `many_faces_admin` a overené**, alebo je v **PR výslovne odmietnuté** (waiver) **s dátami z meraní**. Kým to nie je splnené, **žiadne ukončenie úlohy** (žiadny „hotovo“, žiadny predčasný handoff).
 
 **§1 inventory table** (each *Area* row) and the **Quick wins** table below: **same rule** — no exit until that row is **closed in code** or **waived with proof in the PR**.
 
@@ -44,8 +44,8 @@
 
 | Signal | Why it matters | **Exit gate** | **Pre AI** |
 | ------ | -------------- | ------------- | --- |
-| **`logger.info` at start of `AppContent` render** | Runs on **every React commit** that re-renders `AppContent` — sync serialization + console I/O; skews Profiler and fills Seq/browser logs. **Guard** with `env.debugMode`, **sample**, **move to `useEffect` once** on mount, or **remove**. | **REQUIRED.** Agent MUST NOT finish until addressed in `admin_demo` or waived with Profiler/network proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
-| **`AppContext` provider value** | Inline `value={{ currentLanguage, changeLanguage, t }}` and **`changeLanguage` not wrapped in `useCallback`** → **new function identity every render** → every `useApp()` consumer re-renders. | **REQUIRED.** Agent MUST NOT finish until addressed in `admin_demo` or waived with Profiler proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
+| **`logger.info` at start of `AppContent` render** | Runs on **every React commit** that re-renders `AppContent` — sync serialization + console I/O; skews Profiler and fills Seq/browser logs. **Guard** with `env.debugMode`, **sample**, **move to `useEffect` once** on mount, or **remove**. | **REQUIRED.** Agent MUST NOT finish until addressed in `many_faces_admin` or waived with Profiler/network proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
+| **`AppContext` provider value** | Inline `value={{ currentLanguage, changeLanguage, t }}` and **`changeLanguage` not wrapped in `useCallback`** → **new function identity every render** → every `useApp()` consumer re-renders. | **REQUIRED.** Agent MUST NOT finish until addressed in `many_faces_admin` or waived with Profiler proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
 | **`getRoutePaths` / route maps in `AppContent` render** | Multiple **`getRoutePaths(...)`** calls each render rebuild translated path arrays via **`i18n.t`** — redundant work on language switches and unrelated parent re-renders. | **REQUIRED.** Agent MUST NOT finish until memoized / precomputed (e.g. `useMemo` keyed by `i18n.language`) or waived with Profiler proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
 | **`withLayout` inside `AppContent`** | If **`withLayout`** is an **inline function** recreated every render, every `element={…}` branch allocates a **new function identity** each commit (usually reconciled, but unnecessary). **Hoist** to module scope, wrap in **`useCallback`** with stable deps, or replace with static element factories if Profiler shows cost. | **REQUIRED.** Stabilize or waive with Profiler proof in PR. | [REQ · AI · no exit](#ai-req-exit) |
 
@@ -53,9 +53,9 @@
 
 ## 0. Preconditions (read before coding)
 
-- [ ] **[REQUIRED — no agent exit until done]** Baseline branch clean; `yarn install --immutable` succeeds in `admin_demo`. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** Baseline branch clean; `yarn install --immutable` succeeds in `many_faces_admin`. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** Know **prod vs dev**: `StrictMode` doubles effects in development — profile **production build** (`yarn build && yarn preview`) for meaningful timings. [REQ · AI · no exit](#ai-req-exit)
-- [ ] **[REQUIRED — no agent exit until done]** Security and auth flows must stay correct after refactors: **OAuth2** token refresh, **`setupAxiosInterceptors`** (**401** queue, **`forceLogout`**, redirect to login), and **`setAuthToken`**. **Do not assume** a **`window` `auth:unauthorized` CustomEvent** — that pattern is common in **`fe_demo`** but **`admin_demo`** today routes session loss primarily through **axios interceptors** (verify the repo; if a CustomEvent is added later, document it in the PR). [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** Security and auth flows must stay correct after refactors: **OAuth2** token refresh, **`setupAxiosInterceptors`** (**401** queue, **`forceLogout`**, redirect to login), and **`setAuthToken`**. **Do not assume** a **`window` `auth:unauthorized` CustomEvent** — that pattern is common in **`many_faces_portal`** but **`many_faces_admin`** today routes session loss primarily through **axios interceptors** (verify the repo; if a CustomEvent is added later, document it in the PR). [REQ · AI · no exit](#ai-req-exit)
 
 ---
 
@@ -63,20 +63,20 @@
 
 Use this section as a **checklist of files/areas** the agent must re-open; line counts drift — re-run `wc -l` when starting work.
 
-**Each table row is REQUIRED** under the **Engagement exit rule** (see above): close it in `admin_demo` **with verification**, or **waive in the PR with measurement evidence**.
+**Each table row is REQUIRED** under the **Engagement exit rule** (see above): close it in `many_faces_admin` **with verification**, or **waive in the PR with measurement evidence**.
 
 | Area | Path(s) | Notes | **Pre AI** |
 | ---- | ------- | ----- | --- |
 | **God module / routing shell** | `src/App.tsx` | **~320 lines**: static imports of **all** admin pages (users, faces, pages CRUD, chat, dashboard); **`AppContent`** holds the full `<Routes>` tree, **`getRoutePaths`**, **`withLayout`** helper. Primary **refactor** and **code-splitting** target. | [REQ · AI · no exit](#ai-req-exit) |
 | **Render-path logging** | `src/App.tsx` (`AppContent`) | **`logger.info('App component mounted', …)`** at top of `AppContent` runs on **every render** of `AppContent`, not only mount — treat as **P0** noise + cost (§ Quick wins table). | [REQ · AI · no exit](#ai-req-exit) |
 | **App shell context** | `src/contexts/AppContext.tsx` | **`changeLanguage`** recreated each render; context **`value`** object recreated — broad **re-render fan-out** for `useApp()`. | [REQ · AI · no exit](#ai-req-exit) |
-| **Capabilities warmup** | `src/contexts/AuthContext.tsx` (`MeCapabilitiesWarmup`) | **`useMeCapabilities(token)`** when `token` is set — same class of concern as `fe_demo`: verify **no duplicate** `/me/capabilities` fetches vs pages that need ACL. | [REQ · AI · no exit](#ai-req-exit) |
+| **Capabilities warmup** | `src/contexts/AuthContext.tsx` (`MeCapabilitiesWarmup`) | **`useMeCapabilities(token)`** when `token` is set — same class of concern as `many_faces_portal`: verify **no duplicate** `/me/capabilities` fetches vs pages that need ACL. | [REQ · AI · no exit](#ai-req-exit) |
 | **React Query defaults** | `src/providers/QueryProvider.tsx` | Module-level `QueryClient`: `refetchOnWindowFocus: false`, `retry: 1`, default `staleTime: 5 * 60 * 1000`. **No `gcTime`** set explicitly — audit **per-hook** alignment for large tables (users, faces, pages). | [REQ · AI · no exit](#ai-req-exit) |
 | **Auth + polling** | `src/contexts/AuthContext.tsx` | **`setInterval(checkExpiry, 30_000)`** when authenticated — overlaps with **`useAuthToken`** semantics; candidate for **visibility API** or **Query-driven** expiry only. | [REQ · AI · no exit](#ai-req-exit) |
 | **Auth provider value** | `src/contexts/AuthContext.tsx` | **`AuthContext.Provider value={{ … }}`** new object each render — any `useAuth()` consumer may re-render with parent even if primitives unchanged. | [REQ · AI · no exit](#ai-req-exit) |
 | **Provider tree** | `src/main.tsx`, `src/App.tsx` | `StrictMode` → **`QueryProvider`** → **`App`** → **`AppProvider`** → **`AuthProvider`** → **`BrowserRouter`** → **`AppContent`** + **`ToastContainer`**. | [REQ · AI · no exit](#ai-req-exit) |
 | **API interceptors** | `src/api/config.ts`, `src/api/interceptors.ts` | Request interceptor applies **`applyFacePrefixToRequestUrl`** on matching URLs — hot path for high-churn admin UIs; **401** refresh / logout policy lives in interceptors. | [REQ · AI · no exit](#ai-req-exit) |
-| **i18n bundle** | `src/i18n/config.ts` | **Static JSON imports** for `en`, `sk`, `cz` into namespace `common` — full locale payloads in initial JS (same trade-off as `fe_demo`). | [REQ · AI · no exit](#ai-req-exit) |
+| **i18n bundle** | `src/i18n/config.ts` | **Static JSON imports** for `en`, `sk`, `cz` into namespace `common` — full locale payloads in initial JS (same trade-off as `many_faces_portal`). | [REQ · AI · no exit](#ai-req-exit) |
 | **Admin chrome** | `src/components/AdminLayout.tsx`, `Sidebar.tsx`, `Header.tsx` | **`framer-motion`** in layout/sidebar — ensure animations do not force **layout thrash** on every navigation; **`prefers-reduced-motion`** is **mandatory** to respect (see §2.1). | [REQ · AI · no exit](#ai-req-exit) |
 | **Motion + a11y** | Same as admin chrome | **`(prefers-reduced-motion: reduce)`** — shorten or skip motion (`framer-motion` **`useReducedMotion`**, `reduced` motion config, or CSS). Reduces CPU and meets accessibility expectations. | [REQ · AI · no exit](#ai-req-exit) |
 | **Realtime (AI chat)** | `src/pages/ChatPage.tsx` | **SignalR** `HubConnectionBuilder` inline — **~230 lines**; candidate for **shared hub helper** (URL, token, reconnect, logging) if more hubs appear later. | [REQ · AI · no exit](#ai-req-exit) |
@@ -137,7 +137,7 @@ Use this section as a **checklist of files/areas** the agent must re-open; line 
 
 ### 2.8 Duplicate auth / session work (conceptual consolidation)
 
-**`admin_demo` today:** session teardown after **failed refresh** is driven by **`src/api/interceptors.ts`** (**`forceLogout`**, redirect to login, **`setAuthToken(null)`**) — not by a documented **`window` `auth:unauthorized`** event unless the codebase adds one. Keep this mental model when consolidating layers.
+**`many_faces_admin` today:** session teardown after **failed refresh** is driven by **`src/api/interceptors.ts`** (**`forceLogout`**, redirect to login, **`setAuthToken(null)`**) — not by a documented **`window` `auth:unauthorized`** event unless the codebase adds one. Keep this mental model when consolidating layers.
 
 Layers touching session health:
 
@@ -152,7 +152,7 @@ Layers touching session health:
 
 ### 2.9 Route generation cost (`getRoutePaths` / `i18n.t`)
 
-- [ ] **[REQUIRED — no agent exit until done]** Memoize per-language route tables (`useMemo` keyed by `i18n.language` / `currentLanguage`) or **precompute** in a pure module — same pattern as `fe_demo` §2.9. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** Memoize per-language route tables (`useMemo` keyed by `i18n.language` / `currentLanguage`) or **precompute** in a pure module — same pattern as `many_faces_portal` §2.9. [REQ · AI · no exit](#ai-req-exit)
 
 ### 2.10 Vite / Rollup build tuning (after bundle analyze)
 
@@ -191,7 +191,7 @@ Target structure (example — adjust names to taste):
 
 ### 3.4 Type safety and boundaries
 
-- [ ] **[REQUIRED — no agent exit until done]** Reduce `any` in tests and window mocks where it blocks refactors — follow patterns from existing `admin_demo` hook tests. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** Reduce `any` in tests and window mocks where it blocks refactors — follow patterns from existing `many_faces_admin` hook tests. [REQ · AI · no exit](#ai-req-exit)
 
 ### 3.5 ACL and capabilities (UI layer)
 
@@ -218,7 +218,7 @@ Waiver — [section id, e.g. §2.6 toast CSS]
 
 **Pre AI:** Každý **waiver** v PR je **legálna náhrada dokončenia** len ak spĺňa tú istú latku ako body s **[REQ · AI · no exit](#ai-req-exit)** — pozri [pravidlo ukončenia](#ai-req-exit).
 
-- [ ] **[REQUIRED — no agent exit until done]** **Bundle:** `yarn build` in `admin_demo` — analyze output (`rollup-plugin-visualizer` or equivalent — devDependency only if team accepts). Capture **total JS**, **largest chunks**. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** **Bundle:** `yarn build` in `many_faces_admin` — analyze output (`rollup-plugin-visualizer` or equivalent — devDependency only if team accepts). Capture **total JS**, **largest chunks**. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** **Lighthouse** (Chrome) on **preview**: Performance + **TBT** + **LCP** for default language **login** and **authenticated dashboard**. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** **React Profiler** (production build): commit duration for **open sidebar**, **navigate users → faces → chat**, **open a heavy table page**. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** **Network:** DevTools **disable cache** — count duplicate **`/me/capabilities`** (if any) + list endpoints on cold authenticated load. [REQ · AI · no exit](#ai-req-exit)
@@ -248,7 +248,7 @@ Waiver — [section id, e.g. §2.6 toast CSS]
 - [ ] **[REQUIRED — no agent exit until done]** Optional **`features/*`** lazy entry points for large admin areas. [REQ · AI · no exit](#ai-req-exit)
 
 **Phase D — Deeper optimizations (REQUIRED: decide + implement or waive)**  
-After Phases A–C, **re-measure**. Each item is **mandatory** — implement in `admin_demo` or **waive in PR** with before/after metrics.
+After Phases A–C, **re-measure**. Each item is **mandatory** — implement in `many_faces_admin` or **waive in PR** with before/after metrics.
 
 - [ ] **[REQUIRED — no agent exit until done]** i18n lazy loading **or** documented waiver + bundle table. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** Interceptor / face-prefix memoization **or** documented waiver + request-count evidence. [REQ · AI · no exit](#ai-req-exit)
@@ -262,9 +262,9 @@ After Phases A–C, **re-measure**. Each item is **mandatory** — implement in 
 
 - [ ] **[REQUIRED — no agent exit until done]** PR lists **bundle stats** before/after and **Profiler** (or Performance) evidence for at least **two** flows (e.g. cold login, dashboard → users table). [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** No regression in **auth**, **token refresh** (**`setupAxiosInterceptors`** / **`forceLogout`** paths), **SignalR chat**, **face-prefixed API** URLs (existing tests + manual smoke). [REQ · AI · no exit](#ai-req-exit)
-- [ ] **[REQUIRED — no agent exit until done]** `yarn validate` and **`yarn test`** (use **`yarn vitest run`** / **`vitest run`** in CI logs if that is the project’s non-watch default — keep **non-interactive** runs green) green in `admin_demo`; **`yarn build`** green. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** `yarn validate` and **`yarn test`** (use **`yarn vitest run`** / **`vitest run`** in CI logs if that is the project’s non-watch default — keep **non-interactive** runs green) green in `many_faces_admin`; **`yarn build`** green. [REQ · AI · no exit](#ai-req-exit)
 - [ ] **[REQUIRED — no agent exit until done]** If new lazy routes: document **fallback UX** in PR; SPA SEO constraints unchanged. [REQ · AI · no exit](#ai-req-exit)
-- [ ] **[REQUIRED — no agent exit until done]** If project adds **Cypress** (or similar) for `admin_demo`, smoke still passes **or** PR documents manual substitute checklist. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **[REQUIRED — no agent exit until done]** If project adds **Cypress** (or similar) for `many_faces_admin`, smoke still passes **or** PR documents manual substitute checklist. [REQ · AI · no exit](#ai-req-exit)
 
 ---
 
@@ -275,15 +275,15 @@ These bullets are **not** deliverables and **do not** use the `[ ]` / exit rule 
 - Rewriting **OpenAPI generated** `src/api/**` (except thin wrappers and interceptors glue).  
 - Replacing **React Router** without explicit product approval.  
 - Premature **`useCallback` on every handler** without Profiler proof.  
-- Re-implementing **`fe_demo`** features inside `admin_demo`.
+- Re-implementing **`many_faces_portal`** features inside `many_faces_admin`.
 
 ---
 
 ## 8. Related documentation
 
 - [docs/guides/development.md](../guides/development.md) — local scripts (`yarn validate`, etc.).  
-- [docs/readmes/admin-demo-overview.md](../readmes/admin-demo-overview.md) — high-level **`admin_demo`** architecture (update after large routing/context refactors).  
-- [docs/prompts/fe-performance-and-refactor-agent-prompt.md](./fe-performance-and-refactor-agent-prompt.md) — **parallel** spec for `fe_demo` (keep concerns symmetric where useful).  
+- [docs/readmes/admin-demo-overview.md](../readmes/admin-demo-overview.md) — high-level **`many_faces_admin`** architecture (update after large routing/context refactors).  
+- [docs/prompts/fe-performance-and-refactor-agent-prompt.md](./fe-performance-and-refactor-agent-prompt.md) — **parallel** spec for `many_faces_portal` (keep concerns symmetric where useful).  
 - [docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) — hook lint alignment after refactors.  
 - [docs/prompts/unit-test-gap-fill-agent-prompt.md](./unit-test-gap-fill-agent-prompt.md) — tests for extracted pure modules and hooks.
 
@@ -302,7 +302,7 @@ Use this as a **single closing pass** over the entire prompt. **Same rules as ab
 ### 10.0 Read first
 
 - [ ] **Engagement exit rule** (EN + SK): understood; agent will not exit until §0–§6 + tables below are satisfied or waived with PR evidence. [REQ · AI · no exit](#ai-req-exit)
-- [ ] **Out of scope** (Purpose paragraph): no unscoped work in `fe_demo` / `be_demo` / etc. unless explicitly added to the task. [REQ · AI · no exit](#ai-req-exit)
+- [ ] **Out of scope** (Purpose paragraph): no unscoped work in `many_faces_portal` / `many_faces_backend` / etc. unless explicitly added to the task. [REQ · AI · no exit](#ai-req-exit)
 
 ### 10.1 Quick wins table (four signals)
 

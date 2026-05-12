@@ -1,6 +1,6 @@
 # Documentation hub (`docs/`)
 
-Central documentation for the **`many_faces_main`** monorepo on GitHub lives here. **Per-submodule README** files remain under `be_demo/`, `fe_demo/`, … — see [`readmes/README.md`](./readmes/README.md) for an index.
+Central documentation for the **`many_faces_main`** monorepo on GitHub lives here. **Per-submodule README** files remain under `many_faces_backend/`, `many_faces_portal/`, … — see [`readmes/README.md`](./readmes/README.md) for an index.
 
 **Why these folders:** [STRUCTURE.md](./STRUCTURE.md) (short rationale for `guides/` vs `components/` vs `prompts/` vs `readmes/`).
 
@@ -68,9 +68,9 @@ _(Add more files as you ship coherent modules.)_
 | [monorepo-dependency-audit-and-upgrade-agent-prompt.md](./prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md)       | **Agent prompt:** inventory of **all** packages per app (NuGet, Yarn, PyPI, Docker) + **latest stable** snapshot + feasibility; commands to re-run audit and PR checklist.                                                                                                                 |
 | [eslint10-react-hooks-peer-yarn-agent-prompt.md](./prompts/eslint10-react-hooks-peer-yarn-agent-prompt.md)                     | **Agent prompt:** **ESLint 10** vs **`eslint-plugin-react-hooks`** under **Yarn 4** — **required** investigation (full peer trees, `@latest`/`@canary`, whole eslint graph, lockfile), **decision matrix** **A1/A2/B/C**, flat-config alignment, CI `YN0060`/`YN0086` grep, anti-patterns. |
 | [react-hooks-compiler-rules-rollout-agent-prompt.md](./prompts/react-hooks-compiler-rules-rollout-agent-prompt.md)             | **Agent prompt:** post-canary migration — enable **`flat.recommended`** / **`recommended-latest`** safely (**S1–S4** strategies), per-rule playbook, **required** violation baselines, flat-config merge order, **react.dev** lint docs + CHANGELOG.                                       |
-| [unit-test-gap-fill-agent-prompt.md](./prompts/unit-test-gap-fill-agent-prompt.md)                                             | **Agent prompt:** unit-test gaps (**P0–P2**), **`fe_demo`/`admin_demo`/`be_demo`/`ai_demo`/scripts**, extract pure logic, **no render-first** testing policy, verification checklist.                                                                                                      |
-| [fe-performance-and-refactor-agent-prompt.md](./prompts/fe-performance-and-refactor-agent-prompt.md)                         | **Agent prompt:** **`fe_demo`** performance + refactor — bundle/code-splitting, Query/cache, context re-renders, SignalR, `App.tsx` decomposition, measurement protocol.                                                                                                                      |
-| [fe-grid-face-scope-rollout-agent-prompt.md](./prompts/fe-grid-face-scope-rollout-agent-prompt.md)                             | **Agent prompt:** **`fe_demo`** grid — face-scoped rollout: current state audit, per-component TODOs, placeholders, bindings, responsiveness, verification checklist.                                                                                                                                       |
+| [unit-test-gap-fill-agent-prompt.md](./prompts/unit-test-gap-fill-agent-prompt.md)                                             | **Agent prompt:** unit-test gaps (**P0–P2**), **`many_faces_portal`/`many_faces_admin`/`many_faces_backend`/`many_faces_ai`/scripts**, extract pure logic, **no render-first** testing policy, verification checklist.                                                                                                      |
+| [fe-performance-and-refactor-agent-prompt.md](./prompts/fe-performance-and-refactor-agent-prompt.md)                         | **Agent prompt:** **`many_faces_portal`** performance + refactor — bundle/code-splitting, Query/cache, context re-renders, SignalR, `App.tsx` decomposition, measurement protocol.                                                                                                                      |
+| [fe-grid-face-scope-rollout-agent-prompt.md](./prompts/fe-grid-face-scope-rollout-agent-prompt.md)                             | **Agent prompt:** **`many_faces_portal`** grid — face-scoped rollout: current state audit, per-component TODOs, placeholders, bindings, responsiveness, verification checklist.                                                                                                                                       |
 
 Full index (including retention policy): [`prompts/README.md`](./prompts/README.md).
 
@@ -81,9 +81,9 @@ Full index (including retention policy): [`prompts/README.md`](./prompts/README.
 | Document                                                   | Contents                                      |
 | ---------------------------------------------------------- | --------------------------------------------- |
 | [README.md](./readmes/README.md)                           | Links to each submodule README + this folder. |
-| [fe-demo-overview.md](./readmes/fe-demo-overview.md)       | `fe_demo` architecture and features.          |
-| [admin-demo-overview.md](./readmes/admin-demo-overview.md) | `admin_demo` architecture and features.       |
-| [redis-subrepo.md](./readmes/redis-subrepo.md)             | `redis_demo` submodule for the job queue.     |
+| [fe-demo-overview.md](./readmes/fe-demo-overview.md)       | `many_faces_portal` architecture and features.          |
+| [admin-demo-overview.md](./readmes/admin-demo-overview.md) | `many_faces_admin` architecture and features.       |
+| [redis-subrepo.md](./readmes/redis-subrepo.md)             | `many_faces_redis` submodule for the job queue.     |
 
 ---
 
@@ -92,6 +92,6 @@ Full index (including retention policy): [`prompts/README.md`](./prompts/README.
 | Path                                                     | Contents                              |
 | -------------------------------------------------------- | ------------------------------------- |
 | [`../README.md`](../README.md)                           | Short monorepo entry and quick start. |
-| [`../be_demo/STORIES_API.md`](../be_demo/STORIES_API.md) | Stories API reference.                |
+| [`../many_faces_backend/STORIES_API.md`](../many_faces_backend/STORIES_API.md) | Stories API reference.                |
 
 **New docs:** prefer `guides/` (reference), `components/` (catalog), `prompts/` (AI), or `readmes/` (overviews / index). Update this hub and [`guides/development.md`](./guides/development.md) when you add paths.

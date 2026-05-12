@@ -4,7 +4,7 @@
 # 
 # This script orchestrates the startup of all development services in the correct order:
 # 1. Database (PostgreSQL) - must start first as other services depend on it
-# 2. Redis (redis_demo) - job queue for backend (optional but recommended before BE)
+# 2. Redis (many_faces_redis) - job queue for backend (optional but recommended before BE)
 # 3. Backend API (ASP.NET Core) - provides REST API and authentication
 # 4. Frontend (React + Vite) - user-facing application
 # 5. AI Demo (Python gRPC) - AI service with gRPC interface
@@ -57,35 +57,35 @@ echo ""
 # ============================================================================
 # START DATABASE (PostgreSQL)
 # ============================================================================
-echo "📦 Starting database (db_demo)..."
-if [ -f "db_demo/start-db.sh" ]; then
-    cd db_demo
+echo "📦 Starting database (many_faces_database)..."
+if [ -f "many_faces_database/start-db.sh" ]; then
+    cd many_faces_database
     ./start-db.sh > /dev/null 2>&1 &
     cd ..
     echo "    ✅ Database startup launched"
 else
-    echo "  ⚠️  db_demo/start-db.sh not found, starting manually..."
-    cd db_demo
+    echo "  ⚠️  many_faces_database/start-db.sh not found, starting manually..."
+    cd many_faces_database
     docker-compose up -d > /dev/null 2>&1 &
     cd ..
 fi
 
 # ============================================================================
-# START REDIS (redis_demo submodule)
+# START REDIS (many_faces_redis submodule)
 # ============================================================================
-echo "📦 Starting Redis (redis_demo)..."
-if [ -f "redis_demo/start-redis.sh" ]; then
-    cd redis_demo
+echo "📦 Starting Redis (many_faces_redis)..."
+if [ -f "many_faces_redis/start-redis.sh" ]; then
+    cd many_faces_redis
     ./start-redis.sh > /dev/null 2>&1 &
     cd ..
     echo "    ✅ Redis startup launched"
     _expect_redis=1
 else
-    echo "  ⚠️  redis_demo/start-redis.sh not found, skipping Redis"
+    echo "  ⚠️  many_faces_redis/start-redis.sh not found, skipping Redis"
     _expect_redis=0
 fi
 
-# Full stack checklist for the status screen exit condition (redis only if we start redis_demo)
+# Full stack checklist for the status screen exit condition (redis only if we start many_faces_redis)
 if [ "$_expect_redis" -eq 1 ]; then
     EXPECTED_CONTAINERS=(
         postgres-dev pgadmin-dev redis-dev be-demo-dev seq-dev
@@ -125,27 +125,27 @@ if [ "$_expect_redis" -eq 1 ]; then
         sleep 1
     done
     if [ "$_redis_ok" -eq 0 ]; then
-        echo "    ⚠️  redis-dev not found after 90s — ensure redis_demo is started"
+        echo "    ⚠️  redis-dev not found after 90s — ensure many_faces_redis is started"
     fi
 fi
 
 # ============================================================================
 # START BACKEND (ASP.NET Core API)
 # ============================================================================
-echo "📦 Starting backend (be_demo)..."
+echo "📦 Starting backend (many_faces_backend)..."
 # Clean up any old containers that might conflict with ports
-# Remove both old containers from be_demo docker-compose and root docker-compose
+# Remove both old containers from many_faces_backend docker-compose and root docker-compose
 docker rm -f be-demo-seq be-demo-api be-demo-dev seq seq-dev 2>/dev/null || true
 lsof -ti:8000,8001 | xargs kill -9 2>/dev/null || true
 sleep 1
 
 # Use root docker-compose to start backend and seq-dev together (synchronous — waits for pulls/build/health)
-# This ensures we use seq-dev from root docker-compose, not be-demo-seq from be_demo/docker-compose.dev.yml
+# This ensures we use seq-dev from root docker-compose, not be-demo-seq from many_faces_backend/docker-compose.dev.yml
 echo "    Starting backend and seq with root docker-compose (this may take several minutes on first run)..."
 docker-compose -f docker-compose.dev.yml up -d be-demo-dev seq
 echo "    ✅ Backend + Seq containers are up (compose finished)"
 
-# Redis (redis_demo) runs on its own bridge; BE uses hostname redis-dev on many_faces_main_dev-network.
+# Redis (many_faces_redis) runs on its own bridge; BE uses hostname redis-dev on many_faces_main_dev-network.
 # Compose štartuje na pozadí — opakovane čakáme na sieť + redis-dev a skúšame connect, kým to nevyjde.
 echo "    Attaching redis-dev to many_faces_main_dev-network (retry until ready)..."
 _redis_net_ok=0
@@ -172,7 +172,7 @@ for _i in {1..90}; do
     sleep 1
 done
 if [ "$_redis_net_ok" -eq 0 ]; then
-    echo "    ⚠️  Could not attach redis-dev to many_faces_main_dev-network after 90s (is redis_demo running?)"
+    echo "    ⚠️  Could not attach redis-dev to many_faces_main_dev-network after 90s (is many_faces_redis running?)"
 fi
 
 # ============================================================================
@@ -188,20 +188,20 @@ echo "    ✅ Frontend, proxy, admin, AI compose step finished"
 # ============================================================================
 # START LOGGER DEMO (Dozzle)
 # ============================================================================
-echo "📦 Starting Logger Demo (logger_demo)..."
+echo "📦 Starting Logger Demo (many_faces_logger)..."
 if ! docker network ls --format '{{.Name}}' 2>/dev/null | grep -qE '^(many_faces_main_dev-network|mfai_demo_dev-network)$'; then
     docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
     sleep 1
 fi
 
-if [ -f "logger_demo/start-dev.sh" ]; then
-    cd logger_demo
+if [ -f "many_faces_logger/start-dev.sh" ]; then
+    cd many_faces_logger
     ./start-dev.sh > /dev/null 2>&1
     cd ..
     echo "    ✅ Logger Demo startup finished (start-dev.sh)"
 else
-    echo "  ⚠️  logger_demo/start-dev.sh not found, starting with docker-compose..."
-    docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev
+    echo "  ⚠️  many_faces_logger/start-dev.sh not found, starting with docker-compose..."
+    docker-compose -f many_faces_logger/docker-compose.dev.yml up -d dozzle-dev
 fi
 echo "    ✅ Logger Demo (dozzle-dev) up"
 
@@ -247,7 +247,7 @@ while true; do
             if [ "$CONTAINER" = "dozzle-dev" ]; then
                 # Dozzle can get stuck with "network not found" after dev-network recreate; remove and recreate
                 docker rm -f dozzle-dev 2>/dev/null || true
-                docker-compose -f logger_demo/docker-compose.dev.yml up -d dozzle-dev > /dev/null 2>&1 || true
+                docker-compose -f many_faces_logger/docker-compose.dev.yml up -d dozzle-dev > /dev/null 2>&1 || true
             else
                 docker start "$CONTAINER" > /dev/null 2>&1 || true
             fi
@@ -316,7 +316,7 @@ while true; do
     # ========================================================================
     # BACKEND STATUS
     # ========================================================================
-    echo "📦 Backend API (be_demo)"
+    echo "📦 Backend API (many_faces_backend)"
     echo "───────────────────────────────────────────────────────────"
     BACKEND_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E '^be-demo-dev$|^be-demo-api$' | head -1)
     if [ -n "$BACKEND_CONTAINER" ]; then
@@ -345,7 +345,7 @@ while true; do
     # ========================================================================
     # FRONTEND STATUS
     # ========================================================================
-    echo "📦 Frontend (fe_demo)"
+    echo "📦 Frontend (many_faces_portal)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=fe-demo-dev)
@@ -378,7 +378,7 @@ while true; do
     # ========================================================================
     # ADMIN STATUS
     # ========================================================================
-    echo "📦 Admin (admin_demo)"
+    echo "📦 Admin (many_faces_admin)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^admin-demo-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=admin-demo-dev)
@@ -432,7 +432,7 @@ while true; do
     # ========================================================================
     # AI DEMO STATUS
     # ========================================================================
-    echo "📦 AI Demo (ai_demo)"
+    echo "📦 AI Demo (many_faces_ai)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=ai-demo-dev)
@@ -452,7 +452,7 @@ while true; do
     # ========================================================================
     # LOGGER DEMO STATUS
     # ========================================================================
-    echo "📦 Logger Demo (logger_demo)"
+    echo "📦 Logger Demo (many_faces_logger)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^dozzle-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=dozzle-dev)

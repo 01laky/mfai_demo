@@ -1,6 +1,6 @@
 # Authentication, JWT lifetimes, and “stay signed in”
 
-This document explains **how login works** across **BeDemo API** (`be_demo`), **main frontend** (`fe_demo`), and **admin UI** (`admin_demo`): OAuth2 password grant, the optional **`rememberMe`** flag, JWT configuration, browser storage, and how clients detect **expired** tokens.
+This document explains **how login works** across **BeDemo API** (`many_faces_backend`), **main frontend** (`many_faces_portal`), and **admin UI** (`many_faces_admin`): OAuth2 password grant, the optional **`rememberMe`** flag, JWT configuration, browser storage, and how clients detect **expired** tokens.
 
 For a **curl walkthrough** (register + token), see [api-oauth-stories-curl.md](./api-oauth-stories-curl.md).
 
@@ -51,7 +51,7 @@ flowchart TB
 
 ---
 
-## 2. Backend (`be_demo`)
+## 2. Backend (`many_faces_backend`)
 
 ### 2.1 Endpoint: `POST /api/oauth2/token`
 
@@ -183,7 +183,7 @@ If the body includes **`signature`** + **`signatureAlgorithm`**, middleware vali
 
 ---
 
-## 3. Main frontend (`fe_demo`)
+## 3. Main frontend (`many_faces_portal`)
 
 ### Diagram: login → token → storage → axios default header
 
@@ -267,7 +267,7 @@ OAuth2 **`clientId` / `clientSecret`** for the browser come from **`src/config/e
 
 ---
 
-## 4. Admin UI (`admin_demo`)
+## 4. Admin UI (`many_faces_admin`)
 
 Same auth stack as FE for password login:
 
@@ -281,18 +281,18 @@ Same auth stack as FE for password login:
 
 | Layer              | Location                                                      | What is asserted                                                                                           |
 | ------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **BE integration** | `be_demo/BeDemo.Api.Tests/OAuth2RememberMeTests.cs`           | With overridden `Jwt:*`, `rememberMe` true/false/absent maps to correct **`expiresIn`** on token response. |
-| **FE unit**        | `fe_demo/src/utils/__tests__/jwtUtils.test.ts`                | `exp` edge cases, malformed tokens.                                                                        |
-| **FE unit**        | `fe_demo/src/hooks/api/__tests__/authTokenRequest.test.ts`    | Strict `rememberMe` → boolean in payload.                                                                  |
-| **Admin unit**     | `admin_demo/src/utils/__tests__/jwtUtils.test.ts`             | Same as FE jwt tests.                                                                                      |
-| **Admin unit**     | `admin_demo/src/hooks/api/__tests__/authTokenRequest.test.ts` | Same as FE payload tests.                                                                                  |
+| **BE integration** | `many_faces_backend/BeDemo.Api.Tests/OAuth2RememberMeTests.cs`           | With overridden `Jwt:*`, `rememberMe` true/false/absent maps to correct **`expiresIn`** on token response. |
+| **FE unit**        | `many_faces_portal/src/utils/__tests__/jwtUtils.test.ts`                | `exp` edge cases, malformed tokens.                                                                        |
+| **FE unit**        | `many_faces_portal/src/hooks/api/__tests__/authTokenRequest.test.ts`    | Strict `rememberMe` → boolean in payload.                                                                  |
+| **Admin unit**     | `many_faces_admin/src/utils/__tests__/jwtUtils.test.ts`             | Same as FE jwt tests.                                                                                      |
+| **Admin unit**     | `many_faces_admin/src/hooks/api/__tests__/authTokenRequest.test.ts` | Same as FE payload tests.                                                                                  |
 
 Run:
 
 ```bash
-cd be_demo && dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
-cd fe_demo && yarn test
-cd admin_demo && yarn test
+cd many_faces_backend && dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj
+cd many_faces_portal && yarn test
+cd many_faces_admin && yarn test
 ```
 
 ---
@@ -341,4 +341,4 @@ flowchart TB
 
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — curl: register + token (includes `rememberMe` example).
 - [development.md](./development.md) — monorepo dev workflow and links.
-- [be_demo/README.md](../be_demo/README.md) — API overview.
+- [many_faces_backend/README.md](../many_faces_backend/README.md) — API overview.

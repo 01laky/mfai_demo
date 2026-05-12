@@ -248,13 +248,13 @@ Product or infra items not covered by the baseline table above; keep IDs for iss
 | **TRACK-INFRA-KMS**          | Production: HSM/vault for signing keys; operator runbook beyond PEM paths.                                                                |
 | **TRACK-OAUTH-MTLS**         | Optional mTLS / `private_key_jwt` for confidential clients if required.                                                                   |
 | **TRACK-OAUTH-RL-PARTITION** | Rate limits: extend beyond per-IP (e.g. per `client_id` / username).                                                                      |
-| **TRACK-CI-E2E-AUTH**        | **Resolved for CI:** `fe_demo` GitHub job runs **Cypress** `app-load.cy.js` after `yarn build` + `vite preview` (HTTP). **Optional:** set `E2E_API_URL` and run `oauth-api-chain.cy.js` for register→token→refresh→capabilities. **UI login** in browser remains manual or a future Cypress UI spec. |
+| **TRACK-CI-E2E-AUTH**        | **Resolved for CI:** `many_faces_portal` GitHub job runs **Cypress** `app-load.cy.js` after `yarn build` + `vite preview` (HTTP). **Optional:** set `E2E_API_URL` and run `oauth-api-chain.cy.js` for register→token→refresh→capabilities. **UI login** in browser remains manual or a future Cypress UI spec. |
 | **TRACK-QA-IDOR-MATRIX**     | Broader IDOR / ACL matrix across controllers vs representative tests today.                                                               |
 | **TRACK-DOCS-MERMAID-CI**    | Optional CI gate to render-verify Mermaid in `docs/guides/`.                                                                              |
-| **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `ai_demo` if exposure grows.                                                                                 |
+| **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `many_faces_ai` if exposure grows.                                                                                 |
 | **TRACK-DOCS-SUBMODULES**    | Exhaustive README sweep per submodule if required as a separate doc pass.                                                                 |
 
-**Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `be_demo/BeDemo.Api`. Demo OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
+**Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `many_faces_backend/BeDemo.Api`. Demo OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
 
 ---
 
@@ -274,7 +274,7 @@ This section satisfies the **agent report / PR evidence** intent of [security-ha
 | **H1–H4** headers / CORS | `SecurityHeadersMiddleware`; CORS explicit origins | `SecurityHeadersIntegrationTests`; diagram below |
 | **D1–D2** OpenAPI | Bearer in Swagger; SignalR URL pattern in this doc + hub comments | `Program.cs` Swagger gate |
 | **M1–M3** monitoring | Structured auth logs (no passwords); audit hooks partial | Serilog; **TRACK** for full audit store |
-| **§12** uploads / IDOR / CSRF / E2E | CSRF N/A (Bearer); IDOR representative tests in `AclIntegrationTests` / controller tests; **E2E** Cypress smoke in CI + optional API chain spec | [manual-oauth-smoke.md](./manual-oauth-smoke.md), `fe_demo/cypress/e2e/*.cy.js` |
+| **§12** uploads / IDOR / CSRF / E2E | CSRF N/A (Bearer); IDOR representative tests in `AclIntegrationTests` / controller tests; **E2E** Cypress smoke in CI + optional API chain spec | [manual-oauth-smoke.md](./manual-oauth-smoke.md), `many_faces_portal/cypress/e2e/*.cy.js` |
 
 ### Hub inventory (§8.1 — mandatory matrix)
 
@@ -291,7 +291,7 @@ Manual steps (mid-connection expiry): connect with short-lived JWT; when `exp` p
 Commands (from repo root):
 
 - `dotnet list package --vulnerable` (projects `BeDemo.Api`, `BeDemo.Api.Tests`): **no vulnerable packages** reported by NuGet advisory API at run time.
-- `yarn npm audit` in `fe_demo` and `admin_demo`: **no audit suggestions** (Yarn 4) at run time.
+- `yarn npm audit` in `many_faces_portal` and `many_faces_admin`: **no audit suggestions** (Yarn 4) at run time.
 
 **Automation:** `./scripts/audit-monorepo-deps.sh` runs the same three checks (non-gating); the **monorepo** GitHub Actions job logs this output each run.
 
@@ -305,10 +305,10 @@ Re-run before each release; if advisories appear, record CVE IDs here or in rele
 | BE `invalid_client` / `invalid_grant` / 429 | `OAuthErrorPolicyIntegrationTests`, `OAuthRateLimit429Tests` — aligned with [authentication-and-sessions.md](./authentication-and-sessions.md) OAuth table |
 | BE concurrent refresh | `RefreshTokenEdgeCaseTests` (semaphore / replay) |
 | BE OpenAPI / capabilities sample | `AclIntegrationTests` JSON for `/api/me/capabilities` |
-| FE ACL + `parseMeCapabilities` | `fe_demo/src/acl/__tests__/permissions.test.ts` |
+| FE ACL + `parseMeCapabilities` | `many_faces_portal/src/acl/__tests__/permissions.test.ts` |
 | FE auth refresh + no stale cache loop | `clearAuthAndCapabilitiesQueries` + `useAuthApi.queryCleanup.test.ts` |
 | FE face prefix on API | `facePathRouting.test.ts`, `ChatRoomsService.test.ts` |
-| admin_demo | Mirror `useAuthApi.queryCleanup.test.ts`, ACL `permissions.test.ts` |
+| many_faces_admin | Mirror `useAuthApi.queryCleanup.test.ts`, ACL `permissions.test.ts` |
 | E2E | CI: `yarn test:e2e:ci` (`app-load.cy.js`); optional `cypress/e2e/oauth-api-chain.cy.js` with `E2E_API_URL`; manual: [manual-oauth-smoke.md](./manual-oauth-smoke.md) |
 | Dependencies | Snapshot above |
 
@@ -325,7 +325,7 @@ flowchart TB
     P2[HSTS after HTTPS everywhere]
     P3[wss only for SignalR from browser]
   end
-  Dev --> Clients[SPAs fe_demo admin_demo]
+  Dev --> Clients[SPAs many_faces_portal many_faces_admin]
   Prod --> Clients
 ```
 
@@ -351,24 +351,24 @@ flowchart LR
   Log --> Ops[Operator dashboards]
 ```
 
-### Canonical diagrams — BE to ai_demo gRPC (render-checked)
+### Canonical diagrams — BE to many_faces_ai gRPC (render-checked)
 
 ```mermaid
 sequenceDiagram
   participant Hub as ChatHub
   participant G as IAiGrpcService
-  participant AI as ai_demo gRPC
+  participant AI as many_faces_ai gRPC
 
   Hub->>G: Generate or health
   G->>AI: gRPC over configured channel
-  Note over G,AI: Use TLS for gRPC in production deployments demo uses insecure channel in dev see ai_demo README
+  Note over G,AI: Use TLS for gRPC in production deployments demo uses insecure channel in dev see many_faces_ai README
 ```
 
 ### Canonical diagrams — SPA auth + capabilities warmup (render-checked)
 
 ```mermaid
 sequenceDiagram
-  participant SPA as fe_demo or admin_demo
+  participant SPA as many_faces_portal or many_faces_admin
   participant LS as localStorage
   participant API as Face prefixed REST
   participant Cap as GET api me capabilities
@@ -387,10 +387,10 @@ sequenceDiagram
 | ----- | ---- |
 | Gap analysis in this doc | Yes (this section) |
 | §17.2 technical rows | Addressed in code or **TRACK-*** / manual doc |
-| `scripts/test-all.sh` | Passes when backends/FE prerequisites met; Cypress still **SKIP_CYPRESS=1** in `ci-local` — use dedicated **fe_demo** CI job for Cypress smoke |
+| `scripts/test-all.sh` | Passes when backends/FE prerequisites met; Cypress still **SKIP_CYPRESS=1** in `ci-local` — use dedicated **many_faces_portal** CI job for Cypress smoke |
 | No secrets in git | Yes (placeholders + env) |
 | Swagger production policy | `Swagger:EnableInProduction` — documented in baseline table |
-| Operations runbook | Short runbook above + `be_demo/README.md` emergency bullets |
+| Operations runbook | Short runbook above + `many_faces_backend/README.md` emergency bullets |
 | English comments §14 | Applied on **new/changed** code in this pass |
 | Mermaid set | Keys/JWKS/J6/OAuth/TLS/SignalR in this file + auth guide; headers+CORS+audit+SPA+gRPC added here |
 | Tests §17.3 §18 | Evidence table above |

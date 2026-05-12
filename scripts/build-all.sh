@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# build-all.sh - Build all projects (be_demo, fe_demo, admin_demo, ai_demo)
+# build-all.sh - Build all projects (many_faces_backend, many_faces_portal, many_faces_admin, many_faces_ai)
 #
 # Runs build for each project without Docker.
-# - be_demo: dotnet build
-# - fe_demo: yarn build
-# - admin_demo: yarn build (vite only, no tsc - see admin package.json)
-# - ai_demo: pip install + optional model download (Python, no traditional "build")
+# - many_faces_backend: dotnet build
+# - many_faces_portal: yarn build
+# - many_faces_admin: yarn build (vite only, no tsc - see admin package.json)
+# - many_faces_ai: pip install + optional model download (Python, no traditional "build")
 #
 # Usage: ./scripts/build-all.sh (from repository root)
 
@@ -23,46 +23,46 @@ echo ""
 
 # Backend
 echo "═══════════════════════════════════════════════════════════"
-echo "  Building Backend (be_demo)"
+echo "  Building Backend (many_faces_backend)"
 echo "═══════════════════════════════════════════════════════════"
-if [ -d "be_demo" ]; then
-  (cd be_demo && dotnet build -c Release) || FAILED=1
+if [ -d "many_faces_backend" ]; then
+  (cd many_faces_backend && dotnet build -c Release) || FAILED=1
 else
-  echo "⚠️  be_demo not found, skipping"
+  echo "⚠️  many_faces_backend not found, skipping"
 fi
 echo ""
 
 # Frontend
 echo "═══════════════════════════════════════════════════════════"
-echo "  Building Frontend (fe_demo)"
+echo "  Building Frontend (many_faces_portal)"
 echo "═══════════════════════════════════════════════════════════"
-if [ -d "fe_demo" ]; then
-  (cd fe_demo && yarn build) || FAILED=1
+if [ -d "many_faces_portal" ]; then
+  (cd many_faces_portal && yarn build) || FAILED=1
 else
-  echo "⚠️  fe_demo not found, skipping"
+  echo "⚠️  many_faces_portal not found, skipping"
 fi
 echo ""
 
 # Admin
 echo "═══════════════════════════════════════════════════════════"
-echo "  Building Admin (admin_demo)"
+echo "  Building Admin (many_faces_admin)"
 echo "═══════════════════════════════════════════════════════════"
-if [ -d "admin_demo" ]; then
-  (cd admin_demo && yarn build) || FAILED=1
+if [ -d "many_faces_admin" ]; then
+  (cd many_faces_admin && yarn build) || FAILED=1
 else
-  echo "⚠️  admin_demo not found, skipping"
+  echo "⚠️  many_faces_admin not found, skipping"
 fi
 echo ""
 
 # AI Demo — same checks as CI (ruff + pytest, no full torch stack)
 echo "═══════════════════════════════════════════════════════════"
-echo "  Verifying AI Demo (ai_demo / verify-ci.sh)"
+echo "  Verifying AI Demo (many_faces_ai / verify-ci.sh)"
 echo "═══════════════════════════════════════════════════════════"
-if [ -d "ai_demo" ]; then
-  chmod +x ai_demo/verify-ci.sh 2>/dev/null || true
-  (cd ai_demo && ./verify-ci.sh) || FAILED=1
+if [ -d "many_faces_ai" ]; then
+  chmod +x many_faces_ai/verify-ci.sh 2>/dev/null || true
+  (cd many_faces_ai && ./verify-ci.sh) || FAILED=1
 else
-  echo "⚠️  ai_demo not found, skipping"
+  echo "⚠️  many_faces_ai not found, skipping"
 fi
 echo ""
 
