@@ -125,14 +125,14 @@ if [ -f "many_faces_admin/package.json" ]; then
             export VITE_DEV_PORT=8082
             yarn dev > /dev/null 2>&1 &
             ADMIN_PID=$!
-            echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
+            echo "    ✅ Many Faces Admin started (PID: $ADMIN_PID)"
             cd ..
         fi
     else
         export VITE_DEV_PORT=8082
         yarn dev > /dev/null 2>&1 &
         ADMIN_PID=$!
-        echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
+        echo "    ✅ Many Faces Admin started (PID: $ADMIN_PID)"
         cd ..
     fi
 else
@@ -169,14 +169,14 @@ fi
 
 echo "$BACKEND_STATUS Backend (many_faces_backend): http://localhost:8000"
 echo "$FRONTEND_STATUS Frontend (many_faces_portal): http://localhost:8081"
-echo "$ADMIN_STATUS Admin Demo: http://localhost:8082"
+echo "$ADMIN_STATUS Many Faces Admin: http://localhost:8082"
 echo ""
 
 echo "📋 Application URLs:"
 echo "   Backend API: http://localhost:8000"
 echo "   Backend Swagger: http://localhost:8000/swagger"
 echo "   Frontend (many_faces_portal): http://localhost:8081"
-echo "   Admin Demo: http://localhost:8082"
+echo "   Many Faces Admin: http://localhost:8082"
 echo ""
 
 if [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ]; then
@@ -188,6 +188,6 @@ else
     echo "💡 To check logs:"
     echo "   - Backend: cd many_faces_backend && docker-compose logs -f"
     echo "   - Frontend: cd many_faces_portal && docker-compose logs -f"
-    echo "   - Admin Demo: Check terminal or browser console"
+    echo "   - Many Faces Admin: Check terminal or browser console"
     exit 1
 fi

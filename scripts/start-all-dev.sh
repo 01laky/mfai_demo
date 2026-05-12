@@ -7,9 +7,9 @@
 # 2. Redis (many_faces_redis) - job queue for backend (optional but recommended before BE)
 # 3. Backend API (ASP.NET Core) - provides REST API and authentication
 # 4. Frontend (React + Vite) - user-facing application
-# 5. AI Demo (Python gRPC) - AI service with gRPC interface
+# 5. Many Faces AI service (Python gRPC) - AI service with gRPC interface
 # 6. Admin (React + Vite) - admin panel application
-# 7. Logger Demo (Dozzle) - log viewer for all containers
+# 7. Many Faces log viewer (Dozzle) - log viewer for all containers
 # 
 # The script handles:
 # - Dependency ordering (database before backend, backend before frontend/admin)
@@ -186,9 +186,9 @@ docker-compose -f docker-compose.dev.yml up -d fe-demo-dev fe-demo-proxy admin-d
 echo "    ✅ Frontend, proxy, admin, AI compose step finished"
 
 # ============================================================================
-# START LOGGER DEMO (Dozzle)
+# START LOGGER (Dozzle)
 # ============================================================================
-echo "📦 Starting Logger Demo (many_faces_logger)..."
+echo "📦 Starting Many Faces log viewer (many_faces_logger)..."
 if ! docker network ls --format '{{.Name}}' 2>/dev/null | grep -qE '^(many_faces_main_dev-network|mfai_demo_dev-network)$'; then
     docker-compose -f docker-compose.dev.yml up -d --no-deps seq 2>/dev/null || true
     sleep 1
@@ -198,12 +198,12 @@ if [ -f "many_faces_logger/scripts/start-dev.sh" ]; then
     cd many_faces_logger
     ./scripts/start-dev.sh > /dev/null 2>&1
     cd ..
-    echo "    ✅ Logger Demo startup finished (scripts/start-dev.sh)"
+    echo "    ✅ Many Faces log viewer startup finished (scripts/start-dev.sh)"
 else
     echo "  ⚠️  many_faces_logger/scripts/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f many_faces_logger/docker-compose.dev.yml up -d dozzle-dev
 fi
-echo "    ✅ Logger Demo (dozzle-dev) up"
+echo "    ✅ Many Faces log viewer (dozzle-dev) up"
 
 echo ""
 echo "✅ All services startup launched!"
@@ -430,9 +430,9 @@ while true; do
     echo ""
     
     # ========================================================================
-    # AI DEMO STATUS
+    # AI SERVICE STATUS
     # ========================================================================
-    echo "📦 AI Demo (many_faces_ai)"
+    echo "📦 Many Faces AI service (many_faces_ai)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=ai-demo-dev)
@@ -450,15 +450,15 @@ while true; do
     echo ""
     
     # ========================================================================
-    # LOGGER DEMO STATUS
+    # LOGGER (Dozzle) STATUS
     # ========================================================================
-    echo "📦 Logger Demo (many_faces_logger)"
+    echo "📦 Many Faces log viewer (many_faces_logger)"
     echo "───────────────────────────────────────────────────────────"
     if docker ps --format '{{.Names}}' | grep -q "^dozzle-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=dozzle-dev)
         echo "  Container: ✓ Running (dozzle-dev)"
         echo "  Status: $STATUS"
-        # Logger Demo (Dozzle) is considered accessible if container is running
+        # Many Faces log viewer (Dozzle) is considered accessible if container is running
         echo "  Service: ✓ Running (http://localhost:8080)"
     elif docker ps -a --format '{{.Names}}' | grep -q "^dozzle-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=dozzle-dev | head -1)
@@ -494,7 +494,7 @@ while true; do
     echo "    • Frontend (Docker): https://localhost:9081"
     echo "    • Admin: https://localhost:8082"
     echo "    • Seq Logs: http://localhost:5341"
-    echo "    • Logger Demo (Dozzle): http://localhost:8080"
+    echo "    • Many Faces log viewer (Dozzle): http://localhost:8080"
     echo "    • pgAdmin: http://localhost:5050"
     echo ""
     

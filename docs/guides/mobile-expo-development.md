@@ -35,7 +35,7 @@ Copy environment template:
 
 ```bash
 cp .env.example .env
-# Required: EXPO_PUBLIC_API_BASE_URL (and OAuth2 demo keys if you changed backend clients)
+# Required: EXPO_PUBLIC_API_BASE_URL (and OAuth2 development client keys if you changed backend clients)
 ```
 
 `EXPO_PUBLIC_*` keys are read at bundle time via `app.config.ts` → `expo.extra` (see `src/config/env.ts`).

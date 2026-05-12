@@ -1,18 +1,18 @@
 # Many Faces AI (MFAI) - monorepo
 
-MFAI Demo is a full-stack social platform demo built around the concept of **faces**: configurable community spaces with their own pages, roles, content, chats, stories, profiles, listings, albums, blogs, reels, and AI-assisted features.
+Many Faces AI is a full-stack social platform built around the concept of **faces**: configurable community spaces with their own pages, roles, content, chats, stories, profiles, listings, albums, blogs, reels, and AI-assisted features.
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
 The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
-It is designed both as a runnable local demo and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
+It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
 **GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
-Security and trust boundaries are a high priority in the architecture: the demo uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
+Security and trust boundaries are a high priority in the architecture: this stack uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
-## What This Demo Shows
+## What this stack covers
 
 - Configurable **faces** with their own routes, pages, roles, visual identity, and content.
 - Dynamic page grids managed from the admin portal and rendered by reusable frontend blocks.
@@ -286,13 +286,13 @@ flowchart TD
 4. Use [`docs/readmes/README.md`](./docs/readmes/README.md) to jump into each submodule.
 5. Check [`docs/prompts/README.md`](./docs/prompts/README.md) for long-lived implementation prompts and active engineering checklists.
 
-## Demo Access
+## Local development access
 
-Demo users and passwords are documented in [`docs/guides/demo-users-and-passwords.md`](./docs/guides/demo-users-and-passwords.md). Keep demo credentials separate from real secrets; local environment values and certificates are documented under [`docs/guides/`](./docs/guides/).
+Local development accounts and passwords are documented in [`docs/guides/local-dev-accounts.md`](./docs/guides/local-dev-accounts.md). Keep local development credentials separate from real secrets; local environment values and certificates are documented under [`docs/guides/`](./docs/guides/).
 
 ## Project Status
 
-This is an active demo codebase, not a production deployment. Security, architecture, and hardening work are documented so production-grade decisions remain explicit and reviewable as the system evolves.
+This is an active Many Faces reference monorepo, not a production deployment. Security, architecture, and hardening work are documented so production-grade decisions remain explicit and reviewable as the system evolves.
 
 ## Documentation (start here)
 

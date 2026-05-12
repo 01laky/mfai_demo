@@ -1,4 +1,4 @@
-# Many Faces demo — application context
+# Many Faces — application context
 
 Single place to answer **what this system is**, **who uses which surface**, and **how the pieces hang together**. GitHub monorepo: **`many_faces_main`** (submodules `many_faces_portal`, `many_faces_backend`, …; working-tree paths `many_faces_portal/`, `many_faces_backend/`, …). For deep mechanics, use [`docs/README.md`](./docs/README.md). Submodules retain their own READMEs.
 
@@ -6,7 +6,7 @@ Single place to answer **what this system is**, **who uses which surface**, and 
 
 ## 1. What the product is
 
-**MFAI Demo** is a **multi-tenant web platform** built around **faces** — each face is its own branded space (URL prefix + config + pages), like a lightweight **site-within-an-app**.
+**Many Faces AI** is a **multi-tenant web platform** built around **faces** — each face is its own branded space (URL prefix + config + pages), like a lightweight **site-within-an-app**.
 
 - End users browse and interact inside a chosen face: **dynamic pages**, **social** (friends, messenger, notifications), optional **Stories**, **Wall**, **profiles**, **chat + AI hooks**, and UI composed from **configurable grids** (“blocks” backed by typed components: albums, blogs, reels, chat rooms, etc.).
 - Operators use a separate **Admin** app with **elevated/global or scoped roles** to **shape** those tenants: faces, users, pages, layouts, moderation — without redeploying the frontend.
@@ -21,7 +21,7 @@ So in one sentence: **one shared platform, many branded “sites” (faces), one
 |--------|---------|
 | **Face** | Tenant anchor: slug (`index`), title, gradient/branding knobs, visibility (public vs private), seeded/default pages (`home`, maybe `wall`), optional profile directory visibility. Middleware rewrites requests so `/api/{face}/...` resolves in the backend. |
 | **Page** | A route segment under that face (`/home`, `/lab`, …) with a **page type** (`home`, `static`, `wall`, …). **Static** pages carry an optional **`gridSchema`**: responsive layout + **typed component placeholders** rendered on the Frontend. Translations define localized path aliases. |
-| **User / roles** | **Global roles** (`SUPER_ADMIN`, `ADMIN`, `USER`, …) and **per-face roles** (`FACE_ADMIN`, `FACE_HOST`, …). Capability checks drive what API and hubs allow. Demo seeds give you known accounts (`docs/guides/demo-users-and-passwords.md`). |
+| **User / roles** | **Global roles** (`SUPER_ADMIN`, `ADMIN`, `USER`, …) and **per-face roles** (`FACE_ADMIN`, `FACE_HOST`, …). Capability checks drive what API and hubs allow. Seed data provides known accounts (`docs/guides/local-dev-accounts.md`). |
 | **Realtime + AI** | SignalR hubs (chat, messenger, notifications, …); optional **SendToAi** flows through **`many_faces_ai`** (`many_faces_ai/`) over gRPC. |
 
 The Frontend’s job is **not** to redefine business rules: it reflects **backend config + auth + realtime**. The Admin’s job is to **safely mutate** that config and moderation state.
@@ -66,9 +66,9 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 ## 7. For AI agents editing this repo
 
-- Prefer **focused changes** scoped to FE, Admin, or API contracts; **`docs/guides/proposal-mfai-demo-state.md`** is a good inventory snapshot.
+- Prefer **focused changes** scoped to FE, Admin, or API contracts; **`docs/guides/proposal-many-faces-state.md`** is a good inventory snapshot.
 - Respect **OAuth2**, **face-prefixed API paths**, and **React Router v6 route rules** (no custom wrappers where `<Routes>` insist on literal `<Route>` children).
-- When changing face visibility or **`availableFaces` semantics**, revisit **logged-in UX** — public demonstration faces must remain reachable unless product explicitly restricts them.
+- When changing face visibility or **`availableFaces` semantics**, revisit **logged-in UX** — public showcase faces must remain reachable unless product explicitly restricts them.
 - For **grid components and face-scoped API reads**, follow **[§8](#8-frontend-architecture--face-scoped-data-grid-specs-responsiveness)** (patterns: `useFaceConfig` → `faceId`, TanStack + OpenAPI services, `useFillGridPagination`, `ResizeObserver`).
 
 ---
@@ -113,11 +113,11 @@ Two layers collaborate:
 
 When adding new grid types **copy patterns from finished siblings**: mount ref on scrollport, cancel async on unmount, debounce/observe politely.
 
-### 8.4 Demo data & placeholders — explicit policy
+### 8.4 Seed data & placeholders — explicit policy
 
 | Source | Policy |
 |--------|--------|
-| **PostgreSQL seed / demo tenants** (`many_faces_backend` / `many_faces_backend/` seeders, seeded users/faces, `demo-users-and-passwords.md`) | **Keep** while we need scripted demos until product says drop them. Coordinate removal with docs + teardown scripts. |
+| **PostgreSQL seed / sample tenants** (`many_faces_backend` / `many_faces_backend/` seeders, seeded users/faces, `local-dev-accounts.md`) | **Keep** while we need scripted local setups until product says drop them. Coordinate removal with docs + teardown scripts. |
 | **Hard-coded Frontend placeholders** (e.g. Lorem ipsum, **picsum.photos** stand-ins, fictitious carousel slides) | **Treat as transitional**: once real media URLs/API fields arrive, strip placeholders so empties reflect **truth** (“no uploads yet”). If a placeholder confuses testers, remove it outright. |
 
 **Rule of thumb:** if there is **no persisted entity**, the UI shows **scoped empty/error** states — never fake sibling-face content.

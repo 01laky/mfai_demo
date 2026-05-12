@@ -29,7 +29,7 @@ flowchart LR
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [development.md](./guides/development.md)                                             | CI, Node/Python, Husky/commitlint, `scripts/` orchestration (`scripts/ci-local.sh`, …), API errors in the browser, tests, face home grid, links. |
 | [authentication-and-sessions.md](./guides/authentication-and-sessions.md)             | OAuth2, JWT, `rememberMe`, configuration, FE/admin, tests.                                                                                       |
-| [demo-users-and-passwords.md](./guides/demo-users-and-passwords.md)                   | Local seed: super admin / admin / demo users and passwords (tables).                                                                             |
+| [local-dev-accounts.md](./guides/local-dev-accounts.md)                   | Local seed: super admin / admin / seeded users and passwords (tables).                                                                             |
 | [acl-and-capabilities.md](./guides/acl-and-capabilities.md)                           | Permission keys, `GET …/api/me/capabilities`, gates, file map, integration users, test index.                                                    |
 | [ai-assisted-content-approval.md](./guides/ai-assisted-content-approval.md)           | User-created album/blog/reel approval: pending defaults, public filtering, Redis AI jobs, `ReviewContent`, admin queue + metrics + bulk, creator **My submissions**, notifications, optional retention redaction, audit. |
 | [api-oauth-stories-curl.md](./guides/api-oauth-stories-curl.md)                       | OAuth2 + Stories via **curl**.                                                                                                                   |
@@ -43,7 +43,7 @@ flowchart LR
 | [mobile-expo-development.md](./guides/mobile-expo-development.md)                     | **many_faces_mobile** — Expo/React Native: prerequisites, env, Expo Go, parity with `many_faces_portal`, quality gates, submodule bumps.        |
 | [husky-setup.md](./guides/husky-setup.md)                                             | Husky / hooks (historical note).                                                                                                                 |
 | [boilerplate-checklist.md](./guides/boilerplate-checklist.md)                         | Template checklist.                                                                                                                              |
-| [proposal-mfai-demo-state.md](./guides/proposal-mfai-demo-state.md)                   | Snapshot / proposal (archive).                                                                                                                   |
+| [proposal-many-faces-state.md](./guides/proposal-many-faces-state.md)                   | Snapshot / proposal (archive).                                                                                                                   |
 
 ---
 
@@ -82,8 +82,8 @@ Full index (including retention policy): [`prompts/README.md`](./prompts/README.
 | Document                                                   | Contents                                      |
 | ---------------------------------------------------------- | --------------------------------------------- |
 | [README.md](./readmes/README.md)                           | Links to each submodule README + this folder. |
-| [fe-demo-overview.md](./readmes/fe-demo-overview.md)       | `many_faces_portal` architecture and features.          |
-| [admin-demo-overview.md](./readmes/admin-demo-overview.md) | `many_faces_admin` architecture and features.       |
+| [fe-portal-overview.md](./readmes/fe-portal-overview.md)       | `many_faces_portal` architecture and features.          |
+| [admin-portal-overview.md](./readmes/admin-portal-overview.md) | `many_faces_admin` architecture and features.       |
 | [redis-subrepo.md](./readmes/redis-subrepo.md)             | `many_faces_redis` submodule for the job queue.     |
 
 ---

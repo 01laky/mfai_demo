@@ -225,7 +225,7 @@ These bullets are **not** deliverables and **do not** use the `[ ]` / exit rule 
 ## 8. Related documentation
 
 - [docs/guides/development.md](../guides/development.md) — CI and local scripts (`yarn validate`, Cypress smoke).  
-- [docs/readmes/fe-demo-overview.md](../readmes/fe-demo-overview.md) — high-level `many_faces_portal` architecture (keep in sync if routing shell moves).  
+- [docs/readmes/fe-portal-overview.md](../readmes/fe-portal-overview.md) — high-level `many_faces_portal` architecture (keep in sync if routing shell moves).  
 - [docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) — compiler / hook lint alignment after refactors.  
 - [docs/prompts/unit-test-gap-fill-agent-prompt.md](./unit-test-gap-fill-agent-prompt.md) — tests for extracted pure modules.
 
@@ -406,7 +406,7 @@ Use this as a **single closing pass** over the entire prompt. **Same rules as ab
 ### 10.9 Non-goals & references (sanity)
 
 - [ ] **§7** respected — no scope creep into non-goals.
-- [ ] **§8** links consulted as needed (`development.md`, `fe-demo-overview.md`, related prompts).
+- [ ] **§8** links consulted as needed (`development.md`, `fe-portal-overview.md`, related prompts).
 
 ### 10.10 Prompt maintenance (optional meta)
 

@@ -135,7 +135,7 @@ flowchart TB
 ### 🔄 CI/CD
 
 - ✅ **GitHub Actions** — The monorepo root (**`many_faces_main`**) includes **`.github/workflows/ci.yml`**: parallel jobs per submodule (backend, portal, admin, mobile, AI, infra compose checks, docs Mermaid) plus **`monorepo_scripts`** running **`scripts/ci-local.sh`** (lint → build → test with `SKIP_CYPRESS=1` by default). Several submodules also ship their own workflows when developed standalone.
-- **Optional for your fork**: add Dependabot, deployment workflows, or extra security scanning beyond what this demo already runs.
+- **Optional for your fork**: add Dependabot, deployment workflows, or extra security scanning beyond what this reference stack already runs.
 
 ### 🔒 Security
 

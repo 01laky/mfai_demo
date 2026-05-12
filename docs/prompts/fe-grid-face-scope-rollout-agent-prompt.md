@@ -2,7 +2,7 @@
 
 **Language:** English  
 **Scope:** `many_faces_portal` page grid (`PageGridLayout`, `many_faces_portal/src/components/grid/*`) and related API services.  
-**North star:** Root [`APP_CONTEXT.md`](../../APP_CONTEXT.md) sections 8–9 (face-scoped reads, grid contracts, responsiveness, demo/placeholder policy).
+**North star:** Root [`APP_CONTEXT.md`](../../APP_CONTEXT.md) sections 8–9 (face-scoped reads, grid contracts, responsiveness, placeholder and seed-data policy).
 
 **How to use:** Paste this file (or sections 2–5 plus **section 7** below) into an AI agent chat. Leave `[ ]` checklists **unchecked** in the canonical file; tick copies in PR/issue. Re-run when APIs or components change. **Section 7** is the single flat list of **all remaining work** — use it for sprint planning and PR descriptions.
 
@@ -13,7 +13,7 @@
 - Every grid block **reads and displays data for the currently selected face** (`useFaceConfig()` → `selectedFace.id`, URL `/:lang/:faceIndex/...` in sync per `FaceConfigContext`).
 - Blocks **must not** spoof another face or show cross-tenant mock data.
 - **Inside-block** layout must stay **responsive to cell width** (`ResizeObserver`, `useFillGridPagination`, carousel `visibleCount`), not only CSS breakpoints; page canvas uses `react-grid-layout` from `gridSchema`.
-- **Placeholder / demo** policy: strip **FE picsum / fake thumbs** when API returns real media URLs; keep **DB demo seeds** until product removes them (coordinate with docs and seeders).
+- **Placeholder / sample UI** policy: strip **FE picsum / fake thumbs** when API returns real media URLs; keep **DB seed data** until product removes them (coordinate with docs and seeders).
 - **Writes** (create, edit, upload images) go through **scoped APIs** + **capability-gated** UI (patterns: `*Form.tsx` + settings / grid top panel).
 
 ---
@@ -172,8 +172,8 @@ Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by
 ## 6. Related docs
 
 - [`APP_CONTEXT.md`](../../APP_CONTEXT.md) sections 8–9  
-- [`docs/readmes/fe-demo-overview.md`](../readmes/fe-demo-overview.md)  
-- [`docs/guides/demo-users-and-passwords.md`](../guides/demo-users-and-passwords.md)
+- [`docs/readmes/fe-portal-overview.md`](../readmes/fe-portal-overview.md)  
+- [`docs/guides/local-dev-accounts.md`](../guides/local-dev-accounts.md)
 
 ---
 

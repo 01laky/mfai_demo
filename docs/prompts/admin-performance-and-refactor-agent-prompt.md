@@ -282,7 +282,7 @@ These bullets are **not** deliverables and **do not** use the `[ ]` / exit rule 
 ## 8. Related documentation
 
 - [docs/guides/development.md](../guides/development.md) — local scripts (`yarn validate`, etc.).  
-- [docs/readmes/admin-demo-overview.md](../readmes/admin-demo-overview.md) — high-level **`many_faces_admin`** architecture (update after large routing/context refactors).  
+- [docs/readmes/admin-portal-overview.md](../readmes/admin-portal-overview.md) — high-level **`many_faces_admin`** architecture (update after large routing/context refactors).  
 - [docs/prompts/fe-performance-and-refactor-agent-prompt.md](./fe-performance-and-refactor-agent-prompt.md) — **parallel** spec for `many_faces_portal` (keep concerns symmetric where useful).  
 - [docs/prompts/react-hooks-compiler-rules-rollout-agent-prompt.md](./react-hooks-compiler-rules-rollout-agent-prompt.md) — hook lint alignment after refactors.  
 - [docs/prompts/unit-test-gap-fill-agent-prompt.md](./unit-test-gap-fill-agent-prompt.md) — tests for extracted pure modules and hooks.

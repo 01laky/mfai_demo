@@ -8,8 +8,8 @@
 # - Backend API (ASP.NET Core) - checks container status and API accessibility
 # - Frontend (React + Vite) - checks container status and app accessibility
 # - Admin (React + Vite) - checks container status and app accessibility
-# - AI Demo (Python gRPC) - checks container status
-# - Logger Demo (Dozzle) - checks container status and UI accessibility
+# - Many Faces AI service (Python gRPC) - checks container status
+# - Many Faces log viewer (Dozzle) - checks container status and UI accessibility
 # - Seq Logging Server - checks container status and UI accessibility
 # 
 # The script distinguishes between:
@@ -456,20 +456,20 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK AI DEMO (many_faces_ai)
+# CHECK AI SERVICE (many_faces_ai)
 # ============================================================================
 
-echo "📦 AI Demo (many_faces_ai)"
+echo "📦 Many Faces AI service (many_faces_ai)"
 echo "───────────────────────────────────────────────────────────"
 
-AI_DEMO_CONTAINER="ai-demo-dev"
-if check_container_exists "$AI_DEMO_CONTAINER"; then
-    if check_container "$AI_DEMO_CONTAINER"; then
-        STATUS_INFO=$(get_container_status "$AI_DEMO_CONTAINER")
+AI_DEV_CONTAINER="ai-demo-dev"
+if check_container_exists "$AI_DEV_CONTAINER"; then
+    if check_container "$AI_DEV_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$AI_DEV_CONTAINER")
         STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
         UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
         
-        echo -e "  Container: ${GREEN}✓ Running${NC} ($AI_DEMO_CONTAINER)"
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($AI_DEV_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
         
@@ -477,17 +477,17 @@ if check_container_exists "$AI_DEMO_CONTAINER"; then
         # In a full implementation, we would call the HealthCheck RPC method
         echo -e "  Service: ${GREEN}✓ Running${NC} (gRPC on port 50051)"
     else
-        STATUS_INFO=$(get_container_status "$AI_DEMO_CONTAINER")
+        STATUS_INFO=$(get_container_status "$AI_DEV_CONTAINER")
         STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
         UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
         
-        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($AI_DEMO_CONTAINER)"
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($AI_DEV_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
         echo "  Port: 50051 (gRPC)"
     fi
 else
-    echo -e "  Container: ${BLUE}○ Not found${NC} ($AI_DEMO_CONTAINER)"
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($AI_DEV_CONTAINER)"
     echo "  Status: Does not exist (removed)"
     echo "  Port: 50051 (gRPC)"
 fi
@@ -495,39 +495,39 @@ fi
 echo ""
 
 # ============================================================================
-# CHECK LOGGER DEMO (many_faces_logger)
+# CHECK LOGGER (many_faces_logger)
 # ============================================================================
 
-echo "📦 Logger Demo (many_faces_logger)"
+echo "📦 Many Faces log viewer (many_faces_logger)"
 echo "───────────────────────────────────────────────────────────"
 
-LOGGER_DEMO_CONTAINER="dozzle-dev"
-if check_container_exists "$LOGGER_DEMO_CONTAINER"; then
-    if check_container "$LOGGER_DEMO_CONTAINER"; then
-        STATUS_INFO=$(get_container_status "$LOGGER_DEMO_CONTAINER")
+DOZZLE_DEV_CONTAINER="dozzle-dev"
+if check_container_exists "$DOZZLE_DEV_CONTAINER"; then
+    if check_container "$DOZZLE_DEV_CONTAINER"; then
+        STATUS_INFO=$(get_container_status "$DOZZLE_DEV_CONTAINER")
         STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
         UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
         
-        echo -e "  Container: ${GREEN}✓ Running${NC} ($LOGGER_DEMO_CONTAINER)"
+        echo -e "  Container: ${GREEN}✓ Running${NC} ($DOZZLE_DEV_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
         
-        # Check if Logger Demo (Dozzle) is accessible
+        # Check if Many Faces log viewer (Dozzle) is accessible
         # Dozzle may return 404 on root, but container is running if we got here
         # The web UI is available at http://localhost:8080 even if root returns 404
         echo -e "  Service: ${GREEN}✓ Running${NC} (http://localhost:8080)"
     else
-        STATUS_INFO=$(get_container_status "$LOGGER_DEMO_CONTAINER")
+        STATUS_INFO=$(get_container_status "$DOZZLE_DEV_CONTAINER")
         STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
         UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
         
-        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($LOGGER_DEMO_CONTAINER)"
+        echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($DOZZLE_DEV_CONTAINER)"
         echo "  Status: $STATUS"
         echo "  Started: $UPTIME"
         echo "  Port: 8080 (http://localhost:8080)"
     fi
 else
-    echo -e "  Container: ${BLUE}○ Not found${NC} ($LOGGER_DEMO_CONTAINER)"
+    echo -e "  Container: ${BLUE}○ Not found${NC} ($DOZZLE_DEV_CONTAINER)"
     echo "  Status: Does not exist (removed)"
     echo "  Port: 8080 (http://localhost:8080)"
 fi
@@ -548,7 +548,7 @@ STOPPED=0
 ACCESSIBLE=0
 NOT_ACCESSIBLE=0
 
-CONTAINERS=("$DB_CONTAINER" "$PGADMIN_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEMO_CONTAINER" "$SEQ_CONTAINER" "$LOGGER_DEMO_CONTAINER")
+CONTAINERS=("$DB_CONTAINER" "$PGADMIN_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEV_CONTAINER" "$SEQ_CONTAINER" "$DOZZLE_DEV_CONTAINER")
 
 NOT_FOUND=0
 for container in "${CONTAINERS[@]}"; do
@@ -611,14 +611,14 @@ if check_container "$SEQ_CONTAINER"; then
     fi
 fi
 
-# Note: AI Demo uses gRPC, not HTTP, so we count it as accessible if container is running
-if check_container "$AI_DEMO_CONTAINER"; then
+# Note: Many Faces AI service uses gRPC, not HTTP, so we count it as accessible if container is running
+if check_container "$AI_DEV_CONTAINER"; then
     ACCESSIBLE=$((ACCESSIBLE + 1))
 fi
 
-# Check Logger Demo (Dozzle) accessibility
+# Check Many Faces log viewer (Dozzle) accessibility
 # If container is running, Dozzle is accessible (web UI works even if root returns 404)
-if check_container "$LOGGER_DEMO_CONTAINER"; then
+if check_container "$DOZZLE_DEV_CONTAINER"; then
     ACCESSIBLE=$((ACCESSIBLE + 1))
 fi
 
@@ -648,8 +648,8 @@ fi
 if check_container "$SEQ_CONTAINER"; then
     echo "    • Seq Logs: http://localhost:5341"
 fi
-if check_container "$LOGGER_DEMO_CONTAINER"; then
-    echo "    • Logger Demo (Dozzle): http://localhost:8080"
+if check_container "$DOZZLE_DEV_CONTAINER"; then
+    echo "    • Many Faces log viewer (Dozzle): http://localhost:8080"
 fi
 
 echo ""

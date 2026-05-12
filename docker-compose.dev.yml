@@ -52,7 +52,7 @@ services:
     environment:
       - VITE_API_URL=https://localhost:8001
       - VITE_API_HTTPS_URL=https://localhost:8001
-      - VITE_APP_NAME=Fe Demo Frontend
+      - VITE_APP_NAME=Many Faces Portal
       - VITE_APP_VERSION=1.0.0
       - VITE_PORT=8081
       - VITE_DEV_CERT_DIR=/certs
@@ -89,7 +89,7 @@ services:
       - dev-network
     restart: unless-stopped
 
-  # Admin Demo (many_faces_admin)
+  # Many Faces Admin (many_faces_admin)
   admin-demo-dev:
     build:
       context: ./many_faces_admin
@@ -105,7 +105,7 @@ services:
     environment:
       - VITE_API_URL=https://localhost:8001
       - VITE_API_HTTPS_URL=https://localhost:8001
-      - VITE_APP_NAME=Admin Demo
+      - VITE_APP_NAME=Many Faces Admin
       - VITE_APP_VERSION=1.0.0
       - VITE_PORT=8081
       - VITE_DEV_CERT_DIR=/certs
@@ -148,7 +148,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # AI Demo gRPC Server (independent - no dependency on backend)
+  # Many Faces AI gRPC Server (independent - no dependency on backend)
   ai-demo-dev:
     build:
       context: ./many_faces_ai

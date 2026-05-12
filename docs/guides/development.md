@@ -257,7 +257,7 @@ User-facing fetch wrappers use **`getApiErrorMessage`** (`many_faces_portal` / `
 
 Wall ticket API behaviour: [wall-tickets.md](./wall-tickets.md).
 
-## Face home grid & demo content (FE + BE)
+## Face home grid & seeded sample content (FE + BE)
 
 The **page grid** on a face home page (`PageGridLayout` + `many_faces_portal/src/components/grid/*`) supports **single**, **grid**, and **carousel** display modes per component type (Ad, Album, Blog, ChatRoom, UserProfile, Story, Reel).
 
@@ -290,9 +290,9 @@ flowchart LR
 
 ### Database seeding (`DatabaseSeeder`)
 
-After **`SeedUsersAsync`** (demo `@demo.com` users), **`SeedFaceGridContentAsync`** runs (non-fatal on failure):
+After **`SeedUsersAsync`** (seeded `@demo.com` users), **`SeedFaceGridContentAsync`** runs (non-fatal on failure):
 
-- For **each** demo user and **each** face, ensures **5** items per content class: wall tickets, albums (+ `AlbumFace`), blogs (+ image), reels (+ `ReelFace`), **published** stories (+ `StoryFace` + image), `FaceChatRoom`.
+- For **each** seeded user and **each** face, ensures **5** items per content class: wall tickets, albums (+ `AlbumFace`), blogs (+ image), reels (+ `ReelFace`), **published** stories (+ `StoryFace` + image), `FaceChatRoom`.
 - **Regular** seeded users (`user01@demo.com` …) are normalized to **`FACE_USER`** per face (not `FACE_HOST`) so the **profile directory** is populated; **admins** stay **`FACE_HOST`** for moderation semantics.
 - Logic is **idempotent** (counts per user+face, fills up to 5).
 
@@ -302,9 +302,9 @@ Implementation: `many_faces_backend/BeDemo.Api/Scripts/DatabaseSeeder.cs`; invok
 
 ```mermaid
 flowchart TB
-  Users[SeedUsersAsync demo users]
+  Users[SeedUsersAsync seeded users]
   Grid[SeedFaceGridContentAsync]
-  Loop[For each demo user and each face]
+  Loop[For each seeded user and each face]
   Five[Up to 5 items per content class]
   Classes[Wall Album Blog Reel Story ChatRoom]
   Users --> Grid
@@ -338,6 +338,6 @@ i18n: wall and settings strings exist for **en / sk / cz**; other app areas may 
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — OAuth2 + Stories curl walkthrough.
 - [acl-and-capabilities.md](./acl-and-capabilities.md) — capabilities API, permission keys, FE/admin wiring, tests.
 - [redis-subrepo.md](../readmes/redis-subrepo.md) — Redis submodule.
-- [fe-demo-overview.md](../readmes/fe-demo-overview.md) / [admin-demo-overview.md](../readmes/admin-demo-overview.md) — FE / admin extended overviews.
+- [fe-portal-overview.md](../readmes/fe-portal-overview.md) / [admin-portal-overview.md](../readmes/admin-portal-overview.md) — FE / admin extended overviews.
 - [git-submodules.md](./git-submodules.md) — submodule checkout and updates.
 - [security-crypto-sockets.md](./security-crypto-sockets.md) — TLS, JWT keys, WebSockets backlog.

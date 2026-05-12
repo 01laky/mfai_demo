@@ -355,7 +355,7 @@ flowchart LR
 
 ---
 
-## 19. Default demo credentials
+## 19. Default local development credentials
 
 - **Email:** `admin@admin.com`
 - **Password:** `admin`

@@ -10,7 +10,7 @@
 
 ## 1. Context — Why this submodule exists
 
-The Many Faces monorepo (`many_faces_main`) is a multi-submodule demo of a **face-scoped social platform**: configurable “faces” (tenants), OAuth2/JWT auth, ASP.NET Core API (`many_faces_backend`), Redis-backed jobs, a Python gRPC AI service (`many_faces_ai`), and rich web SPAs (`many_faces_portal`, `many_faces_admin`). **User-created** albums, blogs, and reels can enter an **AI-assisted moderation pipeline** (pending approval, admin queue, creator “My submissions”) — see [`docs/guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md).
+The Many Faces monorepo (`many_faces_main`) is a multi-submodule reference of a **face-scoped social platform**: configurable “faces” (tenants), OAuth2/JWT auth, ASP.NET Core API (`many_faces_backend`), Redis-backed jobs, a Python gRPC AI service (`many_faces_ai`), and rich web SPAs (`many_faces_portal`, `many_faces_admin`). **User-created** albums, blogs, and reels can enter an **AI-assisted moderation pipeline** (pending approval, admin queue, creator “My submissions”) — see [`docs/guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md).
 
 The **mobile app** is the portable client for the **same product story**. Phase 1 does **not** ship every web module; it **does** establish the same **configuration contract** (`GET /api/faces/config`), the same **auth model** (password + refresh, **`rememberMe` parity with the portal**), and a **shell UI** that reflects the selected face’s branding (`gradientSettings`). Future phases add grid renderers, SignalR, “My submissions”, etc.
 
@@ -59,7 +59,7 @@ The mobile `README.md` must be **long-form English** similar in spirit to:
 
 ### 3.1 Required README sections (use these headings)
 
-1. **Title + one-line summary** — Expo client for Many Faces AI demo; submodule of `many_faces_main`.
+1. **Title + one-line summary** — Expo client for Many Faces AI; submodule of `many_faces_main`.
 2. **Overview** — faces, URL/index concept (mobile uses **navigator paths** instead of browser URL but same `face.index`), public vs private faces, config from API.
 3. **What this app shows (Phase 1)** — bullet list: config-driven stack, login, face shell, placeholders, future grid.
 4. **Relationship to the web portal** — link to `many_faces_portal/README.md` (relative path from submodule: `../many_faces_portal/README.md` or monorepo-absolute URL on GitHub).

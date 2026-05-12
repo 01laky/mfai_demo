@@ -336,6 +336,6 @@ When introducing `reactHooks.configs.flat.recommended`:
 5. **(required)** **Tables (`useReactTable`):** memoize **column defs** and **data** references; avoid recreating columns inline in render when enabling compiler rules.
 6. **(required)** **`react-refresh/only-export-components`:** contexts folder may stay special-cased — do not break the existing `eslint.config.js` second block when editing hooks rules.
 7. **(required)** **Cypress / e2e:** if lint config `ignores` cypress, ensure new rules do not accidentally apply to files that should stay excluded.
-8. **(required)** After full preset adoption, **re-evaluate** whether any **`eslint-disable-next-line react-hooks/incompatible-library`** added earlier are still needed (admin demo removed some when rules were off — they may return under full preset).
+8. **(required)** After full preset adoption, **re-evaluate** whether any **`eslint-disable-next-line react-hooks/incompatible-library`** added earlier are still needed (**many_faces_admin** removed some when rules were off — they may return under full preset).
 9. **(required)** **`recommended-latest`:** treat as **volatile**; pin plugin version already exact in this repo — still re-run **§3.2** (preset dump) on every bump (**§5.4**).
 10. **(required)** If the team hits a **dead end** on a rule (plugin false positive), open an **upstream issue** with minimal repro before permanent disable.

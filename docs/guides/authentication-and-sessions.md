@@ -148,7 +148,7 @@ In `BeDemo.Api/appsettings.json` (and overridable via environment / secrets):
 | Key                                                                      | Role                                                                                                                                      |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **`Jwt:ExpiresInMinutes`**                                               | Default access-token lifetime when **`rememberMe` is not true** (typical “browser session” length).                                       |
-| **`Jwt:ExpiresInMinutesRememberMe`**                                     | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). In demo configs this can be very large; tune down for production. |
+| **`Jwt:ExpiresInMinutesRememberMe`**                                     | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). In local development configs this can be very large; tune down for production. |
 | **`Jwt:Issuer`**, **`Jwt:Audience`**                                     | Standard JWT validation; must match between token creation and validation.                                                                |
 | **`Jwt:RefreshTokenDaysSession`** / **`Jwt:RefreshTokenDaysRememberMe`** | Absolute lifetime (days) for stored refresh rows after password grant (shorter vs remember-me).                                           |
 
@@ -331,8 +331,8 @@ flowchart TB
 ## 7. Security and product notes
 
 1. **“Stay signed in”** keeps a **valid JWT** on the device longer. On a **shared computer**, that is higher risk than a short session.
-2. Tokens in **`localStorage`** are readable by JavaScript (XSS surface). **HttpOnly cookies** would be a different architecture; not what this demo uses.
-3. **Tune** `Jwt:ExpiresInMinutesRememberMe` per environment; demo values may be extremely large for convenience.
+2. Tokens in **`localStorage`** are readable by JavaScript (XSS surface). **HttpOnly cookies** would be a different architecture; not what this stack uses.
+3. **Tune** `Jwt:ExpiresInMinutesRememberMe` per environment; local development values may be extremely large for convenience.
 4. **Refresh tokens** are **rotated** server-side; clients must replace stored refresh material on each refresh response.
 
 ---

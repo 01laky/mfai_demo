@@ -276,7 +276,7 @@ Before merge, explicitly decide:
 
 - whether **HOST** may be assigned via the same endpoint as other global roles,
 - **404** vs **403** for missing users in admin API,
-- whether production needs **2FA** or a ticket system (out of scope for the demo).
+- whether production needs **2FA** or a ticket system (out of scope for local development).
 
 ---
 

@@ -41,8 +41,8 @@ Longer narratives that read like extended READMEs:
 
 | File                                               | Description                                 |
 | -------------------------------------------------- | ------------------------------------------- |
-| [fe-demo-overview.md](./fe-demo-overview.md)       | Architecture and features of `many_faces_portal`.     |
-| [admin-demo-overview.md](./admin-demo-overview.md) | Architecture and features of `many_faces_admin`.  |
+| [fe-portal-overview.md](./fe-portal-overview.md)       | Architecture and features of `many_faces_portal`.     |
+| [admin-portal-overview.md](./admin-portal-overview.md) | Architecture and features of `many_faces_admin`.  |
 | [redis-subrepo.md](./redis-subrepo.md)             | Developing with the `many_faces_redis` submodule. |
 
 **Auth / JWT / sessions:** see the canonical guide [authentication-and-sessions.md](../guides/authentication-and-sessions.md).

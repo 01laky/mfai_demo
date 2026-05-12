@@ -1,4 +1,4 @@
-# BeDemo API: OAuth2, faces, and Stories — curl walkthrough
+# Many Faces API (BeDemo.Api): OAuth2, faces, and Stories — curl walkthrough
 
 This document shows how to verify **OAuth2** registration and token issuance, set a **face role** (needed to see the stories list), and run a full **Stories** flow with **curl**. Useful for local development and post-deploy smoke tests.
 

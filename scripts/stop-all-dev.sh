@@ -14,9 +14,9 @@ echo "🛑 Stopping all development environments..."
 echo ""
 
 # ============================================================================
-# STOP LOGGER DEMO (Dozzle)
+# STOP LOGGER (Dozzle)
 # ============================================================================
-echo "📦 Stopping Logger Demo (many_faces_logger)..."
+echo "📦 Stopping Many Faces log viewer (many_faces_logger)..."
 if [ -f "many_faces_logger/scripts/stop-dev.sh" ]; then
     cd many_faces_logger
     ./scripts/stop-dev.sh > /dev/null 2>&1
@@ -24,7 +24,7 @@ if [ -f "many_faces_logger/scripts/stop-dev.sh" ]; then
 else
     docker-compose -f many_faces_logger/docker-compose.dev.yml stop 2>/dev/null || true
 fi
-echo "    ✅ Logger Demo stopped"
+echo "    ✅ Many Faces log viewer stopped"
 echo ""
 
 # ============================================================================
@@ -67,9 +67,9 @@ else
     docker-compose -f docker-compose.dev.yml rm -f admin-demo-dev 2>/dev/null || true
 fi
 
-# Stop AI Demo (many_faces_ai)
+# Stop Many Faces AI service (many_faces_ai)
 if [ -f "many_faces_ai/scripts/stop-dev.sh" ]; then
-    echo "  📦 Stopping AI Demo (many_faces_ai)..."
+    echo "  📦 Stopping Many Faces AI service (many_faces_ai)..."
     cd many_faces_ai
     ./scripts/stop-dev.sh 2>/dev/null || true
     cd ..
@@ -79,9 +79,9 @@ else
     docker-compose -f docker-compose.dev.yml rm -f ai-demo-dev 2>/dev/null || true
 fi
 
-# Stop Logger Demo (many_faces_logger)
+# Stop Many Faces log viewer (many_faces_logger)
 if [ -f "many_faces_logger/scripts/stop-dev.sh" ]; then
-    echo "  📦 Stopping Logger Demo (many_faces_logger)..."
+    echo "  📦 Stopping Many Faces log viewer (many_faces_logger)..."
     cd many_faces_logger
     ./scripts/stop-dev.sh 2>/dev/null || true
     cd ..

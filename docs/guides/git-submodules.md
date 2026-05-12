@@ -40,7 +40,7 @@ git remote add origin https://github.com/YOUR_USERNAME/many_faces_admin.git
 git branch -M main
 git push -u origin main
 
-# AI Demo
+# Many Faces AI service
 cd ../many_faces_ai
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_ai.git
 git branch -M main

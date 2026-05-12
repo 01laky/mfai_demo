@@ -1,6 +1,6 @@
 # AI-Assisted Content Approval
 
-This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current demo implementation** in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, and `many_faces_ai`, plus optional roadmap items.
+This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current reference implementation** in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, and `many_faces_ai`, plus optional roadmap items.
 
 **Related:** implementation task checklist (ticked items) — [`../prompts/user-content-approval-extensions-implementation-checklist.md`](../prompts/user-content-approval-extensions-implementation-checklist.md).
 
@@ -156,7 +156,7 @@ The **Moderation** area (superadmin-gated in UI; backend enforces the same):
 
 Internal AI diagnostics (raw model reason, trace IDs, flag dumps) are **not** shown to regular users in copy or badges.
 
-## Retention And Privacy (demo policy)
+## Retention And Privacy (local development policy)
 
 Configured under **`Retention`** in `many_faces_backend` `appsettings` (see submodule README):
 
@@ -174,7 +174,7 @@ Policy redacts **internal AI trace fields** on rejected/removed content whose hu
 
 Rejected (or edited pending) content flows through existing **update** endpoints: increment **`ModerationVersion`**, reset pipeline to **`PendingApproval`**, enqueue a **new** AI job, preserve prior events.
 
-## Roadmap (optional, not required for current demo)
+## Roadmap (optional, not required for the current reference stack)
 
 - Controlled auto-approval for strictly defined low-risk profiles.
 - Per-face moderation policy configuration.
@@ -183,7 +183,7 @@ Rejected (or edited pending) content flows through existing **update** endpoints
 
 ## Implementation Phase Checklist (historical)
 
-The work originally rolled out in slices; the rows below are **done** in the current monorepo demo unless explicitly listed as roadmap above.
+The work originally rolled out in slices; the rows below are **done** in the current monorepo reference stack unless explicitly listed as roadmap above.
 
 - **Phase 1 — Pending + public filtering + FE copy:** done.
 - **Phase 2 — AI jobs, gRPC contract, worker, validation, metrics, admin detail/bulk, creator submissions + notifications, retention helpers:** done.

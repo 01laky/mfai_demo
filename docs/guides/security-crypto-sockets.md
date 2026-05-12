@@ -165,7 +165,7 @@ sequenceDiagram
 | JWT validation            | **`ValidateLifetime = true`**, **`ValidAlgorithms` = ES512**, **`ClockSkew = 0`**                                                                                                                                   |
 | Access session (J6)       | Claim **`atv`** must match **`ApplicationUser.AccessTokenVersion`** (`OnTokenValidated`); **password or global `UserRoleId` change** bumps version + revokes active refresh tokens (`ApplicationDbContext` partial) |
 | Refresh tokens            | **Stored** (hash), rotate on use (`OAuthRefreshTokenStore`); in-memory tests use a **semaphore** so concurrent refresh replay is deterministic                                                                      |
-| OAuth clients (O1)        | **`OAuthClients`** + **`OAuthClientValidator`**; hashed **`client_secret`**; demo client seeded; `IPasswordHasher<OAuthClient>`                                                                                     |
+| OAuth clients (O1)        | **`OAuthClients`** + **`OAuthClientValidator`**; hashed **`client_secret`**; development OAuth client seeded; `IPasswordHasher<OAuthClient>`                                                                                     |
 | Access JWT (issue)        | **`OAuthAccessTokenFactory`** — ES512, global role + **`atv`** from DB, session vs remember TTL; **`OAuth2Service`** orchestrates grants                                                                            |
 | OAuth rate limits (O2)    | **`POST /api/oauth2/token`** and **`POST /api/oauth2/register`**: fixed window per IP; **`429`** + **`Retry-After`**; in **Testing**, limits bypassed unless **`OAuth2:BypassRateLimitInTesting=false`**            |
 | OAuth body signature      | **Rejected** (`400` `invalid_request`) in middleware; **`OAuthTokenRequestSignatureVerifier`** remains for legacy / tests (`IClock`)                                                                                |
@@ -254,7 +254,7 @@ Product or infra items not covered by the baseline table above; keep IDs for iss
 | **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `many_faces_ai` if exposure grows.                                                                                 |
 | **TRACK-DOCS-SUBMODULES**    | Exhaustive README sweep per submodule if required as a separate doc pass.                                                                 |
 
-**Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `many_faces_backend/BeDemo.Api`. Demo OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
+**Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `many_faces_backend/BeDemo.Api`. Seeded OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.
 
 ---
 
@@ -266,7 +266,7 @@ This section satisfies the **agent report / PR evidence** intent of [security-ha
 
 | Workstream (prompt §17.2) | Status in this repo | Evidence / gap |
 | --------------------------- | -------------------- | -------------- |
-| **K1–K6** keys / JWKS | **K2–K6** implemented for API validation + JWKS; **K1** production vault not in demo — use `Jwt:SigningPemPath` for stable dev/prod PEM | `ECDSAKeyService`, `OAuthJwksController`, `OAuthJwksTests`; **TRACK-INFRA-KMS** |
+| **K1–K6** keys / JWKS | **K2–K6** implemented for API validation + JWKS; **K1** production vault not in this reference stack — use `Jwt:SigningPemPath` for stable dev/prod PEM | `ECDSAKeyService`, `OAuthJwksController`, `OAuthJwksTests`; **TRACK-INFRA-KMS** |
 | **J1–J7** JWT validation | **J1,J3,J6,J7** enforced in `Program.cs` + `OAuthAccessTokenFactory`; **J2** `ClockSkew = 0` documented in [authentication-and-sessions.md](./authentication-and-sessions.md); **J4** single audience `Jwt:Audience` — documented rationale in auth guide §JWT | Code + `AccessTokenVersionTests` |
 | **O1–O6** OAuth | **O1** hashed client secrets; **O2** rate limits + 429; **O3** Identity lockout on password path (verify in `OAuth2Service`); **O4** body signature rejected; **O5/O6** documented as future / invite-only | `OAuthRateLimit429Tests`, `OAuthErrorPolicyIntegrationTests` |
 | **T1–T4** TLS | TLS at **edge** in prod; dev HTTPS optional `dev/generate-https-certs.sh` | Diagram below; HSTS when TLS everywhere |
@@ -361,7 +361,7 @@ sequenceDiagram
 
   Hub->>G: Generate or health
   G->>AI: gRPC over configured channel
-  Note over G,AI: Use TLS for gRPC in production deployments demo uses insecure channel in dev see many_faces_ai README
+  Note over G,AI: Use TLS for gRPC in production; for local development this stack uses an insecure channel — see many_faces_ai README
 ```
 
 ### Canonical diagrams — SPA auth + capabilities warmup (render-checked)

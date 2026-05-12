@@ -8,7 +8,7 @@
 # - Admin (many_faces_admin) - runs Vitest tests using 'yarn test --run'
 # - Database (many_faces_database) - infrastructure only, no tests
 # - Redis (many_faces_redis) - infrastructure only, no tests
-# - AI Demo (many_faces_ai) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
+# - Many Faces AI service (many_faces_ai) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
 # 
 # The script:
 # - Parses test output from different test frameworks (.NET, Vitest, Cypress)

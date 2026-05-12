@@ -30,7 +30,7 @@ Unauthenticated visits to protected routes redirect to sign-in, then return to t
 ### Header
 
 - **Hamburger** — toggles sidebar on small screens.
-- **Title:** Admin Demo.
+- **Title:** Many Faces Admin.
 - **Language** (`sk` / `en` / `cz`).
 - Admin **email** + **Sign out**.
 
@@ -252,7 +252,7 @@ flowchart TB
 
 REST CRUD; model: Album, AlbumFace, AlbumComment, AlbumLike. Visibility: Public (any signed-in), Private/Paid (creator for now).
 
-Endpoints mirror [`fe-demo-overview.md`](./fe-demo-overview.md) album table (`/api/albums` …).
+Endpoints mirror [`fe-portal-overview.md`](./fe-portal-overview.md) album table (`/api/albums` …).
 
 ---
 
@@ -268,7 +268,7 @@ Blog bound to one Face; HTML content; max 3 images; comments/likes. Endpoints un
 
 ---
 
-## 13. Default demo credentials
+## 13. Default local development credentials
 
 - **Email:** `admin@admin.com`
 - **Password:** `admin`

@@ -1,4 +1,4 @@
-# MFAI Demo — what is implemented (current snapshot)
+# Many Faces AI — what is implemented (current snapshot)
 
 A consolidated inventory of implemented areas. Use it as a baseline when deciding what to build next.
 
@@ -9,14 +9,14 @@ A consolidated inventory of implemented areas. Use it as a baseline when decidin
 ### Layout
 
 - Monorepo: `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, `many_faces_database`, `many_faces_logger`.
-- Main `docker-compose.dev.yml` for backend, frontend, admin, Seq, AI demo; DB and logger have their own compose files.
+- Main `docker-compose.dev.yml` for backend, frontend, admin, Seq, AI service; DB and logger have their own compose files.
 - Bash scripts for start, stop, status, clear, rebuild, test, lint.
 
 ### Monorepo scripts (`scripts/`)
 
 | Script                         | Purpose                                                                                                                         |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| **scripts/start-all-dev.sh**   | Start: DB → backend+Seq → frontend → AI demo → logger → admin; live status every 5s; auto-restart stopped containers.           |
+| **scripts/start-all-dev.sh**   | Start: DB → backend+Seq → frontend → AI service → logger → admin; live status every 5s; auto-restart stopped containers.           |
 | **scripts/stop-all-dev.sh**    | Stop all services in reverse order.                                                                                             |
 | **scripts/status-all.sh**      | One-shot status: containers, HTTP/gRPC reachability, ports, links.                                                              |
 | **scripts/clear-all-dev.sh**   | Remove containers and volumes (**data loss**).                                                                                  |
@@ -33,7 +33,7 @@ flowchart LR
   DB[(Database)]
   BE[Backend plus Seq]
   FE[Frontend]
-  AI[AI demo]
+  AI[AI service]
   LG[Logger]
   AD[Admin]
   DB --> BE --> FE --> AI --> LG --> AD

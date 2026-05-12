@@ -67,9 +67,9 @@ else
 fi
 echo ""
 
-# AI Demo — same checks as CI (ruff + pytest, no full torch stack)
+# Many Faces AI service — same checks as CI (ruff + pytest, no full torch stack)
 echo "═══════════════════════════════════════════════════════════"
-echo "  Verifying AI Demo (many_faces_ai / scripts/verify-ci.sh)"
+echo "  Verifying Many Faces AI service (many_faces_ai / scripts/verify-ci.sh)"
 echo "═══════════════════════════════════════════════════════════"
 if [ -d "many_faces_ai" ]; then
   find many_faces_ai/scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
