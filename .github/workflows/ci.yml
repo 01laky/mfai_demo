@@ -93,7 +93,9 @@ jobs:
       - name: Dependency audit (informational)
         run: yarn npm audit || true
 
-  # Python gRPC demo: protobuf generation, Ruff, pytest (torch intentionally omitted in CI install step).
+  # Python gRPC demo: protobuf generation, Ruff, pytest. ML stack (CPU torch +
+  # transformers) is required so test_server.py can import server.py (same as
+  # ai_demo/verify-ci.sh); otherwise the whole module skips and pytest exits 5.
   ai_demo:
     name: ai_demo
     runs-on: ubuntu-latest
@@ -111,10 +113,12 @@ jobs:
           cache: pip
           cache-dependency-path: ai_demo/requirements.txt
 
-      - name: Install tooling and gRPC deps (no torch)
+      - name: Install tooling, gRPC deps, and CPU ML stack for tests
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip wheel
+          pip install "setuptools<82"
           pip install ruff pytest grpcio==1.68.1 grpcio-tools==1.68.1 protobuf==5.28.3 grpcio-testing==1.68.1
+          pip install numpy accelerate "transformers>=4.36" torch --index-url https://download.pytorch.org/whl/cpu
 
       - name: Generate protobuf / gRPC stubs
         run: python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto
