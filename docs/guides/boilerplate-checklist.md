@@ -134,12 +134,8 @@ flowchart TB
 
 ### 🔄 CI/CD
 
-- ❌ **GitHub Actions** - No CI/CD workflows
-- **Recommendation**: Add `.github/workflows/` for:
-  - Automated testing on PR/push
-  - Docker image building
-  - Code quality checks (linter, formatter)
-  - Security scanning
+- ✅ **GitHub Actions** — The monorepo root (**`many_faces_main`**) includes **`.github/workflows/ci.yml`**: parallel jobs per submodule (backend, portal, admin, mobile, AI, infra compose checks, docs Mermaid) plus **`monorepo_scripts`** running **`scripts/ci-local.sh`** (lint → build → test with `SKIP_CYPRESS=1` by default). Several submodules also ship their own workflows when developed standalone.
+- **Optional for your fork**: add Dependabot, deployment workflows, or extra security scanning beyond what this demo already runs.
 
 ### 🔒 Security
 
@@ -151,11 +147,8 @@ flowchart TB
 
 ### 📊 Code Quality
 
-- ⚠️ **Pre-commit hooks** - Not configured
-- **Recommendation**: Add Husky for:
-  - Pre-commit linting/formatting
-  - Pre-push tests
-  - Commit message validation
+- ✅ **Git hooks** — **many_faces_portal**, **many_faces_admin**, **many_faces_backend**, and **many_faces_mobile** use **Husky** + **commitlint** (and lint-staged where configured). **many_faces_ai** uses the **`pre-commit`** Python framework (see **`many_faces_ai/README_PRE_COMMIT.md`** and **`.pre-commit-config.yaml`**), not Husky.
+- **Optional**: add a single monorepo-wide `pre-commit` config if you want one hook runner across all languages.
 
 ### 📈 Additional Documentation
 

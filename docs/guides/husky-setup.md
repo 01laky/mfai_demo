@@ -181,7 +181,7 @@ git commit --no-verify -m "your message"
 
 - `.pre-commit-config.yaml` - Pre-commit hooks configuration
 - `pyproject.toml` - Black and Ruff configuration
-- `README_HUSKY.md` - Detailed documentation
+- `README_PRE_COMMIT.md` - pre-commit (Python) hook documentation
 
 ## Notes
 

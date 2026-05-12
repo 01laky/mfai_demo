@@ -84,24 +84,26 @@ sleep 3
 # Start frontend (many_faces_portal)
 if [ -f "many_faces_portal/scripts/start-dev.sh" ]; then
     echo "  📦 Starting frontend (many_faces_portal)..."
-    cd many_faces_portal
-    
-    # Check if node_modules exists, if not install dependencies
+    cd many_faces_portal || exit 1
+
     if [ ! -d "node_modules" ]; then
         echo "    ⚙️  Installing dependencies..."
-        yarn install
-        if [ $? -ne 0 ]; then
+        if ! yarn install; then
             echo "    ❌ Failed to install dependencies!"
             cd ..
-            continue
+        else
+            echo "    ✅ Dependencies installed!"
+            ./scripts/start-dev.sh > /dev/null 2>&1 &
+            FRONTEND_PID=$!
+            echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
+            cd ..
         fi
-        echo "    ✅ Dependencies installed!"
+    else
+        ./scripts/start-dev.sh > /dev/null 2>&1 &
+        FRONTEND_PID=$!
+        echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
+        cd ..
     fi
-    
-    ./scripts/start-dev.sh > /dev/null 2>&1 &
-    FRONTEND_PID=$!
-    echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
-    cd ..
 else
     echo "  ⚠️  many_faces_portal/scripts/start-dev.sh not found"
 fi
@@ -111,25 +113,28 @@ sleep 3
 # Start many_faces_admin
 if [ -f "many_faces_admin/package.json" ]; then
     echo "  📦 Starting many_faces_admin..."
-    cd many_faces_admin
-    
-    # Check if node_modules exists, if not install dependencies
+    cd many_faces_admin || exit 1
+
     if [ ! -d "node_modules" ]; then
         echo "    ⚙️  Installing dependencies..."
-        yarn install
-        if [ $? -ne 0 ]; then
+        if ! yarn install; then
             echo "    ❌ Failed to install dependencies!"
             cd ..
-            continue
+        else
+            echo "    ✅ Dependencies installed!"
+            export VITE_DEV_PORT=8082
+            yarn dev > /dev/null 2>&1 &
+            ADMIN_PID=$!
+            echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
+            cd ..
         fi
-        echo "    ✅ Dependencies installed!"
+    else
+        export VITE_DEV_PORT=8082
+        yarn dev > /dev/null 2>&1 &
+        ADMIN_PID=$!
+        echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
+        cd ..
     fi
-    
-    export VITE_DEV_PORT=8082
-    yarn dev > /dev/null 2>&1 &
-    ADMIN_PID=$!
-    echo "    ✅ Admin Demo started (PID: $ADMIN_PID)"
-    cd ..
 else
     echo "  ⚠️  many_faces_admin/package.json not found"
 fi
