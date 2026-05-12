@@ -19,6 +19,7 @@ Security and trust boundaries are a high priority in the architecture: the demo 
 - Role-aware frontend flows backed by backend authorization and explicit capability checks.
 - A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, logging, and AI service up together.
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
+- AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail.
 
 ## System Overview
 
@@ -212,29 +213,31 @@ flowchart LR
 
 ## AI-Assisted Content Approval
 
-Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns the approval status and public visibility rules, creates and processes AI review job records, stores moderation audit events, and enforces that only `SUPER_ADMIN` can approve, reject, or remove submitted content in the current phase. The AI service provides a typed structured recommendation, while the admin portal exposes moderation queues, metrics, detail, and audit history for superadmin review. Detailed design: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns approval status and visibility, enqueues **asynchronous** AI review work (`content.ai-review` on Redis), validates structured recommendations, notifies creators and super-admins on key transitions, and restricts approve / reject / remove / bulk / requeue to **`SUPER_ADMIN`**. Creators use **`GET /api/my/content-submissions`** and the **My submissions** page; the admin app exposes the moderation queue with **filters, metrics + alerts, bulk actions**, and per-item audit. Optional **retention** hosting can redact internal AI trace fields after a policy delay. Full reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 
 ```mermaid
 flowchart TD
     user["FE user creates<br/>album / blog / reel"] --> api["Backend create endpoint"]
     api --> pending["Store as PendingApproval"]
     pending --> hidden["Exclude from public<br/>grid/list/detail views"]
-    pending --> queue["Queue AI review job"]
+    pending --> notify1["Notifications<br/>creator + super-admins"]
+    pending --> queue["Enqueue Redis job<br/>content.ai-review"]
 
-    queue --> ai["AI reviewer<br/>bounded queue + structured recommendation"]
-    ai --> policy["Backend policy<br/>validate confidence, risk, flags"]
+    queue --> worker["Worker + ContentAiReviewService"]
+    worker --> ai["ai_demo ReviewContent<br/>classifier + boundary flags"]
+    ai --> policy["Backend policy<br/>confidence, risk, flags, version"]
 
-    policy --> admin["Admin moderation queues"]
-    admin --> approve["Approve<br/>publicly visible"]
-    admin --> reject["Reject<br/>creator sees safe reason"]
-    admin --> remove["Remove<br/>audit kept"]
+    policy --> admin["Admin moderation<br/>filters, metrics, bulk"]
+    admin --> approve["Approve → public lists"]
+    admin --> reject["Reject → safe user message"]
+    admin --> remove["Remove → audit retained"]
 
     super["SUPER_ADMIN"] --> admin
-    super --> remove
 
-    approve --> public["FE public content views"]
-    reject --> creator["Creator status views"]
-    remove --> audit["Moderation audit log"]
+    approve --> public["FE public grids / detail"]
+    reject --> mysub["My submissions + detail ?edit=1"]
+    pending --> mysub
+    remove --> audit["ContentModerationEvents"]
     policy --> audit
     admin --> audit
 ```

@@ -199,6 +199,23 @@ flowchart LR
 
 ---
 
+## 7.5 User content moderation (SUPER_ADMIN)
+
+**Moderation** in the sidebar (visible when the signed-in user is **`SUPER_ADMIN`**) lists albums, blogs, and reels submitted from the user-facing app: **`PendingApproval`** and related AI review states. The page supports rich **filters** (content type, approval and AI status, face, author, risk tier, flags substring, confidence band, submitted time window, reviewer, queue age, moderation version), **metrics** with **alerts** when the queue is stressed, a **detail** drawer with **audit** events, single-item **approve / reject / remove / re-queue AI**, and **bulk** actions with per-row results. All routes are enforced again on the API.
+
+See [`guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md).
+
+```mermaid
+flowchart TB
+  Q[Moderation queue] --> F[Filter rows]
+  Q --> M[Metrics plus alerts]
+  Q --> S[Select rows bulk]
+  S --> B[Approve reject remove requeue]
+  Q --> A[Audit timeline per item]
+```
+
+---
+
 ## 8. AI Chat
 
 Sidebar **AI Chat**: connection state, **You** / **AI** history, input, **Send**, “AI is typing…” indicator, long-running notice. History is in-memory for the browser session (refresh clears it).
@@ -210,9 +227,10 @@ Sidebar **AI Chat**: connection state, **You** / **AI** history, input, **Send**
 1. Sign in.
 2. Dashboard metrics.
 3. Users — create/edit as needed.
-4. Faces — create, tune gradient and visibility.
-5. Pages — routes, translations, grid layout.
-6. AI Chat — optional assistance.
+4. **Content moderation** (superadmin) — pending user submissions, metrics, bulk decisions, audit.
+5. Faces — create, tune gradient and visibility.
+6. Pages — routes, translations, grid layout.
+7. AI Chat — optional assistance.
 
 ### Diagram: typical workflow
 
@@ -221,10 +239,11 @@ flowchart TB
   W1[1 Sign in]
   W2[2 Dashboard metrics]
   W3[3 Users CRUD]
-  W4[4 Faces gradient visibility]
-  W5[5 Pages routes grid]
-  W6[6 AI Chat optional]
-  W1 --> W2 --> W3 --> W4 --> W5 --> W6
+  W4[4 Content moderation optional]
+  W5[5 Faces gradient visibility]
+  W6[6 Pages routes grid]
+  W7[7 AI Chat optional]
+  W1 --> W2 --> W3 --> W4 --> W5 --> W6 --> W7
 ```
 
 ---

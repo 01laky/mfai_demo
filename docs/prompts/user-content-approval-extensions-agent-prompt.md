@@ -346,6 +346,8 @@ Tests should be focused and fast. Prefer pure helper tests for formatting/filter
 
 Leave these unchecked in this canonical prompt. Tick them only in the implementation PR or copied agent task list.
 
+Implementation progress with checked items lives next to this prompt in [user-content-approval-extensions-implementation-checklist.md](user-content-approval-extensions-implementation-checklist.md).
+
 - [ ] Audit current moderation implementation across `be_demo`, `ai_demo`, `admin_demo`, and `fe_demo`, including complete unit-test gap notes.
 - [ ] Add or complete creator-owned listing APIs for albums, blogs, and reels, including complete unit/integration tests for ownership, moderation fields, and non-owner access denial.
 - [ ] Add a unified FE “My submissions” experience or equivalent creator-owned moderation surface, including complete unit tests for grouping, labels, safe messages, and empty states.
@@ -381,3 +383,14 @@ Leave these unchecked in this canonical prompt. Tick them only in the implementa
 - FE/admin clients match backend contracts.
 - Every implemented behaviour is covered by tests.
 - The workflow remains safe if the AI service is unavailable, wrong, slow, or returns invalid data.
+
+## 18. Implementation Notes From Current Branch
+
+The current branch implements the extension baseline while preserving the core safety boundary:
+
+- `be_demo` adds `GET /api/my/content-submissions` for creator-owned albums, blogs, and reels with safe moderation fields only.
+- `be_demo` adds `POST /api/contentmoderation/bulk` for `SUPER_ADMIN` bulk approve/reject/remove/requeue, per-item results, per-item audit events, required reasons for reject/remove, Redis requeue integration, creator notifications, richer metrics, and retention/media helper coverage.
+- `fe_demo` adds the protected `/my-submissions` creator page, data hook, grouping helpers, safe reason display, empty states, and tests for grouping/status behaviour.
+- `admin_demo` extends moderation filters, metrics widgets, queue warnings, bulk selection, bulk shared reason payloads, and unit tests for hook/helper behaviour.
+- `ai_demo` keeps Qwen as the advisory model path and strengthens the deterministic classifier fallback used by `ReviewContent` for policy text categories, unsafe links, unsupported media metadata, and low-quality submissions.
+- Real image/video model inference remains a documented integration boundary; this branch implements URL/file metadata safety signals and tests rather than downloading or running a heavyweight media model by default.

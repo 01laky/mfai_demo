@@ -31,7 +31,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 ## 3. Frontend (`fe_demo`) — what it’s for
 
 - **Primary users:** Visitors and authenticated members of faces.
-- **Responsibilities:** Auth (OAuth2 + JWT session), localized routing (`/:lang/...`), **face-aware navigation**, rendering **CMS-like pages from API** (`FacePageView`, grid system), social surfaces (friends, messenger, settings), and optional richer features (stories wall, reels, albums, profiles) backed by REST + hubs.
+- **Responsibilities:** Auth (OAuth2 + JWT session), localized routing (`/:lang/...`), **face-aware navigation**, rendering **CMS-like pages from API** (`FacePageView`, grid system), social surfaces (friends, messenger, settings), **My submissions** for pending user-created albums/blogs/reels, and optional richer features (stories wall, reels, albums, profiles) backed by REST + hubs.
 - **Design intent:** One shell (header/footer/settings panel) swapping **tenant context** (`FaceConfigProvider`) — users can operate in **their** tenant or land on **public** faces **without treating “public CMS” as second-class once logged in**.
 - **Data & layout contract:** See **[§8 — Frontend architecture (face scope, grids, responsiveness)](#8-frontend-architecture--face-scoped-data-grid-specs-responsiveness)**.
 
@@ -40,7 +40,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 ## 4. Admin (`admin_demo`) — what it’s for
 
 - **Primary users:** Super admins / admins managing the estate; tenant admins scoped to faces where policy allows.
-- **Responsibilities:** OAuth login against the API (often **`admin` face prefix** in dev), dashboards, **Users** CRUD, **Faces** CRUD, **Pages** CRUD (+ **route translations**), **`Page Types`**, grid layout authoring (`GridLayoutEditor` + component picker), wall ticket moderation hooks where enabled, optional AI Chat page depending on deployment.
+- **Responsibilities:** OAuth login against the API (often **`admin` face prefix** in dev), dashboards, **Users** CRUD, **Faces** CRUD, **Pages** CRUD (+ **route translations**), **`Page Types`**, grid layout authoring (`GridLayoutEditor` + component picker), **user content moderation** (superadmin queue, metrics, bulk, audit) for albums/blogs/reels from the Frontend, wall ticket moderation hooks where enabled, optional AI Chat page depending on deployment.
 - **Design intent:** **Structure and policy** precede polish: define **what routes exist**, **who can see whom**, **what grids host which component types**. Content can still live in-domain via APIs/UI the Frontend exposes once structure exists.
 
 ---
@@ -51,7 +51,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 |-------|------|
 | **`be_demo`** | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC client to AI. |
 | **`db_demo`** / **`redis_demo`** | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides). |
-| **`ai_demo`** | Local model / gRPC `Health` + `Generate` boundary for demos. |
+| **`ai_demo`** | gRPC `Health`, local Qwen `Generate`, and **`ReviewContent`** — structured, advisory recommendations for user-created album/blog/reel moderation (`be_demo` validates and `SUPER_ADMIN` finalizes). |
 
 ---
 
@@ -59,7 +59,8 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 1. **Operator** creates/edits face + adds **static pages** + drops **grid blocks** with component types → saves `gridSchema`.
 2. **End user** (guest or logged-in, depending on face and page guards) visits `/:lang/:faceIndex/...`, loads config → sees composed page + social chrome.
-3. **Moderation / escalation** flows stay on Admin or guarded API routes; JWT + face scope prevent cross-tenant leaks (see ACL guides).
+3. **User-created content moderation:** pending albums/blogs/reels stay off public grids until **`Approved`**; Redis drives AI review; creators use **My submissions** on the Frontend; **`SUPER_ADMIN`** uses the Admin moderation screen (filters, metrics, bulk, audit). See [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+4. **Other moderation / escalation** (e.g. wall tickets) stays on Admin or guarded API routes; JWT + face scope prevent cross-tenant leaks (see ACL guides).
 
 ---
 

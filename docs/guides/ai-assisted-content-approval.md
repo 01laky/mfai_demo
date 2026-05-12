@@ -1,374 +1,192 @@
 # AI-Assisted Content Approval
 
-This guide describes the intended approval process for user-created content in Many Faces AI. It is a product and engineering reference, not an implementation completion record.
+This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current demo implementation** in `be_demo`, `fe_demo`, `admin_demo`, and `ai_demo`, plus optional roadmap items.
+
+**Related:** implementation task checklist (ticked items) — [`../prompts/user-content-approval-extensions-implementation-checklist.md`](../prompts/user-content-approval-extensions-implementation-checklist.md).
 
 ## Scope
 
-The workflow applies to content created by regular users from the user-facing frontend (`fe_demo`):
+The workflow applies to content created by **regular users** from the user-facing frontend (`fe_demo`):
 
 - Albums
 - Blogs
 - Reels
 
-It does not cover admin page/grid configuration, chat room creation, stories, ads, or user profiles.
+It does not cover admin page/grid configuration, chat room creation, stories, ads, or user profiles (unless they reuse the same notification infrastructure).
 
 ## Product Goal
 
-Users should be able to create useful content inside a face, but that content should not become public immediately. New user-created albums, blogs, and reels should enter an approval process first.
+Users create content inside a **face**, but **non-approved** items must **not** appear in public grids, lists, or detail views for other users. The backend owns **approval status**, **public visibility**, **AI job lifecycle**, **audit events**, and **who may finalize** moderation decisions.
 
-The first implementation phase stores content as `PendingApproval`, keeps it out of public lists, creates an AI review job record, and exposes a superadmin-only moderation queue. A later phase can connect the queued work to a real AI reviewer service and richer operational dashboards.
+**Safety rule (unchanged):**
 
-## Current Implementation Snapshot
+- **AI recommends** (structured gRPC response).
+- **Backend policy validates** (ranges, risk, stale moderation version).
+- **`SUPER_ADMIN` finalizes** approve / reject / remove in the current phase (no `ADMIN` / `FACE_ADMIN` moderation powers on this queue unless product explicitly changes that).
 
-The current branch implements the foundation described in this guide:
+## What Is Implemented Today
 
-- `Album`, `Blog`, and `Reel` records include approval status, AI review status/metadata, moderation versioning, human decision metadata, and removal metadata.
-- Regular FE-created albums, blogs, and reels are saved as `PendingApproval` and are not returned by public list queries until approved.
-- Existing content is protected by migration defaults that keep migrated rows `Approved`.
-- Backend moderation APIs list moderation items and allow approve/reject/remove actions for `SUPER_ADMIN` only.
-- `ADMIN`, `FACE_ADMIN`, and regular FE users cannot approve, reject, or remove content through the moderation API.
-- `AiReviewJobs` and `ContentModerationEvents` provide the queue/audit foundation for future AI processing.
-- `fe_demo` shows creator-facing submitted-for-approval copy after album/blog/reel create.
-- `admin_demo` includes a first `Moderation` screen for superadmin review actions.
-- The Part 2 rollout adds a typed AI `ReviewContent` gRPC contract, backend job worker processing for `content.ai-review`, retry/fallback behaviour, structured AI recommendation persistence, moderation metrics, admin detail/audit history, and creator-safe status badges.
-
-The AI integration is intentionally conservative. It recommends and records model/version/trace metadata, but it does not autonomously publish or remove content.
+| Area | Behaviour |
+|------|-----------|
+| **Persistence** | `Album`, `Blog`, `Reel` carry `ApprovalStatus`, AI fields, moderation version, human/removal metadata, `SubmittedAtUtc`. |
+| **Defaults** | Regular FE creates → `PendingApproval`. Migrated / admin-created paths default to `Approved` where applicable. |
+| **Public API** | List/grid/detail queries return **only `Approved`** content for non-owners; owners may load their own pending/rejected items for detail/edit flows. |
+| **AI pipeline** | Redis job type `content.ai-review`; `ContentAiReviewService` calls `ai_demo` `ReviewContent`, validates response, retries with backoff, escalates to `NeedsHumanReview` after max attempts. |
+| **AI service** | Deterministic classifier (text + media URL metadata) + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
+| **Admin** | `ContentModerationController`: queue with filters (type, status, AI status, face, author, risk, flags substring, confidence band, submitted window, reviewer, queue age, moderation version), metrics `{ metrics, alerts }`, per-item actions, **bulk** approve/reject/remove/requeue, audit events. |
+| **Creator FE** | `GET /api/my/content-submissions`, **My submissions** page (`/my-submissions`), grouping helpers, safe reasons, links to detail with optional `?edit=1`, edit/delete gated on owner + pending/rejected. |
+| **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
+| **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `ai_demo/test_server.py`. |
 
 ## Core Rule
 
-Regular FE user-created content should start as:
+Regular FE user-created content starts as:
 
-- `PendingApproval`
+- **`PendingApproval`**
 
-Existing public content and admin-created content should not be accidentally hidden. The recommended default is:
+Existing public content should not be hidden accidentally:
 
-- existing migrated content: `Approved`
-- admin-created content: `Approved`
-- regular FE-created content: `PendingApproval`
+- **Migrated content:** `Approved` (via migration defaults).
+- **Admin-created / product-chosen paths:** typically `Approved` unless explicitly submitted through the same pending flow.
 
-## Content Statuses
+## Content Statuses (`ContentApprovalStatus`)
 
-Keep the final public lifecycle separate from AI processing state.
+| Status | Meaning |
+|--------|---------|
+| `PendingApproval` | Awaiting human decision; not public to others. |
+| `Approved` | Shown in normal public catalog/detail flows. |
+| `Rejected` | Not public; creator may see safe message; may edit/resubmit per policy. |
+| `Removed` | Removed from publication; audit retained; prefer soft semantics over hard delete for moderation. |
 
-Implemented content status:
+## AI Review Statuses (`AiReviewStatus`)
 
-- `PendingApproval` - created by a regular FE user and waiting for review
-- `Approved` - public and visible in normal grid/list/detail views
-- `Rejected` - not public; creator may see a safe rejection message
-- `Removed` - was public or reviewed, then removed by an authorized admin/superadmin
+AI state is **separate** from final approval so history can record “AI recommended reject, superadmin approved with reason”.
 
-Optional:
-
-- `Draft` - only if product wants explicit draft editing before submission
-
-## AI Review Statuses
-
-AI review is a processing/recommendation state, not the same thing as final publication.
-
-Implemented AI review status:
-
-- `NotQueued`
-- `Queued`
-- `InProgress`
-- `RecommendedApprove`
-- `RecommendedReject`
-- `NeedsHumanReview`
-- `Failed`
-
-This separation allows the system to say: “AI recommended reject, but a superadmin approved with a reason” without losing history.
+Implemented values: `NotQueued`, `Queued`, `InProgress`, `RecommendedApprove`, `RecommendedReject`, `NeedsHumanReview`, `Failed`.
 
 ## High-Level Flow
 
 ```mermaid
 flowchart TD
-    user["FE user creates<br/>album / blog / reel"] --> create["Backend create endpoint"]
-    create --> pending["Save content<br/>ApprovalStatus = PendingApproval"]
-    pending --> hidden["Exclude from public<br/>grid/list/detail queries"]
-    pending --> queue["Queue AI review job"]
+    subgraph fe["fe_demo"]
+        U["User creates album / blog / reel"]
+        MS["My submissions page<br/>GET /api/my/content-submissions"]
+        D["Detail + optional ?edit=1<br/>owner-gated edit/delete"]
+    end
 
-    queue --> worker["AI review worker<br/>bounded batch size"]
-    worker --> ai["AI service returns<br/>structured recommendation"]
-    ai --> policy["Backend policy validates<br/>confidence, risk, flags"]
+    subgraph be["be_demo"]
+        C["Create endpoint<br/>PendingApproval"]
+        N["Notifications<br/>creator + super-admins"]
+        J["Enqueue Redis job<br/>content.ai-review"]
+        W["RedisJobWorkerService<br/>ContentAiReviewService"]
+        G["gRPC ReviewContent → ai_demo"]
+        V["Validate AI response<br/>policy + version"]
+        M["GET /api/contentmoderation/metrics<br/>alerts + structured logs"]
+        A["SUPER_ADMIN decisions<br/>single + bulk + requeue"]
+        E["ContentModerationEvents<br/>audit trail"]
+        R["Optional retention worker<br/>redact AI trace fields"]
+    end
 
-    policy --> approveRec["RecommendedApprove"]
-    policy --> rejectRec["RecommendedReject"]
-    policy --> human["NeedsHumanReview"]
+    subgraph ai["ai_demo"]
+        RC["ReviewContent<br/>classifier + boundary flags"]
+    end
 
-    approveRec --> admin["SUPER_ADMIN<br/>moderation queue"]
-    rejectRec --> admin
-    human --> admin
-
-    admin --> approved["Approved<br/>publicly visible"]
-    admin --> rejected["Rejected<br/>not public"]
-    admin --> removed["Removed<br/>not public, audit kept"]
-
-    approved --> publicViews["FE public grids/lists/details"]
-    rejected --> creatorViews["Creator status views"]
-    removed --> audit["Moderation audit log"]
+    U --> C
+    C --> N
+    C --> J
+    J --> W
+    W --> G
+    G --> RC
+    RC --> V
+    V --> M
+    V --> A
+    A --> E
+    MS --> D
+    D --> be
+    R -.->|"Retention:Enabled"| E
 ```
 
-## Backend Responsibilities
+## Key HTTP Endpoints (summary)
 
-The backend is the source of truth for approval status and visibility.
+| Method | Path | Role | Notes |
+|--------|------|------|--------|
+| GET | `/api/my/content-submissions` | Authenticated creator | Unified list with `canEdit` / `canDelete`; safe fields only. |
+| GET | `/api/contentmoderation` | `SUPER_ADMIN` | Filterable moderation queue. |
+| GET | `/api/contentmoderation/metrics` | `SUPER_ADMIN` | JSON `{ metrics, alerts }`; alerts also logged. |
+| POST | `/api/contentmoderation/bulk` | `SUPER_ADMIN` | Per-item results; reasons required for reject/remove. |
+| POST | `/api/contentmoderation/{type}/{id}/approve|reject|remove` | `SUPER_ADMIN` | Single-item decisions. |
+| GET | `/api/contentmoderation/{type}/{id}/events` | `SUPER_ADMIN` | Audit history. |
 
-Required responsibilities:
+Public album/blog/reel list endpoints remain **`Approved`-only** for anonymous or non-owning callers; detail routes enforce owner vs public rules in controllers.
 
-- Set regular FE-created albums/blogs/reels to `PendingApproval`.
-- Store approval metadata and creator ownership.
-- Keep public queries filtered to `Approved`.
-- Prevent users from approving their own content through public APIs.
-- Expose protected review/moderation APIs for `SUPER_ADMIN` only in this phase.
-- Store AI recommendation metadata separately from final status.
-- Apply backend policy before any auto-transition.
-- Write audit events for submit, approve, reject, remove, and override-style transitions.
+## AI Response Shape (contract)
 
-Implemented approval metadata includes:
+The gRPC layer maps to persisted fields including:
 
-- `ApprovalStatus`
-- `SubmittedAtUtc`
-- `HumanReviewedAtUtc`
-- `HumanReviewedByUserId`
-- `HumanDecisionReason`
-- `RemovedAtUtc`
-- `RemovedByUserId`
-- `RemovalReason`
-- `CreatedByUserId` / creator ownership fields
-- `ModerationVersion`
+- `decision` → validated enum
+- `confidence`, `riskLevel`, `flags[]`
+- `reason` (internal / admin-facing where appropriate)
+- `userMessage` (creator-safe)
+- `modelVersion`, `traceId`
 
-Recommended AI metadata:
+Invalid or high-risk combinations are forced to **`NeedsHumanReview`** after validation in the backend worker.
 
-- `AiReviewStatus`
-- `AiReviewDecision`
-- `AiReviewConfidence`
-- `AiReviewRiskLevel`
-- `AiReviewFlagsJson`
-- `AiReviewReason`
-- `AiReviewUserMessage`
-- `AiReviewModelVersion`
-- `AiReviewTraceId`
-- `AiReviewedAtUtc`
+## Redis Queue And Backpressure
 
-## AI Reviewer Responsibilities
+- Jobs are **not** processed synchronously on HTTP create.
+- Worker respects **retry delay**, **max attempts**, **stale moderation version** (ignored jobs), and terminal states.
+- Overload must **never** auto-publish: worst case content stays `PendingApproval` with AI in `Queued` / `Failed` / `NeedsHumanReview`.
 
-AI should return structured recommendations. It should not be treated as an unrestricted autonomous publisher by default.
+## Admin Moderation UI (`admin_demo`)
 
-Safe first rule:
+The **Moderation** area (superadmin-gated in UI; backend enforces the same):
 
-- AI recommends.
-- Backend policy validates.
-- `SUPER_ADMIN` finalizes in the current implementation.
-- Every decision is auditable.
+- Primary + secondary **filter** rows aligned with backend query parameters.
+- **Metrics** cards: pending, AI queue states, failed jobs, oldest pending, avg/P95 latency, human-review counts, timeout-ish job heuristic, top flags table, pending-by-face table.
+- **Operational banner** when queue age, failed jobs, or alert severities warrant attention.
+- **Bulk** selection, shared reason, confirmation for destructive actions, per-item result summary.
+- **Detail drawer** with audit timeline.
 
-Target AI response shape:
+## Creator Experience (`fe_demo`)
 
-```json
-{
-  "decision": "approve | reject | needs_human_review",
-  "confidence": 0.92,
-  "riskLevel": "low | medium | high",
-  "flags": ["spam", "unsafe_link", "low_quality"],
-  "reason": "Internal explanation for admins.",
-  "userMessage": "Safe optional message for the creator.",
-  "modelVersion": "moderation-v1",
-  "traceId": "ai-review-..."
-}
-```
+- After create: submitted-for-approval copy (existing success paths).
+- **My submissions:** grouped cards (pending, under AI review, needs review, approved, rejected, removed) with safe truncated reasons.
+- **Detail pages:** edit/delete controls only for **owner** and while status is **pending or rejected**; `?edit=1` opens the editor when allowed.
 
-Backend must treat invalid, incomplete, low-confidence, or high-risk AI responses as `NeedsHumanReview`.
+Internal AI diagnostics (raw model reason, trace IDs, flag dumps) are **not** shown to regular users in copy or badges.
 
-## AI Queue And Backpressure
+## Retention And Privacy (demo policy)
 
-AI review should not run directly in the user create request. The create request should save content and enqueue review work.
+Configured under **`Retention`** in `be_demo` `appsettings` (see submodule README):
 
-Recommended job fields:
+- `Enabled` — run hosted loop (default off in many dev profiles).
+- `Execute` — `false` = dry-run counts only; `true` = persist redactions.
+- `IntervalHours` — spacing between runs.
 
-- `ContentType`
-- `ContentId`
-- `FaceId`
-- `CreatedByUserId`
-- `Priority`
-- `Status`
-- `Attempts`
-- `MaxAttempts`
-- `NextAttemptAtUtc`
-- `CreatedAtUtc`
-- `StartedAtUtc`
-- `CompletedAtUtc`
-- `LastError`
-
-Recommended controls:
-
-- global max concurrent reviews
-- per-face queue limits
-- per-user submission limits
-- fixed batch sizes
-- retry backoff
-- max attempts
-- duplicate/version detection
-- circuit breaker when AI is unavailable
-- fallback to `NeedsHumanReview`
-
-If the queue is overloaded, content should remain `PendingApproval`; overload must never publish content.
-
-## Admin Moderation
-
-The admin portal exposes a first dedicated moderation area.
-
-Target tabs/queues:
-
-- Pending
-- AI Recommended Approval
-- AI Recommended Rejection
-- Needs Human Review
-- Approved
-- Rejected
-- Removed
-
-Recommended filters:
-
-- content type
-- face
-- author
-- approval status
-- AI review status
-- risk level
-- AI flags
-- confidence range
-- date range
-- reviewer
-
-Recommended detail view:
-
-- content preview
-- author and face metadata
-- current approval status
-- AI recommendation
-- AI reason and flags
-- safe user-facing rejection message
-- moderation history
-- approve / reject / remove actions
-- superadmin override action with required reason
-
-## Superadmin Rules
-
-`SUPER_ADMIN` can override the moderation system.
-
-Allowed actions:
-
-- approve pending content
-- approve AI-rejected content
-- reject AI-approved content
-- reject pending content
-- remove already approved content
-- view AI metadata and audit history
-- override AI recommendations with a reason
-
-Prefer `Removed` over hard delete for moderation removals. This keeps auditability and makes later review possible.
-
-Current phase rule:
-
-- `SUPER_ADMIN` may approve, reject, and remove content.
-- `ADMIN` and `FACE_ADMIN` may not approve, reject, or remove user-created albums/blogs/reels.
-- UI gating is for user experience only; backend enforcement is mandatory and covered by tests.
+Policy redacts **internal AI trace fields** on rejected/removed content whose human/removal decision is older than **`DefaultRetentionDays`** (**180** days in `ContentModerationHelpers`), preserves **audit events**, and records retention actions with **`ModerationActorType.Retention`**.
 
 ## Audit Log
 
-Every important transition should write a moderation event.
-
-Recommended event fields:
-
-- `ContentType`
-- `ContentId`
-- `FaceId`
-- `OldApprovalStatus`
-- `NewApprovalStatus`
-- `OldAiReviewStatus`
-- `NewAiReviewStatus`
-- `ActorType`
-- `ActorUserId`
-- `Reason`
-- `UserMessage`
-- `AiTraceId`
-- `AiModelVersion`
-- `CreatedAtUtc`
-
-Events to log:
-
-- content submitted
-- AI job queued
-- AI processing started
-- AI recommendation completed
-- AI failed / retry scheduled / human review required
-- admin approved
-- admin rejected
-- superadmin override
-- approved content removed
-- removed content restored, if supported
-
-## FE User Experience
-
-The creator should receive clear copy after submitting content:
-
-- “Submitted for approval.”
-- “Your content was created and is waiting for review.”
-- “This item is not public yet.”
-
-Creator-owned content views can show:
-
-- Pending approval
-- Under AI review
-- Needs review
-- Approved
-- Rejected
-- Removed
-
-Do not expose internal AI flags, trace ids, or model details to regular users. Show only safe user-facing messages.
+`ContentModerationEvents` capture submit, AI progress, recommendations, failures, human decisions, bulk actions, and retention. Reasons passed through `RedactForAudit` for very long strings.
 
 ## Resubmission
 
-If rejected content can be edited and resubmitted:
+Rejected (or edited pending) content flows through existing **update** endpoints: increment **`ModerationVersion`**, reset pipeline to **`PendingApproval`**, enqueue a **new** AI job, preserve prior events.
 
-- increment a moderation version or create a new content version
-- reset status to `PendingApproval`
-- enqueue a new AI review
-- keep old moderation events
+## Roadmap (optional, not required for current demo)
 
-Do not overwrite old rejection reasons or AI decisions without history.
+- Controlled auto-approval for strictly defined low-risk profiles.
+- Per-face moderation policy configuration.
+- Heavier image/video models behind the existing **boundary** flags.
+- External alerting integrations (today: structured logs + admin UI alerts).
 
-## Implementation Phases
+## Implementation Phase Checklist (historical)
 
-Phase 1:
+The work originally rolled out in slices; the rows below are **done** in the current monorepo demo unless explicitly listed as roadmap above.
 
-- Add pending approval status for FE-created albums/blogs/reels.
-- Filter public queries to approved content.
-- Add user-facing submitted/pending copy.
+- **Phase 1 — Pending + public filtering + FE copy:** done.
+- **Phase 2 — AI jobs, gRPC contract, worker, validation, metrics, admin detail/bulk, creator submissions + notifications, retention helpers:** done.
+- **Phase 3+ — optional auto-approve, per-face policy, external ops integrations:** not implemented unless added later.
 
-Phase 2A:
-
-- Add AI review status and metadata.
-- Add queue/job model.
-- Add admin moderation lists without real AI.
-
-Phase 2B:
-
-- Add typed AI reviewer contract.
-- Add mock AI reviewer.
-- Store recommendations.
-
-Phase 2C:
-
-- Add admin moderation detail screen.
-- Add approve/reject/remove/superadmin override.
-- Add audit log UI.
-
-Phase 2D:
-
-- Connect real AI service.
-- Add queue backpressure and retry policies.
-- Add model/version tracing.
-
-Phase 2E:
-
-- Optional controlled auto-approval for low-risk/high-confidence content.
-- Add per-face policy config and superadmin kill switch.
-
+For agent prompts and extension ideas, see also [`../prompts/fe-user-content-ai-approval-workflow-agent-prompt.md`](../prompts/fe-user-content-ai-approval-workflow-agent-prompt.md) and [`../prompts/user-content-approval-extensions-agent-prompt.md`](../prompts/user-content-approval-extensions-agent-prompt.md).

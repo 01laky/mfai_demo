@@ -337,7 +337,25 @@ Filter: `GET /api/blogs?faceId=`.
 
 ---
 
-## 18. Default demo credentials
+## 18. User content moderation (creator)
+
+Albums, blogs, and reels created from the Frontend start as **`PendingApproval`**: they do not appear in public grids or anonymous detail views. After create, success copy explains that the item is submitted for review.
+
+**My submissions** (`/:lang/.../my-submissions` under the authenticated shell) calls **`GET /api/my/content-submissions`** and groups rows by moderation pipeline state. Each card links to the module detail route; **`?edit=1`** opens the editor when the API marks the row as editable (typically owner + pending or rejected). Edit/delete on detail pages follows the same rules.
+
+See the monorepo guide [`guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md).
+
+```mermaid
+flowchart LR
+  C[Create album blog reel] --> P[PendingApproval]
+  P --> M[My submissions]
+  M --> D[Detail optional edit=1]
+  D --> E[Owner PUT DELETE when allowed]
+```
+
+---
+
+## 19. Default demo credentials
 
 - **Email:** `admin@admin.com`
 - **Password:** `admin`
