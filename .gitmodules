@@ -19,3 +19,6 @@
 [submodule "many_faces_logger"]
 	path = many_faces_logger
 	url = https://github.com/01laky/many_faces_logger.git
+[submodule "many_faces_mobile"]
+	path = many_faces_mobile
+	url = https://github.com/01laky/many_faces_mobile.git

@@ -4,7 +4,7 @@
 
 ### 1. Create repositories on GitHub
 
-Create **7+ private repositories** on GitHub (root + submodules). Canonical names in this org:
+Create **8+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
 1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](../../.gitmodules) at the repo root.
 2. **Submodules** (remote repo names — **local paths** in the monorepo stay `many_faces_backend/`, `many_faces_portal/`, …):
@@ -15,6 +15,7 @@ Create **7+ private repositories** on GitHub (root + submodules). Canonical name
    - `many_faces_database` → path `many_faces_database/`
    - `many_faces_redis` → path `many_faces_redis/`
    - `many_faces_logger` → path `many_faces_logger/`
+   - `many_faces_mobile` → path `many_faces_mobile/`
 
 ### 2. Set remote URL in each submodule
 
@@ -62,6 +63,12 @@ cd ../many_faces_logger
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_logger.git
 git branch -M main
 git push -u origin main
+
+# Mobile (Expo)
+cd ../many_faces_mobile
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_mobile.git
+git branch -M main
+git push -u origin main
 ```
 
 ### 3. Update `.gitmodules` with real GitHub URLs
@@ -86,6 +93,7 @@ git submodule add -f https://github.com/YOUR_USERNAME/many_faces_ai.git many_fac
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_database.git many_faces_database
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_redis.git many_faces_redis
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_logger.git many_faces_logger
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_mobile.git many_faces_mobile
 
 # Or if they already exist, update .gitmodules and commit:
 git add .gitmodules

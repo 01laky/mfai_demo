@@ -4,11 +4,11 @@ MFAI Demo is a full-stack social platform demo built around the concept of **fac
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the backend API, AI services, PostgreSQL and Redis infrastructure, Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local demo and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
-**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, ai, database, redis, logger). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
+**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
 Security and trust boundaries are a high priority in the architecture: the demo uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
@@ -28,10 +28,12 @@ Security and trust boundaries are a high priority in the architecture: the demo 
 ```mermaid
 flowchart LR
     visitor["Users / Members"] --> fe["many_faces_portal<br/>User-facing React SPA"]
+    visitor --> mobile["many_faces_mobile<br/>Expo React Native"]
     adminUser["Admins / Operators"] --> admin["many_faces_admin<br/>Admin React SPA"]
 
     fe --> api["many_faces_backend<br/>ASP.NET Core API"]
     admin --> api
+    mobile --> api
 
     api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
     api --> db["many_faces_database<br/>PostgreSQL"]
@@ -45,12 +47,14 @@ flowchart LR
     scripts --> db
     scripts --> redis
     scripts --> ai
+    scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
 
     docs["docs/ + APP_CONTEXT.md<br/>guides, prompts, architecture notes"] -.-> fe
     docs -.-> admin
     docs -.-> api
     docs -.-> ai
+    docs -.-> mobile
 ```
 
 ## Frontend Route And Grid Rendering
@@ -249,6 +253,7 @@ flowchart TD
 | Layer | Path | Purpose |
 | --- | --- | --- |
 | User frontend | [`many_faces_portal/`](./many_faces_portal/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
+| Mobile app | [`many_faces_mobile/`](./many_faces_mobile/) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`npm run start`). |
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
@@ -260,7 +265,7 @@ flowchart TD
 ## Tech Stack Highlights
 
 - **Backend:** ASP.NET Core, EF Core, OAuth2/JWT, SignalR, OpenAPI, PostgreSQL, Redis.
-- **Frontend/Admin:** React, Vite, TypeScript, React Router, TanStack Query, i18next, Vitest, Cypress, ESLint.
+- **Frontend/Admin/Mobile:** React, Vite, TypeScript, React Router, TanStack Query, i18next, Vitest, Cypress, ESLint; **many_faces_mobile:** Expo, React Native.
 - **AI/infra:** Python gRPC service, Docker Compose, local HTTPS tooling, log viewer, Bash orchestration scripts.
 - **Quality:** linting, type checks, unit tests, narrow integration tests, local CI script, documented security and dependency audit prompts.
 
@@ -314,6 +319,7 @@ Backend details: [`many_faces_backend/README.md`](./many_faces_backend/README.md
 ```
 many_faces_backend/       # many_faces_backend — API (OAuth2, JWT, SignalR, EF Core)
 many_faces_portal/       # many_faces_portal — user-facing SPA
+many_faces_mobile/       # many_faces_mobile — Expo React Native
 many_faces_admin/    # many_faces_admin — admin SPA
 many_faces_database/       # many_faces_database — PostgreSQL compose
 many_faces_redis/    # many_faces_redis — job queue

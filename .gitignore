@@ -46,6 +46,7 @@ many_faces_ai/.git/
 many_faces_database/.git/
 many_faces_redis/.git/
 many_faces_logger/.git/
+many_faces_mobile/.git/
 # Legacy checkout paths (folder rename before many_faces_*)
 be_demo/.git/
 fe_demo/.git/
