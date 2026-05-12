@@ -212,7 +212,7 @@ flowchart LR
 
 ## AI-Assisted Content Approval
 
-Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns the approval status and public visibility rules, creates AI review job records, stores moderation audit events, and enforces that only `SUPER_ADMIN` can approve, reject, or remove submitted content in the current phase. The AI service remains a future structured recommender, while the admin portal now has a first moderation queue for superadmin review. Detailed design: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns the approval status and public visibility rules, creates and processes AI review job records, stores moderation audit events, and enforces that only `SUPER_ADMIN` can approve, reject, or remove submitted content in the current phase. The AI service provides a typed structured recommendation, while the admin portal exposes moderation queues, metrics, detail, and audit history for superadmin review. Detailed design: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 
 ```mermaid
 flowchart TD

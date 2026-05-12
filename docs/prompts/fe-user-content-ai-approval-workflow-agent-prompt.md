@@ -783,6 +783,14 @@ the first concrete rollout by adding backend moderation status fields, AI review
 FE-created album/blog/reel submissions, approved-only public visibility, `SUPER_ADMIN` moderation endpoints,
 creator-facing FE pending copy, and a first admin Moderation screen.
 
+The follow-up rollout also covers the Part 2 foundation:
+
+- `ai_demo` exposes a typed `ReviewContent` gRPC method with a deterministic baseline moderation recommendation and tests.
+- `be_demo` processes `content.ai-review` Redis jobs through `ContentAiReviewService`, stores AI recommendation metadata, retries transient AI failures, falls back to human review after retry exhaustion, ignores stale moderation versions, preserves final publish/remove authority for `SUPER_ADMIN`, and exposes moderation metrics.
+- `admin_demo` expands the Moderation page with AI status filtering, operational counters, item detail, and audit history.
+- `fe_demo` adds reusable creator-safe moderation badges/helpers for pending/rejected/removed content returned to creator-owned views.
+- Backend, admin, FE, and AI unit tests were added or updated for the new queue, policy, API hook, helper, and service behaviours.
+
 Known operational note:
 
 - EF migration generation via local `dotnet-ef` failed because the installed EF design tool/runtime combination

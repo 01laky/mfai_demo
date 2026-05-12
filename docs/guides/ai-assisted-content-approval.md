@@ -30,8 +30,9 @@ The current branch implements the foundation described in this guide:
 - `AiReviewJobs` and `ContentModerationEvents` provide the queue/audit foundation for future AI processing.
 - `fe_demo` shows creator-facing submitted-for-approval copy after album/blog/reel create.
 - `admin_demo` includes a first `Moderation` screen for superadmin review actions.
+- The Part 2 rollout adds a typed AI `ReviewContent` gRPC contract, backend job worker processing for `content.ai-review`, retry/fallback behaviour, structured AI recommendation persistence, moderation metrics, admin detail/audit history, and creator-safe status badges.
 
-The current AI integration is intentionally a queue/contract foundation. It does not make autonomous publish/remove decisions.
+The AI integration is intentionally conservative. It recommends and records model/version/trace metadata, but it does not autonomously publish or remove content.
 
 ## Core Rule
 
