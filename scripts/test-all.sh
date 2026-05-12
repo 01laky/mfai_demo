@@ -251,7 +251,7 @@ print(f'{total}|{passed}|{failed}')
             if [ -d "../many_faces_backend" ]; then
                 cd ../many_faces_backend
                 # Try start-dev.sh, fallback to docker-compose
-                ./start-dev.sh > /dev/null 2>&1 || docker-compose -f docker-compose.dev.yml up -d > /dev/null 2>&1 || true
+                ./scripts/start-dev.sh > /dev/null 2>&1 || docker-compose -f docker-compose.dev.yml up -d > /dev/null 2>&1 || true
                 cd ../many_faces_portal
                 E2E_SERVICES_STARTED=true
                 

@@ -299,7 +299,7 @@ sequenceDiagram
 
 ### Configuration
 
-- Port 50051; `health.proto`; `generate_proto.sh`; Docker with HF_HOME volume, memory limit, long start_period.
+- Port 50051; `health.proto`; `scripts/generate_proto.sh`; Docker with HF_HOME volume, memory limit, long start_period.
 
 ---
 

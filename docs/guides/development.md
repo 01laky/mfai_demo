@@ -69,12 +69,12 @@ The mobile submodule uses **Expo**, **TypeScript**, and **`npm`** with `package-
 
   ```bash
   cd many_faces_ai
-  ./generate_proto.sh
+  ./scripts/generate_proto.sh
   ```
 
   or `python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto`.
 
-- **Lint**: `./lint.sh` (Ruff). **Tests**: after generating protos, `PYTHONPATH=. pytest test_server.py` (no PyTorch required for health-check tests).
+- **Lint**: `./scripts/lint.sh` (Ruff). **Tests**: after generating protos, `PYTHONPATH=. pytest test_server.py` (no PyTorch required for health-check tests).
 
 ## Git hooks (Husky + commitlint)
 
@@ -180,12 +180,12 @@ Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipe
 
 ## Monorepo scripts (`scripts/`)
 
-Run from repository root (submodules checked out). Executable bits: match the **Make scripts executable** step in **monorepo_scripts** (`.github/workflows/ci.yml`) — `chmod` on `scripts/*.sh` plus `find` over each submodule’s **`scripts/*.sh`** and root **`*.sh`** wrappers (`many_faces_portal`, `many_faces_admin`, `many_faces_backend`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`, `many_faces_mobile`).
+Run from repository root (submodules checked out). Executable bits: match the **Make scripts executable** step in **monorepo_scripts** (`.github/workflows/ci.yml`) — `chmod` on `scripts/*.sh` plus `find` over each submodule’s **`scripts/*.sh`** (`many_faces_portal`, `many_faces_admin`, `many_faces_backend`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`, `many_faces_mobile`).
 
 | Script                              | Purpose                                                                                                                                                                                                                         |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`npm` scripts after `npm ci` in CI; locally reuse `node_modules` if already installed). |
-| **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, **`many_faces_mobile`** (`./lint.sh` → `scripts/lint.sh`: ESLint + Prettier check + `tsc`), `many_faces_ai` each `./lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
+| **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, **`many_faces_mobile`** (`./scripts/lint.sh`: ESLint + Prettier check + `tsc`), `many_faces_ai` `./scripts/lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
 | **`scripts/build-all.sh`**          | `many_faces_backend`: `dotnet build -c Release`; `many_faces_portal` / `many_faces_admin`: `yarn build`; **`many_faces_mobile`**: `./scripts/build.sh` (`tsc` + `expo-doctor`); `many_faces_ai`: **`./scripts/verify-ci.sh`**. |
 | **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`many_faces_mobile`** `./scripts/test.sh` (Jest / `jest-expo`), **`many_faces_ai/scripts/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`. |
 | **`scripts/status-all.sh`**         | Docker / HTTP status of dev containers (does not run builds).                                                                                                                                                                   |
@@ -194,7 +194,7 @@ Run from repository root (submodules checked out). Executable bits: match the **
 
 **Dev stack:** `scripts/start-all-dev.sh`, `scripts/stop-all-dev.sh`, `scripts/clear-all-dev.sh`, `scripts/rebuild-all-dev.sh`, `scripts/restart-all-dev.sh`, `scripts/start-missing-dev.sh`, `scripts/menu.sh`.
 
-**`many_faces_ai/scripts/verify-ci.sh`** (root **`./verify-ci.sh`** is a thin wrapper): local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **many_faces_ai** GitHub Actions job (no PyTorch).
+**`many_faces_ai/scripts/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **many_faces_ai** GitHub Actions job (no PyTorch).
 
 ### Diagram: ci-local chain
 

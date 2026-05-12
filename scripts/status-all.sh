@@ -221,7 +221,7 @@ if check_container_exists "$REDIS_CONTAINER"; then
     echo "  Port: 6379 (localhost)"
 else
     echo -e "  Container: ${BLUE}○ Not found${NC} ($REDIS_CONTAINER)"
-    echo "  Status: Does not exist (run many_faces_redis/start-redis.sh)"
+    echo "  Status: Does not exist (run many_faces_redis/scripts/start-redis.sh)"
     echo "  Port: 6379 (localhost)"
 fi
 

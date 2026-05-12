@@ -16,7 +16,7 @@ The Redis instance used for the backend **job queue** is a **standalone git subm
 
 ```bash
 cd many_faces_redis
-./start-redis.sh
+./scripts/start-redis.sh
 ```
 
 Or from the root via `./scripts/start-all-dev.sh` (Redis starts after DB).
@@ -63,7 +63,7 @@ flowchart TB
 | File                                                  | Purpose                                     |
 | ----------------------------------------------------- | ------------------------------------------- |
 | `docker-compose.yml`                                  | `redis:7-alpine`, volume, healthcheck       |
-| `start-redis.sh` / `stop-redis.sh` / `clear-redis.sh` | Same idea as `many_faces_database` scripts              |
+| `scripts/start-redis.sh`, `scripts/stop-redis.sh`, `scripts/clear-redis.sh` | Same idea as `many_faces_database` scripts under `scripts/` |
 | `README.md`                                           | English description for the standalone repo |
 
 ## Fresh monorepo clone

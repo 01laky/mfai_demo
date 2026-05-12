@@ -58,13 +58,13 @@ echo ""
 # START DATABASE (PostgreSQL)
 # ============================================================================
 echo "📦 Starting database (many_faces_database)..."
-if [ -f "many_faces_database/start-db.sh" ]; then
+if [ -f "many_faces_database/scripts/start-db.sh" ]; then
     cd many_faces_database
-    ./start-db.sh > /dev/null 2>&1 &
+    ./scripts/start-db.sh > /dev/null 2>&1 &
     cd ..
     echo "    ✅ Database startup launched"
 else
-    echo "  ⚠️  many_faces_database/start-db.sh not found, starting manually..."
+    echo "  ⚠️  many_faces_database/scripts/start-db.sh not found, starting manually..."
     cd many_faces_database
     docker-compose up -d > /dev/null 2>&1 &
     cd ..
@@ -74,14 +74,14 @@ fi
 # START REDIS (many_faces_redis submodule)
 # ============================================================================
 echo "📦 Starting Redis (many_faces_redis)..."
-if [ -f "many_faces_redis/start-redis.sh" ]; then
+if [ -f "many_faces_redis/scripts/start-redis.sh" ]; then
     cd many_faces_redis
-    ./start-redis.sh > /dev/null 2>&1 &
+    ./scripts/start-redis.sh > /dev/null 2>&1 &
     cd ..
     echo "    ✅ Redis startup launched"
     _expect_redis=1
 else
-    echo "  ⚠️  many_faces_redis/start-redis.sh not found, skipping Redis"
+    echo "  ⚠️  many_faces_redis/scripts/start-redis.sh not found, skipping Redis"
     _expect_redis=0
 fi
 
@@ -194,13 +194,13 @@ if ! docker network ls --format '{{.Name}}' 2>/dev/null | grep -qE '^(many_faces
     sleep 1
 fi
 
-if [ -f "many_faces_logger/start-dev.sh" ]; then
+if [ -f "many_faces_logger/scripts/start-dev.sh" ]; then
     cd many_faces_logger
-    ./start-dev.sh > /dev/null 2>&1
+    ./scripts/start-dev.sh > /dev/null 2>&1
     cd ..
-    echo "    ✅ Logger Demo startup finished (start-dev.sh)"
+    echo "    ✅ Logger Demo startup finished (scripts/start-dev.sh)"
 else
-    echo "  ⚠️  many_faces_logger/start-dev.sh not found, starting with docker-compose..."
+    echo "  ⚠️  many_faces_logger/scripts/start-dev.sh not found, starting with docker-compose..."
     docker-compose -f many_faces_logger/docker-compose.dev.yml up -d dozzle-dev
 fi
 echo "    ✅ Logger Demo (dozzle-dev) up"

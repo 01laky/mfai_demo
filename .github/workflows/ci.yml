@@ -249,7 +249,6 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
-          find many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_logger -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
           for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_mobile; do
             [ -d "$d/scripts" ] && find "$d/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
           done

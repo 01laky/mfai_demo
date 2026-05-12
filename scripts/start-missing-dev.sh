@@ -48,8 +48,8 @@ fi
 # 1b. Redis
 if [[ " ${MISSING[*]} " =~ " redis " ]]; then
   echo "📦 Starting Redis (many_faces_redis)..."
-  if [ -f "many_faces_redis/start-redis.sh" ]; then
-    (cd many_faces_redis && ./start-redis.sh)
+  if [ -f "many_faces_redis/scripts/start-redis.sh" ]; then
+    (cd many_faces_redis && ./scripts/start-redis.sh)
   else
     (cd many_faces_redis && docker-compose up -d)
   fi

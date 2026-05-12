@@ -20,33 +20,33 @@ echo "🛑 Stopping all applications..."
 echo ""
 
 # Stop backend
-if [ -f "many_faces_backend/stop-dev.sh" ]; then
+if [ -f "many_faces_backend/scripts/stop-dev.sh" ]; then
     echo "  📦 Stopping backend (many_faces_backend)..."
     cd many_faces_backend
-    ./stop-dev.sh 2>/dev/null || true
+    ./scripts/stop-dev.sh 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  many_faces_backend/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_backend/scripts/stop-dev.sh not found"
 fi
 
 # Stop frontend (many_faces_portal)
-if [ -f "many_faces_portal/stop-dev.sh" ]; then
+if [ -f "many_faces_portal/scripts/stop-dev.sh" ]; then
     echo "  📦 Stopping frontend (many_faces_portal)..."
     cd many_faces_portal
-    ./stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
+    ./scripts/stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  many_faces_portal/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_portal/scripts/stop-dev.sh not found"
 fi
 
 # Stop many_faces_admin
-if [ -f "many_faces_admin/stop-dev.sh" ]; then
+if [ -f "many_faces_admin/scripts/stop-dev.sh" ]; then
     echo "  📦 Stopping many_faces_admin..."
     cd many_faces_admin
-    ./stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
+    ./scripts/stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
     cd ..
 else
-    echo "  ⚠️  many_faces_admin/stop-dev.sh not found"
+    echo "  ⚠️  many_faces_admin/scripts/stop-dev.sh not found"
 fi
 
 # Kill any remaining processes
@@ -68,21 +68,21 @@ echo "🚀 Starting all applications..."
 echo ""
 
 # Start backend
-if [ -f "many_faces_backend/start-dev.sh" ]; then
+if [ -f "many_faces_backend/scripts/start-dev.sh" ]; then
     echo "  📦 Starting backend (many_faces_backend)..."
     cd many_faces_backend
-    ./start-dev.sh > /dev/null 2>&1 &
+    ./scripts/start-dev.sh > /dev/null 2>&1 &
     BACKEND_PID=$!
     echo "    ✅ Backend started (PID: $BACKEND_PID)"
     cd ..
 else
-    echo "  ⚠️  many_faces_backend/start-dev.sh not found"
+    echo "  ⚠️  many_faces_backend/scripts/start-dev.sh not found"
 fi
 
 sleep 3
 
 # Start frontend (many_faces_portal)
-if [ -f "many_faces_portal/start-dev.sh" ]; then
+if [ -f "many_faces_portal/scripts/start-dev.sh" ]; then
     echo "  📦 Starting frontend (many_faces_portal)..."
     cd many_faces_portal
     
@@ -98,12 +98,12 @@ if [ -f "many_faces_portal/start-dev.sh" ]; then
         echo "    ✅ Dependencies installed!"
     fi
     
-    ./start-dev.sh > /dev/null 2>&1 &
+    ./scripts/start-dev.sh > /dev/null 2>&1 &
     FRONTEND_PID=$!
     echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
     cd ..
 else
-    echo "  ⚠️  many_faces_portal/start-dev.sh not found"
+    echo "  ⚠️  many_faces_portal/scripts/start-dev.sh not found"
 fi
 
 sleep 3

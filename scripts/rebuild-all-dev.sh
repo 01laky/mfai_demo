@@ -36,12 +36,12 @@ echo ""
 # REBUILD BACKEND (many_faces_backend)
 # ============================================================================
 echo "📦 Rebuilding backend (many_faces_backend)..."
-if [ -f "many_faces_backend/rebuild-dev.sh" ]; then
+if [ -f "many_faces_backend/scripts/rebuild-dev.sh" ]; then
     cd many_faces_backend
-    ./rebuild-dev.sh
+    ./scripts/rebuild-dev.sh
     cd ..
 else
-    echo "  ⚠️  many_faces_backend/rebuild-dev.sh not found, skipping..."
+    echo "  ⚠️  many_faces_backend/scripts/rebuild-dev.sh not found, skipping..."
 fi
 echo ""
 
@@ -49,12 +49,12 @@ echo ""
 # REBUILD FRONTEND (many_faces_portal)
 # ============================================================================
 echo "📦 Rebuilding frontend (many_faces_portal)..."
-if [ -f "many_faces_portal/rebuild-dev.sh" ]; then
+if [ -f "many_faces_portal/scripts/rebuild-dev.sh" ]; then
     cd many_faces_portal
-    ./rebuild-dev.sh
+    ./scripts/rebuild-dev.sh
     cd ..
 else
-    echo "  ⚠️  many_faces_portal/rebuild-dev.sh not found, skipping..."
+    echo "  ⚠️  many_faces_portal/scripts/rebuild-dev.sh not found, skipping..."
 fi
 echo ""
 
@@ -62,12 +62,12 @@ echo ""
 # REBUILD ADMIN (many_faces_admin)
 # ============================================================================
 echo "📦 Rebuilding admin (many_faces_admin)..."
-if [ -f "many_faces_admin/rebuild-dev.sh" ]; then
+if [ -f "many_faces_admin/scripts/rebuild-dev.sh" ]; then
     cd many_faces_admin
-    ./rebuild-dev.sh
+    ./scripts/rebuild-dev.sh
     cd ..
 else
-    echo "  ⚠️  many_faces_admin/rebuild-dev.sh not found, skipping..."
+    echo "  ⚠️  many_faces_admin/scripts/rebuild-dev.sh not found, skipping..."
 fi
 echo ""
 
@@ -75,12 +75,12 @@ echo ""
 # REBUILD AI DEMO (many_faces_ai)
 # ============================================================================
 echo "📦 Rebuilding AI Demo (many_faces_ai)..."
-if [ -f "many_faces_ai/rebuild-dev.sh" ]; then
+if [ -f "many_faces_ai/scripts/rebuild-dev.sh" ]; then
     cd many_faces_ai
-    ./rebuild-dev.sh
+    ./scripts/rebuild-dev.sh
     cd ..
 else
-    echo "  ⚠️  many_faces_ai/rebuild-dev.sh not found, skipping..."
+    echo "  ⚠️  many_faces_ai/scripts/rebuild-dev.sh not found, skipping..."
 fi
 echo ""
 
@@ -88,12 +88,12 @@ echo ""
 # REBUILD LOGGER DEMO (many_faces_logger)
 # ============================================================================
 echo "📦 Rebuilding Logger Demo (many_faces_logger)..."
-if [ -f "many_faces_logger/rebuild-dev.sh" ]; then
+if [ -f "many_faces_logger/scripts/rebuild-dev.sh" ]; then
     cd many_faces_logger
-    ./rebuild-dev.sh
+    ./scripts/rebuild-dev.sh
     cd ..
 else
-    echo "  ⚠️  many_faces_logger/rebuild-dev.sh not found, skipping..."
+    echo "  ⚠️  many_faces_logger/scripts/rebuild-dev.sh not found, skipping..."
 fi
 echo ""
 

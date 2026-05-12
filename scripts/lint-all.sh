@@ -15,14 +15,14 @@ lint_project() {
     local dir=$1
     local name=$2
     local run=""
-    if [ -f "$dir/lint.sh" ]; then
-        run="./lint.sh"
-        chmod +x "$dir/lint.sh" 2>/dev/null || true
-    elif [ -f "$dir/scripts/lint.sh" ]; then
+    if [ -f "$dir/scripts/lint.sh" ]; then
         run="./scripts/lint.sh"
         chmod +x "$dir/scripts/lint.sh" 2>/dev/null || true
+    elif [ -f "$dir/lint.sh" ]; then
+        run="./lint.sh"
+        chmod +x "$dir/lint.sh" 2>/dev/null || true
     else
-        echo "⚠️  $dir/lint.sh (or scripts/lint.sh) not found, skipping $name"
+        echo "⚠️  $dir/scripts/lint.sh (or lint.sh) not found, skipping $name"
         return
     fi
     if [ -d "$dir/scripts" ]; then

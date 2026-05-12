@@ -65,7 +65,7 @@ flowchart TB
   - `scripts/status-all.sh` - Show comprehensive status
   - `scripts/rebuild-all-dev.sh` - Rebuild all Docker images
   - `scripts/test-all.sh` - Run all tests
-- ✅ **Service-specific scripts** - Each service has start-dev.sh, stop-dev.sh, clear-dev.sh, rebuild-dev.sh
+- ✅ **Service-specific scripts** - Each submodule keeps shell entrypoints under its own **`scripts/`** (e.g. `scripts/start-dev.sh`, `scripts/stop-dev.sh`, `scripts/clear-dev.sh`, `scripts/rebuild-dev.sh`); the monorepo root **`scripts/`** orchestrates them.
 
 ### 🐳 Docker Setup
 
