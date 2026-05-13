@@ -182,6 +182,10 @@ Rejected (or edited pending) content flows through existing **update** endpoints
 - Heavier image/video models behind the existing **boundary** flags.
 - External alerting integrations (today: structured logs + admin UI alerts).
 
+## Related agent specifications
+
+- **Prompt-injection defense** for untrusted creator content in the `ReviewContent` / moderation pipeline (sanitization, policy, tests; admin chat out of scope): [`../prompts/moderation-content-prompt-injection-defense-agent-prompt.md`](../prompts/moderation-content-prompt-injection-defense-agent-prompt.md).
+
 ## Implementation Phase Checklist (historical)
 
 The work originally rolled out in slices; the rows below are **done** in the current monorepo reference stack unless explicitly listed as roadmap above.
