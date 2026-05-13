@@ -22,7 +22,7 @@ This document **does not** implement code; it is input for a follow-up implement
 - Global role: `ApplicationUser.UserRoleId` → `UserRoles` (`Name`, `Scope` = `Global` | `Face`).
 - Name constants: `UserRole.GlobalRoleNames` — `SuperAdmin` = `"SUPER_ADMIN"`, `Admin` = `"ADMIN"`, `User`, `Host`.
 - When issuing an access token, `OAuth2Service.BuildAccessJwtAsync` loads the current role name from the DB and adds a single `ClaimTypes.Role` claim (thin token, A1/A9).
-- After `UserRoleId` changes in the DB, **an old JWT still carries the old role** until expiry; the new role appears after **token refresh** (`refresh_token` grant) or a new **password** login — see XML on [`OAuth2Service`](../many_faces_backend/BeDemo.Api/Services/OAuth2Service.cs) (`BuildAccessJwtAsync`).
+- After `UserRoleId` changes in the DB, **an old JWT still carries the old role** until expiry; the new role appears after **token refresh** (`refresh_token` grant) or a new **password** login — see XML on [`OAuth2Service`](../../many_faces_backend/BeDemo.Api/Services/OAuth2Service.cs) (`BuildAccessJwtAsync`).
 
 ### 2.2 Who can do what today (platform vs super)
 
@@ -57,7 +57,7 @@ flowchart TB
 
 - `IntegrationTestSeed`: `integration-superadmin@test.com` + `GetSuperAdminAccessTokenAsync`; `integration-admin@test.com` + `GetAdminAccessTokenAsync`.
 - `AclTestClients`: `GetPlatformSuperAdminTokenAsync`, `GetPlatformAdminTokenAsync`; OAuth via `CreateUnscopedClient()`, API via `CreateFaceClient("admin")` for platform scope.
-- Test pattern: [`PageTypesControllerTests.cs`](../many_faces_backend/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 by token and face client).
+- Test pattern: [`PageTypesControllerTests.cs`](../../many_faces_backend/BeDemo.Api.Tests/PageTypesControllerTests.cs) (401/403/200 by token and face client).
 
 ### 2.5 Audit
 

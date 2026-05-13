@@ -13,7 +13,7 @@
 | Redis stack      | [`../../many_faces_redis/README.md`](../../many_faces_redis/README.md)   |
 | Logger (Dozzle)  | [`../../many_faces_logger/README.md`](../../many_faces_logger/README.md) |
 
-Canonical **guides and prompts** (AI-assisted approval, submodules, security, …) live under [`../README.md`](../README.md) in this repo’s [`guides/`](../guides/) tree — submodule READMEs stay the per-app source of truth.
+Canonical **guides and prompts** live in the monorepo [`docs/README.md`](../README.md) hub (`guides/`, `prompts/`) — submodule READMEs stay the per-app source of truth.
 
 ### Diagram: this index as hub to submodule READMEs
 
@@ -48,6 +48,8 @@ Longer narratives that read like extended READMEs:
 | -------------------------------------------------- | ------------------------------------------- |
 | [fe-portal-overview.md](./fe-portal-overview.md)       | Architecture and features of `many_faces_portal`.     |
 | [admin-portal-overview.md](./admin-portal-overview.md) | Architecture and features of `many_faces_admin`.  |
+| [be-backend-overview.md](./be-backend-overview.md)       | `many_faces_backend` API narrative + links to guides. |
+| [ai-grpc-overview.md](./ai-grpc-overview.md)            | `many_faces_ai` gRPC narrative + links to guides.   |
 | [redis-subrepo.md](./redis-subrepo.md)             | Developing with the `many_faces_redis` submodule. |
 | Mobile (`many_faces_mobile`)                      | Long-form narrative lives in the submodule [`README.md`](../../many_faces_mobile/README.md) (Phase 1 parity, submissions read path). |
 

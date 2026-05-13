@@ -4,7 +4,7 @@
 
 **Checklists:** Trailing `[ ]` sections are **PR / audit evidence templates**—tick them in the PR or issue, not by default in this canonical file (see [docs/prompts/README.md](./README.md)).
 
-**Snapshot (human + tooling):** 2026-04-10 (`many_faces_portal` / `many_faces_admin` §2.3 union table + NCU re-run; `many_faces_backend` NuGet unchanged vs prior note — re-run §0 before upgrades — registry “latest” changes daily). Completion log: [docs/guides/monorepo-dependency-audit-completion.md](../guides/monorepo-dependency-audit-completion.md).
+**Snapshot (human + tooling):** 2026-04-10 (`many_faces_portal` / `many_faces_admin` §2.3 union table + NCU re-run; `many_faces_backend` NuGet unchanged vs prior note — re-run §0 before upgrades — registry “latest” changes daily). Completion log: [docs/guides/archive/monorepo-dependency-audit-completion.md](../guides/archive/monorepo-dependency-audit-completion.md).
 
 ### Monorepo layout (`git` submodules)
 

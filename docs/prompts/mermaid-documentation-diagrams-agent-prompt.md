@@ -66,7 +66,7 @@
 ### 2.2 Recommended execution order (reduces rework and contradictions)
 
 1. **`docs/guides/authentication-and-sessions.md`** and **`docs/guides/acl-and-capabilities.md`** (shared authz/token story).
-2. **Remaining `docs/guides/*.md`** (api-oauth, chat-rooms, wall-tickets, security-crypto-sockets, dev-https, development, git-submodules, husky-setup, boilerplate-checklist, proposal-many-faces-state).
+2. **Remaining `docs/guides/*.md`** (api-oauth, chat-rooms, wall-tickets, security-crypto-sockets, dev-https, development, git-submodules, husky-setup, boilerplate-checklist, `docs/guides/archive/proposal-many-faces-state.md`).
 3. **`docs/readmes/*.md`** (fe/admin overview, redis-subrepo, `readmes/README`).
 4. **`docs/prompts/super-admin-api.md`**, **`docs/components/acl-capabilities-module.md`**.
 5. **`docs/STRUCTURE.md`**, **`docs/README.md`** (hub).
@@ -453,7 +453,7 @@
 
 ---
 
-### D-PROPOSAL-01 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-01 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After monorepo `scripts/` / `start-all-dev` description.
 - **Type:** `flowchart TB`.
@@ -461,7 +461,7 @@
 
 ---
 
-### D-PROPOSAL-02 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-02 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After BE controllers + hubs overview.
 - **Type:** `flowchart TB`.
@@ -470,7 +470,7 @@
 
 ---
 
-### D-PROPOSAL-03 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-03 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After `### Middleware`.
 - **Type:** `flowchart LR`.
@@ -478,7 +478,7 @@
 
 ---
 
-### D-PROPOSAL-04 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-04 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After `### Data (EF Core)` roles subsection.
 - **Type:** `erDiagram`.
@@ -487,7 +487,7 @@
 
 ---
 
-### D-PROPOSAL-05 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-05 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After default pages when creating face.
 - **Type:** `flowchart TB`.
@@ -495,7 +495,7 @@
 
 ---
 
-### D-PROPOSAL-06 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-06 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After private face first visit / my-role.
 - **Type:** `sequenceDiagram`.
@@ -503,7 +503,7 @@
 
 ---
 
-### D-PROPOSAL-07 — `docs/guides/proposal-many-faces-state.md`
+### D-PROPOSAL-07 — `docs/guides/archive/proposal-many-faces-state.md`
 
 - **Placement:** After AI service section.
 - **Type:** `sequenceDiagram`.
@@ -708,7 +708,7 @@ Check each row: **`added`** / **`updated`** / **`skipped` + reason**.
 - [x] **Batch 1 — Auth + ACL guides:** `authentication-and-sessions.md` (`D-AUTH-01` … `D-AUTH-06`), `acl-and-capabilities.md` (`D-ACL-01` … `D-ACL-06`).
 - [x] **Batch 2 — Curl + chat + wall:** `api-oauth-stories-curl.md` (`D-OAUTH-CURL-01`, `D-OAUTH-CURL-02`), `chat-rooms-testing-and-operations.md` (`D-CHAT-01` … `D-CHAT-05`), `wall-tickets.md` (`D-WALL-01` … `D-WALL-05`).
 - [x] **Batch 3 — Security + dev + monorepo dev guide:** `security-crypto-sockets.md` (`D-SEC-01` … `D-SEC-03`), `dev-https.md` (`D-DEVHTTPS-01`, `D-DEVHTTPS-02`), `development.md` (`D-DEV-01` … `D-DEV-06`).
-- [x] **Batch 4 — Git + hooks + boilerplate + proposal:** `git-submodules.md` (`D-GITMOD-01`, `D-GITMOD-02`), `husky-setup.md` (`D-HUSKY-01`), `boilerplate-checklist.md` (`D-BOILER-01`), `proposal-many-faces-state.md` (`D-PROPOSAL-01` … `D-PROPOSAL-07`).
+- [x] **Batch 4 — Git + hooks + boilerplate + proposal:** `git-submodules.md` (`D-GITMOD-01`, `D-GITMOD-02`), `husky-setup.md` (`D-HUSKY-01`), `boilerplate-checklist.md` (`D-BOILER-01`), `docs/guides/archive/proposal-many-faces-state.md` (`D-PROPOSAL-01` … `D-PROPOSAL-07`).
 - [x] **Batch 5 — Prompts + components + docs hub:** `super-admin-api.md` (`D-SUPERADMIN-01` … `D-SUPERADMIN-03`), `acl-capabilities-module.md` (`D-COMP-ACL-01`), `STRUCTURE.md` (`D-STRUCT-01`), `README.md` (`D-README-HUB-01`).
 - [x] **Batch 6 — Readmes overviews:** `fe-portal-overview.md` (`D-FE-OVERVIEW-01` … `D-FE-OVERVIEW-04`), `admin-portal-overview.md` (`D-ADMIN-OVERVIEW-01` … `D-ADMIN-OVERVIEW-03`), `redis-subrepo.md` (`D-REDIS-SUB-01`, `D-REDIS-SUB-02`), `readmes/README.md` (`D-README-READMES-01`).
 
@@ -727,7 +727,7 @@ Check each row: **`added`** / **`updated`** / **`skipped` + reason**.
 | `docs/guides/git-submodules.md`                    | `D-GITMOD-01`, `D-GITMOD-02`                                   |
 | `docs/guides/husky-setup.md`                       | `D-HUSKY-01`                                                   |
 | `docs/guides/boilerplate-checklist.md`             | `D-BOILER-01`                                                  |
-| `docs/guides/proposal-many-faces-state.md`          | `D-PROPOSAL-01` … `D-PROPOSAL-07` (7)                          |
+| `docs/guides/archive/proposal-many-faces-state.md`          | `D-PROPOSAL-01` … `D-PROPOSAL-07` (7)                          |
 | `docs/prompts/super-admin-api.md`                  | `D-SUPERADMIN-01` … `D-SUPERADMIN-03` (3)                      |
 | `docs/components/acl-capabilities-module.md`       | `D-COMP-ACL-01`                                                |
 | `docs/readmes/fe-portal-overview.md`                 | `D-FE-OVERVIEW-01` … `D-FE-OVERVIEW-04` (4)                    |

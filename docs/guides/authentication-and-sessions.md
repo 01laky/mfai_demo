@@ -341,4 +341,4 @@ flowchart TB
 
 - [api-oauth-stories-curl.md](./api-oauth-stories-curl.md) — curl: register + token (includes `rememberMe` example).
 - [development.md](./development.md) — monorepo dev workflow and links.
-- [many_faces_backend/README.md](../many_faces_backend/README.md) — API overview.
+- [many_faces_backend/README.md](../../many_faces_backend/README.md) — API overview.

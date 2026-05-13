@@ -1,5 +1,7 @@
 # Redis — `many_faces_redis` submodule
 
+**Canonical per-repo ops** (compose, scripts, credentials): **[`many_faces_redis/README.md`](../../many_faces_redis/README.md)**. This page focuses **how the submodule fits the monorepo** and how the backend reaches Redis in dev.
+
 The Redis instance used for the backend **job queue** is a **standalone git submodule**, same pattern as **`many_faces_database`**.
 
 ## Location

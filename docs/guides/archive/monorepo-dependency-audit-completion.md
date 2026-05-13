@@ -1,7 +1,7 @@
 # Monorepo dependency audit — completion record
 
 **Snapshot date:** 2026-04-10  
-**Canonical prompt:** [docs/prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md](../prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md) (§0, §2.1–2.3 refreshed in-tree).
+**Canonical prompt:** [docs/prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md](../../prompts/monorepo-dependency-audit-and-upgrade-agent-prompt.md) (§0, §2.1–2.3 refreshed in-tree).
 
 ## Evidence (commands)
 

@@ -66,7 +66,7 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 ## 7. For AI agents editing this repo
 
-- Prefer **focused changes** scoped to FE, Admin, or API contracts; **`docs/guides/proposal-many-faces-state.md`** is a good inventory snapshot.
+- Prefer **focused changes** scoped to FE, Admin, or API contracts; historical inventory snapshot: [`docs/guides/archive/proposal-many-faces-state.md`](./docs/guides/archive/proposal-many-faces-state.md).
 - Respect **OAuth2**, **face-prefixed API paths**, and **React Router v6 route rules** (no custom wrappers where `<Routes>` insist on literal `<Route>` children).
 - When changing face visibility or **`availableFaces` semantics**, revisit **logged-in UX** — public showcase faces must remain reachable unless product explicitly restricts them.
 - For **grid components and face-scoped API reads**, follow **[§8](#8-frontend-architecture--face-scoped-data-grid-specs-responsiveness)** (patterns: `useFaceConfig` → `faceId`, TanStack + OpenAPI services, `useFillGridPagination`, `ResizeObserver`).
@@ -127,6 +127,12 @@ When adding new grid types **copy patterns from finished siblings**: mount ref o
 ## 9. Roadmap tone (Frontend)
 
 We will iterate **per grid type** and **per write path** next: align API + capability gates + uploads + optimistic UX — using §8 rules as acceptance criteria.
+
+## 10. Further reading (monorepo)
+
+- [`docs/README.md`](./docs/README.md) — documentation hub (all `guides/`, `components/`, `prompts/`).
+- [`docs/guides/development.md`](./docs/guides/development.md) — CI, scripts, hooks.
+- [`docs/guides/troubleshooting-local-dev.md`](./docs/guides/troubleshooting-local-dev.md) — common local failures.
 
 ---
 

@@ -7,7 +7,7 @@
 | **`prompts/`**    | Copy-paste **specs for AI agents** (implementation prompts, not end-user docs).                                                                 |
 | **`readmes/`**    | **Index** of per-submodule README files plus **extended overview** pages for apps (`many_faces_portal`, `many_faces_admin`, Redis) that read like long READMEs. |
 
-The hub for humans is **[README.md](./README.md)**. Root **[`../README.md`](../README.md)** stays a short monorepo entry and points here.
+The hub for humans is **[README.md](./README.md)**. Root **[`../README.md`](../README.md)** is the **monorepo overview** (architecture, quick links); long procedural detail is pushed into **`guides/`** and submodule READMEs so this tree stays navigable.
 
 ### Diagram: docs folder layout
 

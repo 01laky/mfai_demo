@@ -1,0 +1,24 @@
+# Docker and Compose (local stack)
+
+This guide ties together the **monorepo** compose file and per-service Docker READMEs. Commands assume repository root **`many_faces_main`**.
+
+## Entry compose
+
+- **`docker-compose.dev.yml`** (repo root) — primary local orchestration: API, SPAs, PostgreSQL, Redis, logger UI, AI, etc. Exact services and ports drift with commits; compare the file and [`dev-https.md`](./dev-https.md).
+
+## Submodule stacks
+
+| Area | Submodule | Typical role |
+| ---- | --------- | ------------- |
+| PostgreSQL | `many_faces_database/` | Dev database container(s); see [`many_faces_database/README.md`](../../many_faces_database/README.md). |
+| Redis | `many_faces_redis/` | Cache / job queue infra; see [`many_faces_redis/README.md`](../../many_faces_redis/README.md) and [`redis-subrepo.md`](../readmes/redis-subrepo.md). |
+| Logs UI | `many_faces_logger/` | Dozzle / log viewing; see [`many_faces_logger/README.md`](../../many_faces_logger/README.md). |
+
+## Scripts
+
+Aggregated lifecycle scripts (`ci-local.sh`, `build-all.sh`, …) are documented in [`development.md`](./development.md) (*Monorepo scripts*).
+
+## Related
+
+- [`dev-https.md`](./dev-https.md) — TLS, ports, macOS PFX notes.
+- [`troubleshooting-local-dev.md`](./troubleshooting-local-dev.md) — when containers fail health checks.
