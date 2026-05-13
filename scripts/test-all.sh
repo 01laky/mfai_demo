@@ -200,6 +200,25 @@ else
     echo "⏭️  many_faces_elastic: go not on PATH, skipping"
 fi
 
+if [ "${RUN_SEARCH_TLS_SMOKE:-}" = "1" ] && [ -f "many_faces_elastic/scripts/smoke-grpc-tls.sh" ]; then
+    echo ""
+    echo "📦 RUN_SEARCH_TLS_SMOKE=1 — many_faces_elastic TLS/mTLS Docker smoke (OpenSSL + grpcurl + dotnet)..."
+    if command -v docker >/dev/null 2>&1 && command -v openssl >/dev/null 2>&1 && command -v grpcurl >/dev/null 2>&1 && command -v dotnet >/dev/null 2>&1; then
+        chmod +x many_faces_elastic/scripts/smoke-grpc-tls.sh 2>/dev/null || true
+        if bash many_faces_elastic/scripts/smoke-grpc-tls.sh; then
+            TEST_RESULTS+=("✅ many_faces_elastic: TLS smoke passed")
+            echo "✅ many_faces_elastic: TLS smoke passed"
+        else
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            TEST_RESULTS+=("❌ many_faces_elastic: TLS smoke failed")
+            echo "❌ many_faces_elastic: TLS smoke failed"
+        fi
+    else
+        echo "⏭️  TLS smoke skipped (need docker, openssl, grpcurl, dotnet on PATH)"
+        TEST_RESULTS+=("⏭️  many_faces_elastic: TLS smoke skipped (missing tools)")
+    fi
+fi
+
 echo ""
 
 # ============================================================================

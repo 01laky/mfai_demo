@@ -11,6 +11,12 @@ This guide explains how the **optional** search stack fits the Many Faces monore
 
 Compose project in `many_faces_elastic/docker-compose.yml` uses the **service** hostname `elasticsearch` for sibling containers; the **container_name** `elasticsearch-dev` is what you see in `docker ps` and what the root dev script attaches to the monorepo network.
 
+## TLS and mTLS (production-style)
+
+The worker can terminate **TLS** (and optional **mTLS**) on the same gRPC port when PEM paths are set in the environment; **`many_faces_backend`** then uses **`Search:WorkerGrpcUrl`** with an **`https://`** scheme and optional `Search:WorkerTls*` keys for a private CA and client certificate. Cleartext **`http://`** remains the default for local Docker.
+
+Full matrix, `openssl` example, and mount snippets: **[`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md)**.
+
 ## Enabling the stack
 
 1. From the monorepo root, run with the flag so both Elasticsearch and the worker start:
@@ -58,6 +64,8 @@ If `SEARCH_WORKER_EXPECTED_TOKEN` is set, add metadata:
 grpcurl -plaintext -H "x-search-worker-token: YOUR_TOKEN" -d '{}' localhost:59202 manyfaces.search.v1.SearchService/Ping
 ```
 
+Full **TLS + mTLS** stack smoke (separate compose, ports **59210** / **59211**): [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md) and `many_faces_elastic/scripts/smoke-grpc-tls.sh`.
+
 ## REST health check
 
 From the **public** face prefix (no JWT), the backend exposes:
@@ -76,6 +84,7 @@ The JSON reports whether search is configured and whether the worker’s `Ping` 
 
 ## Related docs
 
+- TLS / mTLS on gRPC: [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md)
 - Submodule overview: [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md)
 - Compose orchestration: [`docker-and-compose.md`](./docker-and-compose.md)
 - Agent checklist (scope / non-goals): [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](../prompts/elasticsearch-search-infra-agent-prompt.md)

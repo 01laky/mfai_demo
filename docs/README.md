@@ -37,6 +37,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [dev-https.md](./guides/dev-https.md) | Local HTTPS certs (`dev/README.md`), ports, Docker, macOS PFX. |
 | [docker-and-compose.md](./guides/docker-and-compose.md) | Root compose + submodule Docker stacks. |
 | [elasticsearch-local-dev.md](./guides/elasticsearch-local-dev.md) | Optional Elasticsearch + Go search-worker, gRPC wiring, ports, grpcurl smoke. |
+| [elasticsearch-grpc-tls-mtls.md](./guides/elasticsearch-grpc-tls-mtls.md) | TLS and mTLS for backend ↔ search-worker gRPC; env matrix, openssl example, Docker mounts. |
 | [testing-and-ci-matrix.md](./guides/testing-and-ci-matrix.md) | What runs where (scripts + per-stack commands). |
 | [troubleshooting-local-dev.md](./guides/troubleshooting-local-dev.md) | Common local failures and where to read next. |
 | [husky-setup.md](./guides/husky-setup.md) | **Pointer** → canonical [`development.md`](./guides/development.md#git-hooks-husky--commitlint); legacy in [`archive/husky-setup-legacy.md`](./guides/archive/husky-setup-legacy.md). |
@@ -97,6 +98,8 @@ Index file: [`components/README.md`](./components/README.md). Short **what it is
 ## AI prompts (`prompts/`)
 
 Specs for **agent-assisted implementation**: [`prompts/README.md`](./prompts/README.md) (full table + retention rules). **Humans** implementing features should read the relevant **`guides/`** first, then open a prompt for checklists and acceptance criteria.
+
+**Push notifications (FCM):** full-stack agent spec (Go gRPC worker submodule, backend, Expo) — [`prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md) (companion guide path `guides/push-notifications-local-dev.md` is created when that work ships).
 
 ---
 
