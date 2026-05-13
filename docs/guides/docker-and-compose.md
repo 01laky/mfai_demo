@@ -12,7 +12,7 @@ This guide ties together the **monorepo** compose file and per-service Docker RE
 | ---- | --------- | ------------- |
 | PostgreSQL | `many_faces_database/` | Dev database container(s); see [`many_faces_database/README.md`](../../many_faces_database/README.md). |
 | Redis | `many_faces_redis/` | Cache / job queue infra; see [`many_faces_redis/README.md`](../../many_faces_redis/README.md) and [`redis-subrepo.md`](../readmes/redis-subrepo.md). |
-| Search index (optional) | `many_faces_elastic/` | Elasticsearch + **Go search-worker** (gRPC); backend talks to the worker only — see [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md), [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md), and [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md). |
+| Search index (optional) | `many_faces_elastic/` | Elasticsearch + **Go search-worker** (gRPC); backend talks to the worker only — see [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md), [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md), [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md), and [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md). |
 | Logs UI | `many_faces_logger/` | Dozzle / log viewing; see [`many_faces_logger/README.md`](../../many_faces_logger/README.md). |
 
 ## Scripts
@@ -22,5 +22,6 @@ Aggregated lifecycle scripts (`ci-local.sh`, `build-all.sh`, …) are documented
 ## Related
 
 - [`dev-https.md`](./dev-https.md) — TLS, ports, macOS PFX notes.
+- [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md) — optional search stack: capabilities, TLS/mTLS, smoke, CI, tests.
 - [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md) — optional Elasticsearch + search-worker, `ENABLE_ELASTICSEARCH`, gRPC env for the API.
 - [`troubleshooting-local-dev.md`](./troubleshooting-local-dev.md) — when containers fail health checks.

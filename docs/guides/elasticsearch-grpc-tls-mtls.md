@@ -104,5 +104,6 @@ Normal **`dotnet test`** without that environment variable skips the end-to-end 
 
 ## Related documentation
 
+- Feature overview (stack capabilities, verification matrix): [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md)
 - Local dev (plaintext defaults): [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md)
 - Submodule overview: [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md)

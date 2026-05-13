@@ -2,6 +2,8 @@
 
 This guide explains how the **optional** search stack fits the Many Faces monorepo: **Elasticsearch** for a read-optimized index and a colocated **Go gRPC search-worker** in `many_faces_elastic/`. **PostgreSQL** remains authoritative; browsers and mobile apps never talk to Elasticsearch or the worker directly.
 
+**Capability summary (TLS, smoke, CI):** [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md).
+
 ## Ports and DNS
 
 | Surface | Host (your laptop) | Inside `many_faces_main_dev-network` | Notes |
