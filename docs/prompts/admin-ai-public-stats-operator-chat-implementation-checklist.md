@@ -24,4 +24,7 @@ This file records the **2026-05-13** delivery; every item is **`[x]`** by design
 - [x] **`many_faces_admin`**: **`faceApiRouting`** — **`scopePathForPublicFace`**, **`absolutePublicFaceUrl`**.
 - [x] **`many_faces_admin`**: **`ChatPage`** calls **`SendToAiWithOperatorStats`** with the saved mode.
 - [x] **`many_faces_admin`**: **`Sidebar`** links for chat + settings; i18n **`en` / `sk` / `cz`** for new copy and **`routes.settings`**.
-- [x] Run **`dotnet build`** + full **`BeDemo.Api.Tests`**; run **`yarn tsc --noEmit`** in **`many_faces_admin`**.
+- [x] Add integration tests for **`GET /api/Stats/public`**: admin face without JWT (**401**), bare `/api/Stats/public` (**400**), authenticated operator on public face (**200**), response excludes operator-only fields, numeric shape for all public snapshot keys.
+- [x] Add **`many_faces_ai`** pytest coverage for **`Generate`** + **`stats_context_json`**, invalid **`FetchPublicStats`** URLs, **`OperatorStatsChat`** validation and unreachable live URL.
+- [x] Add **`many_faces_admin`** Vitest tests for **`adminAiStatsSettings`** and **`faceApiRouting`** public-face path helpers.
+- [x] Update monorepo **`README.md`** (mermaid + bullet), **`docs/guides/admin-dashboard-metrics.md`**, submodule READMEs (**backend**, **admin**, **AI**) for operator statistics and AI modes.

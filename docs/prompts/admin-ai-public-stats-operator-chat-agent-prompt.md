@@ -99,8 +99,9 @@ Give **platform operators** (users with **`CanManageAllFaces`** under the **admi
 
 ## 6. Tests and verification
 
-- **Backend:** `StatsControllerTests` includes anonymous **`public`** face **`GET /api/Stats/public`**; full **`BeDemo.Api.Tests`** suite green; **`FakeAiGrpcService`** updated for new interface methods.
-- **Admin:** `yarn tsc --noEmit` passes.
+- **Backend:** `StatsControllerTests` — operator **`GET /api/Stats`** / **`timeseries`**; **`GET /api/Stats/public`** on **`public`** face without JWT; **401** on **`admin`** face without JWT; **400** bare `/api/Stats/public` (no face prefix); **200** with operator JWT on **`public`** face; public JSON **numeric** keys only and **no** operator-only fields (`oauthClientsCount`, etc.); **`FakeAiGrpcService`** updated for **`IAiGrpcService`**.
+- **Admin:** `yarn tsc --noEmit`; Vitest — **`adminAiStatsSettings.test.ts`**, **`faceApiRouting.publicFace.test.ts`**, **`dashboardChartData.test.ts`**.
+- **AI:** `test_server.py` — **`Generate`** + **`stats_context_json`** (mocked **`AIModelService`**), whitespace-only stats, **`FetchPublicStats`** invalid schemes, **`OperatorStatsChat`** validation and unreachable live URL.
 
 ---
 
@@ -118,7 +119,10 @@ Use this section as the **canonical “what shipped”** list for audits. Every 
 - [x] Add **`AiStats`** section to **`appsettings.json`** and development example URL.
 - [x] Implement Python **`Generate`** context prefix, **`FetchPublicStats`**, **`OperatorStatsChat`**; harden **`generate_proto.sh`** for local **`grpc_tools`** via **`.venv`**.
 - [x] **`many_faces_admin`**: settings page + SCSS; **`adminAiStatsSettings`**; **`usePublicStatsSnapshot`** + **`PublicStatsSnapshot`** type; **`DashboardAiStatsPanel`**; wire **`DashboardPage`**; **`ChatPage`** hub invoke; **`faceApiRouting`** public-face absolute URL helpers; sidebar links; routes + i18n (`en`/`sk`/`cz`).
-- [x] Add integration test **`GetPublicStats_ShouldReturnOk_WithoutAuth_OnPublicFaceScope`**.
+- [x] Add integration tests for **`GET /api/Stats/public`**: **401** on admin face without JWT; **400** bare path; **200** with operator JWT on public face; numeric field set; no operator-only JSON keys.
+- [x] Add **`many_faces_ai`** pytest classes **`TestGenerateWithStatsContext`**, **`TestFetchPublicStats`**, **`TestOperatorStatsChat`** in **`test_server.py`**.
+- [x] Add **`many_faces_admin`** Vitest **`adminAiStatsSettings.test.ts`** and **`faceApiRouting.publicFace.test.ts`**.
+- [x] Expand **`docs/guides/admin-dashboard-metrics.md`**, monorepo **`README.md`** (mermaid), submodule READMEs (**backend**, **admin**, **AI**), and refresh **`docs/prompts/admin-ai-public-stats-operator-chat-*.md`** test sections.
 - [x] Document the work in **`docs/prompts/admin-ai-public-stats-operator-chat-implementation-checklist.md`** and register the prompt in **`docs/prompts/README.md`**.
 
 ---

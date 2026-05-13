@@ -22,6 +22,7 @@ Security and trust boundaries are a high priority in the architecture: this stac
 - A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, logging, and AI service up together.
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
 - AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, **sanitization and prompt-injection defenses** on the path to gRPC `ReviewContent` (also in `many_faces_ai`), superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail. Reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+- **Admin operator dashboard + optional AI statistics:** consolidated **`GET /api/Stats`** / **`timeseries`**, anonymous aggregate **`GET /api/Stats/public`** (via **`public`** face prefix), **Settings** modes (**off / inline / live**) for attaching totals to **SignalR** admin AI chat, and gRPC **`stats_context_json`** / **`FetchPublicStats`** / **`OperatorStatsChat`** in **`many_faces_ai`**. Reference: [`docs/guides/admin-dashboard-metrics.md`](./docs/guides/admin-dashboard-metrics.md) and [`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](./docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
 
 ## System Overview
 
@@ -104,6 +105,38 @@ flowchart LR
     api --> refresh["Saved content reloads<br/>or navigates to detail"]
 
     capabilities -->|no| disabled["Disabled action<br/>localized unavailable message"]
+```
+
+## Admin operator statistics and optional AI context
+
+Platform operators use **`many_faces_admin`** with the **admin** face URL prefix for **`GET /api/Stats`** (full KPIs and charts). For **optional** AI-assisted explanations in the admin **AI chat**, the stack can attach **aggregate counts only** via **`GET /api/Stats/public`** (callable **without** a JWT only under the **`public`** face prefix). The admin SPA stores **off / inline / live** in **`localStorage`**; **inline** injects JSON from the API process, **live** lets the Python worker **HTTP GET** a configured public URL before **`Generate`**. See [`docs/guides/admin-dashboard-metrics.md`](./docs/guides/admin-dashboard-metrics.md).
+
+```mermaid
+flowchart LR
+    subgraph Browser["many_faces_admin"]
+        set["Settings<br/>off / inline / live"]
+        dash2["Dashboard<br/>public snapshot preview"]
+        chat2["ChatPage<br/>SignalR"]
+    end
+
+    subgraph BE["many_faces_backend"]
+        op["GET /api/Stats<br/>operator JWT + admin face"]
+        anon["GET /api/Stats/public<br/>no JWT + public face"]
+        hub2["ChatHub<br/>SendToAiWithOperatorStats"]
+        grpc2["gRPC → many_faces_ai"]
+    end
+
+    subgraph Py["many_faces_ai"]
+        gen2["Generate + optional stats_context_json"]
+    end
+
+    set --> chat2
+    dash2 --> anon
+    chat2 --> hub2
+    hub2 --> op
+    hub2 --> anon
+    hub2 --> grpc2
+    grpc2 --> gen2
 ```
 
 ## Admin Configuration Flow
