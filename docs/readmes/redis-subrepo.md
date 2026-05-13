@@ -12,6 +12,8 @@ The Redis instance used for the backend **job queue** is a **standalone git subm
 - Its own GitHub repository (see `.gitmodules` for the URL).
 - From the monorepo root: `git submodule update --init many_faces_redis`
 
+Per-submodule operational detail: [`../../many_faces_redis/README.md`](../../many_faces_redis/README.md). Central index of all submodule READMEs: [`README.md`](./README.md) (this folder). Full guides hub: [`../README.md`](../README.md).
+
 ## Running
 
 ```bash

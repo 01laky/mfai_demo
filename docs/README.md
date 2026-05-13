@@ -97,5 +97,8 @@ Full index (including retention policy): [`prompts/README.md`](./prompts/README.
 | -------------------------------------------------------- | ------------------------------------- |
 | [`../README.md`](../README.md)                           | Short monorepo entry and quick start. |
 | [`../many_faces_backend/STORIES_API.md`](../many_faces_backend/STORIES_API.md) | Stories API reference.                |
+| [`../many_faces_mobile/README.md`](../many_faces_mobile/README.md) | Expo mobile client (Phase 1+); parity and submissions notes. |
+| [`../many_faces_database/README.md`](../many_faces_database/README.md) | Local PostgreSQL stack for BeDemo.   |
+| [`../many_faces_logger/README.md`](../many_faces_logger/README.md) | Dozzle log viewer for local Docker.   |
 
 **New docs:** prefer `guides/` (reference), `components/` (catalog), `prompts/` (AI), or `readmes/` (overviews / index). Update this hub and [`guides/development.md`](./guides/development.md) when you add paths.
