@@ -39,7 +39,8 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [elasticsearch-local-dev.md](./guides/elasticsearch-local-dev.md) | Optional Elasticsearch + Go search-worker, gRPC wiring, ports, grpcurl smoke. |
 | [elasticsearch-search-features-overview.md](./guides/elasticsearch-search-features-overview.md) | **Summary:** search stack capabilities (TLS/mTLS, smoke script, CI, tests, health) and links to deeper guides. |
 | [elasticsearch-grpc-tls-mtls.md](./guides/elasticsearch-grpc-tls-mtls.md) | TLS and mTLS for backend ↔ search-worker gRPC; env matrix, openssl example, Docker mounts. |
-| [`many_faces_push/README.md`](../many_faces_push/README.md) | Optional **FCM push worker** submodule (**skeleton** today); full spec: [`push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md). |
+| [push-notifications-local-dev.md](./guides/push-notifications-local-dev.md) | **FCM + `many_faces_push`**: dev compose, service account, backend `Push:*`, grpcurl, localization catalog. |
+| [`many_faces_push/README.md`](../many_faces_push/README.md) | Push worker repo entry (ports, security, proto regen) — complements the guide above. |
 | [testing-and-ci-matrix.md](./guides/testing-and-ci-matrix.md) | What runs where (scripts + per-stack commands). |
 | [troubleshooting-local-dev.md](./guides/troubleshooting-local-dev.md) | Common local failures and where to read next. |
 | [husky-setup.md](./guides/husky-setup.md) | **Pointer** → canonical [`development.md`](./guides/development.md#git-hooks-husky--commitlint); legacy in [`archive/husky-setup-legacy.md`](./guides/archive/husky-setup-legacy.md). |

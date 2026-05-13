@@ -24,7 +24,10 @@ services:
       # Redis z many_faces_redis (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
       #   docker network connect many_faces_main_dev-network redis-dev
       - Redis__Configuration=redis-dev:6379,abortConnect=false
-      # Optional Elasticsearch + Go search-worker (many_faces_elastic): start with ENABLE_ELASTICSEARCH=1 and attach both containers to this network.
+      # Optional many_faces_push (ENABLE_PUSH_WORKER=1): push-worker-dev on many_faces_main_dev-network — example:
+      # - Push__Enabled=true
+      # - Push__WorkerGrpcUrl=http://push-worker-dev:50053
+      # - Push__WorkerAuthToken=   # optional; must match PUSH_WORKER_EXPECTED_TOKEN on the worker when set
       # Backend uses gRPC only (no Elasticsearch HTTP from the API). Example when the stack is up:
       # - Search__Enabled=true
       # - Search__WorkerGrpcUrl=http://search-worker-dev:50052

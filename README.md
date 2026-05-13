@@ -4,7 +4,7 @@ Many Faces AI is a full-stack social platform built around the concept of **face
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** skeleton (`many_faces_push`), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
@@ -58,9 +58,11 @@ flowchart LR
 
 ## Push worker / FCM (optional, `many_faces_push`)
 
-**`many_faces_push`** is a separate git submodule reserved for a future **Go gRPC worker** that will isolate **Firebase Admin / FCM** credentials and dispatch from **`many_faces_backend`**. **Skeleton only today** (placeholder binary, compose, Dockerfile, CI) — no gRPC API and no FCM sending yet.
+**`many_faces_push`** is a separate git submodule implementing a **Go gRPC worker** that isolates **Firebase Admin / FCM** dispatch from **`many_faces_backend`**. The API persists device tokens and calls **`PushService.SendPush`** over gRPC.
 
 - **Submodule:** [`many_faces_push/README.md`](./many_faces_push/README.md)
+- **Local dev:** [`docs/guides/push-notifications-local-dev.md`](./docs/guides/push-notifications-local-dev.md)
+- **Start with full stack:** `ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh` (requires a gitignored **service account JSON** and `GOOGLE_APPLICATION_CREDENTIALS` for the worker container).
 - **Roadmap / checklist:** [`docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md)
 
 ## System Overview
@@ -357,7 +359,7 @@ flowchart TD
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional future **FCM push** worker (gRPC skeleton). PostgreSQL stays authoritative. |
+| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional **FCM push** worker (gRPC). PostgreSQL stays authoritative. |
 | Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./docs/guides/development.md#monorepo-scripts-scripts), [`dev/`](./dev/README.md) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/README.md) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
@@ -424,7 +426,7 @@ many_faces_admin/    # many_faces_admin — admin SPA
 many_faces_database/       # many_faces_database — PostgreSQL compose
 many_faces_redis/    # many_faces_redis — job queue
 many_faces_elastic/  # many_faces_elastic — optional Elasticsearch (search)
-many_faces_push/     # many_faces_push — optional FCM push worker (skeleton)
+many_faces_push/     # many_faces_push — optional FCM push worker (Go gRPC)
 many_faces_ai/       # many_faces_ai — gRPC health / AI
 many_faces_logger/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
