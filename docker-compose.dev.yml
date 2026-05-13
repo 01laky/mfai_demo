@@ -19,6 +19,8 @@ services:
       - ASPNETCORE_DEV_HTTPS_PFX=/https-certs/localhost.pfx
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
       - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password
+      # Reference rows come from many_faces_database/seed/sql (see start-all-dev.sh: migrate + seed-after-migrate.sh).
+      - Seed__AssumeExternalSqlReferenceApplied=true
       # Redis z many_faces_redis (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
       #   docker network connect many_faces_main_dev-network redis-dev
       - Redis__Configuration=redis-dev:6379,abortConnect=false

@@ -130,6 +130,27 @@ if [ "$_expect_redis" -eq 1 ]; then
 fi
 
 # ============================================================================
+# EF MIGRATE + SQL REFERENCE SEEDS (host Postgres on 54320, before backend container)
+# ============================================================================
+echo "📦 EF database update + SQL reference seeds (many_faces_database)..."
+if nc -z localhost 54320 2>/dev/null; then
+    _conn='Host=localhost;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password'
+    export PATH="${PATH:+$PATH:}$HOME/.dotnet/tools"
+    if (cd many_faces_backend/BeDemo.Api && dotnet ef database update --connection "$_conn"); then
+        echo "    ✅ dotnet ef database update completed"
+    else
+        echo "    ⚠️  dotnet ef database update failed — install dotnet-ef; backend will still run Migrate on startup"
+    fi
+    if [ -x "many_faces_database/scripts/seed-after-migrate.sh" ]; then
+        many_faces_database/scripts/seed-after-migrate.sh && echo "    ✅ SQL reference seeds applied"
+    else
+        echo "    ⚠️  many_faces_database/scripts/seed-after-migrate.sh missing or not executable"
+    fi
+else
+    echo "    ⚠️  Postgres not reachable on localhost:54320 — skip migrate/seed"
+fi
+
+# ============================================================================
 # START BACKEND (ASP.NET Core API)
 # ============================================================================
 echo "📦 Starting backend (many_faces_backend)..."
