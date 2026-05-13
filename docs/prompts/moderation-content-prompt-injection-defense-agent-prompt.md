@@ -71,7 +71,7 @@ Verify paths after submodule checkout:
 
 | Area | Likely touchpoints |
 |------|-------------------|
-| `many_faces_backend` | `ContentAiReviewService`, `ContentModerationHelpers`, `IAiGrpcService` / gRPC client, entity → `ToAiRequest()` mapping (search the solution for `ReviewContent` / `ContentReviewRequest`), album/blog/reel create/update validators, OpenAPI if DTOs change |
+| `many_faces_backend` | `ContentAiReviewService`, `ContentModerationHelpers`, `IAiGrpcService` / gRPC client, entity → `ToAiRequest()` mapping (search the solution for `ReviewContent` / `ContentReviewRequest`), album/blog/reel create/update validators. **OpenAPI / NSwag:** touch only when **public HTTP REST** contracts change for portal/admin (see §8 Phase 1 note) — **not** when you change only `many_faces_ai` or `health.proto` gRPC, unless new data is also exposed on a REST endpoint. |
 | `many_faces_ai` | `server.py` / `HealthServiceServicer.ReviewContent`, any future LLM wrapper, `proto/health.proto` if fields added |
 | `many_faces_portal` | `AlbumForm`, `BlogForm`, `ReelForm`, client-side length hints (optional), `contentModeration` helpers if new flags surface to UI |
 | `many_faces_admin` | moderation filters / metrics if new flags are exposed to operators |
@@ -118,7 +118,7 @@ Verify paths after submodule checkout:
 ### 6.6 Creator FE / mobile
 
 - [ ] Do **not** show “prompt injection detected” to end users; use neutral copy (“Submitted for review”) or existing moderation states.
-- [ ] Any new machine-only flags or internal reasons must stay **off** creator JSON (`GET /api/my/content-submissions` and OpenAPI “safe fields” contract); follow the same rules as existing internal AI diagnostics.
+- [ ] Any new machine-only flags or internal reasons must stay **off** creator JSON (`GET /api/my/content-submissions` and the **REST** “safe fields” contract used by portal/mobile); follow the same rules as existing internal AI diagnostics. **OpenAPI** here means the backend’s **HTTP** API description that drives generated TypeScript clients — it is unrelated to calling **your own AI** over gRPC.
 - [ ] If you introduce creator-visible **generic** rejection copy for blocked submissions, add **i18n** keys in `many_faces_portal` (and `many_faces_mobile` when that surface shows the message), not hard-coded English in multiple repos.
 - [ ] Optional: client-side **length** and obvious control-character strip to reduce failed submits (must mirror server rules).
 
@@ -150,7 +150,7 @@ Tick in PR copies only.
 - [ ] Apply sanitization **immediately before** building the gRPC request inside backend (single choke point preferred). Document whether you also **normalize on write** (create/update) so DB and AI see the same bytes, or **only at review time** (worker) — if only at review time, legacy rows still get sanitized before `ReviewContent`; if on write, add migration/backfill only if product requires it.
 - [ ] Extend `ValidateRecommendation` with flag whitelist and new policy branches; add unit tests for each branch.
 - [ ] Add structured logging for sanitization events (no raw secrets).
-- [ ] Update OpenAPI / generated clients if any public DTO changes (unlikely if only internal).
+- [ ] **REST OpenAPI + generated clients** (`many_faces_portal` / `many_faces_admin`): update NSwag/OpenAPI spec and regenerate TypeScript **only** if you change **public HTTP** request/response shapes (e.g. `GET /api/my/content-submissions`, `GET /api/contentmoderation`, moderation action bodies). **No OpenAPI work** is required for edits confined to **gRPC** `ReviewContent` / `health.proto` / `many_faces_ai` — the browser never consumes that contract directly; codegen for AI stays in the protobuf toolchain, not OpenAPI.
 
 ### Phase 2 — Heuristic “instruction-like” signal
 
