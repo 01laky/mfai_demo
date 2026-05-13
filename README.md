@@ -4,11 +4,11 @@ Many Faces AI is a full-stack social platform built around the concept of **face
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
-**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
+**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger, **elastic**). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
 Security and trust boundaries are a high priority in the architecture: this stack uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
@@ -19,7 +19,7 @@ Security and trust boundaries are a high priority in the architecture: this stac
 - Social modules for profiles, albums, blogs, reels, stories, wall listings, chats, comments, likes, follows, blocks, and notifications.
 - Real-time and asynchronous features through SignalR, Redis-backed infrastructure, and an AI gRPC service.
 - Role-aware frontend flows backed by backend authorization and explicit capability checks.
-- A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, logging, and AI service up together.
+- A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, optional Elasticsearch (`ENABLE_ELASTICSEARCH=1` in `scripts/start-all-dev.sh`), logging, and AI service up together.
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
 - AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, **sanitization and prompt-injection defenses** on the path to gRPC `ReviewContent` (also in `many_faces_ai`), superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail. Reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 - **Admin operator dashboard + optional AI statistics:** consolidated **`GET /api/Stats`** / **`timeseries`**, anonymous aggregate **`GET /api/Stats/public`** (via **`public`** face prefix), **Settings** modes (**off / inline / live**) for attaching totals to **SignalR** admin AI chat, and gRPC **`stats_context_json`** / **`FetchPublicStats`** / **`OperatorStatsChat`** in **`many_faces_ai`**. Reference: [`docs/guides/admin-dashboard-metrics.md`](./docs/guides/admin-dashboard-metrics.md) and [`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](./docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
@@ -39,6 +39,7 @@ flowchart LR
     api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
     api --> db["many_faces_database<br/>PostgreSQL"]
     api --> redis["many_faces_redis<br/>Redis"]
+    api -.->|"optional"| elastic["many_faces_elastic<br/>Elasticsearch search index"]
     api --> realtime["SignalR<br/>real-time updates"]
     api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
 
@@ -47,6 +48,7 @@ flowchart LR
     scripts --> api
     scripts --> db
     scripts --> redis
+    scripts -.->|"ENABLE_ELASTICSEARCH=1"| elastic
     scripts --> ai
     scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
@@ -56,6 +58,22 @@ flowchart LR
     docs -.-> api
     docs -.-> ai
     docs -.-> mobile
+    docs -.-> elastic
+```
+
+### Optional search index (`many_faces_elastic`)
+
+**Elasticsearch** is an **optional** submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**; the API does not require Elasticsearch at startup. Enable the container with **`ENABLE_ELASTICSEARCH=1`** when running `./scripts/start-all-dev.sh`, map **`Search__ElasticsearchUri`** for the backend on the dev Docker network (see [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)), and probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
+
+```mermaid
+flowchart LR
+    subgraph roles["Authoritative data vs search projection"]
+        pg[(PostgreSQL<br/>OLTP source of truth)]
+        es[(Elasticsearch<br/>optional read index)]
+    end
+
+    be["many_faces_backend"] --> pg
+    be -.->|"Search ElasticsearchUri set"| es
 ```
 
 ## Frontend Route And Grid Rendering
@@ -203,6 +221,7 @@ flowchart TD
     services --> db["PostgreSQL via EF Core"]
     services --> redis["Redis queue/cache infrastructure"]
     services --> ai["Python gRPC AI service"]
+    services -.->|"optional"| es["many_faces_elastic<br/>Elasticsearch HTTP API"]
     controllers --> dto["Typed DTOs / OpenAPI contracts"]
 ```
 
