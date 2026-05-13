@@ -28,3 +28,4 @@ This file records the **2026-05-13** delivery; every item is **`[x]`** by design
 - [x] Add **`many_faces_ai`** pytest coverage for **`Generate`** + **`stats_context_json`**, invalid **`FetchPublicStats`** URLs, **`OperatorStatsChat`** validation and unreachable live URL.
 - [x] Add **`many_faces_admin`** Vitest tests for **`adminAiStatsSettings`** and **`faceApiRouting`** public-face path helpers.
 - [x] Update monorepo **`README.md`** (mermaid + bullet), **`docs/guides/admin-dashboard-metrics.md`**, submodule READMEs (**backend**, **admin**, **AI**) for operator statistics and AI modes.
+- [x] Refresh **`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`** (tests + implementation record); keep this checklist and the prompt entry in **`docs/prompts/README.md`** current.
