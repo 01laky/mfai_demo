@@ -146,7 +146,7 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | **many_faces_portal**           | Node from `many_faces_portal/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`, **`yarn npm audit`** (informational, always exits 0 in CI), then **Cypress smoke**: `yarn preview` on **HTTP** `127.0.0.1:4173` + **`yarn test:e2e:ci`** |
 | **many_faces_admin**        | Same Node/Yarn gate as **many_faces_portal** through **`yarn build`**, plus informational **`yarn npm audit`**; **no** Cypress job in this workflow yet. |
 | **many_faces_mobile**       | Node from **`many_faces_mobile/.nvmrc`**, **`corepack enable`** + **`yarn install --immutable`**, then **`./scripts/verify-ci.sh --quick`** (ESLint + Prettier check + `tsc`, Jest, `expo-doctor`, informational **`yarn npm audit`**). |
-| **many_faces_ai**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                             |
+| **many_faces_ai**           | Python **3.11**, pip install **grpcio 1.68.x**, **ruff**, **pytest**, **CPU torch + transformers + accelerate + numpy** (so `test_server.py` can import `server.py`), **generate protos**, then `ruff check` / `ruff format --check` and **`pytest test_server.py`** (matches `.github/workflows/ci.yml`; heavier than local `verify-ci.sh`) |
 | **infra_many_faces_database**     | `docker compose -f many_faces_database/docker-compose.yml config`                                                                                                        |
 | **infra_many_faces_redis**  | `docker compose -f many_faces_redis/docker-compose.yml config`                                                                                                     |
 | **infra_many_faces_logger** | `docker compose -f many_faces_logger/docker-compose.dev.yml config`                                                                                                |
@@ -195,7 +195,7 @@ Run from repository root (submodules checked out). Executable bits: match the **
 
 **Dev stack:** `scripts/start-all-dev.sh`, `scripts/stop-all-dev.sh`, `scripts/clear-all-dev.sh`, `scripts/rebuild-all-dev.sh`, `scripts/restart-all-dev.sh`, `scripts/start-missing-dev.sh`, `scripts/menu.sh`.
 
-**`many_faces_ai/scripts/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, ruff, pytest — aligned with the **many_faces_ai** GitHub Actions job (no PyTorch).
+**`many_faces_ai/scripts/verify-ci.sh`**: local venv `.venv-ci-verify/`, gRPC stub generation, **ruff**, **pytest** — lighter local gate (no full PyTorch stack unless you extend that script). The **many_faces_ai** job in **root** `.github/workflows/ci.yml` additionally installs **torch** and **transformers** so the same `pytest test_server.py` path matches production imports; do not assume `verify-ci.sh` and CI use identical pip sets without reading both files.
 
 ### Diagram: ci-local chain
 
