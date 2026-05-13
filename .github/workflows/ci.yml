@@ -194,6 +194,25 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f many_faces_elastic/docker-compose.yml config
 
+  go_many_faces_elastic:
+    name: go (many_faces_elastic search-worker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: many_faces_elastic/go.mod
+          cache-dependency-path: many_faces_elastic/go.sum
+
+      - name: go vet and test
+        run: |
+          cd many_faces_elastic
+          go vet ./...
+          go test ./... -count=1
+
   # Seq / logger sidecar compose used in local dev stacks.
   infra_many_faces_logger:
     name: infra (many_faces_logger)

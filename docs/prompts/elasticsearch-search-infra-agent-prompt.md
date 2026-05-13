@@ -243,8 +243,8 @@ Reject unauthenticated or untrusted peers at the worker **before** touching Elas
 
 ## 9. Documentation deliverables
 
-- [ ] New submodule **`many_faces_elastic/`** with `README.md`, `docker-compose.yml`, **Go `search-worker`** (`Dockerfile`, `go.mod`, `proto/`, `cmd/` + `internal/`), scripts, `.env.example`, and optional **`.github/workflows`** for Go + Docker build.
-- [ ] **`docs/guides/elasticsearch-local-dev.md`** in `many_faces_main` — ports (Elasticsearch HTTP, worker gRPC), **`Search__WorkerGrpcUrl`**, `ENABLE_ELASTICSEARCH`, network attach order, **proto sync** between repos, **grpcurl** smoke, troubleshooting, link to submodule.
+- [x] New submodule **`many_faces_elastic/`** with `README.md`, `docker-compose.yml`, **Go `search-worker`** (`Dockerfile`, `go.mod`, `proto/`, `cmd/` + `internal/`), scripts, `.env.example`, and optional **`.github/workflows`** for Go + Docker build.
+- [x] **`docs/guides/elasticsearch-local-dev.md`** in `many_faces_main` — ports (Elasticsearch HTTP, worker gRPC), **`Search__WorkerGrpcUrl`**, `ENABLE_ELASTICSEARCH`, network attach order, **proto sync** between repos, **grpcurl** smoke, troubleshooting, link to submodule.
 - [ ] Update **`docs/guides/docker-and-compose.md`** and **`docs/guides/redis-workers-and-queues.md`** only if wiring overlaps (keep deltas minimal).
 - [ ] Update **`docs/readmes/README.md`** if you add a short “infra overview” cross-link pattern for the new submodule.
 
@@ -252,25 +252,25 @@ Reject unauthenticated or untrusted peers at the worker **before** touching Elas
 
 ## 10. Verification checklist (unchecked — tick in PRs)
 
-- [ ] `docker compose … config` passes in CI for the submodule path (Elasticsearch + **`search-worker`** services).
-- [ ] **`go test ./...`** (and **`go vet`** or lint) passes for the worker module in CI (submodule or monorepo workflow).
-- [ ] `many_faces_backend` builds with search **disabled** by default (no Elasticsearch container and **no** worker required for default `dotnet test`).
+- [x] `docker compose … config` passes in CI for the submodule path (Elasticsearch + **`search-worker`** services).
+- [x] **`go test ./...`** (and **`go vet`** or lint) passes for the worker module in CI (submodule or monorepo workflow).
+- [x] `many_faces_backend` builds with search **disabled** by default (no Elasticsearch container and **no** worker required for default `dotnet test`).
 - [ ] **Proto drift check** (if C# is generated from `many_faces_elastic/proto/`) passes in CI.
 - [ ] `scripts/lint-all.sh` / `ci-local.sh` remain green (update scripts if new folders are linted).
 - [ ] Submodule pointer bump merged in `many_faces_main` with coherent commit message.
-- [ ] No secrets committed; `.gitignore` covers ES data dirs, env files, and Go build artifacts.
+- [x] No secrets committed; `.gitignore` covers ES data dirs, env files, and Go build artifacts.
 
 ---
 
 ## 11. Suggested implementation order
 
-1. **`many_faces_elastic`**: extend `docker-compose.yml` with **`search-worker`**; add **`proto/`** with minimal RPCs + **Go** server skeleton + **Dockerfile**; document ports and auth plan in `README.md`; optional Go CI in submodule.
-2. **Proto consumption**: wire **`many_faces_backend`** `Grpc.Tools` (or Buf) to generate **C#** from **`many_faces_elastic/proto/`**; add **`Search:`** options (`WorkerGrpcUrl`, `Enabled`, timeouts, TLS/auth).
-3. **`many_faces_backend`**: dedicated **search gateway** (gRPC client) + **`SearchController`** REST; health/readiness that respects **disabled** mode; unit tests with mocked gRPC.
-4. **Indexing strategy** (section 4.3) implemented in backend jobs calling **worker RPCs** (not ES HTTP).
-5. **First vertical slice**: one index + one read REST API + portal **or** admin UI.
-6. **`many_faces_ai`**: generate Python stubs from the same protos; add narrow client + auth metadata when AI needs search.
-7. Hardening: **mTLS** or token auth on worker, rate limits, index retention, reindex playbook.
+1. [x] **`many_faces_elastic`**: extend `docker-compose.yml` with **`search-worker`**; add **`proto/`** with minimal RPCs + **Go** server skeleton + **Dockerfile**; document ports and auth plan in `README.md`; optional Go CI in submodule.
+2. [x] **Proto consumption**: wire **`many_faces_backend`** `Grpc.Tools` (or Buf) to generate **C#** from **`many_faces_elastic/proto/`**; add **`Search:`** options (`WorkerGrpcUrl`, `Enabled`, timeouts, TLS/auth).
+3. [x] **`many_faces_backend`**: dedicated **search gateway** (gRPC client) + **`SearchController`** REST; health/readiness that respects **disabled** mode; unit tests with mocked gRPC.
+4. [ ] **Indexing strategy** (section 4.3) implemented in backend jobs calling **worker RPCs** (not ES HTTP).
+5. [ ] **First vertical slice**: one index + one read REST API + portal **or** admin UI.
+6. [ ] **`many_faces_ai`**: generate Python stubs from the same protos; add narrow client + auth metadata when AI needs search.
+7. [ ] Hardening: **mTLS** or token auth on worker, rate limits, index retention, reindex playbook.
 
 ---
 

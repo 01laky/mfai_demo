@@ -26,6 +26,11 @@
 
 - **Import errors in `many_faces_ai`** — regenerate protos (`./scripts/generate_proto.sh`); see [`many_faces_ai/README.md`](../../many_faces_ai/README.md).
 
+## Optional Elasticsearch / search-worker (`many_faces_elastic`)
+
+- **Nothing listening on `59200` / `59202`** — start the stack with `ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh` (or `many_faces_elastic/scripts/start-elasticsearch.sh`) and wait until both `elasticsearch-dev` and `search-worker-dev` exist (`docker ps`).
+- **Backend cannot reach the worker** — containers must be on `many_faces_main_dev-network`; use Docker DNS names `http://search-worker-dev:50052` from `be-demo-dev`, not `localhost`. Full checklist: [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md).
+
 ## Still stuck
 
 - Capture **Seq** + **browser network** + **API logs** in one timeline ([`observability-seq-and-logs.md`](./observability-seq-and-logs.md)).

@@ -176,6 +176,33 @@ fi
 echo ""
 
 # ============================================================================
+# TEST SEARCH WORKER (many_faces_elastic / Go)
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing search worker (many_faces_elastic)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -f "many_faces_elastic/go.mod" ] && command -v go >/dev/null 2>&1; then
+    echo "📦 Running go vet + go test (many_faces_elastic)..."
+    if (cd many_faces_elastic && go vet ./... && go test ./... -count=1); then
+        TEST_RESULTS+=("✅ many_faces_elastic: go test passed")
+        echo "✅ many_faces_elastic: go test passed"
+    else
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        TEST_RESULTS+=("❌ many_faces_elastic: go test failed")
+        echo "❌ many_faces_elastic: go test failed"
+    fi
+else
+    TEST_RESULTS+=("⏭️  many_faces_elastic: go not installed — skipped (CI runs dedicated Go job)")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  many_faces_elastic: go not on PATH, skipping"
+fi
+
+echo ""
+
+# ============================================================================
 # TEST FRONTEND (many_faces_portal)
 # ============================================================================
 

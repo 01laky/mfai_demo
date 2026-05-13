@@ -11,6 +11,7 @@
 | AI gRPC          | [`../../many_faces_ai/README.md`](../../many_faces_ai/README.md)         |
 | PostgreSQL stack | [`../../many_faces_database/README.md`](../../many_faces_database/README.md)         |
 | Redis stack      | [`../../many_faces_redis/README.md`](../../many_faces_redis/README.md)   |
+| Search (optional) | [`../../many_faces_elastic/README.md`](../../many_faces_elastic/README.md) |
 | Logger (Dozzle)  | [`../../many_faces_logger/README.md`](../../many_faces_logger/README.md) |
 
 Canonical **guides and prompts** live in the monorepo [`docs/README.md`](../README.md) hub (`guides/`, `prompts/`) — submodule READMEs stay the per-app source of truth.
@@ -27,6 +28,7 @@ flowchart TB
   AI[many_faces_ai README.md]
   DB[many_faces_database README.md]
   RD[many_faces_redis README.md]
+  ES[many_faces_elastic README.md]
   LG[many_faces_logger README.md]
   Idx --> BE
   Idx --> FE
@@ -35,6 +37,7 @@ flowchart TB
   Idx --> AI
   Idx --> DB
   Idx --> RD
+  Idx --> ES
   Idx --> LG
 ```
 
@@ -51,6 +54,7 @@ Longer narratives that read like extended READMEs:
 | [be-backend-overview.md](./be-backend-overview.md)       | `many_faces_backend` API narrative + links to guides. |
 | [ai-grpc-overview.md](./ai-grpc-overview.md)            | `many_faces_ai` gRPC narrative + links to guides.   |
 | [redis-subrepo.md](./redis-subrepo.md)             | Developing with the `many_faces_redis` submodule. |
+| Search stack (optional) | Submodule [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md); monorepo operator steps in [`../guides/elasticsearch-local-dev.md`](../guides/elasticsearch-local-dev.md). |
 | Mobile (`many_faces_mobile`)                      | Long-form narrative lives in the submodule [`README.md`](../../many_faces_mobile/README.md) (Phase 1 parity, submissions read path). |
 
 **Auth / JWT / sessions:** see the canonical guide [authentication-and-sessions.md](../guides/authentication-and-sessions.md).

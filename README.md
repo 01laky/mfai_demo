@@ -39,7 +39,13 @@ flowchart LR
     api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
     api --> db["many_faces_database<br/>PostgreSQL"]
     api --> redis["many_faces_redis<br/>Redis"]
-    api -.->|"optional"| elastic["many_faces_elastic<br/>Elasticsearch search index"]
+    subgraph elastic_stack["many_faces_elastic optional read index"]
+        direction TB
+        sw["Go search-worker<br/>gRPC :50052"]
+        esx["Elasticsearch<br/>HTTP :9200"]
+        sw --> esx
+    end
+    api -.->|"Search:Enabled + WorkerGrpcUrl"| sw
     api --> realtime["SignalR<br/>real-time updates"]
     api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
 
@@ -48,7 +54,7 @@ flowchart LR
     scripts --> api
     scripts --> db
     scripts --> redis
-    scripts -.->|"ENABLE_ELASTICSEARCH=1"| elastic
+    scripts -.->|"ENABLE_ELASTICSEARCH=1"| elastic_stack
     scripts --> ai
     scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
@@ -58,22 +64,26 @@ flowchart LR
     docs -.-> api
     docs -.-> ai
     docs -.-> mobile
-    docs -.-> elastic
+    docs -.-> elastic_stack
 ```
 
 ### Optional search index (`many_faces_elastic`)
 
-**Elasticsearch** is an **optional** submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**; the API does not require Elasticsearch at startup. Enable the container with **`ENABLE_ELASTICSEARCH=1`** when running `./scripts/start-all-dev.sh`, map **`Search__ElasticsearchUri`** for the backend on the dev Docker network (see [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)), and probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
+**Elasticsearch** is an **optional** submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**; the API does not require Elasticsearch or the Go **search-worker** at startup. Enable both containers with **`ENABLE_ELASTICSEARCH=1`** when running `./scripts/start-all-dev.sh`, then set **`Search__Enabled=true`**, **`Search__WorkerGrpcUrl=http://search-worker-dev:50052`**, and optional **`Search__WorkerAuthToken`** to match the worker (see [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md) and [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)). Probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
+
+For how this submodule fits root **`docker-compose.dev.yml`** and lifecycle scripts, see [`docs/guides/docker-and-compose.md`](./docs/guides/docker-and-compose.md). When search containers misbehave (network attach, ports **59200** / **59202**, or gRPC `Unavailable`), use [`docs/guides/troubleshooting-local-dev.md`](./docs/guides/troubleshooting-local-dev.md) together with the Elasticsearch guide above.
 
 ```mermaid
 flowchart LR
     subgraph roles["Authoritative data vs search projection"]
         pg[(PostgreSQL<br/>OLTP source of truth)]
         es[(Elasticsearch<br/>optional read index)]
+        sw[Go search-worker<br/>gRPC in many_faces_elastic]
     end
 
     be["many_faces_backend"] --> pg
-    be -.->|"Search ElasticsearchUri set"| es
+    be -.->|"Search Enabled + WorkerGrpcUrl"| sw
+    sw --> es
 ```
 
 ## Frontend Route And Grid Rendering
@@ -310,7 +320,7 @@ flowchart TD
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch for full-text search (read index; PostgreSQL stays authoritative). |
+| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC); PostgreSQL stays authoritative. |
 | Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./docs/guides/development.md#monorepo-scripts-scripts), [`dev/`](./dev/README.md) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/README.md) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
@@ -393,7 +403,7 @@ git submodule update --init --recursive
 ./scripts/start-all-dev.sh
 ```
 
-**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, optional Elasticsearch `59200`. Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
+**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, optional Elasticsearch HTTP `59200`, optional search-worker gRPC `59202`. Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
 
 **Run all tests:**
 

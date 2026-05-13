@@ -7,6 +7,7 @@ This page is a **narrative index** for the ASP.NET Core API submodule. **Source 
 - OAuth2 / JWT sessions, refresh rotation, JWKS, face-scoped routing middleware.
 - EF Core + PostgreSQL persistence for social modules, pages, grids, moderation, stats.
 - SignalR hubs; Redis-backed workers; gRPC client to **`many_faces_ai`**.
+- **Optional search tier:** when `Search:Enabled` and `Search:WorkerGrpcUrl` are set, the API calls the Go **search-worker** in **`many_faces_elastic`** over **gRPC** (e.g. `GET /api/search/health`); Elasticsearch HTTP is used only inside that worker.
 
 ## Where to read next
 
@@ -17,4 +18,5 @@ This page is a **narrative index** for the ASP.NET Core API submodule. **Source 
 | Content moderation | [`ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md), [`content-moderation-operations.md`](../guides/content-moderation-operations.md) |
 | Operator stats + admin AI | [`admin-dashboard-metrics.md`](../guides/admin-dashboard-metrics.md), [`backend-stats-and-admin-ai-runbook.md`](../guides/backend-stats-and-admin-ai-runbook.md) |
 | OpenAPI clients | [`openapi-client-generation.md`](../guides/openapi-client-generation.md) |
+| Optional search (Elasticsearch + worker) | [`elasticsearch-local-dev.md`](../guides/elasticsearch-local-dev.md), submodule [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md) |
 | Migrations | [`efcore-migrations-and-seeding.md`](../guides/efcore-migrations-and-seeding.md) |

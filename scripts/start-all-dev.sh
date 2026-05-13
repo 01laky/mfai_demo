@@ -19,7 +19,7 @@
 # - Live status screen until every expected container is running (not “subset == all existing”)
 #
 # Usage: ./scripts/start-all-dev.sh (from repository root)
-# Optional: ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh — starts many_faces_elastic and attaches elasticsearch-dev to the dev network.
+# Optional: ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh — starts many_faces_elastic (Elasticsearch + Go search-worker) and attaches elasticsearch-dev + search-worker-dev to the dev network.
 # Press Ctrl+C to exit the status screen early
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -92,11 +92,11 @@ fi
 # ============================================================================
 _expect_elastic=0
 if [ "${ENABLE_ELASTICSEARCH:-}" = "1" ] && [ -f "many_faces_elastic/scripts/start-elasticsearch.sh" ]; then
-    echo "📦 Starting Elasticsearch (many_faces_elastic)..."
+    echo "📦 Starting Elasticsearch + search-worker (many_faces_elastic)..."
     cd many_faces_elastic
     ./scripts/start-elasticsearch.sh > /dev/null 2>&1 &
     cd ..
-    echo "    ✅ Elasticsearch startup launched"
+    echo "    ✅ Elasticsearch + search-worker startup launched"
     _expect_elastic=1
 fi
 
@@ -113,7 +113,7 @@ else
     )
 fi
 if [ "$_expect_elastic" -eq 1 ]; then
-    EXPECTED_CONTAINERS+=(elasticsearch-dev)
+    EXPECTED_CONTAINERS+=(elasticsearch-dev search-worker-dev)
 fi
 EXPECTED_TOTAL=${#EXPECTED_CONTAINERS[@]}
 
@@ -160,6 +160,19 @@ if [ "$_expect_elastic" -eq 1 ]; then
     done
     if [ "$_es_ok" -eq 0 ]; then
         echo "    ⚠️  Elasticsearch not ready on localhost:59200 after ~90s"
+    fi
+    echo "    Waiting for search-worker gRPC (localhost:59202)..."
+    _sw_ok=0
+    for _i in {1..45}; do
+        if nc -z localhost 59202 2>/dev/null; then
+            _sw_ok=1
+            echo "    ✅ search-worker gRPC port is open"
+            break
+        fi
+        sleep 2
+    done
+    if [ "$_sw_ok" -eq 0 ]; then
+        echo "    ⚠️  search-worker not ready on localhost:59202 after ~90s"
     fi
 fi
 
@@ -258,6 +271,33 @@ if [ "$_expect_elastic" -eq 1 ]; then
     if [ "$_es_net_ok" -eq 0 ]; then
         echo "    ⚠️  Could not attach elasticsearch-dev to many_faces_main_dev-network after 90s"
     fi
+    echo "    Attaching search-worker-dev to many_faces_main_dev-network (retry until ready)..."
+    _sw_net_ok=0
+    for _i in {1..90}; do
+        if ! docker network inspect many_faces_main_dev-network >/dev/null 2>&1; then
+            sleep 1
+            continue
+        fi
+        if ! docker ps --format '{{.Names}}' | grep -q '^search-worker-dev$'; then
+            sleep 1
+            continue
+        fi
+        _out=$(docker network connect many_faces_main_dev-network search-worker-dev 2>&1) || true
+        if [ -z "$_out" ]; then
+            _sw_net_ok=1
+            echo "    ✅ search-worker-dev connected to dev network"
+            break
+        fi
+        if echo "$_out" | grep -qi 'already exists'; then
+            _sw_net_ok=1
+            echo "    ✅ search-worker-dev already on dev network"
+            break
+        fi
+        sleep 1
+    done
+    if [ "$_sw_net_ok" -eq 0 ]; then
+        echo "    ⚠️  Could not attach search-worker-dev to many_faces_main_dev-network after 90s"
+    fi
 fi
 
 # ============================================================================
@@ -322,7 +362,7 @@ while true; do
     # CHECK AND RESTART STOPPED CONTAINERS
     # ========================================================================
     # Check for stopped containers and attempt to restart them automatically
-    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev)$" || true)
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev)$" || true)
     
     if [ -n "$STOPPED" ]; then
         echo ""

@@ -36,6 +36,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [git-submodules.md](./guides/git-submodules.md) | Submodule setup and workflow. |
 | [dev-https.md](./guides/dev-https.md) | Local HTTPS certs (`dev/README.md`), ports, Docker, macOS PFX. |
 | [docker-and-compose.md](./guides/docker-and-compose.md) | Root compose + submodule Docker stacks. |
+| [elasticsearch-local-dev.md](./guides/elasticsearch-local-dev.md) | Optional Elasticsearch + Go search-worker, gRPC wiring, ports, grpcurl smoke. |
 | [testing-and-ci-matrix.md](./guides/testing-and-ci-matrix.md) | What runs where (scripts + per-stack commands). |
 | [troubleshooting-local-dev.md](./guides/troubleshooting-local-dev.md) | Common local failures and where to read next. |
 | [husky-setup.md](./guides/husky-setup.md) | **Pointer** → canonical [`development.md`](./guides/development.md#git-hooks-husky--commitlint); legacy in [`archive/husky-setup-legacy.md`](./guides/archive/husky-setup-legacy.md). |

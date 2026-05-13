@@ -20,6 +20,7 @@ Details and edge cases: [`development.md`](./development.md) (*Monorepo scripts*
 | Stack | Location | Typical commands |
 | ----- | -------- | ------------------ |
 | .NET | `many_faces_backend/` | `dotnet test`, `dotnet format` |
+| Go (search-worker) | `many_faces_elastic/` | `go test ./...`, `go vet ./...` (also run from root `scripts/test-all.sh` when `go` is on `PATH`) |
 | React | `many_faces_portal/`, `many_faces_admin/` | `yarn test`, `yarn validate`, `yarn lint` |
 | Expo | `many_faces_mobile/` | `yarn test`, `./scripts/test.sh` (see mobile guide) |
 | Python AI | `many_faces_ai/` | `pytest`, Ruff (`./scripts/lint.sh`) |
@@ -27,4 +28,5 @@ Details and edge cases: [`development.md`](./development.md) (*Monorepo scripts*
 ## Related
 
 - [`mobile-expo-development.md`](./mobile-expo-development.md)
+- [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md)
 - [`unit-test-gap-fill-agent-prompt.md`](../prompts/unit-test-gap-fill-agent-prompt.md)
