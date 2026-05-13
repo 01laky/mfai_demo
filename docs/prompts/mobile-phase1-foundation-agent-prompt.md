@@ -203,8 +203,7 @@ Add to `.github/workflows/ci.yml` (same workflow file other jobs use):
 
 - `runs-on: ubuntu-latest`
 - `actions/checkout@v4` with `submodules: recursive`
-- `actions/setup-node@v4` with `node-version-file: many_faces_mobile/.nvmrc`
-- **Caching:** `cache: yarn`, `cache-dependency-path: many_faces_mobile/yarn.lock`
+- `actions/setup-node@v4` with `node-version-file: many_faces_mobile/.nvmrc` — **do not** set `cache: yarn` on this step: GitHub Actions would run global Yarn 1.x before Corepack activates Yarn 4 from `packageManager`, which fails. After **`corepack enable`**, restore **`actions/cache@v4`** on **`many_faces_mobile/.yarn/cache`** keyed by **`many_faces_mobile/yarn.lock`** (and optionally **`.yarnrc.yml`**), then install.
 - Steps (required order):
   1. `cd many_faces_mobile && corepack enable && yarn install --immutable`
   2. `./scripts/verify-ci.sh --quick` — runs **`./scripts/lint.sh`** (ESLint + Prettier check + `tsc`), **`yarn test`**, **`npx expo-doctor`**, and **`yarn npm audit || true`**. CI already installed deps in step 1, so **`--quick`** skips a second install. **`expo-doctor`** must exit zero; audit is informational only (must still print).
