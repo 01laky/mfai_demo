@@ -13,6 +13,7 @@ This guide ties together the **monorepo** compose file and per-service Docker RE
 | PostgreSQL | `many_faces_database/` | Dev database container(s); see [`many_faces_database/README.md`](../../many_faces_database/README.md). |
 | Redis | `many_faces_redis/` | Cache / job queue infra; see [`many_faces_redis/README.md`](../../many_faces_redis/README.md) and [`redis-subrepo.md`](../readmes/redis-subrepo.md). |
 | Search index (optional) | `many_faces_elastic/` | Elasticsearch + **Go search-worker** (gRPC); backend talks to the worker only — see [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md), [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md), [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md), and [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md). |
+| Push / FCM (optional, skeleton) | `many_faces_push/` | Future **Go gRPC** FCM worker; submodule is a **shell** until wired — see [`many_faces_push/README.md`](../../many_faces_push/README.md) and [`push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](../prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md). |
 | Logs UI | `many_faces_logger/` | Dozzle / log viewing; see [`many_faces_logger/README.md`](../../many_faces_logger/README.md). |
 
 ## Scripts

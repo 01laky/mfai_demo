@@ -222,6 +222,33 @@ fi
 echo ""
 
 # ============================================================================
+# TEST PUSH WORKER SKELETON (many_faces_push / Go)
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing push worker skeleton (many_faces_push)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -f "many_faces_push/go.mod" ] && command -v go >/dev/null 2>&1; then
+    echo "📦 Running go vet + go test (many_faces_push)..."
+    if (cd many_faces_push && go vet ./... && go test ./... -count=1); then
+        TEST_RESULTS+=("✅ many_faces_push: go test passed")
+        echo "✅ many_faces_push: go test passed"
+    else
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        TEST_RESULTS+=("❌ many_faces_push: go test failed")
+        echo "❌ many_faces_push: go test failed"
+    fi
+else
+    TEST_RESULTS+=("⏭️  many_faces_push: go not installed — skipped")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  many_faces_push: go not on PATH or submodule missing, skipping"
+fi
+
+echo ""
+
+# ============================================================================
 # TEST FRONTEND (many_faces_portal)
 # ============================================================================
 

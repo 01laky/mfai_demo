@@ -12,6 +12,7 @@
 | PostgreSQL stack | [`../../many_faces_database/README.md`](../../many_faces_database/README.md)         |
 | Redis stack      | [`../../many_faces_redis/README.md`](../../many_faces_redis/README.md)   |
 | Search (optional) | [`../../many_faces_elastic/README.md`](../../many_faces_elastic/README.md) |
+| Push / FCM (optional, skeleton) | [`../../many_faces_push/README.md`](../../many_faces_push/README.md) |
 | Logger (Dozzle)  | [`../../many_faces_logger/README.md`](../../many_faces_logger/README.md) |
 
 Canonical **guides and prompts** live in the monorepo [`docs/README.md`](../README.md) hub (`guides/`, `prompts/`) — submodule READMEs stay the per-app source of truth.

@@ -197,6 +197,17 @@ jobs:
       - name: Validate TLS smoke compose (requires SEARCH_TLS_SMOKE_CERT_DIR for variable expansion)
         run: SEARCH_TLS_SMOKE_CERT_DIR=/tmp docker compose -f many_faces_elastic/docker-compose.tls-smoke.yml config
 
+  infra_many_faces_push:
+    name: infra (many_faces_push)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Validate docker compose
+        run: docker compose -f many_faces_push/docker-compose.yml config
+
   go_many_faces_elastic:
     name: go (many_faces_elastic search-worker)
     runs-on: ubuntu-latest
@@ -213,6 +224,24 @@ jobs:
       - name: go vet and test
         run: |
           cd many_faces_elastic
+          go vet ./...
+          go test ./... -count=1
+
+  go_many_faces_push:
+    name: go (many_faces_push)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: many_faces_push/go.mod
+
+      - name: go vet and test
+        run: |
+          cd many_faces_push
           go vet ./...
           go test ./... -count=1
 

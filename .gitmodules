@@ -25,3 +25,6 @@
 [submodule "many_faces_elastic"]
 	path = many_faces_elastic
 	url = https://github.com/01laky/many_faces_elastic.git
+[submodule "many_faces_push"]
+	path = many_faces_push
+	url = https://github.com/01laky/many_faces_push.git
