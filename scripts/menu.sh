@@ -69,14 +69,20 @@ read_key() {
 run_script() {
   local dir=$1
   local script=$2
+  local ec=0
   term_restore
   echo ""
   echo "▶ Running $dir/$script ..."
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   if [ "$dir" = "." ] || [ -z "$dir" ]; then
-    "./$script" || true
+    "./$script" || ec=$?
   else
-    (cd "$dir" && ./"$script") || true
+    (cd "$dir" && ./"$script") || ec=$?
+  fi
+  if [ "$ec" -ne 0 ]; then
+    echo "Finished with exit code $ec (menu continues; fix errors above if unexpected)."
+  else
+    echo "Finished with exit code 0."
   fi
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
