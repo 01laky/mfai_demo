@@ -1,12 +1,12 @@
 # AI-Assisted Content Approval
 
-This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current reference implementation** in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, and `many_faces_ai`, plus optional roadmap items.
+This guide is the **product and engineering reference** for how user-created albums, blogs, and reels move from submission to publication in Many Faces AI. It reflects the **current reference implementation** in `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, and the **read path** for creators on **`many_faces_mobile`** (see table below), plus optional roadmap items.
 
 **Related:** implementation task checklist (ticked items) — [`../prompts/user-content-approval-extensions-implementation-checklist.md`](../prompts/user-content-approval-extensions-implementation-checklist.md).
 
 ## Scope
 
-The workflow applies to content created by **regular users** from the user-facing frontend (`many_faces_portal`):
+The workflow applies to content created by **regular users** from the user-facing frontend (`many_faces_portal`) and to the **same creator API** when surfaced on mobile (`many_faces_mobile` — list-only today):
 
 - Albums
 - Blogs
@@ -35,9 +35,10 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **AI service** | Deterministic classifier (text + media URL metadata) + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
 | **Admin** | `ContentModerationController`: queue with filters (type, status, AI status, face, author, risk, flags substring, confidence band, submitted window, reviewer, queue age, moderation version), metrics `{ metrics, alerts }`, per-item actions, **bulk** approve/reject/remove/requeue, audit events. |
 | **Creator FE** | `GET /api/my/content-submissions`, **My submissions** page (`/my-submissions`), grouping helpers, safe reasons, links to detail with optional `?edit=1`, edit/delete gated on owner + pending/rejected. |
+| **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped URL via `many_faces_mobile` `faceScope`); **`MySubmissionsScreen`** lists rows grouped with `contentModeration` helpers (creator-safe fields). **No** native detail editor / `?edit=1` / delete yet — portal remains canonical for mutations until ported. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
-| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `many_faces_ai/test_server.py`. |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `many_faces_ai/test_server.py`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
 
 ## Core Rule
 

@@ -61,6 +61,7 @@ The mobile submodule uses **Expo**, **TypeScript**, and **Yarn 4** via Corepack 
 
 - **Start here:** [`mobile-expo-development.md`](./mobile-expo-development.md) — prerequisites, `corepack enable`, `yarn install`, `yarn start`, Expo Go, env vars, submodule pointer bumps.
 - **Implementation prompt:** [`mobile-phase1-foundation-agent-prompt.md`](../prompts/mobile-phase1-foundation-agent-prompt.md) — config/auth parity with `many_faces_portal`, README style, ESLint/Prettier, tests, gitflow, parent `ci.yml` job.
+- **REST parity inventory:** [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md) (submodule) — keep in sync when adding mobile API clients.
 
 ## Python (many_faces_ai)
 

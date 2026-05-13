@@ -87,7 +87,7 @@ Details: [`git-submodules.md`](./git-submodules.md).
 
 - [`development.md`](./development.md) — monorepo scripts, `ci-local.sh`, Node versions.
 - [`authentication-and-sessions.md`](./authentication-and-sessions.md) — OAuth2 / JWT for login parity.
-- [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md) — full-stack moderation story (mobile README should reference for product context; phase-1 mobile does **not** implement grid moderation UI).
+- [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md) — full-stack moderation story; mobile exposes a **read-only My submissions** list (`GET /api/my/content-submissions`) — see guide table row **Creator mobile**. Native detail / edit / grid moderation UIs remain incremental.
 
 ## 8. Troubleshooting
 

@@ -2,6 +2,8 @@
 
 End-to-end feature: per-face **idea / feedback tickets** with **likes** and **comments**, **moderation** (global Admin / SuperAdmin only), **hard delete**, and **delayed deletion** of denied tickets via the Redis job worker.
 
+**Mobile:** `many_faces_mobile` consumes the same list API on wall pages (`WallTicketsSection`) and in **`ad*`** grid blocks (`WallTicketsAdGridBlock`); create/moderation parity remains web-first until ported — see `many_faces_mobile/docs/rest-parity-matrix.md`.
+
 ## Data model
 
 - **FaceWallTicket** — `FaceId`, `CreatorUserId`, `Title` (max 200), `Description` (text, max 8000 in API), `Status` (`active` | `approved` | `denied`), timestamps.
