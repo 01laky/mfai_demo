@@ -2,7 +2,7 @@
 
 **Language:** All **new** prose you add to repositories (README, guides, comments in new code) must be **English**.
 
-**Mission:** Introduce **mobile push notifications** for the Many Faces stack using **Firebase Cloud Messaging (FCM)** as the delivery channel to **Expo / React Native** clients (`many_faces_mobile`), while keeping **Firebase credentials and FCM send logic** isolated in a **new standalone git submodule** implemented as a **Go gRPC server** (internal **“push worker”** / **FCM dispatcher**). **`many_faces_backend`** remains the **system of record** for users, devices, notification intent, and authorization; it talks to the push worker **only via gRPC**. **Browsers, mobile apps, and third parties** must **never** call the push worker directly.
+**Mission:** Introduce **mobile push notifications** for the Many Faces stack using **Firebase Cloud Messaging (FCM)** as the delivery channel to **Expo / React Native** clients (`many_faces_mobile`), while keeping **Firebase credentials and FCM send logic** isolated in a **new standalone git submodule** implemented as a **Go gRPC server** (internal **“push worker”** / **FCM dispatcher**). **`many_faces_backend`** remains the **system of record** for users, devices, notification intent, and authorization; it talks to the push worker **only via gRPC**. **Browsers, mobile apps, and third parties** must **never** call the push worker directly. **Token and API path** (direct FCM vs Expo Push API) must follow **§1.1** once chosen for v1.
 
 **Canonical precedent:** Mirror the **Elasticsearch + Go `search-worker`** pattern documented in [`elasticsearch-search-infra-agent-prompt.md`](./elasticsearch-search-infra-agent-prompt.md) and the existing **`many_faces_elastic`** submodule: dedicated infra repo, `docker-compose.yml`, `README.md`, optional CI, and **monorepo compose / network / documentation** alignment.
 
@@ -25,7 +25,11 @@ Many Faces is a **face-scoped social platform** (`many_faces_main` monorepo): AS
 2. **Matches operational reality** — same deploy model as **`many_faces_elastic`**: internal address, TLS/mTLS optional phases, health checks, structured logs.
 3. **Keeps backend thin** — .NET decides **who** gets **what** and **when**; Go worker’s job is **reliable dispatch** to FCM with observability.
 
-**Expo note:** Client apps obtain **push tokens** via **`expo-notifications`** (and EAS/project configuration). Those tokens are **opaque strings** consumed by FCM; the **mobile app registers the token with `many_faces_backend` over HTTPS** (existing auth session or device-specific flow). The mobile app does **not** open gRPC to the push worker.
+**Expo note:** Client apps obtain **push tokens** via **`expo-notifications`** (and EAS/project configuration). The **mobile app registers the token with `many_faces_backend` over HTTPS** (existing auth session or device-specific flow). The mobile app does **not** open gRPC to the push worker.
+
+### §1.1 Token transport (required clarity)
+
+Expo often exposes an **`ExponentPushToken[...]`** intended for **Expo’s Push Notification service** (separate HTTP API and credentials), which is **not** the same as a raw **FCM registration token** consumed by **Firebase Admin SDK → FCM HTTP v1** from this prompt’s Go worker. **Pick one v1 path and document it in `many_faces_push/README.md` and `docs/guides/push-notifications-local-dev.md` before implementation:** (A) **Direct FCM** — mobile obtains a token Firebase Admin can send to (per current Expo SDK docs for your EAS profile), worker uses Firebase Admin only; or (B) **Expo Push API** — backend or a different component calls Expo’s HTTP API instead, and this prompt’s **Go + Firebase Admin** worker is **not** the right transport (revise architecture). Do **not** mix A and B without an explicit compatibility layer.
 
 ---
 
@@ -133,9 +137,9 @@ Document mapping from **FCM / Admin SDK errors** to gRPC codes **explicitly** in
 - Attach **`push-worker`** to **`many_faces_main_dev-network`** using the **same pattern** as `search-worker` / Redis attachment (document service DNS name and internal gRPC URL).
 - Add **`many_faces_backend`** environment placeholders, e.g.:
 
-  - `Push__Enabled` (bool)
+  - `Push__Enabled` (bool) — maps to configuration key **`Push:Enabled`** (same **`Section__Key`** convention as `Search__*` → `Search:*`).
   - `Push__WorkerGrpcUrl` (e.g. `http://push-worker:50053` for cleartext dev **or** `https://…` when TLS is enabled — **pick one documented convention** aligned with `many_faces_elastic` learnings)
-  - Optional: `Push__AuthToken` or mTLS file paths if you implement auth from day one
+  - Optional: `Push__AuthToken` (or agreed name) or mTLS file paths if you implement auth from day one
 
 - **Do not** expose push worker gRPC on a public host interface without TLS and auth.
 
@@ -173,12 +177,15 @@ Add **`docs/guides/push-notifications-local-dev.md`** (or agreed filename) cover
    - calls **`Grpc.Net.Client`** to **`SendPush`**,
    - interprets errors and **deletes** or **marks invalid** tokens returned as permanent failures.
 
-4. **Configuration** — `IOptions<PushOptions>` pattern mirroring `SearchOptions` / similar; clear **Enabled** flag so local dev without Firebase does not crash the API.
+   **Pilot default (recommended):** first shipping path should be an **admin- or operator-only** test send or a **single** product event with explicit product sign-off (see **§10 Phase B**); avoid a generic “send push to any user” API in early merges.
+
+4. **Configuration** — `IOptions<PushOptions>` pattern mirroring `SearchOptions` / similar; clear **Enabled** flag so local dev without Firebase does not crash the API. Use **`Push:`** keys in `appsettings` and **`Push__*`** environment variables in Docker (**same mapping rule** as **`Search:`** / **`Search__`**).
 
 ### 5.2 gRPC client (required)
 
 - Implement a **narrow interface** (e.g. `IPushWorkerClient`) used by application services — **not** directly from controllers for bulk sends.
 - Channel lifecycle: document whether the channel is **singleton** or **factory**; align with existing `SearchWorkerGrpcProbe` / `AiGrpcService` patterns for **keep-alive** and **HTTP/2 cleartext** dev settings where applicable.
+- **Cleartext gRPC (http://) in local Docker:** when `Push:WorkerGrpcUrl` uses **`http://`**, mirror the **`many_faces_backend`** pattern for the search worker: enable **`AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true)`** only when that URL scheme is **http** (do **not** enable globally for **https://**). For **https://**, use TLS client options consistent with [`docs/guides/elasticsearch-grpc-tls-mtls.md`](../guides/elasticsearch-grpc-tls-mtls.md) (custom CA, mTLS, server name) as for `Search:`.
 - **Timeouts and retries** — policy at the **backend** boundary (retry only for idempotent or deduped notifications; document product implications).
 
 ### 5.3 Authorization and privacy (required)
@@ -207,7 +214,7 @@ Add **`docs/guides/push-notifications-local-dev.md`** (or agreed filename) cover
 
 ### 7.1 Client implementation (required)
 
-- Request permissions, configure notification handler, obtain **Expo push token** or native FCM token per current Expo SDK guidance.
+- Request permissions, configure notification handler, obtain a **push token** per **§1.1** and current Expo SDK guidance (direct FCM path vs Expo Push API path — must match what the backend persists and what the worker accepts).
 - On login / token refresh, **register token with backend** authenticated API.
 - On logout, **unregister** or send “invalidate this installation” if supported.
 - Handle **notification tap** → navigate using **`data`** payload keys agreed with backend (deep link contract documented in one place).
@@ -260,7 +267,7 @@ Copy this section into PRs or issues and tick items there per [`docs/prompts/REA
 - [ ] Add **`proto/`** with versioned **`v1`** service; document package naming and regeneration instructions; **`SendPushRequest`** must carry **notification localization key + args** fields (names per FCM mapping) per **§3.4.1**, not ad-hoc translated strings.
 - [ ] Implement **gRPC server** with **health** service and graceful shutdown.
 - [ ] Integrate **Firebase Admin SDK for Go** (or documented alternative) for **FCM send**; document required IAM roles.
-- [ ] Implement **`SendPush`** (and optional RPCs) per **section 3.4**; map **localization key + args** fields to FCM notification localization properties per **§3.4.1**; map FCM errors to **gRPC status** per **section 3.4**.
+- [ ] Implement **`SendPush`** (and optional RPCs) per **section 3.4**; map **localization key + args** fields to FCM notification localization properties per **§3.4.1**; map **FCM / Admin SDK errors** to **gRPC status codes** per the **Error model** in **§3.4** (document the mapping table in submodule `README.md`).
 - [ ] Ensure logs **redact** full device tokens; add correlation ID support via metadata.
 - [ ] Add **Go unit tests** per **section 8**; CI workflow per **section 3.2** / **4.5**.
 - [ ] Pin **Go** and Docker base image versions; document upgrade policy in submodule `README.md`.
@@ -278,7 +285,7 @@ Copy this section into PRs or issues and tick items there per [`docs/prompts/REA
 
 - [ ] Add EF Core **migrations** for push token storage per **section 5.1** (indices for user + platform; uniqueness strategy documented).
 - [ ] Add **authenticated API** for mobile to register/unregister tokens; validate input; align with existing auth patterns.
-- [ ] Add **`IPushWorkerClient`** (or equivalent) using **`Grpc.Net.Client`**; configuration via **`IOptions`** with **`Push:Enabled`** and **`Push:WorkerGrpcUrl`**.
+- [ ] Add **`IPushWorkerClient`** (or equivalent) using **`Grpc.Net.Client`**; bind **`IOptions<PushOptions>`** to section **`Push:`** (`Enabled`, `WorkerGrpcUrl`, …) with **`Push__*`** env vars in compose (same **`Search:`** / **`Search__`** convention as **§4.2**).
 - [ ] Wire **one pilot domain event** to call the worker (choose smallest safe feature — e.g. test notification endpoint for admins only, or a single real product event with product sign-off); emit **loc keys + args** only, per **§3.4.1** / **§5.3**.
 - [ ] Implement **invalid token cleanup** when worker/backend classifies permanent FCM failures.
 - [ ] Add **unit tests** with fake gRPC client; verify options disabled path does not throw.
