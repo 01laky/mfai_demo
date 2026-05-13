@@ -105,15 +105,25 @@ jobs:
         with:
           submodules: recursive
 
+      # Do not use setup-node "cache: yarn" here: it invokes Yarn 1 before Corepack
+      # activates Yarn 4 from many_faces_mobile/package.json#packageManager.
       - uses: actions/setup-node@v4
         with:
           node-version-file: many_faces_mobile/.nvmrc
-          cache: yarn
-          cache-dependency-path: many_faces_mobile/yarn.lock
 
-      - run: |
-          corepack enable
-          yarn install --immutable
+      - name: Enable Corepack (Yarn 4)
+        working-directory: many_faces_mobile
+        run: corepack enable
+
+      - name: Yarn Berry cache (many_faces_mobile)
+        uses: actions/cache@v4
+        with:
+          path: many_faces_mobile/.yarn/cache
+          key: ${{ runner.os }}-yarn-berry-mobile-${{ hashFiles('many_faces_mobile/yarn.lock', 'many_faces_mobile/.yarnrc.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-berry-mobile-
+
+      - run: yarn install --immutable
 
       - name: Make scripts executable
         run: find scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
