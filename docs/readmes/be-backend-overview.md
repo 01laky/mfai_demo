@@ -1,6 +1,6 @@
 # Backend API — overview (`many_faces_backend`)
 
-This page is a **narrative index** for the ASP.NET Core API submodule. **Source of truth** for ports, scripts, and stack-specific notes remains **[`many_faces_backend/README.md`](../../many_faces_backend/README.md)** (short entry + diagrams) and **[`many_faces_backend/docs/DETAILED_README.md`](../../many_faces_backend/docs/DETAILED_README.md)** (features, endpoint tables, migrations, ER diagram).
+This page is a **narrative index** for the ASP.NET Core API submodule. **Source of truth** for ports, scripts, and stack-specific notes remains **[`many_faces_backend/README.md`](../../many_faces_backend/README.md)** (short entry + diagrams) and the split reference under **[`many_faces_backend/docs/`](../../many_faces_backend/docs/README.md)** (index → [`DETAILED_README.md`](../../many_faces_backend/docs/DETAILED_README.md) + [`docs/reference/`](../../many_faces_backend/docs/reference/)).
 
 ## What the backend owns
 

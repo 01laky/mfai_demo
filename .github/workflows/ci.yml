@@ -43,15 +43,9 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/yarn-spa-ci
         with:
-          node-version-file: 'many_faces_portal/.nvmrc'
-
-      - run: corepack enable
-      - run: yarn install --immutable
-      - run: yarn validate
-      - run: yarn test
-      - run: yarn build
+          workspace: many_faces_portal
 
       - name: Dependency audit (informational)
         run: yarn npm audit || true
@@ -81,15 +75,9 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/yarn-spa-ci
         with:
-          node-version-file: 'many_faces_admin/.nvmrc'
-
-      - run: corepack enable
-      - run: yarn install --immutable
-      - run: yarn validate
-      - run: yarn test
-      - run: yarn build
+          workspace: many_faces_admin
 
       - name: Dependency audit (informational)
         run: yarn npm audit || true
@@ -153,10 +141,10 @@ jobs:
 
       - name: Install tooling, gRPC deps, and CPU ML stack for tests
         run: |
-          python -m pip install --upgrade pip wheel
-          pip install "setuptools<82"
-          pip install ruff pytest grpcio==1.68.1 grpcio-tools==1.68.1 protobuf==5.28.3 grpcio-testing==1.68.1
-          pip install numpy accelerate "transformers>=4.36" torch --extra-index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install "setuptools<82"
+          python -m pip install ruff pytest grpcio==1.68.1 grpcio-tools==1.68.1 protobuf==5.28.3 grpcio-testing==1.68.1
+          python -m pip install numpy accelerate "transformers>=4.36" torch --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Generate protobuf / gRPC stubs
         run: python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto
