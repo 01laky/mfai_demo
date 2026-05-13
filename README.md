@@ -286,15 +286,15 @@ flowchart TD
 
 | Layer | Path | Purpose |
 | --- | --- | --- |
-| User frontend | [`many_faces_portal/`](./many_faces_portal/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
-| Mobile app | [`many_faces_mobile/`](./many_faces_mobile/) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`yarn start` after `corepack enable` + `yarn install`). |
-| Admin portal | [`many_faces_admin/`](./many_faces_admin/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
-| Backend API | [`many_faces_backend/`](./many_faces_backend/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
-| AI service | [`many_faces_ai/`](./many_faces_ai/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`many_faces_database/`](./many_faces_database/), [`many_faces_redis/`](./many_faces_redis/) | **many_faces_database** + **many_faces_redis** — PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
-| Logging | [`many_faces_logger/`](./many_faces_logger/) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
-| Orchestration | [`scripts/`](./scripts/), [`dev/`](./dev/) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
-| Documentation | [`docs/`](./docs/) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
+| User frontend | [`many_faces_portal/`](./many_faces_portal/README.md) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
+| Mobile app | [`many_faces_mobile/`](./many_faces_mobile/README.md) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`yarn start` after `corepack enable` + `yarn install`). |
+| Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
+| Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
+| AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
+| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL for persisted application data and Redis for queue/cache-style infrastructure. |
+| Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
+| Orchestration | [`scripts/`](./docs/guides/development.md#monorepo-scripts-scripts), [`dev/`](./dev/README.md) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
+| Documentation | [`docs/`](./docs/README.md) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
 
 ## Tech Stack Highlights
 
@@ -322,7 +322,7 @@ flowchart TD
 
 ## Local development access
 
-Local development accounts and passwords are documented in [`docs/guides/local-dev-accounts.md`](./docs/guides/local-dev-accounts.md). Keep local development credentials separate from real secrets; local environment values and certificates are documented under [`docs/guides/`](./docs/guides/).
+Local development accounts and passwords are documented in [`docs/guides/local-dev-accounts.md`](./docs/guides/local-dev-accounts.md). Keep local development credentials separate from real secrets; local environment values and certificates are documented under **`docs/guides/`** — start from [`docs/README.md`](./docs/README.md) (Guides table) and [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) for HTTPS and ports.
 
 ## Project Status
 
