@@ -328,6 +328,8 @@ many_faces_logger/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
 ```
 
+**Full script inventory:** [`docs/guides/development.md`](./docs/guides/development.md) (section *Monorepo scripts*) lists `ci-local.sh`, `lint-all.sh`, `build-all.sh`, `test-all.sh`, `format-all-doc.sh`, `check-mermaid-docs.sh`, `audit-monorepo-deps.sh`, dev stack helpers, and how they relate to `.github/workflows/ci.yml`. Prefer updating that guide over growing duplicate tables in this README.
+
 ## Quick start
 
 **Requirements:** Docker, Docker Compose, Bash.
