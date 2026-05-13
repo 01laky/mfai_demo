@@ -1,22 +1,30 @@
 #!/bin/bash
 
 # test-all.sh - Script to run tests in all subrepositories
-# 
+#
 # This script orchestrates test execution across all subrepositories in the monorepo:
-# - Backend (many_faces_backend) - runs .NET xUnit tests using 'dotnet test'
-# - Frontend (many_faces_portal) - runs Vitest tests using 'yarn test --run' and Cypress e2e tests
-# - Admin (many_faces_admin) - runs Vitest tests using 'yarn test --run'
-# - Database (many_faces_database) - infrastructure only, no tests
-# - Redis (many_faces_redis) - infrastructure only, no tests
-# - Many Faces AI service (many_faces_ai) - verify-ci.sh (ruff + pytest, same as GitHub Actions)
-# 
+# - Backend (many_faces_backend): dotnet test on BeDemo.Api.Tests.csproj when present,
+#   otherwise first *.sln in the backend directory (glob, not a literal * file name),
+#   else dotnet test in cwd. Output is parsed for Total/Passed/Failed when possible.
+# - Frontend (many_faces_portal): yarn test (Vitest) plus optional Cypress when SKIP_CYPRESS is unset.
+# - Admin (many_faces_admin): yarn test (Vitest).
+# - Mobile (many_faces_mobile): scripts/test.sh or yarn test; summary counts this as one gate
+#   (not per-Jest-test) for the consolidated Total line at the end.
+# - Database / Redis: infrastructure only, no tests.
+# - many_faces_ai: scripts/verify-ci.sh (local ruff+pytest gate; root CI may install more deps).
+#
 # The script:
 # - Parses test output from different test frameworks (.NET, Vitest, Cypress)
 # - Aggregates results across all repositories
 # - Displays a consolidated summary with pass/fail counts
 # - Handles repositories that don't have tests gracefully
 # - For Cypress e2e tests: automatically starts DB, BE, FE if not running
-# 
+#
+# Caveats:
+# - Many commands use "|| true" so set -e does not always abort early; rely on parsed counts
+#   and the final FAILED_TESTS check for a red summary.
+# - Cypress and Vitest parsing are best-effort; prefer SKIP_CYPRESS=1 in CI (see ci-local.sh).
+#
 # Environment:
 #   SKIP_CYPRESS=1  Skip Cypress e2e (default in scripts/ci-local.sh / monorepo CI job)
 #
@@ -44,6 +52,31 @@ SKIPPED_REPOS=0    # Number of repositories that don't have tests
 # Used to display a summary at the end
 declare -a TEST_RESULTS
 
+# Parse Vitest stdout (many_faces_portal / many_faces_admin yarn test). Prints total|passed|failed|test_files.
+parse_vitest_summary_line() {
+  local out="$1"
+  local test_files tests_line parsed
+  test_files=$(echo "$out" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
+  tests_line=$(echo "$out" | grep "Tests" | head -1)
+  if [ -n "$tests_line" ]; then
+    parsed=$(echo "$tests_line" | python3 -c "
+import sys
+import re
+line = sys.stdin.read().strip()
+total_match = re.search(r'\((\d+)\)', line)
+total = total_match.group(1) if total_match else '0'
+passed_match = re.search(r'(\d+) passed', line)
+passed = passed_match.group(1) if passed_match else '0'
+failed_match = re.search(r'(\d+) failed', line)
+failed = failed_match.group(1) if failed_match else '0'
+print(f'{total}|{passed}|{failed}')
+" 2>/dev/null || echo "0|0|0")
+    echo "${parsed}|${test_files}"
+  else
+    echo "0|0|0|${test_files}"
+  fi
+}
+
 # ============================================================================
 # TEST BACKEND (many_faces_backend)
 # ============================================================================
@@ -63,12 +96,18 @@ if [ -d "many_faces_backend" ] && [ -f "many_faces_backend/BeDemo.Api.Tests/BeDe
     if [ -f "BeDemo.Api.Tests/BeDemo.Api.Tests.csproj" ]; then
         # Explicitly target the test project file (most reliable)
         TEST_OUTPUT=$(dotnet test BeDemo.Api.Tests/BeDemo.Api.Tests.csproj --verbosity minimal 2>&1 || true)
-    elif [ -f "*.sln" ]; then
-        # Use solution file if test project not found directly
-        TEST_OUTPUT=$(dotnet test *.sln --verbosity minimal 2>&1 || true)
     else
-        # Fallback: run tests from current directory
-        TEST_OUTPUT=$(dotnet test --verbosity minimal 2>&1 || true)
+        sln_file=""
+        for f in ./*.sln; do
+            [ -f "$f" ] || continue
+            sln_file="$f"
+            break
+        done
+        if [ -n "$sln_file" ]; then
+            TEST_OUTPUT=$(dotnet test "$sln_file" --verbosity minimal 2>&1 || true)
+        else
+            TEST_OUTPUT=$(dotnet test --verbosity minimal 2>&1 || true)
+        fi
     fi
     TEST_EXIT_CODE=$?
     
@@ -157,39 +196,13 @@ if [ -d "many_faces_portal" ] && [ -f "many_faces_portal/package.json" ]; then
     echo "📦 Running Vitest tests..."
     TEST_OUTPUT=$(yarn test 2>&1 || true)
     TEST_EXIT_CODE=$?
-    
-    # Parse Vitest output using Python for better regex support
-    # Format: "Tests  11 passed (11)" or "Tests  23 passed | 8 skipped (31)"
-    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
-    
-    # Use Python to parse the Tests line more reliably
-    # Get the full line containing "Tests" - important for parsing "passed (X)" and "(X)"
-    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep "Tests" | head -1)
-    if [ -n "$TESTS_LINE" ]; then
-        PARSED=$(echo "$TESTS_LINE" | python3 -c "
-import sys
-import re
-line = sys.stdin.read().strip()
-# Extract total from parentheses: (11) or (31)
-total_match = re.search(r'\((\d+)\)', line)
-total = total_match.group(1) if total_match else '0'
-# Extract passed count
-passed_match = re.search(r'(\d+) passed', line)
-passed = passed_match.group(1) if passed_match else '0'
-# Extract failed count
-failed_match = re.search(r'(\d+) failed', line)
-failed = failed_match.group(1) if failed_match else '0'
-print(f'{total}|{passed}|{failed}')
-" 2>/dev/null || echo "0|0|0")
-        TOTAL=$(echo "$PARSED" | cut -d'|' -f1)
-        PASSED=$(echo "$PARSED" | cut -d'|' -f2)
-        FAILED=$(echo "$PARSED" | cut -d'|' -f3)
-    else
-        TOTAL="0"
-        PASSED="0"
-        FAILED="0"
-    fi
-    
+
+    PARSED_V=$(parse_vitest_summary_line "$TEST_OUTPUT")
+    TOTAL=$(echo "$PARSED_V" | cut -d'|' -f1)
+    PASSED=$(echo "$PARSED_V" | cut -d'|' -f2)
+    FAILED=$(echo "$PARSED_V" | cut -d'|' -f3)
+    TEST_FILES=$(echo "$PARSED_V" | cut -d'|' -f4)
+
     VITEST_TOTAL=${TOTAL:-0}
     VITEST_PASSED=${PASSED:-0}
     VITEST_FAILED=${FAILED:-0}
@@ -471,39 +484,13 @@ if [ -d "many_faces_admin" ] && [ -f "many_faces_admin/package.json" ]; then
     echo "📦 Running Vitest tests..."
     TEST_OUTPUT=$(yarn test 2>&1 || true)
     TEST_EXIT_CODE=$?
-    
-    # Parse Vitest output using Python for better regex support
-    # Format: "Tests  23 passed | 8 skipped (31)" or "Tests  11 passed (11)"
-    TEST_FILES=$(echo "$TEST_OUTPUT" | grep -oE "Test Files[ ]+[0-9]+" | grep -oE "[0-9]+" || echo "0")
-    
-    # Use Python to parse the Tests line more reliably
-    # Get the full line containing "Tests" - important for parsing "passed (X)" and "(X)"
-    TESTS_LINE=$(echo "$TEST_OUTPUT" | grep "Tests" | head -1)
-    if [ -n "$TESTS_LINE" ]; then
-        PARSED=$(echo "$TESTS_LINE" | python3 -c "
-import sys
-import re
-line = sys.stdin.read().strip()
-# Extract total from parentheses: (11) or (31)
-total_match = re.search(r'\((\d+)\)', line)
-total = total_match.group(1) if total_match else '0'
-# Extract passed count
-passed_match = re.search(r'(\d+) passed', line)
-passed = passed_match.group(1) if passed_match else '0'
-# Extract failed count
-failed_match = re.search(r'(\d+) failed', line)
-failed = failed_match.group(1) if failed_match else '0'
-print(f'{total}|{passed}|{failed}')
-" 2>/dev/null || echo "0|0|0")
-        TOTAL=$(echo "$PARSED" | cut -d'|' -f1)
-        PASSED=$(echo "$PARSED" | cut -d'|' -f2)
-        FAILED=$(echo "$PARSED" | cut -d'|' -f3)
-    else
-        TOTAL="0"
-        PASSED="0"
-        FAILED="0"
-    fi
-    
+
+    PARSED_V=$(parse_vitest_summary_line "$TEST_OUTPUT")
+    TOTAL=$(echo "$PARSED_V" | cut -d'|' -f1)
+    PASSED=$(echo "$PARSED_V" | cut -d'|' -f2)
+    FAILED=$(echo "$PARSED_V" | cut -d'|' -f3)
+    TEST_FILES=$(echo "$PARSED_V" | cut -d'|' -f4)
+
     TOTAL_TESTS=$((TOTAL_TESTS + ${TOTAL:-0}))
     PASSED_TESTS=$((PASSED_TESTS + ${PASSED:-0}))
     FAILED_TESTS=$((FAILED_TESTS + ${FAILED:-0}))
