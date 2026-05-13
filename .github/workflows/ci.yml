@@ -183,6 +183,17 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f many_faces_redis/docker-compose.yml config
 
+  infra_many_faces_elastic:
+    name: infra (many_faces_elastic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Validate docker compose
+        run: docker compose -f many_faces_elastic/docker-compose.yml config
+
   # Seq / logger sidecar compose used in local dev stacks.
   infra_many_faces_logger:
     name: infra (many_faces_logger)
@@ -249,7 +260,7 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/audit-monorepo-deps.sh
-          for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_mobile; do
+          for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_elastic many_faces_logger many_faces_mobile; do
             [ -d "$d/scripts" ] && find "$d/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
           done
 

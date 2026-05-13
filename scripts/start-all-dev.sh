@@ -5,6 +5,7 @@
 # This script orchestrates the startup of all development services in the correct order:
 # 1. Database (PostgreSQL) - must start first as other services depend on it
 # 2. Redis (many_faces_redis) - job queue for backend (optional but recommended before BE)
+# 2b. Elasticsearch (many_faces_elastic) - optional search index when ENABLE_ELASTICSEARCH=1
 # 3. Backend API (ASP.NET Core) - provides REST API and authentication
 # 4. Frontend (React + Vite) - user-facing application
 # 5. Many Faces AI service (Python gRPC) - AI service with gRPC interface
@@ -18,6 +19,7 @@
 # - Live status screen until every expected container is running (not “subset == all existing”)
 #
 # Usage: ./scripts/start-all-dev.sh (from repository root)
+# Optional: ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh — starts many_faces_elastic and attaches elasticsearch-dev to the dev network.
 # Press Ctrl+C to exit the status screen early
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -85,6 +87,19 @@ else
     _expect_redis=0
 fi
 
+# ============================================================================
+# START ELASTICSEARCH (many_faces_elastic submodule, optional)
+# ============================================================================
+_expect_elastic=0
+if [ "${ENABLE_ELASTICSEARCH:-}" = "1" ] && [ -f "many_faces_elastic/scripts/start-elasticsearch.sh" ]; then
+    echo "📦 Starting Elasticsearch (many_faces_elastic)..."
+    cd many_faces_elastic
+    ./scripts/start-elasticsearch.sh > /dev/null 2>&1 &
+    cd ..
+    echo "    ✅ Elasticsearch startup launched"
+    _expect_elastic=1
+fi
+
 # Full stack checklist for the status screen exit condition (redis only if we start many_faces_redis)
 if [ "$_expect_redis" -eq 1 ]; then
     EXPECTED_CONTAINERS=(
@@ -96,6 +111,9 @@ else
         postgres-dev pgadmin-dev be-demo-dev seq-dev
         fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev dozzle-dev
     )
+fi
+if [ "$_expect_elastic" -eq 1 ]; then
+    EXPECTED_CONTAINERS+=(elasticsearch-dev)
 fi
 EXPECTED_TOTAL=${#EXPECTED_CONTAINERS[@]}
 
@@ -126,6 +144,22 @@ if [ "$_expect_redis" -eq 1 ]; then
     done
     if [ "$_redis_ok" -eq 0 ]; then
         echo "    ⚠️  redis-dev not found after 90s — ensure many_faces_redis is started"
+    fi
+fi
+
+if [ "$_expect_elastic" -eq 1 ]; then
+    echo "    Waiting for Elasticsearch (localhost:59200)..."
+    _es_ok=0
+    for _i in {1..45}; do
+        if nc -z localhost 59200 2>/dev/null; then
+            _es_ok=1
+            echo "    ✅ Elasticsearch HTTP port is open"
+            break
+        fi
+        sleep 2
+    done
+    if [ "$_es_ok" -eq 0 ]; then
+        echo "    ⚠️  Elasticsearch not ready on localhost:59200 after ~90s"
     fi
 fi
 
@@ -196,6 +230,36 @@ if [ "$_redis_net_ok" -eq 0 ]; then
     echo "    ⚠️  Could not attach redis-dev to many_faces_main_dev-network after 90s (is many_faces_redis running?)"
 fi
 
+if [ "$_expect_elastic" -eq 1 ]; then
+    echo "    Attaching elasticsearch-dev to many_faces_main_dev-network (retry until ready)..."
+    _es_net_ok=0
+    for _i in {1..90}; do
+        if ! docker network inspect many_faces_main_dev-network >/dev/null 2>&1; then
+            sleep 1
+            continue
+        fi
+        if ! docker ps --format '{{.Names}}' | grep -q '^elasticsearch-dev$'; then
+            sleep 1
+            continue
+        fi
+        _out=$(docker network connect many_faces_main_dev-network elasticsearch-dev 2>&1) || true
+        if [ -z "$_out" ]; then
+            _es_net_ok=1
+            echo "    ✅ elasticsearch-dev connected to dev network"
+            break
+        fi
+        if echo "$_out" | grep -qi 'already exists'; then
+            _es_net_ok=1
+            echo "    ✅ elasticsearch-dev already on dev network"
+            break
+        fi
+        sleep 1
+    done
+    if [ "$_es_net_ok" -eq 0 ]; then
+        echo "    ⚠️  Could not attach elasticsearch-dev to many_faces_main_dev-network after 90s"
+    fi
+fi
+
 # ============================================================================
 # START FE, PROXY, ADMIN, AI (root compose — single wait; depends_on orders services)
 # ============================================================================
@@ -258,7 +322,7 @@ while true; do
     # CHECK AND RESTART STOPPED CONTAINERS
     # ========================================================================
     # Check for stopped containers and attempt to restart them automatically
-    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev)$" || true)
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev)$" || true)
     
     if [ -n "$STOPPED" ]; then
         echo ""

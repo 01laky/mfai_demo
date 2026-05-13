@@ -91,6 +91,17 @@ else
     docker-compose -f many_faces_logger/docker-compose.dev.yml rm -f dozzle-dev 2>/dev/null || true
 fi
 
+# Stop Elasticsearch (many_faces_elastic)
+if [ -f "many_faces_elastic/scripts/stop-elasticsearch.sh" ]; then
+    echo "  📦 Stopping Elasticsearch (many_faces_elastic)..."
+    cd many_faces_elastic
+    ./scripts/stop-elasticsearch.sh 2>/dev/null || true
+    cd ..
+else
+    echo "  ⚠️  many_faces_elastic/scripts/stop-elasticsearch.sh not found, trying docker compose directly..."
+    (cd many_faces_elastic 2>/dev/null && docker compose down 2>/dev/null) || true
+fi
+
 # Stop Redis (many_faces_redis)
 if [ -f "many_faces_redis/scripts/stop-redis.sh" ]; then
     echo "  📦 Stopping Redis (many_faces_redis)..."
@@ -141,7 +152,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev" || true)
 
 if [ -n "$RUNNING_CONTAINERS" ]; then
     echo "⚠️  Some containers still running — force-stopping:"
@@ -149,7 +160,7 @@ if [ -n "$RUNNING_CONTAINERS" ]; then
     # shellcheck disable=SC2086
     docker stop $RUNNING_CONTAINERS 2>/dev/null || true
     sleep 2
-    RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev" || true)
+    RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev" || true)
 fi
 
 if [ -z "$RUNNING_CONTAINERS" ]; then
