@@ -22,7 +22,7 @@ The **mobile app** is the portable client for the **same product story**. Phase 
 
 - **Submodule hygiene:** `many_faces_mobile` remains a **separate git repo**; all tooling config lives inside it (`package.json`, `eslint.config.*`, `.prettierrc`, **`.husky/`**, `commitlint.config.*`). **You must** add **both**: (1) a **`many_faces_mobile`** job in `many_faces_main/.github/workflows/ci.yml`, and (2) **`many_faces_mobile/.github/workflows/ci.yml`** so the submodule passes CI when cloned standalone.
 - **README (portal style):** long-form overview: faces concept, auth, link to AI-assisted approval doc as **product context**, security notes, Expo/React Native stack, scripts table, local dev, testing, **CI status badge** in **`many_faces_mobile/README.md`** pointing to **this submodule’s** GitHub Actions; the monorepo root README **may** duplicate a short badge only if it links to the same workflow — document the single source of truth in the mobile README.
-- **Guide sync:** [`docs/guides/mobile-expo-development.md`](../guides/mobile-expo-development.md) — exact prerequisites, `nvm use`, `npm install`, `npm run start`, env var names, Expo Go notes, submodule bump workflow, links to portal files for parity.
+- **Guide sync:** [`docs/guides/mobile-expo-development.md`](../guides/mobile-expo-development.md) — exact prerequisites, `nvm use`, `corepack enable`, `yarn install`, `yarn start`, env var names, Expo Go notes, submodule bump workflow, links to portal files for parity.
 - **API types:** TypeScript types aligned with `many_faces_portal/src/api/types/facesConfig.ts` — copy or maintain a thin duplicate **inside** `many_faces_mobile` for phase 1. **Do not** introduce a new published npm package for shared types in this phase.
 - **`getFacesConfig` equivalent:** one module that performs `GET {baseUrl}/api/faces/config`; send **`Authorization: Bearer <accessToken>`** when the access token string is non-empty — omit the header otherwise.
 - **React contexts:** **`FaceConfigProvider`** and **`AuthProvider`** — use these **exact** export names (match portal grep/review ergonomics).
@@ -35,10 +35,10 @@ The **mobile app** is the portable client for the **same product story**. Phase 
   - **App shell** — top bar: brand, face-aware gradient background, guest vs authenticated affordance (simplified vs web but recognisable).
 - **Persistence:** `selectedFaceId` and tokens in **`expo-secure-store`** on iOS/Android. For **Expo web** or any platform where SecureStore is unavailable, you **must** implement a **documented** fallback (e.g. in-memory only for dev web, or `localStorage` behind a `__DEV__` guard) in code + README — no silent failure.
 - **i18n:** **`i18next`** wired with at least **English** JSON resources; namespaces **`common`**, **`login`**, **`register`** mirroring portal keys where practical. Structure must allow adding `sk`/`cs` later without refactor.
-- **Lint + format + typecheck:** ESLint (flat config), Prettier, `tsc --noEmit`, `npm` scripts documented in README.
+- **Lint + format + typecheck:** ESLint (flat config), Prettier, `tsc --noEmit`, **`package.json` scripts** (`yarn run …`) documented in README.
 - **Unit tests:** **Jest + `jest-expo`** — **only** supported test runner for phase 1.
-- **Git workflow:** documented branch naming, **commitlint** + **Husky** + **lint-staged** mirroring `many_faces_portal` / `many_faces_admin` (ESM `commitlint.config` pattern acceptable; `prepare` script must work after `npm install`).
-- **Parent monorepo CI:** **`many_faces_mobile`** job in `many_faces_main/.github/workflows/ci.yml` — `submodules: recursive`, `npm ci`, `npm run lint`, `npm run typecheck`, `npm test`, **`npx expo-doctor`** (exit non-zero fails the job), **`npm audit`** (informational: `|| true` but **must** run and print output).
+- **Git workflow:** documented branch naming, **commitlint** + **Husky** + **lint-staged** mirroring `many_faces_portal` / `many_faces_admin` (ESM `commitlint.config` pattern acceptable; `prepare` script must work after `yarn install`).
+- **Parent monorepo CI:** **`many_faces_mobile`** job in `many_faces_main/.github/workflows/ci.yml` — `submodules: recursive`, **`corepack enable`** + **`yarn install --immutable`**, **`./scripts/verify-ci.sh --quick`** (lint, format check, typecheck, test, **`npx expo-doctor`** — exit non-zero fails the job), **`yarn npm audit`** (informational: `|| true` but **must** run and print output).
 - **`many_faces_mobile/.env.example`** **and** `app.config` / `extra` wiring for **`EXPO_PUBLIC_API_BASE_URL`** — **required**; **never** commit secrets or real `.env`.
 
 ### 2.2 Explicitly out of scope (later phases)
@@ -67,7 +67,7 @@ The mobile `README.md` must be **long-form English** similar in spirit to:
 6. **Security & trust** — tokens in SecureStore, HTTPS-only production, no secrets in repo, jailbreak disclaimer if appropriate (brief).
 7. **Tech stack** — Expo SDK version, React Native version, TypeScript, React Navigation, testing stack.
 8. **Prerequisites** — Node from `.nvmrc`, Watchman, Xcode/Android, Expo Go.
-9. **Getting started** — copy-paste commands (`nvm use`, `npm install`, `cp .env.example .env`, `npm run start`).
+9. **Getting started** — copy-paste commands (`nvm use`, `corepack enable`, `yarn install`, `cp .env.example .env`, `yarn start`).
 10. **Environment variables** — table of `EXPO_PUBLIC_*` keys, example values for local dev.
 11. **Scripts** — table: `start`, `android`, `ios`, `web`, `lint`, `typecheck`, `test`, `format`, `format:check`.
 12. **Project layout** — `src/` tree description (`api/`, `contexts/`, `navigation/`, `screens/`, `theme/`, `i18n/`, …).
@@ -145,14 +145,14 @@ Mirror `many_faces_portal` OAuth2 password grant and refresh behaviour at a **hi
 ### 5.1 TypeScript
 
 - `tsconfig.json`: **`"strict": true`** — **required** with no relaxation. If Expo template conflicts, fix template code — do not weaken `strict` in phase 1.
-- **Path aliases:** **`@/`** prefixes for `src/api`, `src/contexts`, `src/screens`, `src/navigation`, `src/theme`, `src/i18n` — configure with **`babel-plugin-module-resolver`** (or Expo-supported equivalent) **and** ESLint import resolution so `npm run lint` catches bad imports.
+- **Path aliases:** **`@/`** prefixes for `src/api`, `src/contexts`, `src/screens`, `src/navigation`, `src/theme`, `src/i18n` — configure with **`babel-plugin-module-resolver`** (or Expo-supported equivalent) **and** ESLint import resolution so `yarn run lint` catches bad imports.
 
 ### 5.2 ESLint (flat config)
 
 - **Flat config** only (`eslint.config.js` or `eslint.config.mjs`).
 - Include: `@eslint/js`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, **`eslint-config-expo`**.
 - **Logging rule:** implement a small **`src/utils/logger.ts`** (names illustrative); **`console.log` / `console.debug` are forbidden in `src/**`** except inside the logger implementation — enforce with ESLint (`no-console` with narrow override for the logger file only).
-- Scripts: **`npm run lint`** and **`npm run lint:fix`** (both required).
+- Scripts: **`yarn run lint`** and **`yarn run lint:fix`** (both required).
 
 ### 5.3 Prettier
 
@@ -162,7 +162,7 @@ Mirror `many_faces_portal` OAuth2 password grant and refresh behaviour at a **hi
 
 ### 5.4 Husky + lint-staged + commitlint
 
-- **Required:** Husky **9**, **lint-staged**, **commitlint** (same Conventional Commit rules as [`docs/guides/development.md`](../guides/development.md)); `prepare` script runs `husky`; pre-commit runs **`lint-staged`** (`eslint --fix` + `prettier --write` on staged files); **`commit-msg`** runs commitlint. Document troubleshooting for `npm install` in CI (use `HUSKY=0` only where documented for automation, not by default).
+- **Required:** Husky **9**, **lint-staged**, **commitlint** (same Conventional Commit rules as [`docs/guides/development.md`](../guides/development.md)); `prepare` script runs `husky`; pre-commit runs **`lint-staged`** (`eslint --fix` + `prettier --write` on staged files); **`commit-msg`** runs commitlint. Document troubleshooting for `yarn install` in CI (use `HUSKY=0` only where documented for automation, not by default).
 
 ### 5.5 EditorConfig
 
@@ -204,22 +204,18 @@ Add to `.github/workflows/ci.yml` (same workflow file other jobs use):
 - `runs-on: ubuntu-latest`
 - `actions/checkout@v4` with `submodules: recursive`
 - `actions/setup-node@v4` with `node-version-file: many_faces_mobile/.nvmrc`
-- **Caching:** `cache: npm`, `cache-dependency-path: many_faces_mobile/package-lock.json`
+- **Caching:** `cache: yarn`, `cache-dependency-path: many_faces_mobile/yarn.lock`
 - Steps (required order):
-  1. `cd many_faces_mobile && npm ci`
-  2. `npm run lint`
-  3. `npm run typecheck`
-  4. `npm test`
-  5. **`npx expo-doctor`** — **must** exit zero (fix all doctor failures before merge).
-  6. **`npm audit`** — **must** run; pipeline **must not** fail on audit (append `|| true`) but log output for triage.
+  1. `cd many_faces_mobile && corepack enable && yarn install --immutable`
+  2. `./scripts/verify-ci.sh --quick` — runs **`./scripts/lint.sh`** (ESLint + Prettier check + `tsc`), **`yarn test`**, **`npx expo-doctor`**, and **`yarn npm audit || true`**. CI already installed deps in step 1, so **`--quick`** skips a second install. **`expo-doctor`** must exit zero; audit is informational only (must still print).
 
 ### 7.2 Standalone workflow in the submodule
 
-- **Required:** `many_faces_mobile/.github/workflows/ci.yml` mirroring the parent job steps (§7.1 items 1–6) so pushes to the mobile repo alone stay green.
+- **Required:** `many_faces_mobile/.github/workflows/ci.yml` mirroring the parent job steps (§7.1) so pushes to the mobile repo alone stay green.
 
 ### 7.3 Monorepo orchestration scripts
 
-- **Required:** extend **`scripts/ci-local.sh`**, **`scripts/lint-all.sh`**, and **`scripts/test-all.sh`** to invoke the mobile npm scripts behind `if [ -d many_faces_mobile ]; then … fi`, with loud echo banners. Update **`docs/guides/development.md`** to state that `ci-local.sh` now includes mobile (one short paragraph is enough).
+- **Required:** extend **`scripts/ci-local.sh`**, **`scripts/lint-all.sh`**, and **`scripts/test-all.sh`** to invoke the mobile **`yarn`** scripts behind `if [ -d many_faces_mobile ]; then … fi`, with loud echo banners. Update **`docs/guides/development.md`** to state that `ci-local.sh` now includes mobile (one short paragraph is enough).
 
 ---
 
@@ -238,7 +234,7 @@ Add to `.github/workflows/ci.yml` (same workflow file other jobs use):
 ### 8.2 CI quality gates (repeated from §2.1 / §7.1)
 
 - **`expo-doctor`**: **blocking** in all mobile CI jobs.
-- **`npm audit`**: **required**, **non-blocking** (`|| true`), logs retained.
+- **`yarn npm audit`**: **required**, **non-blocking** (`|| true`), logs retained.
 
 ---
 
@@ -282,19 +278,19 @@ Copy this section into your PR description and tick items there; **do not** mass
 
 ### 10.3 Tooling
 
-- [ ] ESLint flat config + **`npm run lint`** + **`npm run lint:fix`**.
-- [ ] Prettier + **`npm run format`** + **`npm run format:check`** + `.prettierignore`.
-- [ ] **`npm run typecheck`** (`tsc --noEmit`).
+- [ ] ESLint flat config + **`yarn run lint`** + **`yarn run lint:fix`**.
+- [ ] Prettier + **`yarn run format`** + **`yarn run format:check`** + `.prettierignore`.
+- [ ] **`yarn run typecheck`** (`tsc --noEmit`).
 - [ ] `.editorconfig`.
 - [ ] **`react-error-boundary`** dependency + root `ErrorBoundary` wiring (§10.2).
 - [ ] **`src/utils/logger.ts`** + ESLint `no-console` policy (§5.2).
 - [ ] **React Native Reanimated** installed and used for **animated** shell gradients (§4.5); README **Known visual deltas** section if any deviation from web remains after best effort.
 - [ ] **`@/` path aliases** + Babel + ESLint import resolution (§5.1).
-- [ ] Jest + `jest-expo` + **`npm test`** (CI mode, no watch).
+- [ ] Jest + `jest-expo` + **`yarn test`** (CI mode, no watch).
 
 ### 10.4 CI / monorepo
 
-- [ ] `many_faces_main/.github/workflows/ci.yml` — **`many_faces_mobile`** job: `npm ci`, `lint`, `typecheck`, `test`, **`npx expo-doctor`**, **`npm audit || true`** (§7.1).
+- [ ] `many_faces_main/.github/workflows/ci.yml` — **`many_faces_mobile`** job: **`yarn install --immutable`**, **`./scripts/verify-ci.sh --quick`** (lint, typecheck, test, **`npx expo-doctor`**, **`yarn npm audit || true`** inside verify-ci) (§7.1).
 - [ ] `many_faces_mobile/.github/workflows/ci.yml` — **standalone** workflow with the **same** steps (§7.2).
 - [ ] `scripts/ci-local.sh`, `scripts/lint-all.sh`, `scripts/test-all.sh` — **must** include mobile (§7.3).
 
@@ -305,8 +301,8 @@ Copy this section into your PR description and tick items there; **do not** mass
 
 ### 10.6 Verification (run locally before merge)
 
-- [ ] `cd many_faces_mobile && npm ci && npm run lint && npm run typecheck && npm test && npx expo-doctor`
-- [ ] `npm audit` executed locally (result triaged; log in PR if issues).
+- [ ] `cd many_faces_mobile && corepack enable && yarn install --immutable && ./scripts/verify-ci.sh --quick`
+- [ ] **`yarn npm audit`** executed locally (result triaged; log in PR if issues).
 - [ ] `npx expo start` — Login **and** Register reachable; config fetch works against running `many_faces_backend` (document prerequisite in README).
 - [ ] Toggle airplane mode / NetInfo — offline banner and disabled actions behave as specified.
 - [ ] No secrets in git index (`git grep -i password` clean; `.env` not tracked).
@@ -334,7 +330,7 @@ Copy this section into your PR description and tick items there; **do not** mass
 2. Successful **login** and **registration** each navigate to the **same post-auth destinations** as `many_faces_portal` for the same API responses (if web behaviour is ambiguous, README **must** cite the exact portal files and line-level behaviour you matched).
 3. **Offline** behaviour matches §8.1 (banner + disabled network actions).
 4. **`npx expo-doctor`** passes locally and in **both** CI workflows (parent + submodule).
-5. **Husky** hooks run on a clean clone after `npm install` (document in README).
+5. **Husky** hooks run on a clean clone after `yarn install` (document in README).
 6. **`scripts/ci-local.sh`** from monorepo root runs mobile lint/typecheck/tests without manual extra steps.
 7. README explains the **product** (faces, auth, AI moderation context) and lists **no unimplemented feature** as shipped.
 

@@ -108,10 +108,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: many_faces_mobile/.nvmrc
-          cache: npm
-          cache-dependency-path: many_faces_mobile/package-lock.json
+          cache: yarn
+          cache-dependency-path: many_faces_mobile/yarn.lock
 
-      - run: npm ci
+      - run: |
+          corepack enable
+          yarn install --immutable
 
       - name: Make scripts executable
         run: find scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
@@ -235,8 +237,8 @@ jobs:
           (cd many_faces_portal && yarn install --immutable)
           (cd many_faces_admin && yarn install --immutable)
 
-      - name: npm install (many_faces_mobile)
-        run: (cd many_faces_mobile && npm ci)
+      - name: Yarn install (many_faces_mobile)
+        run: (cd many_faces_mobile && corepack enable && yarn install --immutable)
 
       - uses: actions/setup-dotnet@v4
         with:

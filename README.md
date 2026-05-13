@@ -253,7 +253,7 @@ flowchart TD
 | Layer | Path | Purpose |
 | --- | --- | --- |
 | User frontend | [`many_faces_portal/`](./many_faces_portal/) | **many_faces_portal** — React SPA for public/private face pages, page grids, social content, profiles, messaging, and user flows. |
-| Mobile app | [`many_faces_mobile/`](./many_faces_mobile/) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`npm run start`). |
+| Mobile app | [`many_faces_mobile/`](./many_faces_mobile/) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`yarn start` after `corepack enable` + `yarn install`). |
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |

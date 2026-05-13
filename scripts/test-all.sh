@@ -538,30 +538,31 @@ if [ -d "many_faces_mobile" ] && [ -f "many_faces_mobile/package.json" ]; then
     cd many_faces_mobile
     find scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
     if [ ! -d "node_modules" ]; then
-        echo "📦 Installing npm dependencies..."
-        npm ci --silent 2>/dev/null || npm ci
+        echo "📦 Installing Yarn dependencies (many_faces_mobile)..."
+        corepack enable
+        yarn install --immutable
     fi
     echo "📦 Running Jest (jest-expo) via scripts/test.sh..."
     if [ -f "./scripts/test.sh" ]; then
         if ./scripts/test.sh 2>&1; then
-            TEST_RESULTS+=("✅ many_faces_mobile: npm test passed")
-            echo "✅ many_faces_mobile: npm test passed"
+            TEST_RESULTS+=("✅ many_faces_mobile: yarn test passed")
+            echo "✅ many_faces_mobile: yarn test passed"
             TOTAL_TESTS=$((TOTAL_TESTS + 1))
             PASSED_TESTS=$((PASSED_TESTS + 1))
         else
-            TEST_RESULTS+=("❌ many_faces_mobile: npm test failed")
-            echo "❌ many_faces_mobile: npm test failed"
+            TEST_RESULTS+=("❌ many_faces_mobile: yarn test failed")
+            echo "❌ many_faces_mobile: yarn test failed"
             TOTAL_TESTS=$((TOTAL_TESTS + 1))
             FAILED_TESTS=$((FAILED_TESTS + 1))
         fi
-    elif npm test 2>&1; then
-        TEST_RESULTS+=("✅ many_faces_mobile: npm test passed")
-        echo "✅ many_faces_mobile: npm test passed"
+    elif yarn test 2>&1; then
+        TEST_RESULTS+=("✅ many_faces_mobile: yarn test passed")
+        echo "✅ many_faces_mobile: yarn test passed"
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         PASSED_TESTS=$((PASSED_TESTS + 1))
     else
-        TEST_RESULTS+=("❌ many_faces_mobile: npm test failed")
-        echo "❌ many_faces_mobile: npm test failed"
+        TEST_RESULTS+=("❌ many_faces_mobile: yarn test failed")
+        echo "❌ many_faces_mobile: yarn test failed"
         TOTAL_TESTS=$((TOTAL_TESTS + 1))
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi

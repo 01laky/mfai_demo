@@ -14,7 +14,7 @@ This guide is the **human-facing** counterpart to the agent prompt [`docs/prompt
 | Requirement | Notes |
 | ----------- | ----- |
 | **Node** | Use **`.nvmrc`** inside `many_faces_mobile` (aligned with monorepo root, currently **22.14+**). |
-| **npm** | Default for Expo scaffold (`package-lock.json`). CI must use `npm ci`. |
+| **Yarn 4** | **`packageManager`** in `many_faces_mobile/package.json` (Corepack). CI uses **`yarn install --immutable`** (same lockfile discipline as the SPAs). |
 | **Watchman** (macOS) | Recommended for Metro file watching. |
 | **Xcode** | For iOS Simulator. |
 | **Android Studio / SDK** | For Android emulator (optional). |
@@ -28,7 +28,8 @@ From the **monorepo root**:
 git submodule update --init --recursive
 cd many_faces_mobile
 nvm use   # or: nvm install && nvm use
-npm install
+corepack enable
+yarn install
 ```
 
 Copy environment template:
@@ -43,7 +44,7 @@ cp .env.example .env
 Start Metro:
 
 ```bash
-npm run start
+yarn start
 ```
 
 Then press `i` / `a` / scan QR for Expo Go. For HTTPS dev API from a device, you may need a tunnel or a machine-reachable host (document limitations in the mobile README).
@@ -65,14 +66,14 @@ Implementers should mirror behaviour and data contracts, not necessarily file na
 From `many_faces_mobile/`:
 
 ```bash
-npm run lint
-npm run format:check
-npm run typecheck
-npm test
+yarn lint
+yarn format:check
+yarn typecheck
+yarn test
 npx expo-doctor
 ```
 
-Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration calls **`./many_faces_mobile/scripts/lint.sh`** from **`scripts/lint-all.sh`**, **`./many_faces_mobile/scripts/build.sh`** from **`scripts/build-all.sh`**, and **`./many_faces_mobile/scripts/test.sh`** from **`scripts/test-all.sh`** when the directory exists. Locally you can run **`./scripts/verify-ci.sh`** or **`./scripts/verify-ci.sh --quick`** (skips `npm ci` when you set **`SKIP_NPM_CI=1`** or pass **`--quick`**) from the mobile repo root to mirror the mobile CI job.
+Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration calls **`./many_faces_mobile/scripts/lint.sh`** from **`scripts/lint-all.sh`**, **`./many_faces_mobile/scripts/build.sh`** from **`scripts/build-all.sh`**, and **`./many_faces_mobile/scripts/test.sh`** from **`scripts/test-all.sh`** when the directory exists. Locally you can run **`./scripts/verify-ci.sh`** or **`./scripts/verify-ci.sh --quick`** (skips **`yarn install --immutable`** when you set **`SKIP_YARN_INSTALL=1`** or pass **`--quick`**) from the mobile repo root to mirror the mobile CI job.
 
 ## 6. Git / submodule workflow (short)
 

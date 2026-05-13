@@ -18,7 +18,7 @@ This document covers **how we build and test** the **`many_faces_main`** root re
 | PostgreSQL dev stack | `many_faces_database/`     | Docker Compose            |
 | Redis dev stack      | `many_faces_redis/`  | Docker Compose            |
 | Logger UI (Dozzle)   | `many_faces_logger/` | Docker Compose            |
-| Mobile app           | `many_faces_mobile/`   | Expo, React Native, npm  |
+| Mobile app           | `many_faces_mobile/`   | Expo, React Native, Yarn 4  |
 
 ### Diagram: monorepo layout
 
@@ -57,9 +57,9 @@ Both SPAs use **ESLint 10** with **`@eslint/js` ^10** and **`typescript-eslint` 
 
 ## Expo (`many_faces_mobile`)
 
-The mobile submodule uses **Expo**, **TypeScript**, and **`npm`** with `package-lock.json` (the SPAs use Yarn 4 — do not mix commands). Use Node from **`many_faces_mobile/.nvmrc`** (aligned with the monorepo, **22.14+**).
+The mobile submodule uses **Expo**, **TypeScript**, and **Yarn 4** via Corepack (`packageManager` in `many_faces_mobile/package.json`, `yarn.lock` — same family as `many_faces_portal` / `many_faces_admin`, separate install per app). Use Node from **`many_faces_mobile/.nvmrc`** (aligned with the monorepo, **22.14+**).
 
-- **Start here:** [`mobile-expo-development.md`](./mobile-expo-development.md) — prerequisites, `npm install`, `npm run start`, Expo Go, env vars, submodule pointer bumps.
+- **Start here:** [`mobile-expo-development.md`](./mobile-expo-development.md) — prerequisites, `corepack enable`, `yarn install`, `yarn start`, Expo Go, env vars, submodule pointer bumps.
 - **Implementation prompt:** [`mobile-phase1-foundation-agent-prompt.md`](../prompts/mobile-phase1-foundation-agent-prompt.md) — config/auth parity with `many_faces_portal`, README style, ESLint/Prettier, tests, gitflow, parent `ci.yml` job.
 
 ## Python (many_faces_ai)
@@ -144,13 +144,13 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | **many_faces_backend**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                          |
 | **many_faces_portal**           | Node from `many_faces_portal/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`, **`yarn npm audit`** (informational, always exits 0 in CI), then **Cypress smoke**: `yarn preview` on **HTTP** `127.0.0.1:4173` + **`yarn test:e2e:ci`** |
 | **many_faces_admin**        | Same Node/Yarn gate as **many_faces_portal** through **`yarn build`**, plus informational **`yarn npm audit`**; **no** Cypress job in this workflow yet. |
-| **many_faces_mobile**       | Node from **`many_faces_mobile/.nvmrc`**, **`npm ci`**, then **`./scripts/verify-ci.sh --quick`** (ESLint + Prettier check + `tsc`, Jest, `expo-doctor`, **`npm audit`** informational). |
+| **many_faces_mobile**       | Node from **`many_faces_mobile/.nvmrc`**, **`corepack enable`** + **`yarn install --immutable`**, then **`./scripts/verify-ci.sh --quick`** (ESLint + Prettier check + `tsc`, Jest, `expo-doctor`, informational **`yarn npm audit`**). |
 | **many_faces_ai**           | Python **3.11**, pip install **grpcio 1.68.x** + ruff + pytest (no torch), **generate protos**, `ruff` + `pytest test_server.py`                             |
 | **infra_many_faces_database**     | `docker compose -f many_faces_database/docker-compose.yml config`                                                                                                        |
 | **infra_many_faces_redis**  | `docker compose -f many_faces_redis/docker-compose.yml config`                                                                                                     |
 | **infra_many_faces_logger** | `docker compose -f many_faces_logger/docker-compose.dev.yml config`                                                                                                |
 | **docs_mermaid**      | Node from `many_faces_portal/.nvmrc`, runs **`./scripts/check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
-| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin**, **`npm ci`** in **`many_faces_mobile`**, **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + Yarn/npm audit including **many_faces_mobile**), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
+| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin** + **`many_faces_mobile`** (`yarn install --immutable` in each), **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + Yarn audit including **many_faces_mobile**), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
 
 The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI. Dependency-audit output is logged for triage but does not gate green by itself (`|| true` in the audit script and in **many_faces_portal** / **many_faces_admin** audit steps).
 
@@ -184,7 +184,7 @@ Run from repository root (submodules checked out). Executable bits: match the **
 
 | Script                              | Purpose                                                                                                                                                                                                                         |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`npm` scripts after `npm ci` in CI; locally reuse `node_modules` if already installed). |
+| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`yarn` scripts after **`yarn install --immutable`** in CI; locally reuse `node_modules` if already installed). |
 | **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, **`many_faces_mobile`** (`./scripts/lint.sh`: ESLint + Prettier check + `tsc`), `many_faces_ai` `./scripts/lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
 | **`scripts/build-all.sh`**          | `many_faces_backend`: `dotnet build -c Release`; `many_faces_portal` / `many_faces_admin`: `yarn build`; **`many_faces_mobile`**: `./scripts/build.sh` (`tsc` + `expo-doctor`); `many_faces_ai`: **`./scripts/verify-ci.sh`**. |
 | **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`many_faces_mobile`** `./scripts/test.sh` (Jest / `jest-expo`), **`many_faces_ai/scripts/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`. |
