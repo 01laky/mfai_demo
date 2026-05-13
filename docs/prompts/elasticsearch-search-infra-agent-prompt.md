@@ -6,6 +6,8 @@
 
 **Canonical pattern:** mirror **`many_faces_database`**, **`many_faces_redis`**, and **`many_faces_logger`**: own repo, `docker-compose.yml`, `README.md`, helper scripts, and a **compose sanity** job in `many_faces_main/.github/workflows/ci.yml`.
 
+**Integration boundary (required):** The **`many_faces_elastic`** submodule must **not** ship or expose its **own product HTTP/gRPC API** for portal, admin, or mobile clients. **All outward contracts** for search and index operations are owned by **`many_faces_backend`**: a **dedicated MVC controller** (e.g. `SearchController` or a clearly named successor) for **REST/OpenAPI** only, and a **separate application service** (e.g. `ISearchIndexService` / `ISearchQueryService`) that encapsulates every Elasticsearch read/write. Cross-process orchestration (e.g. API host ↔ indexer worker, or API host ↔ sidecar that talks to Elasticsearch) must use **gRPC** with **versioned `.proto`** definitions (follow the same repo conventions as `many_faces_ai` protos: live under `BeDemo.Api/Protos/` or a shared proto package, regenerate stubs in CI). **Elasticsearch’s native HTTP API** may be used **only inside** that dedicated service boundary (or inside the gRPC server implementation), not from arbitrary controllers.
+
 ---
 
 ## 1. Context — Why Elasticsearch here
@@ -38,7 +40,7 @@ Minimum contents:
 
 | Path | Purpose |
 | ---- | -------- |
-| `README.md` | Product context, how ES fits Many Faces, **non-goals**, ports, memory, dev vs prod notes, link to monorepo `docs/guides/…` once written. |
+| `README.md` | Product context, how ES fits Many Faces, **non-goals**, ports, memory, dev vs prod notes, link to monorepo `docs/guides/…` once written. **State explicitly:** this repo is **infra-only** (compose + scripts); it does **not** host a customer-facing search API (see Integration boundary in section 1). |
 | `docker-compose.yml` | Single-node (dev) or documented multi-node (out of scope for v1 unless justified). Pin **image tags** (no `:latest` in committed defaults). |
 | `scripts/*.sh` | `start-elasticsearch.sh`, `stop-elasticsearch.sh` (executable; match style of `many_faces_database` / `many_faces_redis`). |
 | `.env.example` | Cluster name, heap sizes, **no** real secrets. |
@@ -87,6 +89,13 @@ Extend **`scripts/start-all-dev.sh`** / **`stop-all-dev.sh`** (and any related h
 
 ## 4. Backend (`many_faces_backend`) — indexing and query surface
 
+### 4.0 Service and API split (required)
+
+- **REST/OpenAPI:** exactly **one dedicated controller area** for member/admin search HTTP (e.g. `SearchController` under `api/search/...`). Do not scatter Elasticsearch concerns across unrelated controllers.
+- **Application layer:** a **separate service interface + implementation** (not nested inside the controller) owns index templates, bulk indexing, query DSL, and error mapping. Controllers stay thin: auth, validation, mapping to DTOs.
+- **gRPC:** use **gRPC** for any **out-of-process** search pipeline component (indexer worker, query sidecar, or future split host) talking to the main API or to the service that wraps Elasticsearch. Version **`.proto`** files; keep **public** search for browsers/mobile on **HTTPS REST via `many_faces_backend`** only.
+- **Elasticsearch HTTP:** confined to the implementation of the dedicated search service (or gRPC server); never called directly from portal/admin SPAs.
+
 ### 4.1 Configuration (required)
 
 - Add **options-bound** configuration (`Search:` or `Elasticsearch:`) for: base URI, default index prefix, request timeout, and **optional** API key / basic auth for hosted clusters.
@@ -94,8 +103,8 @@ Extend **`scripts/start-all-dev.sh`** / **`stop-all-dev.sh`** (and any related h
 
 ### 4.2 Client library (required)
 
-- Use the official **Elasticsearch .NET client** compatible with the chosen server major version (or OpenSearch .NET client if that path is chosen — **one** client family only).
-- Register `IElasticsearchClient` / `ISearchReadService` in DI with **HttpClientFactory**-friendly lifetime and cancellation tokens.
+- Use the official **Elasticsearch .NET client** compatible with the chosen server major version (or OpenSearch .NET client if that path is chosen — **one** client family only). Register it **only** in the **dedicated search service** (section 4.0), not globally on unrelated types.
+- Register `IElasticsearchClient` / `ISearchReadService` (names illustrative) in DI with **HttpClientFactory**-friendly lifetime and cancellation tokens. If a **gRPC server** hosts the ES client, register the client in that host’s DI container and expose narrow RPCs to `many_faces_backend` instead of exposing Elasticsearch URLs to the rest of the app.
 
 ### 4.3 Indexing pipeline — choose **one** strategy for v1 (required)
 
@@ -124,12 +133,12 @@ For production-minded v1, **prefer A** unless product explicitly accepts **C** f
 
 ### 4.5 HTTP API contracts (required for any shipped phase)
 
-- Add **versioned** internal or public search endpoints under the existing **face-prefixed** routing rules, e.g. `GET /api/search?q=&types=&faceId=` — enforce the same **JWT + capability** rules as analogous list endpoints.
+- Add **versioned** internal or public search endpoints under the existing **face-prefixed** routing rules, e.g. `GET /api/search?q=&types=&faceId=` — enforce the same **JWT + capability** rules as analogous list endpoints. These routes live on the **dedicated search controller** (section 4.0); do not add parallel public routes on a separate host.
 - Never return fields that PostgreSQL would not return to the same principal (index is not an excuse to leak).
 
 ### 4.6 Tests (required)
 
-- **Unit tests** with mocked Elasticsearch HTTP (no real cluster in default `dotnet test`).
+- **Unit tests** with mocked Elasticsearch HTTP (no real cluster in default `dotnet test`). Mock at the **dedicated search service** boundary (or gRPC client stub), not only at the controller.
 - **Optional** integration test job behind env flag or separate test project that spins ES in CI — only if maintainers agree; otherwise document manual smoke.
 
 ---
@@ -170,6 +179,8 @@ For production-minded v1, **prefer A** unless product explicitly accepts **C** f
 - Replacing PostgreSQL or EF migrations with Elasticsearch.
 - Moving **operator KPI stats** already implemented via SQL (`StatsController`, `PlatformStatsQueryService`) into ES **without** a separate product decision.
 - Real-time **sub-millisecond** sync — document acceptable lag.
+- A standalone **search microservice** HTTP API shipped inside **`many_faces_elastic`** or exposed publicly beside `many_faces_backend` (all traffic goes through **`many_faces_backend`** REST + dedicated controller).
+- Calling **Elasticsearch HTTP** directly from **`many_faces_portal`**, **`many_faces_admin`**, or **`many_faces_mobile`**.
 - Multi-region Elasticsearch production cluster automation — document as future work only.
 
 ---
@@ -196,7 +207,7 @@ For production-minded v1, **prefer A** unless product explicitly accepts **C** f
 ## 11. Suggested implementation order
 
 1. Submodule + compose + CI compose validation + monorepo README table.
-2. Backend config + no-op / disabled behavior + tests.
+2. Backend **Search** configuration + **dedicated search service + dedicated controller** (REST outward; **gRPC** for any split indexer/sidecar per section 4.0) + disabled-by-default behaviour + tests.
 3. Minimal indexer + single index + one read API + portal UI **or** admin UI (pick one vertical slice).
 4. Expand indexed entities + faceting + i18n.
 5. Hardening: rate limits, index retention, reindex playbook.
