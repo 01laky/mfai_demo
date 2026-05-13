@@ -53,7 +53,8 @@ Turn the **`many_faces_admin`** dashboard from a **minimal KPI strip** (three nu
 **Files:** `many_faces_admin/src/components/AdminLayout.tsx`, `Sidebar.tsx`
 
 - Primary nav: dashboard, users, faces, chat; **moderation** nav item only when **`isSuperAdminFromToken(token)`**.
-- **Pages** CRUD routes exist (`CreatePagePage`, `EditPagePage`, `PageDetailPage` in `lazyAdminPages.tsx`) but **Pages are not first-class in the main sidebar/header nav** — operators discover them indirectly. The dashboard work should **either** add a nav entry (product decision) **or** a prominent dashboard link — pick one and document in the PR.
+- **Pages** CRUD routes exist (`CreatePagePage`, `EditPagePage`, `PageDetailPage` in `lazyAdminPages.tsx`) but **Pages are not first-class in the main sidebar/header nav** — operators discover them indirectly.
+- **Routing reality (do not assume a global pages index):** In `many_faces_admin/src/routes/AppRoutes.tsx`, pages are reached as **`/:lang/pages/:id`**, **`/:lang/pages/:id/edit`**, and **`/:lang/{faces}/:faceId/pages/create`** (under the localized **faces** path segments). There is **no** dedicated **`/pages` list** route today. IA options: (1) dashboard copy + deep link to **Faces** explaining per-face page creation, (2) add a **new** admin “all pages” list backed by a new **`GET /api/admin/pages-summary`** (or extend an existing controller) — only if product explicitly wants it; document the choice in the PR.
 
 ### 2.4 Existing moderation metrics (do not reimplement)
 
@@ -127,11 +128,11 @@ The agent should **freeze a C# record/DTO** in `BeDemo.Api` (e.g. `Models/Dtos/A
 | `friendshipsCount` | `Friendships` count |
 | `messagesCount` | all `Messages` |
 | `messagesPendingRequestCount` | `IsMessageRequest && MessageRequestStatus == Pending` (nullable handling per model) |
-| `notificationsCount` | total; optional `unread` if schema supports it |
+| `notificationsCount` | total `Notifications` rows; **do not** promise `unreadCount` unless the **`Notification`** model gains a read flag (today it has `CreatedAt` / `Type` only — verify schema before exposing “unread”). |
 | `albumsCount`, `blogsCount`, `reelsCount`, `storiesCount` | simple totals |
 | `storyViewsCount` | `StoryViews` if table is populated in demo |
 | `faceChatRoomsCount`, `faceChatRoomMessagesCount`, `faceChatRoomJoinRequestsPendingCount` | as feasible |
-| `faceWallTicketsCount` | global; plus **`byStatus`** map if `FaceWallTicketStatus` enum exists |
+| `faceWallTicketsCount` | global; plus **`byStatus`** breakdown keyed by **`FaceWallTicketStatus`** (`FaceWallTicket.Status`) |
 | `userFaceProfilesCount` | optional |
 | `oauthClientsCount` | **only** if deemed non-sensitive for operators |
 
@@ -139,7 +140,7 @@ The agent should **freeze a C# record/DTO** in `BeDemo.Api` (e.g. `Models/Dtos/A
 
 - [ ] Add **`GET /api/Stats/timeseries`** (or `GET /api/admin/dashboard-timeseries`) with query parameters:
 
-  - `metric` — enum string: e.g. `users`, `messages`, `stories`, `blogs`, `reels`, `albums`, `friendRequests`, `wallTickets`, …
+  - `metric` — enum string: e.g. `users` (bucket by **`ApplicationUser.CreatedAt`** UTC), `messages` (**`Message.SentAt`**), `stories`, `blogs`, `reels`, `albums`, `friendRequests` (**`FriendRequest.CreatedAt`**), `wallTickets` (**`FaceWallTicket.CreatedAt`**), …
   - `fromUtc`, `toUtc` — ISO-8601; **clamp** max window (e.g. 366 days) server-side.
   - `bucket` — `day` | `week` (default `day`).
 
@@ -164,6 +165,12 @@ The agent should **freeze a C# record/DTO** in `BeDemo.Api` (e.g. `Models/Dtos/A
 ### 4.4 Errors
 
 - [ ] Consistent problem details / `{ "error": "..." }` shape matching other controllers on validation (bad date range).
+
+### 4.5 Security and abuse (recommended prompt extensions)
+
+- [ ] **Rate limiting / cost:** Aggregates + timeseries over wide windows can be **CPU/IO heavy**. Consider ASP.NET **rate limiting** middleware (per user/IP) on `Stats` / timeseries routes, or cap concurrent requests — document limits in Swagger description.
+- [ ] **ETag / `If-None-Match`:** Optional for the large summary DTO so dashboards polling on a timer do not re-download unchanged JSON (implement only if quick win; otherwise skip for MVP).
+- [ ] **Audit log (optional):** One structured log line per successful operator stats read (`UserId`, duration ms, row counts hash) — helps detect scraping; avoid logging full response bodies.
 
 ---
 
@@ -199,7 +206,8 @@ The agent should **freeze a C# record/DTO** in `BeDemo.Api` (e.g. `Models/Dtos/A
 
 ### 5.4 Navigation / information architecture
 
-- [ ] **Either** add **`/pages`** (localized) to **`AdminLayout` `NAV_ITEMS`** and **`Sidebar`** **or** add a **dashboard quick action** “Manage pages” — **do not** leave pages undiscoverable if the dashboard advertises page metrics.
+- [ ] Because there is **no** global pages list route (**§2.3**), **do not** add a dead nav link to **`/pages`**. Prefer: **dashboard quick action** “Manage pages” → **`Faces`** list (or first face) + short i18n hint (“Create or edit pages under each face”), **or** implement the new **all-pages** admin screen + API if product chooses that scope.
+- [ ] Keep **`useAdminRoutePaths`** / `routeTranslations.ts` in sync if new first-class routes are introduced.
 
 ### 5.5 Styling
 
@@ -254,8 +262,9 @@ The agent should **freeze a C# record/DTO** in `BeDemo.Api` (e.g. `Models/Dtos/A
 
 **Phase 0 — Discovery**
 
-- [ ] Repo-wide search: all callers of `/api/Stats` (admin, scripts, tests).
+- [ ] Repo-wide search: all callers of **`/api/Stats`** (admin, scripts, tests, **portal/mobile** if any indirect use).
 - [ ] Confirm **production** expectations for auth on stats (sync with `IAccessEvaluator` implementation).
+- [ ] Note dual dashboard entry: **`/:lang` index** and **`dashboardPaths`** both render `DashboardPage` — avoid duplicate `useQuery` mounts causing double fetch unless `staleTime` / shared layout makes it harmless; document chosen pattern.
 
 **Phase 1 — Backend summary counts**
 
