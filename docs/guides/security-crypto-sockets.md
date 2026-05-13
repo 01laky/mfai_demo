@@ -361,7 +361,7 @@ sequenceDiagram
 
   Hub->>G: Generate or health
   G->>AI: gRPC over configured channel
-  Note over G,AI: Use TLS for gRPC in production; for local development this stack uses an insecure channel — see many_faces_ai README
+  Note over G,AI: Use TLS for gRPC in production. Local dev may use an insecure channel. See many_faces_ai README.
 ```
 
 ### Canonical diagrams — SPA auth + capabilities warmup (render-checked)
@@ -379,7 +379,7 @@ sequenceDiagram
   Note over SPA,Cap: parseMeCapabilities drives permission gates
 ```
 
-**Render validation:** each diagram above was exported with `@mermaid-js/mermaid-cli@11.4.0` (`mmdc -i <file>.mmd -o <file>.svg`) from equivalent `.mmd` sources during this pass — syntax verified.
+**Render validation:** each diagram above was exported with `@mermaid-js/mermaid-cli@11.4.1` (`mmdc -i <file>.mmd -o <file>.svg`) from equivalent `.mmd` sources during this pass — syntax verified.
 
 ### Master checklist (prompt §16) — summary
 
