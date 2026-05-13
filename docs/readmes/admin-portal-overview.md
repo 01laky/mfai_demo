@@ -70,9 +70,12 @@ Three locales: **Slovak** (`sk`), **English** (`en`), **Czech** (`cz`). Toggle i
 
 ## 4. Dashboard
 
-- Greeting with signed-in email.
-- **Cards:** Users count, Faces count, Friend requests count, Messages count — each links into the module.
-- **Quick actions:** Users, Faces.
+- Greeting with signed-in name or email.
+- **KPI cards** (with deep links): users, faces, pages, pending friend requests, messages, notifications.
+- **Charts** (last 30 days UTC): new users vs messages (line), content mix albums/blogs/reels/stories (donut), friend-request outcomes (bar). Data from `GET /api/Stats` and `GET /api/Stats/timeseries` (requires admin face URL prefix + platform operator JWT — see [Admin dashboard metrics](../guides/admin-dashboard-metrics.md)).
+- **Super-admin strip**: pending submissions, AI failed jobs, needs human review, link to moderation console (`GET /api/contentmoderation/metrics`).
+- **All platform metrics** table: every field returned by the stats summary, including wall tickets by status.
+- **Quick actions:** Users, Faces, and a hint that **pages** are managed **per face** (no global `/pages` list route).
 
 ---
 
