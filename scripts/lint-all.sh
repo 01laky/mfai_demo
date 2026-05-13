@@ -1,6 +1,17 @@
 #!/bin/bash
-
-# Lint all projects: portal, backend, admin, mobile (Expo), AI
+#
+# lint-all.sh — run each submodule's lint entrypoint from the monorepo root.
+#
+# For each first-party app below, the script looks for ./scripts/lint.sh inside
+# the submodule directory, or ./lint.sh at the repository root of that submodule.
+# If neither exists, the project is skipped with a warning (common when a
+# submodule is not checked out in a sparse clone); that skip does not set FAILED.
+#
+# Order: portal, backend, admin, mobile (Expo), AI service. Each project runs in
+# a subshell so a failure is recorded via FAILED=1 without aborting the rest.
+#
+# Exit codes: 0 if every executed lint succeeded, 1 if any executed lint failed.
+#
 # Usage: ./scripts/lint-all.sh (from repository root)
 
 set -e
