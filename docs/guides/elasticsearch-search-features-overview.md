@@ -50,6 +50,7 @@ Full matrix, `openssl` example, and **grpcurl** snippets: [`elasticsearch-grpc-t
 ## Submodule and code layout
 
 - **Submodule path:** `many_faces_elastic/` — canonical remote **`many_faces_elastic`** on GitHub.
+- **Submodule-local operator notes:** [`many_faces_elastic/docs/search-stack.md`](../../many_faces_elastic/docs/search-stack.md) (quick reference + links to monorepo guides).
 - **Key paths:** `docker-compose.yml`, **`docker-compose.tls-smoke.yml`**, `Dockerfile.search-worker`, `cmd/search-worker`, `internal/grpccreds`, `internal/server`, `proto/`, `scripts/smoke-grpc-tls.sh`, `.env.example`.
 
 Submodule README: [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md).
