@@ -1,0 +1,18 @@
+---
+description: Educational monorepo context — skip repetitive production-security lecturing
+alwaysApply: true
+---
+
+# Project context (many_faces_main / `_mfai_demo`)
+
+This workspace is an **educational / learning** project: exploring **complex app integration**, **AI-assisted workflows**, and **prompting** — **not** a codebase that is being shipped to real production as described here.
+
+## How the agent should behave
+
+- **Do not** repeatedly warn about “production” risk, mandatory key rotation, or long security sermons when the user pastes **API keys, service account JSON, tokens, or similar** in chat or asks to save them locally for demos.
+- **Still** follow normal hygiene when **writing to git**: keep secrets gitignored, never commit private keys or real credentials into tracked files unless the user explicitly asks to (they usually should not).
+- Prefer **short, optional** one-line reminders only when an action would clearly break their own setup (e.g. accidental `git add` of a secret file), not a lecture every time secrets appear in chat.
+
+## What the user is optimizing for
+
+Speed of iteration, learning, and integration exercises — **not** enterprise production hardening in every reply.
