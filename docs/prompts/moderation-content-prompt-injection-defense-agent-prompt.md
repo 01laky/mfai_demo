@@ -28,12 +28,13 @@ This document is an **English** implementation specification for an AI coding ag
 - **Output and policy hardening** in `ContentModerationHelpers.ValidateRecommendation` (and related helpers): whitelist unknown `flags`, suspicious-input + high-confidence approve combinations forced to **`NeedsHumanReview`**, optional caps and pattern checks on `reason` / `user_message` if they originate from model output.
 - **Optional lightweight “instruction-like” heuristic** (regex / small allow-deny list / scoring) producing a **machine flag** such as `instruction_like_text` or `prompt_injection_suspected` that **never** auto-approves on its own but **escalates** or tightens validation.
 - **Future LLM path** inside `many_faces_ai`: strict **instruction vs data separation** in any prompt template; structured decoding; deterministic generation settings; fallback to the existing deterministic classifier when parsing fails or confidence is ambiguous.
-- **Tests:** unit tests for pure helpers; narrow integration tests for worker behaviour; **red-team corpus** of known jailbreak / delimiter / role-play strings that must **never** result in persisted `RecommendedApprove` without passing all policy gates (or must always land in `NeedsHumanReview` — pick one policy and encode it in tests).
-- **Documentation:** extend [`../guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md) with a subsection on untrusted content vs moderation LLM; link from this prompt; optional short `many_faces_ai/README.md` note if behaviour changes.
+- **Tests:** unit tests for pure helpers; narrow integration tests for worker behaviour; **red-team corpus** of known jailbreak / delimiter / role-play strings. **Encode one explicit policy in tests**, for example: every corpus line, after full pipeline processing, must end in **`AiReviewStatus.NeedsHumanReview`** (or another state that still **does not** reduce human oversight for approve — document the exact enum outcome per case). Corpus strings must **never** be the sole reason the system persists **`RecommendedApprove`** together with validation that would let a product mistake treat the item as “safe to approve” without `SUPER_ADMIN` (today nothing auto-publishes; tests must lock that invariant).
+- **Documentation:** extend [`../guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md) with a subsection on untrusted content vs moderation LLM; link from this prompt; optional short `many_faces_ai/README.md` note if behaviour changes. If you add **Mermaid** there or in other `docs/`, follow CI rules: in `sequenceDiagram`, **avoid semicolons inside `Note over` text** (mmdc treats `;` as a statement terminator — see `docs_mermaid` job and `scripts/check-mermaid-docs.sh`).
 
 ### 2.2 Explicitly out of scope
 
 - **Admin / superadmin “chat with AI”** or any operator-facing conversational AI where the authenticated principal is a **trusted** `SUPER_ADMIN`. Those surfaces may use different APIs and trust models; **do not** apply creator-content sanitization there unless product later asks for parity.
+- **`Generate` gRPC** (open-ended text continuation) unless product explicitly routes **untrusted** user blobs into it for moderation; this prompt targets **`ReviewContent`** only. If `Generate` is ever fed the same untrusted fields, apply the same defense stack or keep that path forbidden by design.
 - Replacing the entire moderation product with a third-party SaaS API (unless a separate prompt authorizes it).
 - Watermarking or steganographic detection in binary image/video bytes (covered only as **future** notes if you add media decoding later; this prompt focuses on **text and URL strings** in the current `ReviewContent` contract).
 
@@ -48,6 +49,9 @@ This document is an **English** implementation specification for an AI coding ag
 | Unicode tricks | Zero-width, bidi overrides, homoglyphs | Normalized or stripped before model; log minimal metadata only (privacy). |
 | `media_url` stuffing | Huge query string copied into prompts | Cap length; parse URL components; do not pass raw megabyte queries into LLM context. |
 | Resubmission loops | User edits only to probe model | Rate limits / existing moderation version rules should interact cleanly with new checks (no duplicate jobs bypass). |
+| Oversized payloads | Body near gRPC / HTTP limits | Respect backend and gRPC max message sizes; reject or truncate at API with **consistent** rules so worker and AI never see unbounded strings. |
+| **`ContentReviewResponse.error`** | Model or stub returns `error` filled with echoed user text | Do not treat `error` as trusted UI copy; log and map to safe internal messages; avoid echoing raw user input into admin-only surfaces without encoding. |
+| **SSRF (future)** | Worker or AI **fetches** `media_url` over HTTP for scanning | Out of scope until implemented; when adding fetch, use allowlisted hosts, timeouts, size caps, no redirect to private IPs, and never pass response bytes into an LLM as unconstrained text without the same injection defenses. |
 
 **Attacker goal:** skew `ContentReviewResponse` toward **`RecommendedApprove`** or pollute audit / operator UX — **not** XSS in admin (that is a separate hardening track unless you touch the same strings in React — still escape/sanitize display defensively).
 
@@ -67,8 +71,8 @@ Verify paths after submodule checkout:
 
 | Area | Likely touchpoints |
 |------|-------------------|
-| `many_faces_backend` | `ContentAiReviewService`, `ContentModerationHelpers`, entity → `ToAiRequest()` mapping, album/blog/reel create/update validators, OpenAPI if DTOs change |
-| `many_faces_ai` | `server.py` / `ReviewContent`, any future LLM wrapper, `proto/health.proto` if fields added |
+| `many_faces_backend` | `ContentAiReviewService`, `ContentModerationHelpers`, `IAiGrpcService` / gRPC client, entity → `ToAiRequest()` mapping (search the solution for `ReviewContent` / `ContentReviewRequest`), album/blog/reel create/update validators, OpenAPI if DTOs change |
+| `many_faces_ai` | `server.py` / `HealthServiceServicer.ReviewContent`, any future LLM wrapper, `proto/health.proto` if fields added |
 | `many_faces_portal` | `AlbumForm`, `BlogForm`, `ReelForm`, client-side length hints (optional), `contentModeration` helpers if new flags surface to UI |
 | `many_faces_admin` | moderation filters / metrics if new flags are exposed to operators |
 | `many_faces_mobile` | read-only grouping if new creator-safe labels or flags appear in API |
@@ -109,10 +113,13 @@ Verify paths after submodule checkout:
 
 - [ ] If new flags exist: add filter chip or query param support matching backend `ContentModerationController` contract.
 - [ ] Document in admin help text what the flag means (operator-facing English).
+- [ ] When rendering any model- or user-origin strings in the moderation UI (reasons, snippets), use normal **React text escaping** / safe components; do not `dangerouslySetInnerHTML` with unsanitized content — **prompt injection is not XSS**, but the same fields can carry HTML-like payloads used in blended attacks.
 
 ### 6.6 Creator FE / mobile
 
 - [ ] Do **not** show “prompt injection detected” to end users; use neutral copy (“Submitted for review”) or existing moderation states.
+- [ ] Any new machine-only flags or internal reasons must stay **off** creator JSON (`GET /api/my/content-submissions` and OpenAPI “safe fields” contract); follow the same rules as existing internal AI diagnostics.
+- [ ] If you introduce creator-visible **generic** rejection copy for blocked submissions, add **i18n** keys in `many_faces_portal` (and `many_faces_mobile` when that surface shows the message), not hard-coded English in multiple repos.
 - [ ] Optional: client-side **length** and obvious control-character strip to reduce failed submits (must mirror server rules).
 
 ---
@@ -140,7 +147,7 @@ Tick in PR copies only.
 ### Phase 1 — Backend input hygiene + validation (low user-visible risk)
 
 - [ ] Implement sanitization helper module (static class or dedicated service) with clear XML doc comments.
-- [ ] Apply sanitization **immediately before** building the gRPC request inside backend (single choke point preferred).
+- [ ] Apply sanitization **immediately before** building the gRPC request inside backend (single choke point preferred). Document whether you also **normalize on write** (create/update) so DB and AI see the same bytes, or **only at review time** (worker) — if only at review time, legacy rows still get sanitized before `ReviewContent`; if on write, add migration/backfill only if product requires it.
 - [ ] Extend `ValidateRecommendation` with flag whitelist and new policy branches; add unit tests for each branch.
 - [ ] Add structured logging for sanitization events (no raw secrets).
 - [ ] Update OpenAPI / generated clients if any public DTO changes (unlikely if only internal).
@@ -164,7 +171,7 @@ Tick in PR copies only.
 
 - [ ] Add “Untrusted content vs moderation model” section to [`../guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md) with Mermaid optional (run `./scripts/check-mermaid-docs.sh` if adding diagrams).
 - [ ] Link this prompt from [`user-content-approval-extensions-agent-prompt.md`](./user-content-approval-extensions-agent-prompt.md) §2 or a new “Related prompts” bullet.
-- [ ] Add row to [`README.md`](./README.md) (prompts hub) and [`../README.md`](../README.md) prompts table for discoverability.
+- [ ] **Verify** this prompt stays indexed: [`README.md`](./README.md) (`docs/prompts/` hub) and [`../README.md`](../README.md) (`docs/` hub) — add or update rows if prompts were reorganized (initial indexing is already present in `many_faces_main`; keep in sync on refactors).
 
 ### Phase 5 — Final verification
 
@@ -172,7 +179,7 @@ Tick in PR copies only.
 - [ ] `pytest` for `many_faces_ai` touched.
 - [ ] Portal/admin `yarn validate` / `yarn test` if FE touched.
 - [ ] `many_faces_mobile` `yarn test` if mobile grouping or API types touched.
-- [ ] Run `./scripts/check-mermaid-docs.sh` if any fenced **mermaid** diagram was added under `docs/`.
+- [ ] Run `./scripts/check-mermaid-docs.sh` whenever **fenced mermaid** blocks under `docs/` were added or edited (CI `docs_mermaid` validates the whole tree).
 - [ ] Self-review PR against §2 **Out of scope** (no accidental changes to superadmin chat trust model).
 
 ---
@@ -191,6 +198,7 @@ Tick in PR copies only.
 - [`user-content-approval-extensions-agent-prompt.md`](./user-content-approval-extensions-agent-prompt.md) — broader moderation extensions (models, media, bulk, retention).
 - [`fe-user-content-ai-approval-workflow-agent-prompt.md`](./fe-user-content-ai-approval-workflow-agent-prompt.md) — original pending-approval workflow.
 - [`../guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md) — product and engineering reference for the live stack.
+- [`security-hardening-full-stack-edge-tests-agent-prompt.md`](./security-hardening-full-stack-edge-tests-agent-prompt.md) — broader security / edge-test discipline if this work touches transport, logging, or cross-cutting abuse cases (use only relevant sections).
 
 ---
 
