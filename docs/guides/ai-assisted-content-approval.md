@@ -31,14 +31,14 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **Persistence** | `Album`, `Blog`, `Reel` carry `ApprovalStatus`, AI fields, moderation version, human/removal metadata, `SubmittedAtUtc`. |
 | **Defaults** | Regular FE creates → `PendingApproval`. Migrated / admin-created paths default to `Approved` where applicable. |
 | **Public API** | List/grid/detail queries return **only `Approved`** content for non-owners; owners may load their own pending/rejected items for detail/edit flows. |
-| **AI pipeline** | Redis job type `content.ai-review`; `ContentAiReviewService` calls `many_faces_ai` `ReviewContent`, validates response, retries with backoff, escalates to `NeedsHumanReview` after max attempts. |
-| **AI service** | Deterministic classifier (text + media URL metadata) + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
+| **AI pipeline** | Redis job type `content.ai-review`; `ContentAiReviewService` sanitizes untrusted title/body/media URL before gRPC, merges optional **`instruction_like_text`** heuristic on stored content, normalizes AI flags, validates policy, then calls `many_faces_ai` `ReviewContent`; retries with backoff, escalates to `NeedsHumanReview` after max attempts. |
+| **AI service** | Deterministic classifier (text + media URL metadata) with the same input normalization at RPC entry + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
 | **Admin** | `ContentModerationController`: queue with filters (type, status, AI status, face, author, risk, flags substring, confidence band, submitted window, reviewer, queue age, moderation version), metrics `{ metrics, alerts }`, per-item actions, **bulk** approve/reject/remove/requeue, audit events. |
 | **Creator FE** | `GET /api/my/content-submissions`, **My submissions** page (`/my-submissions`), grouping helpers, safe reasons, links to detail with optional `?edit=1`, edit/delete gated on owner + pending/rejected. |
 | **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped URL via `many_faces_mobile` `faceScope`); **`MySubmissionsScreen`** lists rows grouped with `contentModeration` helpers (creator-safe fields). **No** native detail editor / `?edit=1` / delete yet — portal remains canonical for mutations until ported. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
-| **Tests** | Backend integration tests for visibility, bulk, retention, alerts; FE/admin helpers covered by Vitest; AI `ReviewContent` tests in `many_faces_ai/test_server.py`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
 
 ## Core Rule
 
@@ -81,8 +81,9 @@ flowchart TD
         N["Notifications<br/>creator + super-admins"]
         J["Enqueue Redis job<br/>content.ai-review"]
         W["RedisJobWorkerService<br/>ContentAiReviewService"]
+        S["Sanitize untrusted fields<br/>control + bidi strip, caps"]
         G["gRPC ReviewContent → many_faces_ai"]
-        V["Validate AI response<br/>policy + version"]
+        V["Normalize flags + validate policy<br/>version + risk + instruction guard"]
         M["GET /api/contentmoderation/metrics<br/>alerts + structured logs"]
         A["SUPER_ADMIN decisions<br/>single + bulk + requeue"]
         E["ContentModerationEvents<br/>audit trail"]
@@ -97,7 +98,8 @@ flowchart TD
     C --> N
     C --> J
     J --> W
-    W --> G
+    W --> S
+    S --> G
     G --> RC
     RC --> V
     V --> M
@@ -132,6 +134,29 @@ The gRPC layer maps to persisted fields including:
 - `modelVersion`, `traceId`
 
 Invalid or high-risk combinations are forced to **`NeedsHumanReview`** after validation in the backend worker.
+
+## Untrusted content vs moderation model
+
+Album, blog, and reel text (and media URLs) are **untrusted**: they must not be able to steer the moderation classifier as if it were a chat “system” message. The implementation uses **defense in depth**:
+
+- **Backend (`ContentAiReviewService`)** strips bidi / zero-width / disallowed control characters and caps field sizes before building the gRPC `ReviewContent` request; optional **`instruction_like_text`** heuristic flags obvious prompt-injection phrasing on the **stored** submission.
+- **Policy (`ContentModerationHelpers.ValidateRecommendation`)** never allows **`Approve`** together with **`instruction_like_text`**: that combination is normalized to **human review** with an explicit fallback reason.
+- **`many_faces_ai`** applies the same normalization at the start of **`ReviewContent`** so delimiter-smuggling cannot bypass keyword checks inside the Python process.
+
+AI `flags` from the wire are **whitelisted and canonicalized** before persistence; unknown flag strings are dropped.
+
+### Configuration
+
+| Setting | Location | Purpose |
+|--------|----------|---------|
+| `ContentModeration:InstructionHeuristicEnabled` | `many_faces_backend` `appsettings*.json` | When `true` (default), stored title/body/media URL are scanned for instruction-like phrases; **`Approve` + `instruction_like_text`** always becomes human review after validation. Set `false` only for narrow diagnostics or tests. |
+
+### Edge cases covered by automated tests
+
+- **Sanitizer:** C0 controls (except tab/LF/CR), bidi and zero-width code points, BOM, length caps for title/body/media URL.
+- **Heuristic:** Phrases in title, HTML body, or reel `VideoUrl` query text; negative examples that must not match; case-insensitive matching.
+- **Policy:** `Approve` blocked when the instruction flag survives normalization; `Reject` with the same flag remains valid when a reject reason is present; unknown AI flags dropped; duplicate canonical flags collapsed.
+- **Python:** Same sanitizer limits at `ReviewContent` entry plus classifier behaviour on delimiter-smuggled keywords.
 
 ## Redis Queue And Backpressure
 

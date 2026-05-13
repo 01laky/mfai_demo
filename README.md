@@ -21,7 +21,7 @@ Security and trust boundaries are a high priority in the architecture: this stac
 - Role-aware frontend flows backed by backend authorization and explicit capability checks.
 - A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, logging, and AI service up together.
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
-- AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail.
+- AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, **sanitization and prompt-injection defenses** on the path to gRPC `ReviewContent` (also in `many_faces_ai`), superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail. Reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 
 ## System Overview
 
@@ -39,7 +39,7 @@ flowchart LR
     api --> db["many_faces_database<br/>PostgreSQL"]
     api --> redis["many_faces_redis<br/>Redis"]
     api --> realtime["SignalR<br/>real-time updates"]
-    api --> ai["many_faces_ai<br/>Python gRPC AI service"]
+    api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
 
     scripts["scripts/ + dev/<br/>local orchestration"] --> fe
     scripts --> admin
@@ -219,7 +219,7 @@ flowchart LR
 
 ## AI-Assisted Content Approval
 
-Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns approval status and visibility, enqueues **asynchronous** AI review work (`content.ai-review` on Redis), validates structured recommendations, notifies creators and super-admins on key transitions, and restricts approve / reject / remove / bulk / requeue to **`SUPER_ADMIN`**. Creators use **`GET /api/my/content-submissions`** and the **My submissions** page; the admin app exposes the moderation queue with **filters, metrics + alerts, bulk actions**, and per-item audit. Optional **retention** hosting can redact internal AI trace fields after a policy delay. Full reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
+Regular users can create albums, blogs, and reels from the user-facing frontend, but the approval workflow keeps that content out of public views until it is approved. The backend owns approval status and visibility, enqueues **asynchronous** AI review work (`content.ai-review` on Redis), **sanitizes untrusted text and URLs before gRPC**, applies an optional **instruction-like** heuristic on stored submissions, validates structured recommendations (including **never auto-approving** when `instruction_like_text` is present), notifies creators and super-admins on key transitions, and restricts approve / reject / remove / bulk / requeue to **`SUPER_ADMIN`**. Creators use **`GET /api/my/content-submissions`** and the **My submissions** page; the admin app exposes the moderation queue with **filters, metrics + alerts, bulk actions**, and per-item audit. Optional **retention** hosting can redact internal AI trace fields after a policy delay. Full reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 
 ```mermaid
 flowchart TD
@@ -230,8 +230,9 @@ flowchart TD
     pending --> queue["Enqueue Redis job<br/>content.ai-review"]
 
     queue --> worker["Worker + ContentAiReviewService"]
-    worker --> ai["many_faces_ai ReviewContent<br/>classifier + boundary flags"]
-    ai --> policy["Backend policy<br/>confidence, risk, flags, version"]
+    worker --> sanitize["Sanitize fields + caps<br/>bidi or control stripping"]
+    sanitize --> ai["many_faces_ai ReviewContent<br/>same sanitizer + classifier"]
+    ai --> policy["Backend policy<br/>normalize flags, risk, version, instruction guard"]
 
     policy --> admin["Admin moderation<br/>filters, metrics, bulk"]
     admin --> approve["Approve → public lists"]
