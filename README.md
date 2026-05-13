@@ -24,6 +24,37 @@ Security and trust boundaries are a high priority in the architecture: this stac
 - AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, **sanitization and prompt-injection defenses** on the path to gRPC `ReviewContent` (also in `many_faces_ai`), superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail. Reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 - **Admin operator dashboard + optional AI statistics:** consolidated **`GET /api/Stats`** / **`timeseries`**, anonymous aggregate **`GET /api/Stats/public`** (via **`public`** face prefix), **Settings** modes (**off / inline / live**) for attaching totals to **SignalR** admin AI chat, and gRPC **`stats_context_json`** / **`FetchPublicStats`** / **`OperatorStatsChat`** in **`many_faces_ai`**. Reference: [`docs/guides/admin-dashboard-metrics.md`](./docs/guides/admin-dashboard-metrics.md) and [`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](./docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
 
+## Elasticsearch & search-worker (optional, `many_faces_elastic`)
+
+This monorepo can run an **optional search projection** beside PostgreSQL: **`many_faces_elastic`** is a separate git submodule that ships **Elasticsearch** (read-optimized index) and a colocated **Go gRPC search-worker**. **PostgreSQL stays the system of record**; browsers, SPAs, and the mobile app **never** call Elasticsearch or the worker directly—they only call **`many_faces_backend`** REST APIs.
+
+- **Submodule & code:** [`many_faces_elastic/README.md`](./many_faces_elastic/README.md) (Docker Compose, `Dockerfile.search-worker`, `proto/`, `cmd/search-worker`, CI).
+- **Local wiring (ports, env, `ENABLE_ELASTICSEARCH`, Docker DNS):** [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md).
+- **Backend config:** `Search__Enabled`, `Search__WorkerGrpcUrl` (e.g. `http://search-worker-dev:50052` on the dev Docker network), optional `Search__WorkerAuthToken`; health probe: **`GET /{face-prefix}/api/search/health`**.
+- **Agent checklist / roadmap:** [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
+
+**Trust boundary (who talks to whom):**
+
+```mermaid
+flowchart LR
+    subgraph clients["Clients never touch Elasticsearch or worker gRPC"]
+        portal["many_faces_portal"]
+        admin["many_faces_admin"]
+        mobile["many_faces_mobile"]
+    end
+    be["many_faces_backend<br/>REST + JWT"]
+    worker["Go search-worker<br/>many_faces_elastic<br/>gRPC :50052 / host :59202"]
+    es["Elasticsearch<br/>HTTP :9200 / host :59200"]
+
+    portal --> be
+    admin --> be
+    mobile --> be
+    be -->|"Grpc.Net.Client<br/>when Search enabled"| worker
+    worker -->|"official Go client<br/>only inside this submodule"| es
+```
+
+**Plain-text equivalent:** `portal | admin | mobile` → **HTTP** → `many_faces_backend` → **gRPC** → `search-worker` → **HTTP** → `Elasticsearch`.
+
 ## System Overview
 
 ```mermaid
@@ -39,13 +70,10 @@ flowchart LR
     api --> auth["OAuth2 / JWT<br/>roles + capabilities"]
     api --> db["many_faces_database<br/>PostgreSQL"]
     api --> redis["many_faces_redis<br/>Redis"]
-    subgraph elastic_stack["many_faces_elastic optional read index"]
-        direction TB
-        sw["Go search-worker<br/>gRPC :50052"]
-        esx["Elasticsearch<br/>HTTP :9200"]
-        sw --> esx
-    end
-    api -.->|"Search:Enabled + WorkerGrpcUrl"| sw
+    sw["many_faces_elastic<br/>Go search-worker gRPC"]
+    esx["many_faces_elastic<br/>Elasticsearch HTTP"]
+    sw --> esx
+    api -.->|"Search enabled"| sw
     api --> realtime["SignalR<br/>real-time updates"]
     api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
 
@@ -54,7 +82,7 @@ flowchart LR
     scripts --> api
     scripts --> db
     scripts --> redis
-    scripts -.->|"ENABLE_ELASTICSEARCH=1"| elastic_stack
+    scripts -.->|"ENABLE_ELASTICSEARCH=1"| sw
     scripts --> ai
     scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
@@ -64,10 +92,12 @@ flowchart LR
     docs -.-> api
     docs -.-> ai
     docs -.-> mobile
-    docs -.-> elastic_stack
+    docs -.-> sw
 ```
 
 ### Optional search index (`many_faces_elastic`)
+
+The **Elasticsearch & search-worker** section above is the primary architecture summary (trust boundary + Mermaid). Below are **operator-focused** reminders.
 
 **Elasticsearch** is an **optional** submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**; the API does not require Elasticsearch or the Go **search-worker** at startup. Enable both containers with **`ENABLE_ELASTICSEARCH=1`** when running `./scripts/start-all-dev.sh`, then set **`Search__Enabled=true`**, **`Search__WorkerGrpcUrl=http://search-worker-dev:50052`**, and optional **`Search__WorkerAuthToken`** to match the worker (see [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md) and [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)). Probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
 
@@ -75,15 +105,14 @@ For how this submodule fits root **`docker-compose.dev.yml`** and lifecycle scri
 
 ```mermaid
 flowchart LR
-    subgraph roles["Authoritative data vs search projection"]
-        pg[(PostgreSQL<br/>OLTP source of truth)]
-        es[(Elasticsearch<br/>optional read index)]
-        sw[Go search-worker<br/>gRPC in many_faces_elastic]
-    end
+    pg[(PostgreSQL<br/>system of record)]
+    es[(Elasticsearch<br/>read index)]
+    sw2[Go search-worker<br/>gRPC]
+    be2[many_faces_backend]
 
-    be["many_faces_backend"] --> pg
-    be -.->|"Search Enabled + WorkerGrpcUrl"| sw
-    sw --> es
+    be2 --> pg
+    be2 -.->|optional| sw2
+    sw2 --> es
 ```
 
 ## Frontend Route And Grid Rendering
