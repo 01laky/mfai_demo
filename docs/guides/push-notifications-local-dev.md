@@ -44,28 +44,28 @@ Many Faces **v1** targets **direct FCM registration tokens** obtained on the mob
 
 ## Start the worker with the full dev stack
 
-From the monorepo root:
+Copy **[`dev/push-dev.env.example`](../../dev/push-dev.env.example)** into a **`.env`** file at the monorepo root (or export the same variables), then:
 
 ```bash
 export ENABLE_PUSH_WORKER=1
-# Optional shared secret — must match backend Push:WorkerAuthToken when set:
+# Optional shared secret — must match on worker and API when both use it:
 # export PUSH_WORKER_EXPECTED_TOKEN=dev-shared-secret
+./scripts/start-all-dev.sh
+```
+
+**Service account file:** save the Firebase **private key JSON** as **`many_faces_push/firebase-sa.json`** (gitignored via `*-sa.json`). `start-all-dev.sh` sets **`FIREBASE_SA_HOST_PATH`** automatically when that file exists, and **`scripts/start-push-worker.sh`** merges **`docker-compose.credentials.yml`** to mount it at `/run/secrets/firebase-sa.json` and set **`GOOGLE_APPLICATION_CREDENTIALS`**.
+
+If the JSON lives elsewhere, export an absolute path before starting:
+
+```bash
+export FIREBASE_SA_HOST_PATH=/absolute/path/to/firebase-adminsdk.json
+export ENABLE_PUSH_WORKER=1
 ./scripts/start-all-dev.sh
 ```
 
 The script runs `many_faces_push/scripts/start-push-worker.sh`, waits for **localhost:59203**, and connects **`push-worker-dev`** to **`many_faces_main_dev-network`**.
 
-Mount credentials into the worker container (example override via compose override file or `docker compose run`):
-
-- Set **`GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/firebase-sa.json`** inside the container.
-- Bind-mount the JSON read-only to that path on the host.
-
-The stock `many_faces_push/docker-compose.yml` passes `GOOGLE_APPLICATION_CREDENTIALS` through from the host environment — export it **before** `docker compose up` if you start the worker manually:
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS="$PWD/many_faces_push/firebase-sa.json"
-./many_faces_push/scripts/start-push-worker.sh
-```
+When **`ENABLE_PUSH_WORKER=1`**, `start-all-dev.sh` also exports **`PUSH_DEV_*`** so **`be-demo-dev`** receives **`Push__Enabled=true`** and **`Push__WorkerGrpcUrl=http://push-worker-dev:50053`** via root **`docker-compose.dev.yml`** (see `Push__*` lines there).
 
 ---
 

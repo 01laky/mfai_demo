@@ -20,7 +20,7 @@
 #
 # Usage: ./scripts/start-all-dev.sh (from repository root)
 # Optional: ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh — starts many_faces_elastic (Elasticsearch + Go search-worker) and attaches elasticsearch-dev + search-worker-dev to the dev network.
-# Optional: ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh — starts many_faces_push (Go push-worker) and attaches push-worker-dev to the dev network (requires Firebase service account locally).
+# Optional: ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh — starts many_faces_push (Go push-worker) and attaches push-worker-dev to the dev network. Place a Firebase **service account** JSON at many_faces_push/firebase-sa.json (gitignored) or set FIREBASE_SA_HOST_PATH; optional PUSH_WORKER_EXPECTED_TOKEN enables gRPC metadata auth (set Push__WorkerAuthToken to the same value).
 # Press Ctrl+C to exit the status screen early
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -106,6 +106,12 @@ fi
 # ============================================================================
 _expect_push=0
 if [ "${ENABLE_PUSH_WORKER:-}" = "1" ] && [ -f "many_faces_push/scripts/start-push-worker.sh" ]; then
+    if [ -z "${FIREBASE_SA_HOST_PATH:-}" ] && [ -f "$ROOT/many_faces_push/firebase-sa.json" ]; then
+        export FIREBASE_SA_HOST_PATH="$ROOT/many_faces_push/firebase-sa.json"
+    fi
+    if [ -z "${FIREBASE_SA_HOST_PATH:-}" ]; then
+        echo "    ⚠️  ENABLE_PUSH_WORKER=1 but no service account: set FIREBASE_SA_HOST_PATH or add many_faces_push/firebase-sa.json — worker will start without FCM (SendPush → FailedPrecondition)."
+    fi
     echo "📦 Starting push-worker (many_faces_push)..."
     cd many_faces_push
     ./scripts/start-push-worker.sh > /dev/null 2>&1 &
@@ -228,6 +234,15 @@ if nc -z localhost 54320 2>/dev/null; then
     fi
 else
     echo "    ⚠️  Postgres not reachable on localhost:54320 — skip migrate/seed"
+fi
+
+# When push worker is enabled, wire ASP.NET Core Push:* into be-demo-dev (see docker-compose.dev.yml ${PUSH_DEV_*}).
+if [ "${ENABLE_PUSH_WORKER:-}" = "1" ]; then
+    export PUSH_DEV_ENABLED=true
+    export PUSH_DEV_WORKER_GRPC_URL=http://push-worker-dev:50053
+    if [ -n "${PUSH_WORKER_EXPECTED_TOKEN:-}" ]; then
+        export PUSH_DEV_WORKER_AUTH_TOKEN="${PUSH_WORKER_EXPECTED_TOKEN}"
+    fi
 fi
 
 # ============================================================================

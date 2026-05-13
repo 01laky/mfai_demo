@@ -61,8 +61,8 @@ flowchart LR
 **`many_faces_push`** is a separate git submodule implementing a **Go gRPC worker** that isolates **Firebase Admin / FCM** dispatch from **`many_faces_backend`**. The API persists device tokens and calls **`PushService.SendPush`** over gRPC.
 
 - **Submodule:** [`many_faces_push/README.md`](./many_faces_push/README.md)
-- **Local dev:** [`docs/guides/push-notifications-local-dev.md`](./docs/guides/push-notifications-local-dev.md)
-- **Start with full stack:** `ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh` (requires a gitignored **service account JSON** and `GOOGLE_APPLICATION_CREDENTIALS` for the worker container).
+- **Local dev:** [`docs/guides/push-notifications-local-dev.md`](./docs/guides/push-notifications-local-dev.md) — copy **[`dev/push-dev.env.example`](./dev/push-dev.env.example)** hints into a root **`.env`** when using Docker Compose substitution.
+- **Start with full stack:** `ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh` — place Firebase **service account** JSON at **`many_faces_push/firebase-sa.json`** (or set **`FIREBASE_SA_HOST_PATH`**) so the worker gets a bind mount and **`GOOGLE_APPLICATION_CREDENTIALS`** automatically.
 - **Roadmap / checklist:** [`docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md)
 
 ## System Overview
