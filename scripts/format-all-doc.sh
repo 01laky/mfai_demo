@@ -10,6 +10,10 @@
 #
 # Requires: Node.js + npx (downloads Prettier on first run).
 # Env: PRETTIER_VERSION (default 3.8.0, aligned with many_faces_portal/many_faces_admin)
+#
+# Prettier discovers ignore rules from the repository root (e.g. .prettierignore)
+# because npx is invoked with paths under $ROOT; keep ignore files at the monorepo
+# root when excluding generated or vendor Markdown.
 
 set -euo pipefail
 
