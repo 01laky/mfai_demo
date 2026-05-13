@@ -98,7 +98,7 @@ grpcurl -cacert ca.crt -cert api-client.crt -key api-client.key \
 The monorepo workflow **`.github/workflows/ci.yml`** includes:
 
 - **`infra_many_faces_elastic`**: validates `docker compose … config` for **`many_faces_elastic/docker-compose.yml`** and **`many_faces_elastic/docker-compose.tls-smoke.yml`** (the TLS smoke file only needs `SEARCH_TLS_SMOKE_CERT_DIR` set to an existing directory so Compose can expand the volume source path; it does not run containers).
-- **`smoke_search_worker_grpc_tls`**: runs **`many_faces_elastic/scripts/smoke-grpc-tls.sh`**, which generates a short-lived CA + server + client PEM chain with **OpenSSL**, starts **Elasticsearch + search-worker** from **`docker-compose.tls-smoke.yml`**, asserts **`grpcurl`** `Ping` sees Elasticsearch, then runs **`dotnet test`** filtered to **`SearchWorkerTlsEndToEndSmokeTests`** with **`SEARCH_TLS_SMOKE=1`**.
+- **`smoke_search_worker_grpc_tls`**: runs **`many_faces_elastic/scripts/smoke-grpc-tls.sh`**, which generates a short-lived CA + server + client PEM chain with **OpenSSL**, sets **directory and file modes** so the **distroless nonroot** worker can read the bind-mounted `/tls` PEMs, starts **Elasticsearch + search-worker** from **`docker-compose.tls-smoke.yml`**, asserts **`grpcurl`** `Ping` sees Elasticsearch, then runs **`dotnet test`** filtered to **`SearchWorkerTlsEndToEndSmokeTests`** with **`SEARCH_TLS_SMOKE=1`**.
 
 Normal **`dotnet test`** without that environment variable skips the end-to-end class in milliseconds; fast TLS **option** validation lives in **`SearchWorkerGrpcProbeOptionsTests`**.
 
