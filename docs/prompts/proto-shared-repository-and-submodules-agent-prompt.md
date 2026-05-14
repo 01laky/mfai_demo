@@ -15,7 +15,7 @@
 ### 1.1 Today
 
 - **Protobuf sources** may live beside **`many_faces_push`**, **`many_faces_mailer`**, **`many_faces_elastic`**, or be referenced from **`many_faces_backend`** with language-specific codegen.
-- **Snapshot (re-verify with `rg '\.proto$'` before migration):** worker contracts today live under **`many_faces_elastic/proto/manyfaces/search/v1/`**, **`many_faces_push/proto/manyfaces/push/v1/`**, **`many_faces_mailer/proto/manyfaces/mailer/v1/`**. **`many_faces_backend`** pulls those three into **`BeDemo.Api.csproj`** via **`Include="..\..\many_faces_*\proto\..."`** (paths relative to **`many_faces_backend/BeDemo.Api/`**, i.e. **two** `..` segments to the monorepo root) plus a local **`Protos/health.proto`**. **`many_faces_ai`** ships **`proto/health.proto`** (and CI runs `grpc_tools.protoc` there). **`ai_demo/proto/health.proto`** may duplicate the health demo — include in inventory if it must stay wire-identical.
+- **Snapshot (re-verify with `rg '\.proto$'` after refactors):** canonical cross-service `.proto` files live under **`many_faces_proto/proto/`** (`manyfaces/**/v1/*.proto` plus root **`health.proto`** for AI). **`many_faces_backend`** references them from **`BeDemo.Api.csproj`** via **`..\..\many_faces_proto\proto\...`**. **`many_faces_ai`** generates Python stubs from the same **`many_faces_proto`** checkout (`generate_proto.sh`, CI, **`Dockerfile.dev`**). **`ai_demo`** (if present) may still carry a duplicate **`health.proto`** — align or document as non-canonical.
 - **Risk:** two services ship **different** revisions of the same `package` / RPC names → **runtime failures** or silent **wire incompatibility**.
 - **Risk:** copy/paste of `.proto` files between repos → **divergence** and unreviewed drift.
 
@@ -259,49 +259,49 @@ The implementing agent must **state the chosen strategy** in the PR description 
 
 ### Repository `many_faces_proto`
 
-- [ ] Create git repository with **`proto/manyfaces/...`** tree and root **`README.md`**, **`LICENSE`**.
-- [ ] Add **`buf.yaml`** (+ optional **`buf.lock`**) and CI workflow for **`buf lint`** / **`buf breaking`**.
-- [ ] Add **`CHANGELOG.md`** or release process for contract changes.
-- [ ] Add **CODEOWNERS** (or org equivalent) for `proto/**`.
+- [x] Create git repository with **`proto/manyfaces/...`** tree and root **`README.md`**, **`LICENSE`**.
+- [x] Add **`buf.yaml`** (+ optional **`buf.lock`**) and CI workflow for **`buf lint`** / **`buf breaking`**.
+- [x] Add **`CHANGELOG.md`** or release process for contract changes.
+- [x] Add **CODEOWNERS** (or org equivalent) for `proto/**`.
 
 ### Monorepo `many_faces_main`
 
-- [ ] Add **`many_faces_proto`** submodule entry to **`.gitmodules`** at agreed path.
-- [ ] Update root **`README.md`** + **[`docs/guides/git-submodules.md`](../guides/git-submodules.md)**.
-- [ ] Update **[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)** checkout + any new **`proto`** / **`buf`** jobs.
-- [ ] Update **[`docs/guides/testing-and-ci-matrix.md`](../guides/testing-and-ci-matrix.md)** with commands for contributors.
+- [x] Add **`many_faces_proto`** submodule entry to **`.gitmodules`** at agreed path.
+- [x] Update root **`README.md`** + **[`docs/guides/git-submodules.md`](../guides/git-submodules.md)**.
+- [x] Update **[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)** checkout + any new **`proto`** / **`buf`** jobs.
+- [x] Update **[`docs/guides/testing-and-ci-matrix.md`](../guides/testing-and-ci-matrix.md)** with commands for contributors.
 
 ### Consumer: `many_faces_backend`
 
-- [ ] Point **`Protobuf Include=`** entries at **`..\..\many_faces_proto\proto\...`** (same **`..\..`** depth as today’s sibling-submodule paths); keep **`Link=`** entries; remove obsolete includes into **`many_faces_push` / `many_faces_mailer` / `many_faces_elastic`** proto paths once workers read from **`many_faces_proto`** only.
-- [ ] Verify **`dotnet build`** + tests in CI with submodules; do not bump **`Grpc.Tools`** without validating **Docker / arm64** builds per `BeDemo.Api.csproj` comments.
-- [ ] Document regeneration in backend **`README.md`** or `docs/`.
+- [x] Point **`Protobuf Include=`** entries at **`..\..\many_faces_proto\proto\...`** (same **`..\..`** depth as today’s sibling-submodule paths); keep **`Link=`** entries; remove obsolete includes into **`many_faces_push` / `many_faces_mailer` / `many_faces_elastic`** proto paths once workers read from **`many_faces_proto`** only.
+- [x] Verify **`dotnet build`** + tests in CI with submodules; do not bump **`Grpc.Tools`** without validating **Docker / arm64** builds per `BeDemo.Api.csproj` comments.
+- [x] Document regeneration in backend **`README.md`** or `docs/`.
 
 ### Consumer: `many_faces_push`
 
-- [ ] Point **`protoc` / buf** input path to **`many_faces_proto`**; regenerate **`gen/`** (or project convention).
-- [ ] Remove duplicate **`proto/`** if fully superseded; fix **imports** and **Dockerfile** `COPY` paths if needed.
-- [ ] Verify **Go tests** + **TLS smoke** script paths.
+- [x] Point **`protoc` / buf** input path to **`many_faces_proto`**; regenerate **`gen/`** (or project convention).
+- [x] Remove duplicate **`proto/`** if fully superseded; fix **imports** and **Dockerfile** `COPY` paths if needed.
+- [x] Verify **Go tests** + **TLS smoke** script paths.
 
 ### Consumer: `many_faces_mailer`
 
-- [ ] Point Gradle **`proto`** `srcDir` to **`many_faces_proto`**; remove in-repo duplicate protos if any.
-- [ ] Verify **`./gradlew test`** + **Docker** build (glibc vs musl lessons) in CI.
+- [x] Point Gradle **`proto`** `srcDir` to **`many_faces_proto`**; remove in-repo duplicate protos if any.
+- [x] Verify **`./gradlew test`** + **Docker** build (glibc vs musl lessons) in CI.
 
 ### Consumer: `many_faces_elastic`
 
-- [ ] Same as push for **search-worker** protos; regenerate stubs.
-- [ ] Verify **search** TLS smoke + compose still pass.
+- [x] Same as push for **search-worker** protos; regenerate stubs.
+- [x] Verify **search** TLS smoke + compose still pass.
 
 ### Consumer: `many_faces_ai`
 
-- [ ] Align Python gRPC codegen with **`many_faces_proto`** paths.
-- [ ] Document venv / tooling versions for regeneration.
+- [x] Align Python gRPC codegen with **`many_faces_proto`** paths.
+- [x] Document venv / tooling versions for regeneration.
 
 ### Governance
 
-- [ ] PR template bullet: “If this PR changes **wire contracts**, bump **`many_faces_proto`** and list **consumers** rebuilt.”
-- [ ] Agree **Strategy A / B / C** from **§4** and document in **`many_faces_proto/README.md`**.
+- [x] PR template bullet: “If this PR changes **wire contracts**, bump **`many_faces_proto`** and list **consumers** rebuilt.”
+- [x] Agree **Strategy A / B / C** from **§4** and document in **`many_faces_proto/README.md`**.
 - [ ] Run one **end-to-end** manual check: backend ↔ at least **one** worker using **new** proto path (cleartext dev is enough).
 
 ---
