@@ -4,11 +4,11 @@ Many Faces AI is a full-stack social platform built around the concept of **face
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), an optional **transactional mailer skeleton** (`many_faces_mailer`), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
-**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger, **elastic**, **push**). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
+**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger, **elastic**, **push**, **mailer**). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
 Security and trust boundaries are a high priority in the architecture: this stack uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
@@ -64,6 +64,14 @@ flowchart LR
 - **Local dev:** [`docs/guides/push-notifications-local-dev.md`](./docs/guides/push-notifications-local-dev.md) — copy **[`dev/push-dev.env.example`](./dev/push-dev.env.example)** hints into a root **`.env`** when using Docker Compose substitution.
 - **Start with full stack:** `ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh` — place Firebase **service account** JSON at **`many_faces_push/firebase-sa.json`** (or set **`FIREBASE_SA_HOST_PATH`**) so the worker gets a bind mount and **`GOOGLE_APPLICATION_CREDENTIALS`** automatically.
 - **Roadmap / checklist:** [`docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md)
+
+## Mailer worker (optional skeleton, `many_faces_mailer`)
+
+**`many_faces_mailer`** is a separate git submodule reserved for a **Java gRPC** transactional mail worker (SMTP). The current tree is a **skeleton** (Gradle, placeholder container, compose) — no production mail path yet.
+
+- **Submodule:** [`many_faces_mailer/README.md`](./many_faces_mailer/README.md)
+- **Start with full stack:** `ENABLE_MAILER_WORKER=1 ./scripts/start-all-dev.sh` — exposes gRPC on host port **59204** by default.
+- **Roadmap / checklist:** [`docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md`](./docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md)
 
 ## System Overview
 
@@ -359,14 +367,14 @@ flowchart TD
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
-| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional **FCM push** worker (gRPC). PostgreSQL stays authoritative. |
+| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md), [`many_faces_mailer/`](./many_faces_mailer/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional **FCM push** worker (gRPC). **many_faces_mailer** — optional **mailer** worker skeleton (Java gRPC, not wired to the API yet). PostgreSQL stays authoritative. |
 | Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./docs/guides/development.md#monorepo-scripts-scripts), [`dev/`](./dev/README.md) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/README.md) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
 
 ## Tech Stack Highlights
 
-- **Backend:** ASP.NET Core, EF Core, OAuth2/JWT, SignalR, OpenAPI, PostgreSQL, Redis, optional Elasticsearch (search index), optional FCM push worker (future).
+- **Backend:** ASP.NET Core, EF Core, OAuth2/JWT, SignalR, OpenAPI, PostgreSQL, Redis, optional Elasticsearch (search index), optional FCM push worker, optional mailer worker (skeleton).
 - **Frontend/Admin/Mobile:** React, Vite, TypeScript, React Router, TanStack Query, i18next, Vitest, Cypress, ESLint; **many_faces_mobile:** Expo, React Native.
 - **AI/infra:** Python gRPC service, Docker Compose, local HTTPS tooling, log viewer, Bash orchestration scripts.
 - **Quality:** linting, type checks, unit tests, narrow integration tests, local CI script, documented security and dependency audit prompts.
@@ -427,6 +435,7 @@ many_faces_database/       # many_faces_database — PostgreSQL compose
 many_faces_redis/    # many_faces_redis — job queue
 many_faces_elastic/  # many_faces_elastic — optional Elasticsearch (search)
 many_faces_push/     # many_faces_push — optional FCM push worker (Go gRPC)
+many_faces_mailer/   # many_faces_mailer — optional transactional mailer skeleton (Java gRPC)
 many_faces_ai/       # many_faces_ai — gRPC health / AI
 many_faces_logger/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
@@ -443,7 +452,7 @@ git submodule update --init --recursive
 ./scripts/start-all-dev.sh
 ```
 
-**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, optional Elasticsearch HTTP `59200`, optional search-worker gRPC `59202`, optional push-worker gRPC `59203` (when `many_faces_push` compose is used standalone). Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
+**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, optional Elasticsearch HTTP `59200`, optional search-worker gRPC `59202`, optional push-worker gRPC `59203` (when `many_faces_push` compose is used standalone), optional mailer-worker gRPC `59204` (when `many_faces_mailer` compose is used standalone). Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
 
 **Run all tests:**
 

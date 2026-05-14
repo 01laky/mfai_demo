@@ -42,6 +42,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [push-notifications-local-dev.md](./guides/push-notifications-local-dev.md) | **FCM + `many_faces_push`**: dev compose, service account, backend `Push:*`, grpcurl, localization catalog. |
 | [push-grpc-tls-mtls.md](./guides/push-grpc-tls-mtls.md) | **Push-worker gRPC TLS/mTLS**: env vars, backend `Push:WorkerTls*`, smoke script + CI (aligned with search-worker TLS guide). |
 | [`many_faces_push/README.md`](../many_faces_push/README.md) | Push worker repo entry (ports, security, proto regen) — complements the guide above. |
+| [`many_faces_mailer/README.md`](../many_faces_mailer/README.md) | Mailer worker repo entry (skeleton: Gradle, compose, ports) — full spec in [`smtp-mailer-java-grpc-worker-agent-prompt.md`](./prompts/smtp-mailer-java-grpc-worker-agent-prompt.md). |
 | [testing-and-ci-matrix.md](./guides/testing-and-ci-matrix.md) | What runs where (scripts + per-stack commands). |
 | [troubleshooting-local-dev.md](./guides/troubleshooting-local-dev.md) | Common local failures and where to read next. |
 | [husky-setup.md](./guides/husky-setup.md) | **Pointer** → canonical [`development.md`](./guides/development.md#git-hooks-husky--commitlint); legacy in [`archive/husky-setup-legacy.md`](./guides/archive/husky-setup-legacy.md). |

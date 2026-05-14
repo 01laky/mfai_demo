@@ -211,6 +211,36 @@ jobs:
       - name: Validate TLS smoke compose (requires PUSH_TLS_SMOKE_CERT_DIR for variable expansion)
         run: PUSH_TLS_SMOKE_CERT_DIR=/tmp docker compose -f many_faces_push/docker-compose.tls-smoke.yml config
 
+  infra_many_faces_mailer:
+    name: infra (many_faces_mailer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Validate docker compose
+        run: docker compose -f many_faces_mailer/docker-compose.yml config
+
+  java_many_faces_mailer:
+    name: java (many_faces_mailer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle test
+        run: |
+          cd many_faces_mailer
+          chmod +x ./gradlew
+          ./gradlew test --no-daemon
+
   go_many_faces_elastic:
     name: go (many_faces_elastic search-worker)
     runs-on: ubuntu-latest

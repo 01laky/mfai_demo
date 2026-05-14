@@ -102,6 +102,17 @@ else
     (cd many_faces_push 2>/dev/null && docker compose down 2>/dev/null) || true
 fi
 
+# Stop mailer worker (many_faces_mailer)
+if [ -f "many_faces_mailer/scripts/stop-mailer-worker.sh" ]; then
+    echo "  📦 Stopping mailer-worker (many_faces_mailer)..."
+    cd many_faces_mailer
+    ./scripts/stop-mailer-worker.sh 2>/dev/null || true
+    cd ..
+else
+    echo "  ⚠️  many_faces_mailer/scripts/stop-mailer-worker.sh not found, trying docker compose directly..."
+    (cd many_faces_mailer 2>/dev/null && docker compose down 2>/dev/null) || true
+fi
+
 # Stop Elasticsearch (many_faces_elastic)
 if [ -f "many_faces_elastic/scripts/stop-elasticsearch.sh" ]; then
     echo "  📦 Stopping Elasticsearch + search-worker (many_faces_elastic)..."
@@ -163,7 +174,7 @@ echo "🔍 Verifying containers are stopped..."
 echo ""
 
 # Check if containers are still running
-RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev|search-worker-dev|push-worker-dev" || true)
+RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev" || true)
 
 if [ -n "$RUNNING_CONTAINERS" ]; then
     echo "⚠️  Some containers still running — force-stopping:"
@@ -171,7 +182,7 @@ if [ -n "$RUNNING_CONTAINERS" ]; then
     # shellcheck disable=SC2086
     docker stop $RUNNING_CONTAINERS 2>/dev/null || true
     sleep 2
-    RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev|search-worker-dev|push-worker-dev" || true)
+    RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | grep -E "be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev" || true)
 fi
 
 if [ -z "$RUNNING_CONTAINERS" ]; then

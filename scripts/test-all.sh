@@ -249,6 +249,33 @@ fi
 echo ""
 
 # ============================================================================
+# TEST MAILER WORKER SKELETON (many_faces_mailer / Java)
+# ============================================================================
+
+echo "═══════════════════════════════════════════════════════════"
+echo "  Testing mailer worker skeleton (many_faces_mailer)"
+echo "═══════════════════════════════════════════════════════════"
+echo ""
+
+if [ -f "many_faces_mailer/gradlew" ] && command -v java >/dev/null 2>&1; then
+    echo "📦 Running Gradle test (many_faces_mailer)..."
+    if (cd many_faces_mailer && chmod +x ./gradlew && ./gradlew test --no-daemon); then
+        TEST_RESULTS+=("✅ many_faces_mailer: gradle test passed")
+        echo "✅ many_faces_mailer: gradle test passed"
+    else
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        TEST_RESULTS+=("❌ many_faces_mailer: gradle test failed")
+        echo "❌ many_faces_mailer: gradle test failed"
+    fi
+else
+    TEST_RESULTS+=("⏭️  many_faces_mailer: Java/Gradle wrapper missing — skipped")
+    SKIPPED_REPOS=$((SKIPPED_REPOS + 1))
+    echo "⏭️  many_faces_mailer: gradlew or java not available, skipping"
+fi
+
+echo ""
+
+# ============================================================================
 # TEST FRONTEND (many_faces_portal)
 # ============================================================================
 

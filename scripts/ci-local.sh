@@ -20,7 +20,7 @@ echo "════════════════════════�
 echo ""
 
 chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" 2>/dev/null || true
-for s in many_faces_backend many_faces_portal many_faces_admin many_faces_mobile many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_elastic many_faces_push; do
+for s in many_faces_backend many_faces_portal many_faces_admin many_faces_mobile many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_elastic many_faces_push many_faces_mailer; do
   if [ -d "$s/scripts" ]; then
     find "$s/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
   fi
