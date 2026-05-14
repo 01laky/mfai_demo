@@ -31,6 +31,32 @@ jobs:
       - run: dotnet build BeDemo.sln --no-restore -c Release --no-incremental
       - run: dotnet test BeDemo.sln --no-build -c Release --verbosity minimal
 
+  # Shared gRPC contracts: Buf lint (and breaking vs main on pull requests).
+  many_faces_proto:
+    name: many_faces_proto
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.50.0"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: buf lint
+        working-directory: many_faces_proto/proto
+        run: buf lint
+
+      - name: buf breaking (PR only)
+        if: github.event_name == 'pull_request'
+        working-directory: many_faces_proto/proto
+        run: >-
+          buf breaking
+          --against "https://github.com/01laky/many_faces_proto.git#branch=main,subdir=proto"
+
   # Public Vite/React SPA: lint, unit tests, production build, optional Cypress smoke on `vite preview` (HTTP 4173).
   many_faces_portal:
     name: many_faces_portal
