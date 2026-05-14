@@ -34,6 +34,18 @@ With default submodule port maps:
 | `Mail:WorkerAuthToken` | shared secret | Must match **`MAILER_WORKER_EXPECTED_TOKEN`** on the worker when set. Header: **`x-mailer-worker-token`**. |
 | `Mail:DefaultLocale` | `en` | Fallback BCP 47 tag when `CultureInfo.CurrentUICulture` is empty. |
 
+### Correlation (HTTP → gRPC metadata)
+
+`MailerWorkerGrpcClient` copies inbound HTTP headers into outbound gRPC **metadata** (same lowercase keys the worker reads):
+
+| gRPC metadata key | Typical HTTP header |
+| ----------------- | ------------------- |
+| `x-request-id` | `X-Request-Id` |
+| `traceparent` | `traceparent` |
+| `tracestate` | `tracestate` |
+
+Values are single-line ASCII (max 256 chars); CR/LF/NUL are dropped. When there is no HTTP context (background jobs), only **`x-mailer-worker-token`** is sent.
+
 Docker Compose uses placeholders **`MAIL_DEV_*`** (exported by `start-all-dev.sh` when the mailer is enabled), mirroring the **`PUSH_DEV_*`** pattern.
 
 ## Worker environment (many_faces_mailer)
@@ -83,6 +95,20 @@ The backend **`MailerGrpcEmailSender`** classifies Identity mail from HTML marke
 Parity with push/search workers: **`MAILER_WORKER_GRPC_TLS_CERT_FILE`**, **`MAILER_WORKER_GRPC_TLS_KEY_FILE`**, optional **`MAILER_WORKER_GRPC_MTLS_CLIENT_CA_FILE`**, and backend **`Mail:WorkerTls*`** when **`Mail:WorkerGrpcUrl`** uses **`https://`**.
 
 **Step-by-step:** **[mailer-grpc-tls-mtls.md](./mailer-grpc-tls-mtls.md)** (openssl, grpcurl, CI smoke script **`many_faces_mailer/scripts/smoke-grpc-tls.sh`**, Docker project **`mf-mailer-tls-smoke`**, host gRPC port **59216**). The push-worker guide remains a useful generic reference: **[push-grpc-tls-mtls.md](./push-grpc-tls-mtls.md)**.
+
+## Resilience and retries (backend)
+
+- **Transient `UNAVAILABLE`** from the worker (SMTP or network) may justify a **limited** retry in application code; **`INVALID_ARGUMENT`**, **`FAILED_PRECONDITION`**, and most other codes should **not** be blindly retried.
+- Retrying user-visible flows (password reset, confirmation) without an **`idempotency_key`** policy risks **duplicate email**; v1 logs `idempotency_key` when present but does not deduplicate yet — prefer at-most-once send semantics at the caller.
+
+## Runbook (quick)
+
+| Symptom | Checks |
+| ------- | ------ |
+| No mail at all | `Mail:Enabled`, worker container up, `Mail:WorkerGrpcUrl` reachable from `be-demo-dev`, `MAILER_WORKER_EXPECTED_TOKEN` matches `Mail:WorkerAuthToken`, Mailpit SMTP port |
+| gRPC `UNAUTHENTICATED` | Token header on client vs `MAILER_WORKER_EXPECTED_TOKEN` |
+| SMTP auth errors | `MAILER_SMTP_*` credentials; provider suppression / lockout |
+| Wrong locale | Missing bundle key in worker `i18n/`; check `Mail:DefaultLocale` |
 
 ## Security reminders
 
