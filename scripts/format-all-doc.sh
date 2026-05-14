@@ -37,6 +37,7 @@ run_prettier() {
     -path '*/node_modules/*' -o \
     -path '*/.yarn/*' -o \
     -path '*/.venv/*' -o \
+    -path '*/.venv-lint/*' -o \
     -path '*/.venv-ci-verify/*' -o \
     -path '*/venv/*' -o \
     -path '*/site-packages/*' -o \

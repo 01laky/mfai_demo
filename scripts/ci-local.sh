@@ -19,14 +19,13 @@ echo "  SKIP_CYPRESS=$SKIP_CYPRESS"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" "$SCRIPTS_DIR/verify-dev-stack-contracts.sh" 2>/dev/null || true
+chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" "$SCRIPTS_DIR/verify-dev-stack-contracts.sh" "$SCRIPTS_DIR/_monorepo.sh" 2>/dev/null || true
 "$SCRIPTS_DIR/verify-dev-stack-contracts.sh"
 
-for s in many_faces_backend many_faces_portal many_faces_admin many_faces_mobile many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_elastic many_faces_push many_faces_mailer; do
-  if [ -d "$s/scripts" ]; then
-    find "$s/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
-  fi
-done
+# shellcheck source=scripts/_monorepo.sh
+# shellcheck disable=SC1091
+. "$SCRIPTS_DIR/_monorepo.sh"
+monorepo_chmod_submodule_scripts
 
 "$SCRIPTS_DIR/lint-all.sh"
 "$SCRIPTS_DIR/build-all.sh"

@@ -21,7 +21,7 @@ echo "🔎 verify-dev-stack-contracts: bash -n on orchestration scripts..."
 for f in \
   start-all-dev.sh stop-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh restart-all-dev.sh \
   status-all.sh test-all.sh build-all.sh lint-all.sh start-missing-dev.sh menu.sh ci-local.sh \
-  verify-dev-stack-contracts.sh; do
+  verify-dev-stack-contracts.sh _monorepo.sh; do
   bash -n "$SCRIPTS_DIR/$f" || fail "bash -n failed: $f"
 done
 
