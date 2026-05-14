@@ -74,6 +74,27 @@ flowchart LR
 - **Start with full stack:** `ENABLE_MAILER_WORKER=1 ./scripts/start-all-dev.sh` — host gRPC **59204** by default; TLS smoke uses **59216** (see smoke script).
 - **Spec / checklist:** [`docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md`](./docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md)
 
+### Architecture (transactional mail — Mermaid)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User / ASP.NET Identity
+    participant API as many_faces_backend
+    participant MW as many_faces_mailer gRPC
+    participant S as Mailpit or SMTP relay
+
+    U->>API: Confirm email / password reset
+    API->>API: MailerGrpcEmailSender builds template_id + params
+    Note over API,MW: Metadata x-mailer-worker-token optional correlation headers
+    API->>MW: SendTemplatedEmail
+    MW->>MW: Validate template locale params
+    MW->>MW: Pebble render + ResourceBundle i18n
+    MW->>S: MIME message
+    S-->>MW: Accepted Message-ID optional
+    MW-->>API: correlation_id smtp_message_id
+```
+
 ## System Overview
 
 ```mermaid
@@ -95,6 +116,10 @@ flowchart LR
     api -.->|"Search enabled"| sw
     api --> realtime["SignalR<br/>real-time updates"]
     api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
+    mw["many_faces_mailer<br/>Java gRPC + templates"]
+    smtp["Mailpit / SMTP relay"]
+    api -.->|"Mail:Enabled"| mw
+    mw --> smtp
 
     scripts["scripts/ + dev/<br/>local orchestration"] --> fe
     scripts --> admin
@@ -102,6 +127,7 @@ flowchart LR
     scripts --> db
     scripts --> redis
     scripts -.->|"ENABLE_ELASTICSEARCH=1"| sw
+    scripts -.->|"ENABLE_MAILER_WORKER=1"| mw
     scripts --> ai
     scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
@@ -112,6 +138,7 @@ flowchart LR
     docs -.-> ai
     docs -.-> mobile
     docs -.-> sw
+    docs -.-> mw
 ```
 
 ### Optional search index (`many_faces_elastic`)

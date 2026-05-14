@@ -8,6 +8,38 @@ This guide describes how to run **`many_faces_mailer`** (Java gRPC + SMTP) toget
 - Submodule **`many_faces_mailer/`** checked out.
 - Optional: **`grpcurl`** for manual RPC smoke.
 
+## Architecture (Mermaid)
+
+Trust boundary: only **`many_faces_backend`** calls the worker; browsers never open gRPC to the mailer.
+
+```mermaid
+flowchart TB
+    subgraph clients["Public clients"]
+        FE["Portal / Admin / Mobile"]
+    end
+    subgraph api["many_faces_backend"]
+        ID["ASP.NET Core Identity"]
+        ES["MailerGrpcEmailSender"]
+        GC["MailerWorkerGrpcClient"]
+        ID --> ES --> GC
+    end
+    subgraph worker["many_faces_mailer JVM"]
+        INT["MailerCorrelationInterceptor"]
+        AUTH["MailerAuthInterceptor"]
+        IMPL["MailerServiceImpl"]
+        REN["TemplateRenderService"]
+        SMTP["SmtpMailSender"]
+        INT --> AUTH --> IMPL --> REN
+        IMPL --> SMTP
+    end
+    subgraph sink["SMTP sink"]
+        MP["Mailpit or relay"]
+    end
+    FE -->|"HTTPS + JWT"| ID
+    GC -->|"gRPC cleartext or TLS internal network"| INT
+    SMTP --> MP
+```
+
 ## One-command stack (monorepo)
 
 From the monorepo root:

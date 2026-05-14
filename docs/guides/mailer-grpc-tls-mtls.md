@@ -4,6 +4,13 @@ This guide mirrors **[`push-grpc-tls-mtls.md`](./push-grpc-tls-mtls.md)** for th
 
 **Product context:** [`mailer-local-dev.md`](./mailer-local-dev.md) · Submodule **[`many_faces_mailer/README.md`](../../many_faces_mailer/README.md)**.
 
+```mermaid
+flowchart LR
+    be["many_faces_backend<br/>Grpc.Net.Client"]
+    mw["mailer-worker<br/>Netty gRPC Java"]
+    be -->|"https + optional client cert"| mw
+```
+
 ---
 
 ## Worker (Java): environment variables
