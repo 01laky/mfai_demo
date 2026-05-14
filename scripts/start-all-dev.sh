@@ -270,11 +270,11 @@ else
 fi
 
 # When push worker is enabled, wire ASP.NET Core Push:* into be-demo-dev (see docker-compose.dev.yml ${PUSH_DEV_*}).
-if [ "${ENABLE_PUSH_WORKER:-}" = "1" ]; then
-    export PUSH_DEV_ENABLED=true
-    export PUSH_DEV_WORKER_GRPC_URL=http://push-worker-dev:50053
-    if [ -n "${PUSH_WORKER_EXPECTED_TOKEN:-}" ]; then
-        export PUSH_DEV_WORKER_AUTH_TOKEN="${PUSH_WORKER_EXPECTED_TOKEN}"
+if [ "${ENABLE_MAILER_WORKER:-}" = "1" ]; then
+    export MAIL_DEV_ENABLED=true
+    export MAIL_DEV_WORKER_GRPC_URL=http://mailer-worker-dev:50054
+    if [ -n "${MAILER_WORKER_EXPECTED_TOKEN:-}" ]; then
+        export MAIL_DEV_WORKER_AUTH_TOKEN="${MAILER_WORKER_EXPECTED_TOKEN}"
     fi
 fi
 

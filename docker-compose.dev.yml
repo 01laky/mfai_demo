@@ -32,6 +32,14 @@ services:
       - Push__WorkerTlsClientCertPath=${PUSH_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
       - Push__WorkerTlsClientKeyPath=${PUSH_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
       - Push__WorkerGrpcTlsServerName=${PUSH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
+      # Optional many_faces_mailer: set ENABLE_MAILER_WORKER=1; compose substitutes ${MAIL_DEV_*} from start-all-dev.sh.
+      - Mail__Enabled=${MAIL_DEV_ENABLED:-false}
+      - Mail__WorkerGrpcUrl=${MAIL_DEV_WORKER_GRPC_URL:-}
+      - Mail__WorkerAuthToken=${MAIL_DEV_WORKER_AUTH_TOKEN:-}
+      - Mail__WorkerTlsServerCaPath=${MAIL_DEV_WORKER_TLS_SERVER_CA_PATH:-}
+      - Mail__WorkerTlsClientCertPath=${MAIL_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
+      - Mail__WorkerTlsClientKeyPath=${MAIL_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
+      - Mail__WorkerGrpcTlsServerName=${MAIL_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
       # Optional many_faces_elastic (ENABLE_ELASTICSEARCH=1). Backend uses gRPC only (no Elasticsearch HTTP from the API). Example:
       # - Search__Enabled=true
       # - Search__WorkerGrpcUrl=http://search-worker-dev:50052
