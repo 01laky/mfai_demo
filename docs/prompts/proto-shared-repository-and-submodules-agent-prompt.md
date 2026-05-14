@@ -146,8 +146,8 @@ The implementing agent must **state the chosen strategy** in the PR description 
 
 ### 5.5 `many_faces_ai` (Python)
 
-- [ ] `grpcio-tools` / `buf` generation documented; **relative import** layout stable for packaging (today **`proto/health.proto`** + `grpc_tools.protoc` in CI — align **`generate_proto.sh`** / **`-I`** with **`many_faces_proto/proto`**).
-- [ ] If AI runs only from monorepo compose, prefer **Strategy A** paths.
+- [x] `grpcio-tools` / `buf` generation documented; **relative import** layout stable for packaging — **`generate_proto.sh`**, **`Dockerfile.dev`**, **`scripts/verify-ci.sh`**, and **`many_faces_ai` / parent CI** use **`-I …/many_faces_proto/proto`** and **`health.proto`**; generated `*_pb2*.py` stay under **`many_faces_ai/proto/`**.
+- [x] If AI runs only from monorepo compose, prefer **Strategy A** paths.
 - [ ] If **`ai_demo`** (or other non-submodule trees) embed **`health.proto`**, either treat as **non-canonical copy** with a comment, or generate from **`many_faces_proto`** to avoid drift.
 
 ---
