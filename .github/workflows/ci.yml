@@ -458,10 +458,22 @@ jobs:
         with:
           python-version: '3.11'
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: many_faces_push/go.mod
+          cache-dependency-path: |
+            many_faces_elastic/go.sum
+            many_faces_push/go.sum
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Make scripts executable
         run: |
           chmod +x scripts/ci-local.sh scripts/lint-all.sh scripts/build-all.sh scripts/test-all.sh scripts/verify-dev-stack-contracts.sh scripts/audit-monorepo-deps.sh
-          for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_elastic many_faces_logger many_faces_mobile; do
+          for d in many_faces_portal many_faces_admin many_faces_backend many_faces_ai many_faces_database many_faces_redis many_faces_elastic many_faces_logger many_faces_mobile many_faces_push many_faces_mailer; do
             [ -d "$d/scripts" ] && find "$d/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
           done
 

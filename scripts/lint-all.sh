@@ -7,8 +7,9 @@
 # If neither exists, the project is skipped with a warning (common when a
 # submodule is not checked out in a sparse clone); that skip does not set FAILED.
 #
-# Order: portal, backend, admin, mobile (Expo), AI service. Each project runs in
-# a subshell so a failure is recorded via FAILED=1 without aborting the rest.
+# Order: infra + workers (database, redis, logger, elastic, push, mailer), then
+# portal, admin, mobile, backend, AI. Each project runs in a subshell so a failure
+# is recorded via FAILED=1 without aborting the rest.
 #
 # Exit codes: 0 if every executed lint succeeded, 1 if any executed lint failed.
 #
@@ -52,10 +53,16 @@ lint_project() {
 echo "🔍 Linting all projects..."
 echo ""
 
+lint_project "many_faces_database" "many_faces_database (compose + seeds)"
+lint_project "many_faces_redis" "many_faces_redis (compose + scripts)"
+lint_project "many_faces_logger" "many_faces_logger (compose + scripts)"
+lint_project "many_faces_elastic" "many_faces_elastic (go vet)"
+lint_project "many_faces_push" "many_faces_push (go vet)"
+lint_project "many_faces_mailer" "many_faces_mailer (gradle compile)"
 lint_project "many_faces_portal" "many_faces_portal (frontend)"
-lint_project "many_faces_backend" "many_faces_backend (backend)"
 lint_project "many_faces_admin" "many_faces_admin (admin)"
 lint_project "many_faces_mobile" "many_faces_mobile (Expo)"
+lint_project "many_faces_backend" "many_faces_backend (backend)"
 lint_project "many_faces_ai" "many_faces_ai (AI service)"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
