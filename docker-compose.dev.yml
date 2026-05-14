@@ -28,6 +28,10 @@ services:
       - Push__Enabled=${PUSH_DEV_ENABLED:-false}
       - Push__WorkerGrpcUrl=${PUSH_DEV_WORKER_GRPC_URL:-}
       - Push__WorkerAuthToken=${PUSH_DEV_WORKER_AUTH_TOKEN:-}
+      - Push__WorkerTlsServerCaPath=${PUSH_DEV_WORKER_TLS_SERVER_CA_PATH:-}
+      - Push__WorkerTlsClientCertPath=${PUSH_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
+      - Push__WorkerTlsClientKeyPath=${PUSH_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
+      - Push__WorkerGrpcTlsServerName=${PUSH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
       # Optional many_faces_elastic (ENABLE_ELASTICSEARCH=1). Backend uses gRPC only (no Elasticsearch HTTP from the API). Example:
       # - Search__Enabled=true
       # - Search__WorkerGrpcUrl=http://search-worker-dev:50052

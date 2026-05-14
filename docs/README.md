@@ -40,6 +40,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [elasticsearch-search-features-overview.md](./guides/elasticsearch-search-features-overview.md) | **Summary:** search stack capabilities (TLS/mTLS, smoke script, CI, tests, health) and links to deeper guides. |
 | [elasticsearch-grpc-tls-mtls.md](./guides/elasticsearch-grpc-tls-mtls.md) | TLS and mTLS for backend ↔ search-worker gRPC; env matrix, openssl example, Docker mounts. |
 | [push-notifications-local-dev.md](./guides/push-notifications-local-dev.md) | **FCM + `many_faces_push`**: dev compose, service account, backend `Push:*`, grpcurl, localization catalog. |
+| [push-grpc-tls-mtls.md](./guides/push-grpc-tls-mtls.md) | **Push-worker gRPC TLS/mTLS**: env vars, backend `Push:WorkerTls*`, smoke script + CI (aligned with search-worker TLS guide). |
 | [`many_faces_push/README.md`](../many_faces_push/README.md) | Push worker repo entry (ports, security, proto regen) — complements the guide above. |
 | [testing-and-ci-matrix.md](./guides/testing-and-ci-matrix.md) | What runs where (scripts + per-stack commands). |
 | [troubleshooting-local-dev.md](./guides/troubleshooting-local-dev.md) | Common local failures and where to read next. |

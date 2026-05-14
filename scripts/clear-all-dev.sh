@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # clear-all-dev.sh — remove all monorepo dev containers, named volumes, and project networks.
 #
-# Handles Docker Compose v2 volume names (e.g. many_faces_main_seq-data; legacy mfai_demo_*), legacy short names,
-# and leaves no known demo volumes behind when Docker allows removal.
+# Handles Docker Compose v2 volume names (e.g. many_faces_main_seq-data, many_faces_elastic_elasticsearch-data;
+# legacy mfai_demo_*), legacy short names, and leaves no known demo volumes behind when Docker allows removal.
 #
-# WARNING: Destructive (DB, Redis, Seq, FE/Admin node_modules caches, …).
+# WARNING: Destructive (DB, Redis, Seq, FE/Admin node_modules caches, Elasticsearch + search-worker, push-worker, …).
 # By default the AI gRPC service (ai-demo-dev) and its Hugging Face cache volume are left
 # alone so models are not re-downloaded; use --clean-ai to remove them too.
 # After containers/volumes are gone, unused Docker images are pruned; the ai-demo-dev image
@@ -40,7 +40,7 @@ done
 
 echo "🧹 Clearing development containers, volumes, networks, and (most) Docker images..."
 echo ""
-echo "⚠️  WARNING: This removes demo DB, Redis, Seq, BE/FE/Admin dev stack, logger, etc."
+echo "⚠️  WARNING: This removes demo DB, Redis, Seq, BE/FE/Admin dev stack, logger, Elasticsearch/search-worker, push-worker, TLS smoke stacks, etc."
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   echo "   Including AI demo and Hugging Face cache (--clean-ai)."
 else
@@ -76,7 +76,7 @@ compose() {
 
 # -----------------------------------------------------------------------------
 # Phase 1 — Stop each stack with declared volumes (correct working directory / project)
-# Order: logger (external net) → root stack → DB → Redis → per-app local composes
+# Order: logger (external net) → root stack → DB → Redis → elastic + push (optional stacks) → per-app local composes
 # -----------------------------------------------------------------------------
 echo "  📦 Phase 1: docker compose down -v (per stack)"
 
@@ -102,6 +102,23 @@ if [ -f many_faces_redis/docker-compose.yml ]; then
   (cd "$ROOT/many_faces_redis" && compose down -v --remove-orphans 2>/dev/null) || true
 fi
 
+# Elasticsearch + Go search-worker (optional dev stack; named volume elasticsearch-data).
+if [ -f many_faces_elastic/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_elastic" && compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null) || true
+fi
+# TLS/mTLS smoke compose (same project names as CI smoke scripts).
+if [ -f many_faces_elastic/docker-compose.tls-smoke.yml ]; then
+  (cd "$ROOT/many_faces_elastic" && compose -f docker-compose.tls-smoke.yml -p mf-search-tls-smoke down -v --remove-orphans 2>/dev/null) || true
+fi
+
+# FCM push worker (optional dev stack; no named volumes in base compose).
+if [ -f many_faces_push/docker-compose.yml ]; then
+  (cd "$ROOT/many_faces_push" && compose -f docker-compose.yml down --remove-orphans 2>/dev/null) || true
+fi
+if [ -f many_faces_push/docker-compose.tls-smoke.yml ]; then
+  (cd "$ROOT/many_faces_push" && compose -f docker-compose.tls-smoke.yml -p mf-push-tls-smoke down -v --remove-orphans 2>/dev/null) || true
+fi
+
 if [ -f many_faces_backend/docker-compose.dev.yml ]; then
   (cd "$ROOT/many_faces_backend" && compose -f docker-compose.dev.yml down -v --remove-orphans 2>/dev/null) || true
 fi
@@ -119,7 +136,7 @@ fi
 # -----------------------------------------------------------------------------
 echo "  📦 Phase 2: force-remove dev containers by name"
 
-_AI_RM=(be-demo-dev be-demo-seq be-demo-api fe-demo-dev fe-demo-proxy fe-demo-prod admin-demo-dev admin-demo-prod seq seq-dev postgres-dev pgadmin-dev redis-dev dozzle-dev)
+_AI_RM=(be-demo-dev be-demo-seq be-demo-api fe-demo-dev fe-demo-proxy fe-demo-prod admin-demo-dev admin-demo-prod seq seq-dev postgres-dev pgadmin-dev redis-dev dozzle-dev elasticsearch-dev search-worker-dev push-worker-dev elasticsearch-tls-smoke search-worker-tls-smoke push-worker-tls-smoke)
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   _AI_RM+=(ai-demo-dev)
 fi
@@ -137,6 +154,10 @@ for net in \
   many_faces_backend_be-demo-network \
   many_faces_portal_fe-demo-network \
   many_faces_admin_admin-demo-network \
+  many_faces_elastic_elastic-network \
+  many_faces_push_default \
+  mf-search-tls-smoke_tls-smoke-net \
+  mf-push-tls-smoke_tls-smoke-net \
   db_demo_db-network \
   redis_demo_redis-network \
   be_demo_be-demo-network \
@@ -171,7 +192,7 @@ echo "  📦 Phase 5: remove Compose v2–prefixed volumes (many_faces_* + legac
 remove_prefixed_volumes() {
   # grep can exit 1 when no volumes match — must not trip set -e
   local candidates
-  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
+  candidates=$(docker volume ls -q 2>/dev/null | grep -E '^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|many_faces_elastic_|many_faces_push_|mf-search-tls-smoke_|mf-push-tls-smoke_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)' || true)
   [[ -z "$candidates" ]] && return 0
   if [[ "$CLEAN_AI" -ne 1 ]]; then
     candidates=$(echo "$candidates" | grep -vF 'ai-demo-hf-cache' | grep -vE '^many_faces_ai_' || true)
@@ -207,9 +228,9 @@ echo ""
 echo "🔍 Verifying cleanup..."
 echo ""
 
-_CONTAINER_RE='^(be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|be-demo-seq|be-demo-api)$'
+_CONTAINER_RE='^(be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|be-demo-seq|be-demo-api|elasticsearch-dev|search-worker-dev|push-worker-dev|elasticsearch-tls-smoke|search-worker-tls-smoke|push-worker-tls-smoke)$'
 if [[ "$CLEAN_AI" -eq 1 ]]; then
-  _CONTAINER_RE='^(be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|be-demo-seq|be-demo-api)$'
+  _CONTAINER_RE='^(be-demo-dev|fe-demo-dev|fe-demo-proxy|admin-demo-dev|ai-demo-dev|postgres-dev|pgadmin-dev|redis-dev|seq-dev|dozzle-dev|be-demo-seq|be-demo-api|elasticsearch-dev|search-worker-dev|push-worker-dev|elasticsearch-tls-smoke|search-worker-tls-smoke|push-worker-tls-smoke)$'
 fi
 
 BAD_CONTAINERS=$(
@@ -238,7 +259,7 @@ else
   echo "✅ Demo containers removed on retry"
 fi
 
-_BAD_VOL_GREP='^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
+_BAD_VOL_GREP='^(mfai_demo_|many_faces_main_|many_faces_database_|many_faces_redis_|many_faces_logger_|many_faces_backend_|many_faces_portal_|many_faces_admin_|many_faces_ai_|many_faces_elastic_|many_faces_push_|mf-search-tls-smoke_|mf-push-tls-smoke_|db_demo_|redis_demo_|logger_demo_|be_demo_|fe_demo_|admin_demo_|ai_demo_)'
 BAD_VOLUMES_RAW=$(docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E "$_BAD_VOL_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]]; then
   BAD_VOLUMES=$BAD_VOLUMES_RAW
@@ -275,7 +296,7 @@ else
   fi
 fi
 
-_NET_GREP='^(many_faces_main_dev-network|mfai_demo_dev-network|many_faces_database_db-network|many_faces_redis_redis-network|many_faces_backend_be-demo-network|many_faces_portal_fe-demo-network|many_faces_admin_admin-demo-network|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
+_NET_GREP='^(many_faces_main_dev-network|mfai_demo_dev-network|many_faces_database_db-network|many_faces_redis_redis-network|many_faces_backend_be-demo-network|many_faces_portal_fe-demo-network|many_faces_admin_admin-demo-network|many_faces_elastic_elastic-network|many_faces_push_default|mf-search-tls-smoke_tls-smoke-net|mf-push-tls-smoke_tls-smoke-net|db_demo_db-network|redis_demo_redis-network|be_demo_be-demo-network|fe_demo_fe-demo-network|admin_demo_admin-demo-network)$'
 BAD_NETS_RAW=$(docker network ls --format '{{.Name}}' 2>/dev/null | grep -E "$_NET_GREP" || true)
 if [[ "$CLEAN_AI" -eq 1 ]] || ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx 'ai-demo-dev'; then
   BAD_NETS=$BAD_NETS_RAW

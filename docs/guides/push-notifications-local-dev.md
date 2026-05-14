@@ -4,6 +4,8 @@ This guide describes how to run the **Go gRPC push worker** (`many_faces_push`) 
 
 **Canonical product spec:** [`../prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](../prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md).
 
+**Transport security (TLS/mTLS) for backend ↔ worker gRPC:** [`push-grpc-tls-mtls.md`](./push-grpc-tls-mtls.md) (same patterns as [`elasticsearch-grpc-tls-mtls.md`](./elasticsearch-grpc-tls-mtls.md)).
+
 **Submodule README (ports, security, proto regeneration):** [`../../many_faces_push/README.md`](../../many_faces_push/README.md).
 
 ---
@@ -85,9 +87,10 @@ When **`Push:Enabled`** is false, **`IPushWorkerClient.SendPushAsync`** returns 
 
 ## Mobile registration API
 
-Authenticated clients call:
+Authenticated clients call the **face-scoped** path (same rule as other REST traffic; the test `FaceScopeTestHandler` mirrors this for integration tests):
 
-- **`POST /api/me/push-token`** with JSON `{ "registrationToken", "platform": "ios"|"android", "installationId?": "..." }`.
+- **`POST /{face-kebab}/api/me/push-token`** with JSON `{ "registrationToken", "platform": "ios"|"android", "installationId?": "..." }`.
+- **`DELETE /{face-kebab}/api/me/push-token?installationId=...`** removes rows for that installation for the caller; omit `installationId` to delete **all** push rows for the user (rare; mobile logout uses the query for a single device).
 
 The backend stores rows in **`UserPushDevices`** (EF migration `AddUserPushDevices`).
 
@@ -98,7 +101,7 @@ The backend stores rows in **`UserPushDevices`** (EF migration `AddUserPushDevic
 After at least one device row exists for your operator user:
 
 1. Obtain a JWT with **`CanManageAllFaces`** (seed admin / operator account — see [`local-dev-accounts.md`](./local-dev-accounts.md)).
-2. `POST /api/admin/push/test-self` with `Authorization: Bearer …`.
+2. `POST /{admin-face}/api/admin/push/test-self` with `Authorization: Bearer …` (e.g. **`POST /admin/api/admin/push/test-self`** when the admin scope URL prefix is `admin`).
 
 The backend loads **all tokens for the caller** and invokes **`PushService.SendPush`** with localization keys **`push_self_test_title`** / **`push_self_test_body`**. Permanently invalid FCM tokens are **deleted** from SQL based on worker results.
 
@@ -112,7 +115,19 @@ Strings **must** exist in the mobile app bundle (see agent prompt §3.4.1). Back
 | --------------- | -------------- | ---------- | --------- | ------- |
 | `push_self_test_title` | `push_self_test_body` | 0 | 0 | Admin self-test ping |
 
-When you add product events, extend this table and add the same keys to **`many_faces_mobile`** native resources (or the Expo pipeline that compiles into them).
+The Expo config plugin **`many_faces_mobile/plugins/withPushLocaleResources.ts`** injects **English** (`values/strings.xml`, `en.lproj/Localizable.strings`) and **Slovak** (`values-sk/strings.xml`, `sk.lproj/Localizable.strings`) at **prebuild** time. Re-run `npx expo prebuild` / EAS when you add keys to this table.
+
+When you add product events, extend this table and extend the same plugin (or native resources) so keys stay in sync.
+
+---
+
+## End-to-end manual smoke (definition of done)
+
+1. **Prebuild mobile** with Firebase Android file when testing FCM on Android: set **`GOOGLE_SERVICES_JSON`** to the path of your `google-services.json` before `npx expo prebuild` / EAS (see `many_faces_mobile/app.config.ts`). iOS needs **`GoogleService-Info.plist`** in the native project per Expo / Firebase docs.
+2. Install the dev client on a **physical device**, sign in, accept notification permission — the app registers **`POST /{face}/api/me/push-token`** using the **currently selected face** segment.
+3. Obtain an operator JWT with **`CanManageAllFaces`** and call **`POST /admin/api/admin/push/test-self`** (or the correct `/{admin-face}/api/admin/push/test-self` for your deployment) with `Authorization: Bearer …`. With the worker + credentials healthy, the device should show a notification whose **title/body** resolve from native strings (`push_self_test_*`), not raw keys.
+4. **Tap** the notification: the mobile app treats **`data.route === "push-test"`** (admin smoke payload) and navigates to **Home** (extend `PushNotificationResponseEffect` when product routes ship).
+5. **Logout** on the device: the app calls **`DELETE /{face}/api/me/push-token?installationId=...`** so SQL does not retain a stale token for that install.
 
 ---
 

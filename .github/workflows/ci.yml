@@ -208,6 +208,9 @@ jobs:
       - name: Validate docker compose
         run: docker compose -f many_faces_push/docker-compose.yml config
 
+      - name: Validate TLS smoke compose (requires PUSH_TLS_SMOKE_CERT_DIR for variable expansion)
+        run: PUSH_TLS_SMOKE_CERT_DIR=/tmp docker compose -f many_faces_push/docker-compose.tls-smoke.yml config
+
   go_many_faces_elastic:
     name: go (many_faces_elastic search-worker)
     runs-on: ubuntu-latest
@@ -272,6 +275,35 @@ jobs:
         run: |
           chmod +x many_faces_elastic/scripts/smoke-grpc-tls.sh
           many_faces_elastic/scripts/smoke-grpc-tls.sh
+        env:
+          RUN_DOTNET_TLS_SMOKE: '1'
+
+  smoke_push_worker_grpc_tls:
+    name: smoke (push-worker gRPC TLS + mTLS + .NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: many_faces_push/go.mod
+
+      - name: Install grpcurl
+        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1.9.3
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Add Go bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: TLS / mTLS smoke (OpenSSL + Docker + grpcurl + dotnet)
+        run: |
+          chmod +x many_faces_push/scripts/smoke-grpc-tls.sh
+          many_faces_push/scripts/smoke-grpc-tls.sh
         env:
           RUN_DOTNET_TLS_SMOKE: '1'
 

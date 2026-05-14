@@ -107,3 +107,4 @@ Normal **`dotnet test`** without that environment variable skips the end-to-end 
 - Feature overview (stack capabilities, verification matrix): [`elasticsearch-search-features-overview.md`](./elasticsearch-search-features-overview.md)
 - Local dev (plaintext defaults): [`elasticsearch-local-dev.md`](./elasticsearch-local-dev.md)
 - Submodule overview: [`many_faces_elastic/README.md`](../../many_faces_elastic/README.md)
+- **Push-worker** (FCM sidecar) uses the same TLS/mTLS vocabulary: [`push-grpc-tls-mtls.md`](./push-grpc-tls-mtls.md)
