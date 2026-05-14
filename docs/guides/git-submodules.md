@@ -8,8 +8,7 @@ Create **8+ private repositories** on GitHub (root + submodules). Canonical name
 
 1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](../../.gitmodules) at the repo root.
 2. **Submodules** (remote repo names — **local paths** in the monorepo stay `many_faces_backend/`, `many_faces_portal/`, …):
-   - `many_faces_backend` → path `many_faces_backend/`
-   - `many_faces_proto` → path `many_faces_proto/` (**shared gRPC `.proto` contracts**; Buf lint in this repo)
+   - `many_faces_backend` → path `many_faces_backend/` (contains nested submodule **`many_faces_proto/`** for `.proto` contracts)
    - `many_faces_portal` → path `many_faces_portal/`
    - `many_faces_admin` → path `many_faces_admin/`
    - `many_faces_ai` → path `many_faces_ai/`
@@ -88,7 +87,6 @@ cd /path/to/many_faces_main
 
 # Add submodules
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_backend.git many_faces_backend
-git submodule add -f https://github.com/YOUR_USERNAME/many_faces_proto.git many_faces_proto
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_portal.git many_faces_portal
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_admin.git many_faces_admin
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_ai.git many_faces_ai
@@ -149,10 +147,11 @@ flowchart TB
 - Clone with `git clone --recursive` or run `git submodule update --init --recursive` after clone.
 - After updating a submodule, **commit the new pointer** in the root repository.
 
-### `many_faces_proto` (shared `.proto` contracts)
+### `many_faces_proto` (nested Strategy B)
 
-- The monorepo pins **`many_faces_proto/`** at a specific commit (Strategy A). Run **`git submodule update --init --recursive`** so backend and workers see the same wire definitions.
-- To bump the contract pin: `cd many_faces_proto && git pull origin main && cd .. && git add many_faces_proto && git commit -m "chore: bump many_faces_proto submodule"`.
+- The **`many_faces_proto`** remote is linked **inside** each gRPC consumer (e.g. **`many_faces_backend/many_faces_proto/`**, **`many_faces_ai/many_faces_proto/`**, …), not as a sibling folder at **`many_faces_main/`** root.
+- After **`git submodule update --init --recursive`** on **`many_faces_main`**, Git initializes **nested** submodules when parent repos record them in their **`.gitmodules`**.
+- To bump the contract pin in one consumer: `cd many_faces_backend/many_faces_proto && git pull origin main && cd ../.. && git add many_faces_backend && git commit -m "chore: bump nested many_faces_proto in backend"` — repeat for other consumers **with the same commit** when changing shared wire.
 
 ## Day-to-day usage
 

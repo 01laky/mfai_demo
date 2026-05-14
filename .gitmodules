@@ -31,6 +31,3 @@
 [submodule "many_faces_mailer"]
 	path = many_faces_mailer
 	url = https://github.com/01laky/many_faces_mailer.git
-[submodule "many_faces_proto"]
-	path = many_faces_proto
-	url = https://github.com/01laky/many_faces_proto.git

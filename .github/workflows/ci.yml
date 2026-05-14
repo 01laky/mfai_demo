@@ -47,12 +47,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: buf lint
-        working-directory: many_faces_proto/proto
+        working-directory: many_faces_backend/many_faces_proto/proto
         run: buf lint
 
       - name: buf breaking (PR only)
         if: github.event_name == 'pull_request'
-        working-directory: many_faces_proto/proto
+        working-directory: many_faces_backend/many_faces_proto/proto
         run: >-
           buf breaking
           --against "https://github.com/01laky/many_faces_proto.git#branch=main,subdir=proto"
@@ -173,7 +173,7 @@ jobs:
           python -m pip install numpy accelerate "transformers>=4.36" torch --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Generate protobuf / gRPC stubs
-        run: python -m grpc_tools.protoc -I ../many_faces_proto/proto --python_out=proto --grpc_python_out=proto health.proto
+        run: python -m grpc_tools.protoc -I many_faces_proto/proto --python_out=proto --grpc_python_out=proto health.proto
 
       - name: Ruff lint + format check
         run: |

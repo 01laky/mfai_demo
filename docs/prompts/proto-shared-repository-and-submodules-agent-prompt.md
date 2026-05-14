@@ -15,7 +15,7 @@
 ### 1.1 Today
 
 - **Protobuf sources** may live beside **`many_faces_push`**, **`many_faces_mailer`**, **`many_faces_elastic`**, or be referenced from **`many_faces_backend`** with language-specific codegen.
-- **Snapshot (re-verify with `rg '\.proto$'` after refactors):** canonical cross-service `.proto` files live under **`many_faces_proto/proto/`** (`manyfaces/**/v1/*.proto` plus root **`health.proto`** for AI). **`many_faces_backend`** references them from **`BeDemo.Api.csproj`** via **`..\..\many_faces_proto\proto\...`**. **`many_faces_ai`** generates Python stubs from the same **`many_faces_proto`** checkout (`generate_proto.sh`, CI, **`Dockerfile.dev`**). **`ai_demo`** (if present) may still carry a duplicate **`health.proto`** — align or document as non-canonical.
+- **Snapshot (re-verify with `rg '\.proto$'` after refactors):** canonical cross-service `.proto` files live under **`many_faces_proto/proto/`** (`manyfaces/**/v1/*.proto` plus root **`health.proto`** for AI). **Strategy B (current):** each consumer repo vendors **`many_faces_proto`** as a **nested submodule** at **`many_faces_<consumer>/many_faces_proto/`**. **`many_faces_backend`** references them from **`BeDemo.Api.csproj`** via **`..\many_faces_proto\proto\...`** (paths relative to **`BeDemo.Api/`**). **`many_faces_ai`** and other workers use **`many_faces_proto/proto`** from that nested checkout (`generate_proto.sh`, CI, Docker). **`ai_demo`** (if present) may still carry a duplicate **`health.proto`** — align or document as non-canonical.
 - **Risk:** two services ship **different** revisions of the same `package` / RPC names → **runtime failures** or silent **wire incompatibility**.
 - **Risk:** copy/paste of `.proto` files between repos → **divergence** and unreviewed drift.
 
@@ -91,27 +91,29 @@ many_faces_proto/
 
 Document the **chosen** strategy in **`many_faces_proto/README.md`** and monorepo **`README.md`**.
 
-### 4.1 Strategy A — Monorepo hosts the submodule (recommended phase 1)
+### 4.1 Strategy B — Nested submodule per consumer (**current default**)
+
+- Each of **`many_faces_backend`**, **`many_faces_push`**, **`many_faces_mailer`**, **`many_faces_elastic`**, **`many_faces_ai`** contains **`many_faces_proto/`** as a **nested git submodule** (path **`many_faces_proto`**, URL the shared **`many_faces_proto`** remote).
+- **.NET:** from **`many_faces_backend/BeDemo.Api/`**, use **`..\many_faces_proto\proto\...\*.proto`** with **`Link="Protos\..."`**.
+- **Go / Gradle / Python:** from the **consumer repo root**, use **`many_faces_proto/proto`** as the `protoc` / Gradle include root (or **`../many_faces_proto/proto`** when scripting from a subdirectory one level down).
+- **`many_faces_main`:** checkout with **`submodules: recursive`** so nested **`many_faces_proto`** initializes inside each consumer; **do not** register a second top-level **`many_faces_proto`** submodule unless you intentionally adopt Strategy **A** as well.
+
+**Pros:** each service repo builds in CI without the monorepo. **Cons:** easy to pin **different** `many_faces_proto` commits across consumers → **wire skew**; bump nested SHAs **in lockstep** when changing shared wire.
+
+### 4.2 Strategy A — Monorepo hosts the submodule at root
 
 - Path: **`many_faces_main/many_faces_proto/`** as a **git submodule** pointing at `many_faces_proto` remote.
-- Consumer submodules (`many_faces_backend`, …) **reference** protos from the monorepo layout:
-  - **.NET (`BeDemo.Api.csproj`):** keep the **existing pattern**: paths relative to the **`.csproj` directory** (under **`many_faces_backend/BeDemo.Api/`**), typically **`..\..\many_faces_proto\proto\manyfaces\...\*.proto`**, with **`Link="Protos\..."`** so the Solution Explorer tree stays stable — mirror today’s **`..\..\many_faces_push\proto\...`** style, not a single `../` from the wrong working directory.
-  - **Go / Gradle / Python in sibling submodules:** prefer **`../../many_faces_proto/proto`** from the consumer repo root (one `..` to monorepo root when the consumer is a direct child of the monorepo), or document **`${MONOREPO_ROOT}`** in compose/codegen scripts.
-- **CI on `many_faces_main`:** checkout with **`submodules: recursive`**; one job validates all consumers against the **same** `many_faces_proto` commit.
+- Consumer submodules **reference** protos from the monorepo layout:
+  - **.NET:** paths relative to **`BeDemo.Api/`**, typically **`..\..\many_faces_proto\proto\manyfaces\...\*.proto`**, with **`Link="Protos\..."`**.
+  - **Go / Gradle / Python:** prefer **`../../many_faces_proto/proto`** from the consumer repo root when the consumer is a direct child of the monorepo, or document **`${MONOREPO_ROOT}`** in compose/codegen scripts.
+- **CI on `many_faces_main`:** **`submodules: recursive`**; one job can validate all consumers against the **same** `many_faces_proto` commit.
 
-**Pros:** single `git clone --recursive` for developers. **Cons:** standalone clone of **`many_faces_backend`** without monorepo must submodule **`many_faces_proto`** separately (document clearly).
-
-### 4.2 Strategy B — Nested submodule per consumer
-
-- Each of **`many_faces_backend`**, **`many_faces_push`**, … contains **`proto/`** as submodule → **`many_faces_proto`**.
-- **`many_faces_main`** uses **recursive submodules** and pins **nested** SHAs.
-
-**Pros:** each service repo is self-contained in CI. **Cons:** easy to pin **different** `many_faces_proto` commits → **wire skew**; higher operational burden.
+**Pros:** single canonical submodule SHA at monorepo root. **Cons:** standalone clone of a consumer without monorepo must still init **`many_faces_proto`** (nested **B** is often simpler for those repos).
 
 ### 4.3 Strategy C — Hybrid
 
-- **Phase 1:** Strategy **A**.
-- **Phase 2:** add **B** only where a standalone repo **must** build without monorepo (document release process to **bump SHA in lockstep**).
+- Example: **A** at monorepo root for Buf/docs convenience, plus **B** in repos that must CI standalone — keep both pointers aligned or accept documented duplication (discouraged).
+- If mixing, document **which path is authoritative** for codegen in each job.
 
 The implementing agent must **state the chosen strategy** in the PR description and align **`.github/workflows/ci.yml`** checkout accordingly.
 
@@ -121,7 +123,7 @@ The implementing agent must **state the chosen strategy** in the PR description 
 
 ### 5.1 `many_faces_backend` (.NET)
 
-- [ ] Replace the three **`Protobuf Include="..\..\many_faces_elastic|push|mailer\proto\..."`** entries with **`..\..\many_faces_proto\proto\manyfaces\...\*.proto`**, preserving **`Link="Protos\manyfaces\..."`** so generated C# namespaces and on-disk layout stay predictable.
+- [ ] Replace legacy **`Protobuf Include="..\..\many_faces_elastic|push|mailer\proto\..."`** (or root-submodule **`..\..\many_faces_proto\...`** if you used Strategy **A**) with paths that match your layout: **Strategy B:** **`..\many_faces_proto\proto\manyfaces\...\*.proto`** from **`BeDemo.Api/`** when **`many_faces_proto`** is nested under **`many_faces_backend/`**; preserve **`Link="Protos\manyfaces\..."`** so generated C# namespaces and on-disk layout stay predictable.
 - [ ] Decide whether **`Protos/health.proto`** stays backend-local or moves into **`many_faces_proto`** (only if **multiple** processes must share the exact same health wire contract).
 - [ ] **Do not blindly bump `Grpc.Tools`** when changing proto paths — **`many_faces_backend`** pins **`Grpc.Tools`** with a **Docker / linux_arm64** rationale in `BeDemo.Api.csproj`; re-validate **`dotnet build`** in CI images after any tools bump.
 - [ ] Ensure **`GrpcServices="Client"`** (or project policy) still matches generated code layout.
@@ -147,7 +149,7 @@ The implementing agent must **state the chosen strategy** in the PR description 
 ### 5.5 `many_faces_ai` (Python)
 
 - [x] `grpcio-tools` / `buf` generation documented; **relative import** layout stable for packaging — **`generate_proto.sh`**, **`Dockerfile.dev`**, **`scripts/verify-ci.sh`**, and **`many_faces_ai` / parent CI** use **`-I …/many_faces_proto/proto`** and **`health.proto`**; generated `*_pb2*.py` stay under **`many_faces_ai/proto/`**.
-- [x] If AI runs only from monorepo compose, prefer **Strategy A** paths.
+- [x] Prefer **Strategy B** paths (**`many_faces_proto/proto`** under the **`many_faces_ai`** repo); monorepo compose uses **`submodules: recursive`**.
 - [ ] If **`ai_demo`** (or other non-submodule trees) embed **`health.proto`**, either treat as **non-canonical copy** with a comment, or generate from **`many_faces_proto`** to avoid drift.
 
 ---
@@ -156,8 +158,8 @@ The implementing agent must **state the chosen strategy** in the PR description 
 
 ### 6.1 `.gitmodules`
 
-- [ ] Register **`many_faces_proto`** with stable URL and path under monorepo root.
-- [ ] Update **[`docs/guides/git-submodules.md`](../guides/git-submodules.md)** with **clone / update / bump** instructions.
+- [ ] **Strategy B:** do **not** add **`many_faces_proto`** at monorepo root; nested submodule entries live only in each consumer’s **`.gitmodules`**. **Strategy A:** register **`many_faces_proto`** at monorepo root with stable URL.
+- [ ] Update **[`docs/guides/git-submodules.md`](../guides/git-submodules.md)** with **clone / update / bump** instructions (including **`--recursive`** for nested protos).
 
 ### 6.2 Root `README.md`
 
@@ -167,7 +169,7 @@ The implementing agent must **state the chosen strategy** in the PR description 
 
 - [ ] Ensure **checkout** uses **`submodules: recursive`** (or explicit `submodule update`) for jobs that build consumers.
 - [ ] Add **`proto`** job on **`many_faces_proto`** OR monorepo job that runs **`buf lint`** / **`buf breaking`** when `many_faces_proto` changes.
-- [ ] Fail PR if consumer builds do not agree on **same** `many_faces_proto` ref when using Strategy **A** (e.g. single submodule path — verify no second shadow copy).
+- [ ] When using Strategy **A**, fail PR if consumer builds do not agree on the **same** `many_faces_proto` ref. For Strategy **B**, document **lockstep** nested bumps; optional CI check compares nested SHAs across consumers.
 
 ### 6.4 Developer scripts
 
@@ -301,7 +303,7 @@ The implementing agent must **state the chosen strategy** in the PR description 
 ### Governance
 
 - [x] PR template bullet: “If this PR changes **wire contracts**, bump **`many_faces_proto`** and list **consumers** rebuilt.”
-- [x] Agree **Strategy A / B / C** from **§4** and document in **`many_faces_proto/README.md`**.
+- [x] Agree **Strategy A / B / C** from **§4** and document in **`many_faces_proto/README.md`** (Many Faces uses **B** as the primary layout).
 - [ ] Run one **end-to-end** manual check: backend ↔ at least **one** worker using **new** proto path (cleartext dev is enough).
 
 ---
