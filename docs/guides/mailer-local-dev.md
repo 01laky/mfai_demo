@@ -96,6 +96,16 @@ Parity with push/search workers: **`MAILER_WORKER_GRPC_TLS_CERT_FILE`**, **`MAIL
 
 **Step-by-step:** **[mailer-grpc-tls-mtls.md](./mailer-grpc-tls-mtls.md)** (openssl, grpcurl, CI smoke script **`many_faces_mailer/scripts/smoke-grpc-tls.sh`**, Docker project **`mf-mailer-tls-smoke`**, host gRPC port **59216**). The push-worker guide remains a useful generic reference: **[push-grpc-tls-mtls.md](./push-grpc-tls-mtls.md)**.
 
+## Manual acceptance (operator)
+
+Run once per environment or before a release when mail behavior changed. Requires **`ENABLE_MAILER_WORKER=1`**, **`Mail:Enabled=true`**, Mailpit reachable, and a test user.
+
+1. **Confirm email (`sk`):** set UI culture to Slovak (or call the API with `Accept-Language: sk`), register a new user or trigger resend confirmation. In Mailpit, open the message: body should be **Slovak**, link must target your dev host. Follow the link and confirm the account completes.
+2. **Confirm email (`en`):** repeat with English locale; verify **English** template text.
+3. **Password reset:** trigger forgot-password for an existing user; Mailpit shows **reset** template; follow the link only on a throwaway account in dev.
+
+**Correlation:** trigger any send from the web UI with `X-Request-Id` or W3C tracing enabled on the API; worker logs / JSON should show the same id in `correlation_id` or `traceparent` MDC fields (see [`many_faces_mailer/README.md`](../../many_faces_mailer/README.md)).
+
 ## Resilience and retries (backend)
 
 - **Transient `UNAVAILABLE`** from the worker (SMTP or network) may justify a **limited** retry in application code; **`INVALID_ARGUMENT`**, **`FAILED_PRECONDITION`**, and most other codes should **not** be blindly retried.

@@ -10,6 +10,7 @@
 # 4. Admin (many_faces_admin) - React + Vite admin panel
 # 5. Many Faces AI service (many_faces_ai) - Python gRPC server
 # 6. Many Faces log viewer (many_faces_logger) - Dozzle log viewer
+# 7. Many Faces mailer (many_faces_mailer) - Java gRPC + SMTP worker (optional)
 #
 # The script rebuilds each service's Docker image with --no-cache
 # to ensure a completely clean build.
@@ -98,6 +99,17 @@ fi
 echo ""
 
 # ============================================================================
+# REBUILD MAILER WORKER (many_faces_mailer)
+# ============================================================================
+echo "📦 Rebuilding mailer worker (many_faces_mailer)..."
+if [ -f "many_faces_mailer/Dockerfile" ]; then
+    docker build --no-cache -f many_faces_mailer/Dockerfile -t many-faces-mailer-worker:dev ./many_faces_mailer
+else
+    echo "  ⚠️  many_faces_mailer/Dockerfile not found, skipping..."
+fi
+echo ""
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 echo "═══════════════════════════════════════════════════════════"
@@ -112,6 +124,7 @@ echo "   ✅ Frontend (many_faces_portal)"
 echo "   ✅ Admin (many_faces_admin)"
 echo "   ✅ Many Faces AI service (many_faces_ai)"
 echo "   ✅ Many Faces log viewer (many_faces_logger)"
+echo "   ✅ Mailer worker (many_faces_mailer) — image many-faces-mailer-worker:dev"
 echo ""
 echo "💡 Note: many_faces_database and many_faces_redis use official images — no rebuild."
 echo ""

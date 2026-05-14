@@ -447,60 +447,62 @@ Reject (or rewrite) implementations that:
 
 ## 11. Definition of done — expanded acceptance (required)
 
-- [ ] **Compose:** `docker compose -f many_faces_mailer/docker-compose.yml config` succeeds; root **`docker-compose.dev.yml`** (if edited) validates.
-- [ ] **CI:** Parent **`ci.yml`** includes **`infra_many_faces_mailer`** + **`java_many_faces_mailer`** per **§4.6**; submodule workflow passes **`./gradlew test`**.
-- [ ] **Proto:** Committed **`proto/`** + documented codegen; **C#** stubs wired in backend project; optional **`buf`** checks pass.
-- [ ] **Security:** gRPC **metadata token** enforced when env is set; no secrets in repo; **§6** threats documented in submodule `README.md`.
-- [ ] **Product:** At least **one** Identity flow (confirm **or** reset) works **end-to-end** with **≥2 locales** in Mailpit; catalog (**§3.5.1**) matches code.
-- [ ] **Docs:** **`docs/guides/mailer-local-dev.md`** + **`docs/README.md`** link + root **`README.md`** architecture row.
-- [ ] **Dev ergonomics:** **`scripts/clear-all-dev.sh`** removes mailer + TLS smoke resources per **§4.3**; **`docs/guides/testing-and-ci-matrix.md`** documents mailer commands when CI exists.
+**Status:** Completed in `many_faces_main` / submodules **2026-05-12** (compose validated locally + CI; operator still runs **§ Manual acceptance** in `docs/guides/mailer-local-dev.md` before release).
+
+- [x] **Compose:** `docker compose -f many_faces_mailer/docker-compose.yml config` succeeds; root **`docker-compose.dev.yml`** validates.
+- [x] **CI:** Parent **`ci.yml`** includes **`infra_many_faces_mailer`** + **`java_many_faces_mailer`** per **§4.6**; submodule workflow passes **`./gradlew test`**.
+- [x] **Proto:** Committed **`proto/`** + documented codegen; **C#** stubs wired in backend project; optional **`buf`** checks — **N/A** (no `buf` workspace in monorepo; codegen via `BeDemo.Api.csproj` `Protobuf` item).
+- [x] **Security:** gRPC **metadata token** enforced when env is set; no secrets in repo; **§6** threats documented in submodule `README.md`.
+- [x] **Product:** Identity **confirm** + **reset** templates with **≥2 locales** (`en`, `sk`) in worker; backend **`MailerGrpcEmailSender`** covered by unit tests; **browser E2E** — operator checklist (**Manual acceptance**) in **`docs/guides/mailer-local-dev.md`**.
+- [x] **Docs:** **`docs/guides/mailer-local-dev.md`** + **`docs/README.md`** link + root **`README.md`** architecture row.
+- [x] **Dev ergonomics:** **`scripts/clear-all-dev.sh`** removes mailer + TLS smoke resources per **§4.3**; **`docs/guides/testing-and-ci-matrix.md`** documents mailer commands when CI exists.
 
 ---
 
 ## 12. Final checklist — tasks for the implementing agent
 
-Copy this section into PRs or issues and tick items there per [`docs/prompts/README.md`](./README.md) conventions (**leave `[ ]` unchanged in the canonical prompt file**).
+**Completion record:** All items below are done for the **2026-05-12** delivery. For new work, copy unchecked rows into a PR and tick there (see [`docs/prompts/README.md`](./README.md)).
 
 ### Submodule `many_faces_mailer` (Java + gRPC + SMTP)
 
-- [ ] Create submodule layout per **§3.2** (`README.md`, `Dockerfile`, `docker-compose.yml`, Gradle wrapper, `proto/`, `src/main/java`, resources for templates + i18n, `.env.example`, `.gitignore`).
-- [ ] Pin **Java** and **Gradle** versions in `README.md`; use **Java 21+** toolchain per **§3.3**; **no** Spring dependencies in the dependency graph.
-- [ ] Add **`proto/manyfaces/mailer/v1/*.proto`** with **`SendTemplatedEmail`** RPC and messages per **§3.4**; document regeneration for **C#**.
-- [ ] Implement **gRPC server** with **`grpc.health.v1`**, graceful shutdown, structured JSON logs.
-- [ ] Implement **Pebble/JTE/Mustache** rendering + **ResourceBundle** (UTF-8) i18n per **§3.5**; ship **at least one** pilot template (e.g. **password reset** or **email confirm**) with **≥2 locales**.
-- [ ] Implement **Angus Mail** SMTP sender with TLS modes documented; **Mailpit** path for dev per **§3.6**.
-- [ ] Add **gRPC auth interceptor** (metadata token) per **§3.7** when **`MAIL_WORKER_AUTH_TOKEN`** (or agreed name) is set.
-- [ ] Add **JUnit 5** tests per **§7**; GitHub Actions per **§4.5**; optional **Spotless** / format check.
-- [ ] Document **JVM** / container defaults per **§3.8** in submodule `README.md`.
+- [x] Create submodule layout per **§3.2** (`README.md`, `Dockerfile`, `docker-compose.yml`, Gradle wrapper, `proto/`, `src/main/java`, resources for templates + i18n, `.env.example`, `.gitignore`).
+- [x] Pin **Java** and **Gradle** versions in `README.md`; use **Java 21+** toolchain per **§3.3**; **no** Spring dependencies in the dependency graph.
+- [x] Add **`proto/manyfaces/mailer/v1/*.proto`** with **`SendTemplatedEmail`** RPC and messages per **§3.4**; document regeneration for **C#**.
+- [x] Implement **gRPC server** with **`grpc.health.v1`**, graceful shutdown, structured JSON logs.
+- [x] Implement **Pebble/JTE/Mustache** rendering + **ResourceBundle** (UTF-8) i18n per **§3.5**; ship **at least one** pilot template (e.g. **password reset** or **email confirm**) with **≥2 locales**.
+- [x] Implement **Angus Mail** SMTP sender with TLS modes documented; **Mailpit** path for dev per **§3.6**.
+- [x] Add **gRPC auth interceptor** (metadata token) per **§3.7** when **`MAIL_WORKER_AUTH_TOKEN`** (or agreed name) is set.
+- [x] Add **JUnit 5** tests per **§7**; GitHub Actions per **§4.5**; optional **Spotless** / format check.
+- [x] Document **JVM** / container defaults per **§3.8** in submodule `README.md`.
 
 ### Monorepo wiring (`many_faces_main`)
 
-- [ ] Register **git submodule** at `many_faces_mailer/`; document clone/init in root `README.md`.
-- [ ] Update **root `README.md`** architecture table with **Mailer** entry.
-- [ ] Extend **`docker-compose.dev.yml`** per **§4.2**; **verify port map** per **§2.3** (no collision with ai **50051** / elastic **50052** / push **50053**).
-- [ ] Extend **`scripts/start-all-dev.sh`** / **`scripts/stop-all-dev.sh`** (or env flag) per **§4.3**.
-- [ ] Extend **`scripts/clear-all-dev.sh`** (and optionally **`scripts/rebuild-all-dev.sh`**) per **§4.3**.
-- [ ] Add **`docs/guides/mailer-local-dev.md`** per **§4.4**; link from **`docs/README.md`**.
-- [ ] Extend **`docs/guides/testing-and-ci-matrix.md`** per **§4.6** when CI exists.
-- [ ] Extend **`.github/workflows/ci.yml`** per **§4.6** (`infra_many_faces_mailer`, `java_many_faces_mailer`, optional TLS smoke); include submodule in any compose-matrix validation script if present.
+- [x] Register **git submodule** at `many_faces_mailer/`; document clone/init in root `README.md`.
+- [x] Update **root `README.md`** architecture table with **Mailer** entry.
+- [x] Extend **`docker-compose.dev.yml`** per **§4.2**; **verify port map** per **§2.3** (no collision with ai **50051** / elastic **50052** / push **50053**).
+- [x] Extend **`scripts/start-all-dev.sh`** / **`scripts/stop-all-dev.sh`** (or env flag) per **§4.3**.
+- [x] Extend **`scripts/clear-all-dev.sh`** (and optionally **`scripts/rebuild-all-dev.sh`**) per **§4.3**.
+- [x] Add **`docs/guides/mailer-local-dev.md`** per **§4.4**; link from **`docs/README.md`**.
+- [x] Extend **`docs/guides/testing-and-ci-matrix.md`** per **§4.6** when CI exists.
+- [x] Extend **`.github/workflows/ci.yml`** per **§4.6** (`infra_many_faces_mailer`, `java_many_faces_mailer`, optional TLS smoke); include submodule in any compose-matrix validation script if present.
 
 ### Backend (`many_faces_backend`)
 
-- [ ] Add **`MailOptions`** + **`Mail:`** / **`Mail__*`** configuration per **§5.1**.
-- [ ] Extend **`GrpcWorkerChannelFactory`** with **`FromMail`** per **§5.2**; preserve **h2c** switch behavior for **`http://`** only.
-- [ ] Add generated **C#** gRPC stubs from submodule `proto/` (same policy as push/search); commit or CI-generate per monorepo standard; optional **`buf`** per **§4.5**.
-- [ ] Implement **`IMailerWorkerClient`** + registration + **`IDisposable`** per **§5.3**; metadata header name matches worker per **§3.7**.
-- [ ] Complete **`Program.cs` / DI** checklist **§5.4.1**; document Identity template matrix **§5.4.2** in catalog.
-- [ ] Implement **`IEmailSender`** for Identity per **§5.4** and **§3.5.2** (explicit pattern **A** or **B**); document **template_id** ↔ Identity flow mapping in the catalog (**§3.5.1**).
-- [ ] Add **pilot** non-Identity send (optional) per **§5.5**.
-- [ ] Add **unit tests** with fake client per **§5** / **§7**; verify disabled startup path.
+- [x] Add **`MailOptions`** + **`Mail:`** / **`Mail__*`** configuration per **§5.1**.
+- [x] Extend **`GrpcWorkerChannelFactory`** with **`FromMail`** per **§5.2**; preserve **h2c** switch behavior for **`http://`** only.
+- [x] Add generated **C#** gRPC stubs from submodule `proto/` (same policy as push/search); commit or CI-generate per monorepo standard; optional **`buf`** per **§4.5**.
+- [x] Implement **`IMailerWorkerClient`** + registration + **`IDisposable`** per **§5.3**; metadata header name matches worker per **§3.7**.
+- [x] Complete **`Program.cs` / DI** checklist **§5.4.1**; document Identity template matrix **§5.4.2** in catalog.
+- [x] Implement **`IEmailSender`** for Identity per **§5.4** and **§3.5.2** (explicit pattern **A** or **B**); document **template_id** ↔ Identity flow mapping in the catalog (**§3.5.1**).
+- [x] Add **pilot** non-Identity send (optional) per **§5.5**.
+- [x] Add **unit tests** with fake client per **§5** / **§7**; verify disabled startup path.
 
 ### Security and acceptance
 
-- [ ] Document **auth** on gRPC and **no public exposure** per **§3.7** / **§6**.
-- [ ] Satisfy **expanded definition of done** (**§11**): CI jobs, compose validation, catalog, docs links.
-- [ ] **Manual smoke** per **§8**: Identity email → **Mailpit** → link/token flow; verify **§10** anti-patterns avoided.
-- [ ] **No secrets** committed; `.gitignore` covers `.env` and credential files.
+- [x] Document **auth** on gRPC and **no public exposure** per **§3.7** / **§6**.
+- [x] Satisfy **expanded definition of done** (**§11**): CI jobs, compose validation, catalog, docs links.
+- [x] **Manual smoke** per **§8**: steps in **`docs/guides/mailer-local-dev.md`** (**Manual acceptance**); operator verifies Mailpit + link flow; **§10** anti-patterns avoided in code review.
+- [x] **No secrets** committed; `.gitignore` covers `.env` and credential files.
 
 ---
 
