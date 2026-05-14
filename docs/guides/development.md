@@ -6,7 +6,7 @@ This document covers **how we build and test** the **`many_faces_main`** root re
 
 - **Hub:** [**`docs/README.md`**](../README.md) — index of `guides/`, `components/`, `prompts/`, `readmes/`.
 - **Structure rationale:** [`docs/STRUCTURE.md`](../STRUCTURE.md).
-- **New topical guides:** Docker ([`docker-and-compose.md`](./docker-and-compose.md)), OpenAPI regen ([`openapi-client-generation.md`](./openapi-client-generation.md)), EF migrations ([`efcore-migrations-and-seeding.md`](./efcore-migrations-and-seeding.md)), Redis workers ([`redis-workers-and-queues.md`](./redis-workers-and-queues.md)), observability ([`observability-seq-and-logs.md`](./observability-seq-and-logs.md)), testing matrix ([`testing-and-ci-matrix.md`](./testing-and-ci-matrix.md)), submodule bump order ([`submodule-bump-and-release-checklist.md`](./submodule-bump-and-release-checklist.md)), grid schema ([`grid-schema-and-page-layout.md`](./grid-schema-and-page-layout.md)), i18n ([`i18n-conventions.md`](./i18n-conventions.md)), troubleshooting ([`troubleshooting-local-dev.md`](./troubleshooting-local-dev.md)), stats runbook ([`backend-stats-and-admin-ai-runbook.md`](./backend-stats-and-admin-ai-runbook.md)), moderation ops ([`content-moderation-operations.md`](./content-moderation-operations.md)).
+- **New topical guides:** Docker ([`docker-and-compose.md`](./docker-and-compose.md)), OpenAPI regen ([`openapi-client-generation.md`](./openapi-client-generation.md)), EF migrations ([`efcore-migrations-and-seeding.md`](./efcore-migrations-and-seeding.md)), Redis workers ([`redis-workers-and-queues.md`](./redis-workers-and-queues.md)), observability ([`observability-seq-and-logs.md`](./observability-seq-and-logs.md)), testing matrix ([`testing-and-ci-matrix.md`](./testing-and-ci-matrix.md)), **`scripts/verify-dev-stack-contracts.sh`** (dev-stack invariants; runs at start of **`ci-local.sh`**), submodule bump order ([`submodule-bump-and-release-checklist.md`](./submodule-bump-and-release-checklist.md)), grid schema ([`grid-schema-and-page-layout.md`](./grid-schema-and-page-layout.md)), i18n ([`i18n-conventions.md`](./i18n-conventions.md)), troubleshooting ([`troubleshooting-local-dev.md`](./troubleshooting-local-dev.md)), stats runbook ([`backend-stats-and-admin-ai-runbook.md`](./backend-stats-and-admin-ai-runbook.md)), moderation ops ([`content-moderation-operations.md`](./content-moderation-operations.md)).
 
 ## Layout
 
@@ -18,6 +18,9 @@ This document covers **how we build and test** the **`many_faces_main`** root re
 | AI gRPC service      | `many_faces_ai/`     | Python 3.11+, gRPC, Ruff  |
 | PostgreSQL dev stack | `many_faces_database/`     | Docker Compose            |
 | Redis dev stack      | `many_faces_redis/`  | Docker Compose            |
+| Search (ES + worker) | `many_faces_elastic/` | Docker Compose, Go gRPC search-worker |
+| Push (FCM worker)    | `many_faces_push/` | Docker Compose, Go gRPC |
+| Mailer worker        | `many_faces_mailer/` | Docker Compose, Java gRPC + Mailpit |
 | Logger UI (Dozzle)   | `many_faces_logger/` | Docker Compose            |
 | Mobile app           | `many_faces_mobile/`   | Expo, React Native, Yarn 4  |
 
@@ -31,10 +34,13 @@ flowchart TB
   AI[many_faces_ai Python gRPC]
   DB[many_faces_database Docker Postgres]
   RD[many_faces_redis Docker Redis]
+  ES[many_faces_elastic ES + search-worker]
+  PU[many_faces_push FCM worker]
+  MA[many_faces_mailer Java mailer]
   LG[many_faces_logger Dozzle]
 
   classDef apiFill fill:#fff3e0,stroke:#ef6c00
-  class BE,FE,AD,AI,DB,RD,LG apiFill
+  class BE,FE,AD,AI,DB,RD,ES,PU,MA,LG apiFill
 ```
 
 The **root** repository runs aggregated CI (see below). Each submodule that ships code also has its own `.github/workflows/ci.yml` for standalone pushes to that repo.
@@ -144,6 +150,7 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | Job                   | What runs                                                                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **many_faces_backend**           | `dotnet restore`, `dotnet format --verify-no-changes`, Release build, `dotnet test`                                                                          |
+| **many_faces_proto** | **Buf** `buf lint` on `many_faces_backend/many_faces_proto/proto`; PRs also **`buf breaking`** vs `many_faces_proto` main |
 | **many_faces_portal**           | Node from `many_faces_portal/.nvmrc`, `yarn install --immutable`, `yarn validate`, `yarn test`, `yarn build`, **`yarn npm audit`** (informational, always exits 0 in CI), then **Cypress smoke**: `yarn preview` on **HTTP** `127.0.0.1:4173` + **`yarn test:e2e:ci`** |
 | **many_faces_admin**        | Same Node/Yarn gate as **many_faces_portal** through **`yarn build`**, plus informational **`yarn npm audit`**; **no** Cypress job in this workflow yet. |
 | **many_faces_mobile**       | Node from **`many_faces_mobile/.nvmrc`**, **`corepack enable`** + **`yarn install --immutable`**, then **`./scripts/verify-ci.sh --quick`** (ESLint + Prettier check + `tsc`, Jest, `expo-doctor`, informational **`yarn npm audit`**). |
@@ -151,8 +158,17 @@ On push/PR to `main` / `master`, with **submodules recursive**:
 | **infra_many_faces_database**     | `docker compose -f many_faces_database/docker-compose.yml config`                                                                                                        |
 | **infra_many_faces_redis**  | `docker compose -f many_faces_redis/docker-compose.yml config`                                                                                                     |
 | **infra_many_faces_logger** | `docker compose -f many_faces_logger/docker-compose.dev.yml config`                                                                                                |
+| **infra_many_faces_elastic** | `docker compose -f many_faces_elastic/docker-compose.yml config` (+ TLS smoke compose `config` with dummy cert dir) |
+| **infra_many_faces_push** | `docker compose -f many_faces_push/docker-compose.yml config` (+ TLS smoke compose `config`) |
+| **infra_many_faces_mailer** | `docker compose -f many_faces_mailer/docker-compose.yml config` (+ TLS smoke compose `config`) |
+| **go_many_faces_elastic** | `go vet ./...`, `go test ./...` in `many_faces_elastic` |
+| **go_many_faces_push** | `go vet ./...`, `go test ./...` in `many_faces_push` |
+| **java_many_faces_mailer** | `./gradlew test` in `many_faces_mailer` |
+| **smoke_search_worker_grpc_tls** | `many_faces_elastic/scripts/smoke-grpc-tls.sh` (+ optional .NET probe) |
+| **smoke_push_worker_grpc_tls** | `many_faces_push/scripts/smoke-grpc-tls.sh` |
+| **smoke_mailer_worker_grpc_tls** | `many_faces_mailer/scripts/smoke-grpc-tls.sh` |
 | **docs_mermaid**      | Node from `many_faces_portal/.nvmrc`, runs **`./scripts/check-mermaid-docs.sh`** — validates every **mermaid**-labeled fenced code block via `@mermaid-js/mermaid-cli` |
-| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin** + **`many_faces_mobile`** (`yarn install --immutable` in each), **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + Yarn audit including **many_faces_mobile**), then **`./scripts/ci-local.sh`**: `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
+| **monorepo_scripts**  | Yarn installs for **many_faces_portal** + **many_faces_admin** + **`many_faces_mobile`** (`yarn install --immutable` in each), **`./scripts/audit-monorepo-deps.sh`** (informational NuGet + Yarn audit including **many_faces_mobile**), then **`./scripts/ci-local.sh`**: **verify-dev-stack-contracts** → `lint-all` → `build-all` → `test-all` (default **`SKIP_CYPRESS=1`**) |
 
 The **monorepo_scripts** job is the parity check that root orchestration scripts match what individual jobs already cover; it fails if e.g. `scripts/lint-all.sh` or `verify-ci.sh` drifts from CI. Dependency-audit output is logged for triage but does not gate green by itself (`|| true` in the audit script and in **many_faces_portal** / **many_faces_admin** audit steps).
 
@@ -160,19 +176,28 @@ The **monorepo_scripts** job is the parity check that root orchestration scripts
 
 ```mermaid
 flowchart TB
-  BEJ[many_faces_backend job]
-  FEJ[many_faces_portal job]
-  ADJ[many_faces_admin job]
-  AIJ[many_faces_ai job]
-  DBJ[infra many_faces_database config]
-  RDJ[infra many_faces_redis config]
-  LGJ[infra many_faces_logger config]
-  DOCSJ[docs_mermaid Mermaid CLI]
-  MONO[monorepo_scripts scripts/ci-local.sh]
-  PARITY[Parity lint build test SKIP_CYPRESS]
-  BEJ --- MONO
-  FEJ --- MONO
-  MONO --- PARITY
+  subgraph apps [Apps + core infra]
+    BEJ[many_faces_backend]
+    FEJ[many_faces_portal]
+    ADJ[many_faces_admin]
+    AIJ[many_faces_ai]
+    DBJ[infra database]
+    RDJ[infra redis]
+    LGJ[infra logger]
+  end
+  subgraph workers [Workers + TLS smoke]
+    ESJ[elastic infra + go]
+    PUJ[push infra + go]
+    MAJ[mailer infra + Java]
+    SMJ[smoke gRPC TLS x3]
+  end
+  DOCSJ[docs_mermaid]
+  MONO[monorepo_scripts ci-local.sh]
+  PARITY[verify lint build test]
+  apps --> MONO
+  workers --> MONO
+  DOCSJ -.-> MONO
+  MONO --> PARITY
 
   classDef queueFill fill:#fce4ec,stroke:#c2185b
   class MONO,PARITY queueFill
@@ -182,11 +207,12 @@ Commits that **only** bump submodule SHAs and/or `docs/` still trigger this pipe
 
 ## Monorepo scripts (`scripts/`)
 
-Run from repository root (submodules checked out). Executable bits: match the **Make scripts executable** step in **monorepo_scripts** (`.github/workflows/ci.yml`) — `chmod` on `scripts/*.sh` plus `find` over each submodule’s **`scripts/*.sh`** (`many_faces_portal`, `many_faces_admin`, `many_faces_backend`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`, `many_faces_mobile`).
+Run from repository root (submodules checked out). Executable bits: match the **Make scripts executable** step in **monorepo_scripts** (`.github/workflows/ci.yml`) — `chmod` on `scripts/*.sh` plus `find` over each submodule’s **`scripts/*.sh`** (`many_faces_portal`, `many_faces_admin`, `many_faces_backend`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`, `many_faces_elastic`, `many_faces_push`, `many_faces_mailer`, `many_faces_mobile`).
 
 | Script                              | Purpose                                                                                                                                                                                                                         |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`scripts/ci-local.sh`**           | One entrypoint: **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`yarn` scripts after **`yarn install --immutable`** in CI; locally reuse `node_modules` if already installed). |
+| **`scripts/verify-dev-stack-contracts.sh`** | Fast static checks before lint: `bash -n` on orchestration scripts, **`ENABLE_*:-1`** defaults and **`SEARCH_DEV_*`** wiring in `start-all-dev.sh` / `docker-compose.dev.yml`, TLS smoke **grpcurl** `-proto` invariants. |
+| **`scripts/ci-local.sh`**           | **verify-dev-stack-contracts** → **lint-all** → **build-all** → **test-all**. Sets `SKIP_CYPRESS=1` unless you override. Includes **`many_faces_mobile`** when present (`yarn` scripts after **`yarn install --immutable`** in CI; locally reuse `node_modules` if already installed). |
 | **`scripts/lint-all.sh`**           | Calls `many_faces_portal`, `many_faces_backend`, `many_faces_admin`, **`many_faces_mobile`** (`./scripts/lint.sh`: ESLint + Prettier check + `tsc`), `many_faces_ai` `./scripts/lint.sh` (FE/admin: `yarn validate`; BE: `dotnet format`; AI: Ruff). |
 | **`scripts/build-all.sh`**          | `many_faces_backend`: `dotnet build -c Release`; `many_faces_portal` / `many_faces_admin`: `yarn build`; **`many_faces_mobile`**: `./scripts/build.sh` (`tsc` + `expo-doctor`); `many_faces_ai`: **`./scripts/verify-ci.sh`**. |
 | **`scripts/test-all.sh`**           | `dotnet test` (BE), `yarn test` (FE/admin), **`many_faces_mobile`** `./scripts/test.sh` (Jest / `jest-expo`), **`many_faces_ai/scripts/verify-ci.sh`**, optional Cypress e2e unless `SKIP_CYPRESS=1`. |
@@ -202,17 +228,18 @@ Run from repository root (submodules checked out). Executable bits: match the **
 
 ```mermaid
 flowchart TB
+  V[scripts/verify-dev-stack-contracts.sh]
   CLI[scripts/ci-local.sh]
   L[scripts/lint-all.sh]
   B[scripts/build-all.sh]
   T[scripts/test-all.sh]
   CY{SKIP_CYPRESS}
-  CLI --> L --> B --> T
+  CLI --> V --> L --> B --> T
   T -->|default 1| SkipCy[Skip Cypress]
   CY -.-> T
 
   classDef apiFill fill:#fff3e0,stroke:#ef6c00
-  class CLI,L,B,T apiFill
+  class V,CLI,L,B,T apiFill
 ```
 
 ### Submodule-only repos

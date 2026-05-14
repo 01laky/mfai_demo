@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run root orchestration scripts in CI order (lint → build → test).
+# Run root orchestration scripts in CI order (verify-dev-stack-contracts → lint → build → test).
 # Skips Cypress e2e (set SKIP_CYPRESS=0 to allow e2e when stack is up).
 # Prerequisites: submodules checked out, Docker available for compose validation
 # is covered by separate workflow jobs; this script does not start containers.
@@ -14,12 +14,14 @@ cd "$ROOT"
 export SKIP_CYPRESS="${SKIP_CYPRESS:-1}"
 
 echo "═══════════════════════════════════════════════════════════"
-echo "  ci-local: lint-all → build-all → test-all"
+echo "  ci-local: verify-dev-stack-contracts → lint-all → build-all → test-all"
 echo "  SKIP_CYPRESS=$SKIP_CYPRESS"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" 2>/dev/null || true
+chmod +x "$SCRIPTS_DIR/lint-all.sh" "$SCRIPTS_DIR/build-all.sh" "$SCRIPTS_DIR/test-all.sh" "$SCRIPTS_DIR/verify-dev-stack-contracts.sh" 2>/dev/null || true
+"$SCRIPTS_DIR/verify-dev-stack-contracts.sh"
+
 for s in many_faces_backend many_faces_portal many_faces_admin many_faces_mobile many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_elastic many_faces_push many_faces_mailer; do
   if [ -d "$s/scripts" ]; then
     find "$s/scripts" -maxdepth 1 -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true

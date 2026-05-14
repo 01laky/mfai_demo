@@ -119,7 +119,7 @@ if [ -f many_faces_push/docker-compose.tls-smoke.yml ]; then
   (cd "$ROOT/many_faces_push" && compose -f docker-compose.tls-smoke.yml -p mf-push-tls-smoke down -v --remove-orphans 2>/dev/null) || true
 fi
 
-# Mailer worker (optional dev stack; no named volumes in base compose).
+# Mailer worker (default dev stack; no named volumes in base compose).
 if [ -f many_faces_mailer/docker-compose.yml ]; then
   (cd "$ROOT/many_faces_mailer" && compose -f docker-compose.yml down --remove-orphans 2>/dev/null) || true
 fi

@@ -35,8 +35,8 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [local-dev-accounts.md](./guides/local-dev-accounts.md) | Local seed accounts and passwords (tables). |
 | [git-submodules.md](./guides/git-submodules.md) | Submodule setup and workflow. |
 | [dev-https.md](./guides/dev-https.md) | Local HTTPS certs (`dev/README.md`), ports, Docker, macOS PFX. |
-| [docker-and-compose.md](./guides/docker-and-compose.md) | Root compose + submodule Docker stacks. |
-| [elasticsearch-local-dev.md](./guides/elasticsearch-local-dev.md) | Optional Elasticsearch + Go search-worker, gRPC wiring, ports, grpcurl smoke. |
+| [docker-and-compose.md](./guides/docker-and-compose.md) | Root compose + submodule stacks, **Mermaid** data-path diagram, **edge cases** (`ENABLE_*=0`, missing submodules, TLS smoke grpcurl), link to **`verify-dev-stack-contracts.sh`**. |
+| [elasticsearch-local-dev.md](./guides/elasticsearch-local-dev.md) | Elasticsearch + Go search-worker, gRPC wiring, ports, grpcurl smoke; use **`ENABLE_ELASTICSEARCH=0`** with `start-all-dev` to skip. |
 | [elasticsearch-search-features-overview.md](./guides/elasticsearch-search-features-overview.md) | **Summary:** search stack capabilities (TLS/mTLS, smoke script, CI, tests, health) and links to deeper guides. |
 | [elasticsearch-grpc-tls-mtls.md](./guides/elasticsearch-grpc-tls-mtls.md) | TLS and mTLS for backend ↔ search-worker gRPC; env matrix, openssl example, Docker mounts. |
 | [push-notifications-local-dev.md](./guides/push-notifications-local-dev.md) | **FCM + `many_faces_push`**: dev compose, service account, backend `Push:*`, grpcurl, localization catalog. |

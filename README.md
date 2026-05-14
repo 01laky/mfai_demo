@@ -4,7 +4,7 @@ Many Faces AI is a full-stack social platform built around the concept of **face
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, **nested `many_faces_proto` git submodules** inside each gRPC consumer for **canonical `.proto` contracts**, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), an optional **transactional mailer worker** (`many_faces_mailer`, Java gRPC + SMTP templates), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, **nested `many_faces_proto` git submodules** inside each gRPC consumer for **canonical `.proto` contracts**, **Elasticsearch** search tooling (`many_faces_elastic`), an **FCM push worker** (`many_faces_push`), a **transactional mailer worker** (`many_faces_mailer`, Java gRPC + SMTP templates)—all started together by `./scripts/start-all-dev.sh` unless you set **`ENABLE_ELASTICSEARCH=0`**, **`ENABLE_PUSH_WORKER=0`**, or **`ENABLE_MAILER_WORKER=0`**—Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
@@ -19,18 +19,18 @@ Security and trust boundaries are a high priority in the architecture: this stac
 - Social modules for profiles, albums, blogs, reels, stories, wall listings, chats, comments, likes, follows, blocks, and notifications.
 - Real-time and asynchronous features through SignalR, Redis-backed infrastructure, and an AI gRPC service.
 - Role-aware frontend flows backed by backend authorization and explicit capability checks.
-- A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, optional Elasticsearch (`ENABLE_ELASTICSEARCH=1` in `scripts/start-all-dev.sh`), logging, and AI service up together.
+- A Docker-first local environment that brings the API, SPAs, PostgreSQL, Redis, **Elasticsearch + search-worker**, **push-worker**, **mailer-worker**, logging, and AI service up together via `./scripts/start-all-dev.sh` (set **`ENABLE_ELASTICSEARCH=0`**, **`ENABLE_PUSH_WORKER=0`**, or **`ENABLE_MAILER_WORKER=0`** to skip any of those workers).
 - Long-lived documentation and agent prompts that preserve architectural context and implementation checklists.
 - AI-assisted content approval for user-created albums, blogs, and reels: **My submissions** and detail `?edit=1` on the user app, Redis-backed AI review jobs, **sanitization and prompt-injection defenses** on the path to gRPC `ReviewContent` (also in `many_faces_ai`), superadmin moderation with **filters, metrics, alerts, bulk actions**, in-app **notifications**, optional **retention** redaction of internal AI fields, and a full **audit** trail. Reference: [`docs/guides/ai-assisted-content-approval.md`](./docs/guides/ai-assisted-content-approval.md).
 - **Admin operator dashboard + optional AI statistics:** consolidated **`GET /api/Stats`** / **`timeseries`**, anonymous aggregate **`GET /api/Stats/public`** (via **`public`** face prefix), **Settings** modes (**off / inline / live**) for attaching totals to **SignalR** admin AI chat, and gRPC **`stats_context_json`** / **`FetchPublicStats`** / **`OperatorStatsChat`** in **`many_faces_ai`**. Reference: [`docs/guides/admin-dashboard-metrics.md`](./docs/guides/admin-dashboard-metrics.md) and [`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](./docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
 
-## Elasticsearch & search-worker (optional, `many_faces_elastic`)
+## Elasticsearch & search-worker (`many_faces_elastic`)
 
-This monorepo can run an **optional search projection** beside PostgreSQL: **`many_faces_elastic`** is a separate git submodule that ships **Elasticsearch** (read-optimized index) and a colocated **Go gRPC search-worker**. **PostgreSQL stays the system of record**; browsers, SPAs, and the mobile app **never** call Elasticsearch or the worker directly—they only call **`many_faces_backend`** REST APIs.
+This monorepo runs a **search projection** beside PostgreSQL when you use the full dev stack: **`many_faces_elastic`** is a separate git submodule that ships **Elasticsearch** (read-optimized index) and a colocated **Go gRPC search-worker**. **PostgreSQL stays the system of record**; browsers, SPAs, and the mobile app **never** call Elasticsearch or the worker directly—they only call **`many_faces_backend`** REST APIs.
 
 - **Submodule & code:** [`many_faces_elastic/README.md`](./many_faces_elastic/README.md) (Docker Compose, `Dockerfile.search-worker`, `proto/`, `cmd/search-worker`, CI).
 - **Feature overview (TLS, smoke, CI, tests):** [`docs/guides/elasticsearch-search-features-overview.md`](./docs/guides/elasticsearch-search-features-overview.md).
-- **Local wiring (ports, env, `ENABLE_ELASTICSEARCH`, Docker DNS):** [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md).
+- **Local wiring (ports, env, Docker DNS, skip with `ENABLE_ELASTICSEARCH=0`):** [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md).
 - **Backend config:** `Search__Enabled`, `Search__WorkerGrpcUrl` (e.g. `http://search-worker-dev:50052` on the dev Docker network, or `https://…` with TLS), optional `Search__WorkerAuthToken`, optional TLS paths (`Search__WorkerTlsServerCaPath`, `Search__WorkerTlsClientCertPath`, `Search__WorkerTlsClientKeyPath`, `Search__WorkerGrpcTlsServerName`); health probe: **`GET /{face-prefix}/api/search/health`**. TLS guide: [`docs/guides/elasticsearch-grpc-tls-mtls.md`](./docs/guides/elasticsearch-grpc-tls-mtls.md).
 - **Agent checklist / roadmap:** [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
 
@@ -56,22 +56,22 @@ flowchart LR
 
 **Plain-text equivalent:** `portal | admin | mobile` → **HTTP** → `many_faces_backend` → **gRPC** → `search-worker` → **HTTP** → `Elasticsearch`.
 
-## Push worker / FCM (optional, `many_faces_push`)
+## Push worker / FCM (`many_faces_push`)
 
 **`many_faces_push`** is a separate git submodule implementing a **Go gRPC worker** that isolates **Firebase Admin / FCM** dispatch from **`many_faces_backend`**. The API persists device tokens and calls **`PushService.SendPush`** over gRPC.
 
 - **Submodule:** [`many_faces_push/README.md`](./many_faces_push/README.md)
 - **Local dev:** [`docs/guides/push-notifications-local-dev.md`](./docs/guides/push-notifications-local-dev.md) — copy **[`dev/push-dev.env.example`](./dev/push-dev.env.example)** hints into a root **`.env`** when using Docker Compose substitution.
-- **Start with full stack:** `ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh` — place Firebase **service account** JSON at **`many_faces_push/firebase-sa.json`** (or set **`FIREBASE_SA_HOST_PATH`**) so the worker gets a bind mount and **`GOOGLE_APPLICATION_CREDENTIALS`** automatically.
+- **Full dev stack:** `./scripts/start-all-dev.sh` starts the push worker by default; set **`ENABLE_PUSH_WORKER=0`** to skip. Place Firebase **service account** JSON at **`many_faces_push/firebase-sa.json`** (or set **`FIREBASE_SA_HOST_PATH`**) so the worker gets a bind mount and **`GOOGLE_APPLICATION_CREDENTIALS`** automatically.
 - **Roadmap / checklist:** [`docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./docs/prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md)
 
-## Mailer worker (optional, `many_faces_mailer`)
+## Mailer worker (`many_faces_mailer`)
 
 **`many_faces_mailer`** is a **Java gRPC** worker that renders **localized HTML/text** templates and sends mail over **SMTP** (Mailpit in dev). **`many_faces_backend`** uses **`Mail:`** + **`IEmailSender`** (`MailerGrpcEmailSender`) for Identity flows; optional **TLS/mTLS** matches the push/search worker pattern.
 
 - **Submodule:** [`many_faces_mailer/README.md`](./many_faces_mailer/README.md)
 - **Local dev:** [`docs/guides/mailer-local-dev.md`](./docs/guides/mailer-local-dev.md) — Mailpit, `Mail:*`, grpcurl; TLS: [`docs/guides/mailer-grpc-tls-mtls.md`](./docs/guides/mailer-grpc-tls-mtls.md). Example env: [`dev/mail-dev.env.example`](./dev/mail-dev.env.example).
-- **Start with full stack:** `ENABLE_MAILER_WORKER=1 ./scripts/start-all-dev.sh` — host gRPC **59204** by default; TLS smoke uses **59216** (see smoke script).
+- **Full dev stack:** `./scripts/start-all-dev.sh` starts the mailer worker by default; set **`ENABLE_MAILER_WORKER=0`** to skip. Host gRPC **59204** by default; TLS smoke uses **59216** (see smoke script).
 - **Spec / checklist:** [`docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md`](./docs/prompts/smtp-mailer-java-grpc-worker-agent-prompt.md)
 
 ### Architecture (transactional mail — Mermaid)
@@ -126,8 +126,8 @@ flowchart LR
     scripts --> api
     scripts --> db
     scripts --> redis
-    scripts -.->|"ENABLE_ELASTICSEARCH=1"| sw
-    scripts -.->|"ENABLE_MAILER_WORKER=1"| mw
+    scripts -.->|"start-all-dev (default)"| sw
+    scripts -.->|"start-all-dev (default)"| mw
     scripts --> ai
     scripts --> mobile
     scripts --> logs["many_faces_logger<br/>container logs"]
@@ -141,11 +141,11 @@ flowchart LR
     docs -.-> mw
 ```
 
-### Optional search index (`many_faces_elastic`)
+### Search index (`many_faces_elastic`)
 
 The **Elasticsearch & search-worker** section above is the primary architecture summary (trust boundary + Mermaid). Below are **operator-focused** reminders.
 
-**Elasticsearch** is an **optional** submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**; the API does not require Elasticsearch or the Go **search-worker** at startup. Enable both containers with **`ENABLE_ELASTICSEARCH=1`** when running `./scripts/start-all-dev.sh`, then set **`Search__Enabled=true`**, **`Search__WorkerGrpcUrl=http://search-worker-dev:50052`**, and optional **`Search__WorkerAuthToken`** to match the worker (see [`docs/guides/elasticsearch-search-features-overview.md`](./docs/guides/elasticsearch-search-features-overview.md), [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md), [`docs/guides/elasticsearch-grpc-tls-mtls.md`](./docs/guides/elasticsearch-grpc-tls-mtls.md), and [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)). Probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
+**Elasticsearch** is a separate submodule used as a **read-optimized search projection** (full-text and faceted queries later). **PostgreSQL** in `many_faces_database` remains the **system of record**. **`./scripts/start-all-dev.sh`** starts Elasticsearch + **search-worker** by default (when submodule scripts exist) and exports **`SEARCH_DEV_*`** so **`be-demo-dev`** gets **`Search__Enabled`** and **`Search__WorkerGrpcUrl`** (e.g. `http://search-worker-dev:50052`) via root **`docker-compose.dev.yml`**. Set **`ENABLE_ELASTICSEARCH=0`** to skip the stack; optional **`Search__WorkerAuthToken`** must match **`SEARCH_WORKER_EXPECTED_TOKEN`** on the worker when set (see [`docs/guides/elasticsearch-search-features-overview.md`](./docs/guides/elasticsearch-search-features-overview.md), [`docs/guides/elasticsearch-local-dev.md`](./docs/guides/elasticsearch-local-dev.md), [`docs/guides/elasticsearch-grpc-tls-mtls.md`](./docs/guides/elasticsearch-grpc-tls-mtls.md), and [`many_faces_elastic/README.md`](./many_faces_elastic/README.md)). Probe connectivity with **`GET /{face-prefix}/api/search/health`**. Agent checklist: [`docs/prompts/elasticsearch-search-infra-agent-prompt.md`](./docs/prompts/elasticsearch-search-infra-agent-prompt.md).
 
 For how this submodule fits root **`docker-compose.dev.yml`** and lifecycle scripts, see [`docs/guides/docker-and-compose.md`](./docs/guides/docker-and-compose.md). When search containers misbehave (network attach, ports **59200** / **59202**, or gRPC `Unavailable`), use [`docs/guides/troubleshooting-local-dev.md`](./docs/guides/troubleshooting-local-dev.md) together with the Elasticsearch guide above.
 
@@ -157,7 +157,7 @@ flowchart LR
     be2[many_faces_backend]
 
     be2 --> pg
-    be2 -.->|optional| sw2
+    be2 -.->|Search tier| sw2
     sw2 --> es
 ```
 
@@ -395,14 +395,14 @@ flowchart TD
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. Nested **`many_faces_proto/`** holds gRPC `.proto` contracts for workers + AI. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. Nested **`many_faces_proto/`** for **`health.proto`**. |
-| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md), [`many_faces_mailer/`](./many_faces_mailer/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional **FCM push** worker (gRPC). **many_faces_mailer** — optional **transactional mail** worker (Java gRPC → SMTP; backend `Mail:*`). PostgreSQL stays authoritative. |
+| Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md), [`many_faces_mailer/`](./many_faces_mailer/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — **FCM push** worker (gRPC). **many_faces_mailer** — **transactional mail** worker (Java gRPC → SMTP; backend `Mail:*`). All three are started by **`./scripts/start-all-dev.sh`** by default (`ENABLE_*=0` to skip). PostgreSQL stays authoritative. |
 | Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
 | Orchestration | [`scripts/`](./docs/guides/development.md#monorepo-scripts-scripts), [`dev/`](./dev/README.md) | Local startup, rebuild, lint/test, HTTPS, and Docker orchestration scripts. |
 | Documentation | [`docs/`](./docs/README.md) | Guides, component notes, submodule overviews, architecture notes, and reusable implementation prompts. |
 
 ## Tech Stack Highlights
 
-- **Backend:** ASP.NET Core, EF Core, OAuth2/JWT, SignalR, OpenAPI, PostgreSQL, Redis, optional Elasticsearch (search index), optional FCM push worker, optional transactional mailer worker (gRPC).
+- **Backend:** ASP.NET Core, EF Core, OAuth2/JWT, SignalR, OpenAPI, PostgreSQL, Redis, Elasticsearch (search index) + FCM push worker + transactional mailer worker (gRPC) when using full **`./scripts/start-all-dev.sh`** (disable per worker with **`ENABLE_*=0`**).
 - **Frontend/Admin/Mobile:** React, Vite, TypeScript, React Router, TanStack Query, i18next, Vitest, Cypress, ESLint; **many_faces_mobile:** Expo, React Native.
 - **AI/infra:** Python gRPC service, Docker Compose, local HTTPS tooling, log viewer, Bash orchestration scripts.
 - **Quality:** linting, type checks, unit tests, narrow integration tests, local CI script, documented security and dependency audit prompts.
@@ -461,9 +461,9 @@ many_faces_mobile/       # many_faces_mobile — Expo React Native
 many_faces_admin/    # many_faces_admin — admin SPA
 many_faces_database/       # many_faces_database — PostgreSQL compose
 many_faces_redis/    # many_faces_redis — job queue
-many_faces_elastic/  # many_faces_elastic — optional Elasticsearch (search)
-many_faces_push/     # many_faces_push — optional FCM push worker (Go gRPC)
-many_faces_mailer/   # many_faces_mailer — optional transactional mailer worker (Java gRPC + SMTP)
+many_faces_elastic/  # many_faces_elastic — Elasticsearch + search-worker (gRPC; start-all-dev default)
+many_faces_push/     # many_faces_push — FCM push worker (Go gRPC; start-all-dev default)
+many_faces_mailer/   # many_faces_mailer — transactional mailer worker (Java gRPC + SMTP; start-all-dev default)
 many_faces_ai/       # many_faces_ai — gRPC health / AI
 many_faces_logger/   # many_faces_logger — Dozzle
 scripts/       # monorepo orchestration (start-all-dev, ci-local, lint-all, …)
@@ -480,7 +480,7 @@ git submodule update --init --recursive
 ./scripts/start-all-dev.sh
 ```
 
-**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, optional Elasticsearch HTTP `59200`, optional search-worker gRPC `59202`, optional push-worker gRPC `59203` (when `many_faces_push` compose is used standalone), optional mailer-worker gRPC `59204` (when `many_faces_mailer` compose is used standalone), optional mailer TLS smoke gRPC `59216` (`many_faces_mailer/scripts/smoke-grpc-tls.sh`). Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
+**Common ports:** API HTTP `8000`, HTTPS `8001`, FE `8081`, admin `8082`, Seq `5341`, DB `54320`, Elasticsearch HTTP `59200`, search-worker gRPC `59202`, push-worker gRPC `59203`, mailer-worker gRPC `59204` (with default **`./scripts/start-all-dev.sh`**); mailer TLS smoke gRPC `59216` (`many_faces_mailer/scripts/smoke-grpc-tls.sh`). Exact mapping: [`docs/guides/dev-https.md`](./docs/guides/dev-https.md) and submodule READMEs.
 
 **Run all tests:**
 

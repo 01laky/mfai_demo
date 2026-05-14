@@ -9,11 +9,22 @@
 
 | Script | Role |
 | ------ | ---- |
-| `scripts/ci-local.sh` | Lint → build → test (optional Cypress skip). |
+| `scripts/ci-local.sh` | **verify-dev-stack-contracts** → lint → build → test (optional Cypress skip). |
+| `scripts/verify-dev-stack-contracts.sh` | Fast invariants: `bash -n` on orchestration scripts, **`ENABLE_*:-1`** defaults in `start-all-dev.sh`, **`SEARCH_DEV_*`** / compose wiring, TLS smoke **`grpcurl`** `-proto` health stubs. |
 | `scripts/lint-all.sh` | Cross-repo lint/format gates. |
 | `scripts/test-all.sh` | Backend + SPA tests + mobile + AI checks. |
 
-Details and edge cases: [`development.md`](./development.md) (*Monorepo scripts*).
+Details and edge cases: [`development.md`](./development.md) (*Monorepo scripts*), [`docker-and-compose.md`](./docker-and-compose.md) (*Edge cases*).
+
+## Dev stack edge cases (tests vs runtime)
+
+| Concern | Where it is covered |
+| ------- | ------------------- |
+| **Worker TLS + mTLS** | CI jobs `smoke_search_worker_grpc_tls`, `smoke_push_worker_grpc_tls`, `smoke_mailer_worker_grpc_tls` (OpenSSL temp certs, Docker, **grpcurl** with vendored `grpc/health/v1/health.proto`, optional .NET channel tests). |
+| **Compose interpolation** | `infra_many_faces_*` jobs: `docker compose … config` without starting containers. |
+| **Script / compose drift** | `scripts/verify-dev-stack-contracts.sh` at the start of **`ci-local.sh`** (also run locally before large doc/script changes). |
+| **Mermaid in docs** | Job **`docs_mermaid`**: `./scripts/check-mermaid-docs.sh` — every fenced **`mermaid`** block must render. |
+| **Auth / ACL edge cases** | Backend xUnit (JWT expiry, `rememberMe`, capabilities); FE/admin Vitest — see *Testing (quick reference)* in [`development.md`](./development.md). |
 
 ## Per technology
 

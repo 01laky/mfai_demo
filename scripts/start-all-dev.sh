@@ -5,7 +5,7 @@
 # This script orchestrates the startup of all development services in the correct order:
 # 1. Database (PostgreSQL) - must start first as other services depend on it
 # 2. Redis (many_faces_redis) - job queue for backend (optional but recommended before BE)
-# 2b. Elasticsearch (many_faces_elastic) - optional search index when ENABLE_ELASTICSEARCH=1
+# 2b. Elasticsearch (many_faces_elastic) — search index + Go search-worker (on by default; set ENABLE_ELASTICSEARCH=0 to skip)
 # 3. Backend API (ASP.NET Core) - provides REST API and authentication
 # 4. Frontend (React + Vite) - user-facing application
 # 5. Many Faces AI service (Python gRPC) - AI service with gRPC interface
@@ -19,9 +19,9 @@
 # - Live status screen until every expected container is running (not “subset == all existing”)
 #
 # Usage: ./scripts/start-all-dev.sh (from repository root)
-# Optional: ENABLE_ELASTICSEARCH=1 ./scripts/start-all-dev.sh — starts many_faces_elastic (Elasticsearch + Go search-worker) and attaches elasticsearch-dev + search-worker-dev to the dev network.
-# Optional: ENABLE_PUSH_WORKER=1 ./scripts/start-all-dev.sh — starts many_faces_push (Go push-worker) and attaches push-worker-dev to the dev network. Place a Firebase **service account** JSON at many_faces_push/firebase-sa.json (gitignored) or set FIREBASE_SA_HOST_PATH; optional PUSH_WORKER_EXPECTED_TOKEN enables gRPC metadata auth (set Push__WorkerAuthToken to the same value).
-# Optional: ENABLE_MAILER_WORKER=1 ./scripts/start-all-dev.sh — starts many_faces_mailer (Java mailer skeleton) and attaches mailer-worker-dev to the dev network. Backend Mail:* wiring is not required for the placeholder container.
+# Elasticsearch + search-worker, push-worker, and mailer-worker start by default when submodule scripts exist.
+# To skip any of them: ENABLE_ELASTICSEARCH=0, ENABLE_PUSH_WORKER=0, or ENABLE_MAILER_WORKER=0.
+# Push: place Firebase **service account** JSON at many_faces_push/firebase-sa.json (gitignored) or set FIREBASE_SA_HOST_PATH; PUSH_WORKER_EXPECTED_TOKEN enables gRPC metadata auth (mirrored to Push__WorkerAuthToken).
 # Press Ctrl+C to exit the status screen early
 
 set -e  # Exit immediately if a command exits with a non-zero status
@@ -90,10 +90,10 @@ else
 fi
 
 # ============================================================================
-# START ELASTICSEARCH (many_faces_elastic submodule, optional)
+# START ELASTICSEARCH (many_faces_elastic submodule)
 # ============================================================================
 _expect_elastic=0
-if [ "${ENABLE_ELASTICSEARCH:-}" = "1" ] && [ -f "many_faces_elastic/scripts/start-elasticsearch.sh" ]; then
+if [ "${ENABLE_ELASTICSEARCH:-1}" != "0" ] && [ -f "many_faces_elastic/scripts/start-elasticsearch.sh" ]; then
     echo "📦 Starting Elasticsearch + search-worker (many_faces_elastic)..."
     cd many_faces_elastic
     ./scripts/start-elasticsearch.sh > /dev/null 2>&1 &
@@ -103,15 +103,15 @@ if [ "${ENABLE_ELASTICSEARCH:-}" = "1" ] && [ -f "many_faces_elastic/scripts/sta
 fi
 
 # ============================================================================
-# START PUSH WORKER (many_faces_push submodule, optional)
+# START PUSH WORKER (many_faces_push submodule)
 # ============================================================================
 _expect_push=0
-if [ "${ENABLE_PUSH_WORKER:-}" = "1" ] && [ -f "many_faces_push/scripts/start-push-worker.sh" ]; then
+if [ "${ENABLE_PUSH_WORKER:-1}" != "0" ] && [ -f "many_faces_push/scripts/start-push-worker.sh" ]; then
     if [ -z "${FIREBASE_SA_HOST_PATH:-}" ] && [ -f "$ROOT/many_faces_push/firebase-sa.json" ]; then
         export FIREBASE_SA_HOST_PATH="$ROOT/many_faces_push/firebase-sa.json"
     fi
     if [ -z "${FIREBASE_SA_HOST_PATH:-}" ]; then
-        echo "    ⚠️  ENABLE_PUSH_WORKER=1 but no service account: set FIREBASE_SA_HOST_PATH or add many_faces_push/firebase-sa.json — worker will start without FCM (SendPush → FailedPrecondition)."
+        echo "    ⚠️  Push worker is enabled but no Firebase service account: set FIREBASE_SA_HOST_PATH or add many_faces_push/firebase-sa.json — worker will start without FCM (SendPush → FailedPrecondition)."
     fi
     echo "📦 Starting push-worker (many_faces_push)..."
     cd many_faces_push
@@ -122,10 +122,10 @@ if [ "${ENABLE_PUSH_WORKER:-}" = "1" ] && [ -f "many_faces_push/scripts/start-pu
 fi
 
 # ============================================================================
-# START MAILER WORKER (many_faces_mailer submodule, optional)
+# START MAILER WORKER (many_faces_mailer submodule)
 # ============================================================================
 _expect_mailer=0
-if [ "${ENABLE_MAILER_WORKER:-}" = "1" ] && [ -f "many_faces_mailer/scripts/start-mailer-worker.sh" ]; then
+if [ "${ENABLE_MAILER_WORKER:-1}" != "0" ] && [ -f "many_faces_mailer/scripts/start-mailer-worker.sh" ]; then
     echo "📦 Starting mailer-worker (many_faces_mailer)..."
     cd many_faces_mailer
     ./scripts/start-mailer-worker.sh > /dev/null 2>&1 &
@@ -270,11 +270,29 @@ else
 fi
 
 # When push worker is enabled, wire ASP.NET Core Push:* into be-demo-dev (see docker-compose.dev.yml ${PUSH_DEV_*}).
-if [ "${ENABLE_MAILER_WORKER:-}" = "1" ]; then
+if [ "${ENABLE_PUSH_WORKER:-1}" != "0" ]; then
+    export PUSH_DEV_ENABLED=true
+    export PUSH_DEV_WORKER_GRPC_URL="${PUSH_DEV_WORKER_GRPC_URL:-http://push-worker-dev:50053}"
+    if [ -n "${PUSH_WORKER_EXPECTED_TOKEN:-}" ]; then
+        export PUSH_DEV_WORKER_AUTH_TOKEN="${PUSH_WORKER_EXPECTED_TOKEN}"
+    fi
+fi
+
+# When mailer worker is enabled, wire Mail:* into be-demo-dev (see docker-compose.dev.yml ${MAIL_DEV_*}).
+if [ "${ENABLE_MAILER_WORKER:-1}" != "0" ]; then
     export MAIL_DEV_ENABLED=true
     export MAIL_DEV_WORKER_GRPC_URL=http://mailer-worker-dev:50054
     if [ -n "${MAILER_WORKER_EXPECTED_TOKEN:-}" ]; then
         export MAIL_DEV_WORKER_AUTH_TOKEN="${MAILER_WORKER_EXPECTED_TOKEN}"
+    fi
+fi
+
+# When Elasticsearch stack is enabled, wire Search:* into be-demo-dev (see docker-compose.dev.yml ${SEARCH_DEV_*}).
+if [ "${ENABLE_ELASTICSEARCH:-1}" != "0" ]; then
+    export SEARCH_DEV_ENABLED=true
+    export SEARCH_DEV_WORKER_GRPC_URL="${SEARCH_DEV_WORKER_GRPC_URL:-http://search-worker-dev:50052}"
+    if [ -n "${SEARCH_WORKER_EXPECTED_TOKEN:-}" ]; then
+        export SEARCH_DEV_WORKER_AUTH_TOKEN="${SEARCH_WORKER_EXPECTED_TOKEN}"
     fi
 fi
 
@@ -474,6 +492,12 @@ echo "    ✅ Many Faces log viewer (dozzle-dev) up"
 echo ""
 echo "✅ All services startup launched!"
 echo ""
+
+if [ "${SKIP_STATUS_SCREEN:-}" = "1" ]; then
+    echo "✅ Startup finished (SKIP_STATUS_SCREEN=1 — no live TUI). Run ./scripts/status-all.sh"
+    exit 0
+fi
+
 echo "🔄 Starting live status screen (refreshes every 5 seconds)..."
 echo "   Press Ctrl+C to exit"
 echo ""

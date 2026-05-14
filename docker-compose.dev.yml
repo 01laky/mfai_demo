@@ -26,7 +26,7 @@ services:
       # Redis z many_faces_redis (redis-dev) musí byť na tejto sieti: ./scripts/start-all-dev.sh alebo
       #   docker network connect many_faces_main_dev-network redis-dev
       - Redis__Configuration=redis-dev:6379,abortConnect=false
-      # Optional many_faces_push: set ENABLE_PUSH_WORKER=1 and see dev/push-dev.env.example. Compose substitutes ${PUSH_DEV_*} when exporting from start-all-dev.sh.
+      # many_faces_push: start-all-dev exports PUSH_DEV_* when ENABLE_PUSH_WORKER is not 0 (default on).
       - Push__Enabled=${PUSH_DEV_ENABLED:-false}
       - Push__WorkerGrpcUrl=${PUSH_DEV_WORKER_GRPC_URL:-}
       - Push__WorkerAuthToken=${PUSH_DEV_WORKER_AUTH_TOKEN:-}
@@ -34,7 +34,7 @@ services:
       - Push__WorkerTlsClientCertPath=${PUSH_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
       - Push__WorkerTlsClientKeyPath=${PUSH_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
       - Push__WorkerGrpcTlsServerName=${PUSH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
-      # Optional many_faces_mailer: set ENABLE_MAILER_WORKER=1; compose substitutes ${MAIL_DEV_*} from start-all-dev.sh.
+      # many_faces_mailer: start-all-dev exports MAIL_DEV_* when ENABLE_MAILER_WORKER is not 0 (default on).
       - Mail__Enabled=${MAIL_DEV_ENABLED:-false}
       - Mail__WorkerGrpcUrl=${MAIL_DEV_WORKER_GRPC_URL:-}
       - Mail__WorkerAuthToken=${MAIL_DEV_WORKER_AUTH_TOKEN:-}
@@ -42,10 +42,14 @@ services:
       - Mail__WorkerTlsClientCertPath=${MAIL_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
       - Mail__WorkerTlsClientKeyPath=${MAIL_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
       - Mail__WorkerGrpcTlsServerName=${MAIL_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
-      # Optional many_faces_elastic (ENABLE_ELASTICSEARCH=1). Backend uses gRPC only (no Elasticsearch HTTP from the API). Example:
-      # - Search__Enabled=true
-      # - Search__WorkerGrpcUrl=http://search-worker-dev:50052
-      # - Search__WorkerAuthToken=   # optional; must match SEARCH_WORKER_EXPECTED_TOKEN on the worker when set
+      # many_faces_elastic search-worker: start-all-dev exports SEARCH_DEV_* when ENABLE_ELASTICSEARCH is not 0 (default on).
+      - Search__Enabled=${SEARCH_DEV_ENABLED:-false}
+      - Search__WorkerGrpcUrl=${SEARCH_DEV_WORKER_GRPC_URL:-}
+      - Search__WorkerAuthToken=${SEARCH_DEV_WORKER_AUTH_TOKEN:-}
+      - Search__WorkerTlsServerCaPath=${SEARCH_DEV_WORKER_TLS_SERVER_CA_PATH:-}
+      - Search__WorkerTlsClientCertPath=${SEARCH_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
+      - Search__WorkerTlsClientKeyPath=${SEARCH_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
+      - Search__WorkerGrpcTlsServerName=${SEARCH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
     depends_on:
       seq:
         condition: service_healthy

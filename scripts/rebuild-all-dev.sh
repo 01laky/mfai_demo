@@ -10,7 +10,9 @@
 # 4. Admin (many_faces_admin) - React + Vite admin panel
 # 5. Many Faces AI service (many_faces_ai) - Python gRPC server
 # 6. Many Faces log viewer (many_faces_logger) - Dozzle log viewer
-# 7. Many Faces mailer (many_faces_mailer) - Java gRPC + SMTP worker (optional)
+# 7. Many Faces mailer (many_faces_mailer) - Java gRPC + SMTP worker (started by default with start-all-dev)
+# 8. Elasticsearch search worker (many_faces_elastic) - Go gRPC + ES
+# 9. FCM push worker (many_faces_push) - Go gRPC worker
 #
 # The script rebuilds each service's Docker image with --no-cache
 # to ensure a completely clean build.
@@ -110,6 +112,28 @@ fi
 echo ""
 
 # ============================================================================
+# REBUILD SEARCH WORKER (many_faces_elastic)
+# ============================================================================
+echo "📦 Rebuilding search worker (many_faces_elastic / Dockerfile.search-worker)..."
+if [ -f "many_faces_elastic/Dockerfile.search-worker" ]; then
+    docker build --no-cache -f many_faces_elastic/Dockerfile.search-worker -t many-faces-search-worker:dev ./many_faces_elastic
+else
+    echo "  ⚠️  many_faces_elastic/Dockerfile.search-worker not found, skipping..."
+fi
+echo ""
+
+# ============================================================================
+# REBUILD PUSH WORKER (many_faces_push)
+# ============================================================================
+echo "📦 Rebuilding push worker (many_faces_push)..."
+if [ -f "many_faces_push/Dockerfile" ]; then
+    docker build --no-cache -f many_faces_push/Dockerfile -t many-faces-push-worker:dev ./many_faces_push
+else
+    echo "  ⚠️  many_faces_push/Dockerfile not found, skipping..."
+fi
+echo ""
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 echo "═══════════════════════════════════════════════════════════"
@@ -125,6 +149,8 @@ echo "   ✅ Admin (many_faces_admin)"
 echo "   ✅ Many Faces AI service (many_faces_ai)"
 echo "   ✅ Many Faces log viewer (many_faces_logger)"
 echo "   ✅ Mailer worker (many_faces_mailer) — image many-faces-mailer-worker:dev"
+echo "   ✅ Search worker (many_faces_elastic) — image many-faces-search-worker:dev"
+echo "   ✅ Push worker (many_faces_push) — image many-faces-push-worker:dev"
 echo ""
 echo "💡 Note: many_faces_database and many_faces_redis use official images — no rebuild."
 echo ""

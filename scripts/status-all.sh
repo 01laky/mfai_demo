@@ -11,6 +11,7 @@
 # - Many Faces AI service (Python gRPC) - checks container status
 # - Many Faces log viewer (Dozzle) - checks container status and UI accessibility
 # - Seq Logging Server - checks container status and UI accessibility
+# - Optional: Elasticsearch (HTTP), search-worker, push-worker, mailer-worker (gRPC host ports; skipped when containers absent)
 # 
 # The script distinguishes between:
 # - Running containers (✓ Running)
@@ -526,13 +527,173 @@ if check_container_exists "$DOZZLE_DEV_CONTAINER"; then
         echo "  Started: $UPTIME"
         echo "  Port: 8080 (http://localhost:8080)"
     fi
-else
-    echo -e "  Container: ${BLUE}○ Not found${NC} ($DOZZLE_DEV_CONTAINER)"
-    echo "  Status: Does not exist (removed)"
-    echo "  Port: 8080 (http://localhost:8080)"
-fi
+    else
+        echo -e "  Container: ${BLUE}○ Not found${NC} ($DOZZLE_DEV_CONTAINER)"
+        echo "  Status: Does not exist (removed)"
+        echo "  Port: 8080 (http://localhost:8080)"
+    fi
 
-echo ""
+    echo ""
+
+    # ============================================================================
+    # OPTIONAL: ELASTICSEARCH + SEARCH WORKER (many_faces_elastic)
+    # ============================================================================
+
+    ES_CONTAINER="elasticsearch-dev"
+    ES_HTTP_PORT="${ELASTIC_HTTP_HOST_PORT:-59200}"
+
+    echo "📦 Elasticsearch (many_faces_elastic)"
+    echo "───────────────────────────────────────────────────────────"
+
+    if check_container_exists "$ES_CONTAINER"; then
+        if check_container "$ES_CONTAINER"; then
+            STATUS_INFO=$(get_container_status "$ES_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${GREEN}✓ Running${NC} ($ES_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+
+            if check_service "http://localhost:${ES_HTTP_PORT}" "Elasticsearch"; then
+                echo -e "  HTTP: ${GREEN}✓ Accessible${NC} (http://localhost:${ES_HTTP_PORT})"
+            else
+                echo -e "  HTTP: ${YELLOW}⚠ Not accessible${NC} (http://localhost:${ES_HTTP_PORT})"
+            fi
+        else
+            STATUS_INFO=$(get_container_status "$ES_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($ES_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+            echo "  Port: ${ES_HTTP_PORT} (http://localhost:${ES_HTTP_PORT})"
+        fi
+    else
+        echo -e "  Container: ${BLUE}○ Not found${NC} ($ES_CONTAINER)"
+        echo "  Status: Not running — ./scripts/start-all-dev.sh starts this by default (ENABLE_ELASTICSEARCH=0 to skip)"
+        echo "  Port: ${ES_HTTP_PORT} (http://localhost:${ES_HTTP_PORT})"
+    fi
+
+    echo ""
+
+    SW_CONTAINER="search-worker-dev"
+    SW_GRPC_PORT="${SEARCH_WORKER_GRPC_HOST_PORT:-59202}"
+
+    echo "📦 Search worker gRPC (many_faces_elastic)"
+    echo "───────────────────────────────────────────────────────────"
+
+    if check_container_exists "$SW_CONTAINER"; then
+        if check_container "$SW_CONTAINER"; then
+            STATUS_INFO=$(get_container_status "$SW_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${GREEN}✓ Running${NC} ($SW_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+
+            if nc -z localhost "$SW_GRPC_PORT" 2>/dev/null; then
+                echo -e "  gRPC (host): ${GREEN}✓ Port open${NC} (localhost:${SW_GRPC_PORT})"
+            else
+                echo -e "  gRPC (host): ${YELLOW}⚠ Port closed${NC} (localhost:${SW_GRPC_PORT})"
+            fi
+        else
+            STATUS_INFO=$(get_container_status "$SW_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($SW_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+            echo "  Port: ${SW_GRPC_PORT} (localhost)"
+        fi
+    else
+        echo -e "  Container: ${BLUE}○ Not found${NC} ($SW_CONTAINER)"
+        echo "  Status: Optional — same as Elasticsearch stack"
+        echo "  Port: ${SW_GRPC_PORT} (localhost)"
+    fi
+
+    echo ""
+
+    PUSH_CONTAINER="push-worker-dev"
+    PUSH_GRPC_PORT="${PUSH_WORKER_GRPC_HOST_PORT:-59203}"
+
+    echo "📦 Push worker gRPC (many_faces_push)"
+    echo "───────────────────────────────────────────────────────────"
+
+    if check_container_exists "$PUSH_CONTAINER"; then
+        if check_container "$PUSH_CONTAINER"; then
+            STATUS_INFO=$(get_container_status "$PUSH_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${GREEN}✓ Running${NC} ($PUSH_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+
+            if nc -z localhost "$PUSH_GRPC_PORT" 2>/dev/null; then
+                echo -e "  gRPC (host): ${GREEN}✓ Port open${NC} (localhost:${PUSH_GRPC_PORT})"
+            else
+                echo -e "  gRPC (host): ${YELLOW}⚠ Port closed${NC} (localhost:${PUSH_GRPC_PORT})"
+            fi
+        else
+            STATUS_INFO=$(get_container_status "$PUSH_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($PUSH_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+            echo "  Port: ${PUSH_GRPC_PORT} (localhost)"
+        fi
+    else
+        echo -e "  Container: ${BLUE}○ Not found${NC} ($PUSH_CONTAINER)"
+        echo "  Status: Not running — ./scripts/start-all-dev.sh starts this by default (ENABLE_PUSH_WORKER=0 to skip)"
+        echo "  Port: ${PUSH_GRPC_PORT} (localhost)"
+    fi
+
+    echo ""
+
+    MAILER_W_CONTAINER="mailer-worker-dev"
+    MAILER_GRPC_PORT="${MAILER_WORKER_GRPC_HOST_PORT:-59204}"
+
+    echo "📦 Mailer worker gRPC (many_faces_mailer)"
+    echo "───────────────────────────────────────────────────────────"
+
+    if check_container_exists "$MAILER_W_CONTAINER"; then
+        if check_container "$MAILER_W_CONTAINER"; then
+            STATUS_INFO=$(get_container_status "$MAILER_W_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${GREEN}✓ Running${NC} ($MAILER_W_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+
+            if nc -z localhost "$MAILER_GRPC_PORT" 2>/dev/null; then
+                echo -e "  gRPC (host): ${GREEN}✓ Port open${NC} (localhost:${MAILER_GRPC_PORT})"
+            else
+                echo -e "  gRPC (host): ${YELLOW}⚠ Port closed${NC} (localhost:${MAILER_GRPC_PORT})"
+            fi
+        else
+            STATUS_INFO=$(get_container_status "$MAILER_W_CONTAINER")
+            STATUS=$(echo "$STATUS_INFO" | cut -d'|' -f1)
+            UPTIME=$(echo "$STATUS_INFO" | cut -d'|' -f2)
+
+            echo -e "  Container: ${YELLOW}⚠ Stopped${NC} ($MAILER_W_CONTAINER)"
+            echo "  Status: $STATUS"
+            echo "  Started: $UPTIME"
+            echo "  Port: ${MAILER_GRPC_PORT} (localhost)"
+        fi
+    else
+        echo -e "  Container: ${BLUE}○ Not found${NC} ($MAILER_W_CONTAINER)"
+        echo "  Status: Not running — ./scripts/start-all-dev.sh starts this by default (ENABLE_MAILER_WORKER=0 to skip)"
+        echo "  Port: ${MAILER_GRPC_PORT} (localhost)"
+    fi
+
+    echo ""
 
 # ============================================================================
 # SUMMARY
@@ -548,7 +709,7 @@ STOPPED=0
 ACCESSIBLE=0
 NOT_ACCESSIBLE=0
 
-CONTAINERS=("$DB_CONTAINER" "$PGADMIN_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEV_CONTAINER" "$SEQ_CONTAINER" "$DOZZLE_DEV_CONTAINER")
+CONTAINERS=("$DB_CONTAINER" "$PGADMIN_CONTAINER" "$BE_CONTAINER" "$FE_CONTAINER" "$ADMIN_CONTAINER" "$AI_DEV_CONTAINER" "$SEQ_CONTAINER" "$DOZZLE_DEV_CONTAINER" "elasticsearch-dev" "search-worker-dev" "push-worker-dev" "mailer-worker-dev")
 
 NOT_FOUND=0
 for container in "${CONTAINERS[@]}"; do
@@ -622,6 +783,43 @@ if check_container "$DOZZLE_DEV_CONTAINER"; then
     ACCESSIBLE=$((ACCESSIBLE + 1))
 fi
 
+# Optional Elasticsearch HTTP (host-mapped port)
+_ES_HTTP_PORT="${ELASTIC_HTTP_HOST_PORT:-59200}"
+if check_container "elasticsearch-dev"; then
+    if check_service "http://localhost:${_ES_HTTP_PORT}" "Elasticsearch"; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
+_SW_GRPC_PORT="${SEARCH_WORKER_GRPC_HOST_PORT:-59202}"
+if check_container "search-worker-dev"; then
+    if nc -z localhost "$_SW_GRPC_PORT" 2>/dev/null; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
+_PUSH_GRPC_PORT="${PUSH_WORKER_GRPC_HOST_PORT:-59203}"
+if check_container "push-worker-dev"; then
+    if nc -z localhost "$_PUSH_GRPC_PORT" 2>/dev/null; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
+_MAILER_GRPC_PORT="${MAILER_WORKER_GRPC_HOST_PORT:-59204}"
+if check_container "mailer-worker-dev"; then
+    if nc -z localhost "$_MAILER_GRPC_PORT" 2>/dev/null; then
+        ACCESSIBLE=$((ACCESSIBLE + 1))
+    else
+        NOT_ACCESSIBLE=$((NOT_ACCESSIBLE + 1))
+    fi
+fi
+
 if [ $NOT_FOUND -gt 0 ]; then
     echo -e "  Containers: ${GREEN}$RUNNING running${NC}, ${YELLOW}$STOPPED stopped${NC}, ${BLUE}$NOT_FOUND not found${NC}"
 else
@@ -648,8 +846,17 @@ fi
 if check_container "$SEQ_CONTAINER"; then
     echo "    • Seq Logs: http://localhost:5341"
 fi
-if check_container "$DOZZLE_DEV_CONTAINER"; then
-    echo "    • Many Faces log viewer (Dozzle): http://localhost:8080"
+if check_container "elasticsearch-dev"; then
+    echo "    • Elasticsearch: http://localhost:${ELASTIC_HTTP_HOST_PORT:-59200}"
+fi
+if check_container "search-worker-dev"; then
+    echo "    • Search worker gRPC (host): localhost:${SEARCH_WORKER_GRPC_HOST_PORT:-59202}"
+fi
+if check_container "push-worker-dev"; then
+    echo "    • Push worker gRPC (host): localhost:${PUSH_WORKER_GRPC_HOST_PORT:-59203}"
+fi
+if check_container "mailer-worker-dev"; then
+    echo "    • Mailer worker gRPC (host): localhost:${MAILER_WORKER_GRPC_HOST_PORT:-59204}"
 fi
 
 echo ""

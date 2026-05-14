@@ -1,6 +1,6 @@
 #!/bin/bash
-# Start only the dev containers that are not running.
-# Use when status shows "Not found" for postgres, backend, admin, seq, pgadmin.
+# Start only the dev containers that are not running / missing.
+# Covers the same root compose services as ./scripts/start-all-dev.sh (core stack).
 # Usage: ./scripts/start-missing-dev.sh (from repository root)
 
 set -e
@@ -17,11 +17,17 @@ docker ps -a --format '{{.Names}}' | grep -q '^pgadmin-dev$' || MISSING+=(pgadmi
 docker ps -a --format '{{.Names}}' | grep -qE '^be-demo-dev$|^be-demo-api$' || MISSING+=(backend)
 docker ps -a --format '{{.Names}}' | grep -q '^admin-demo-dev$' || MISSING+=(admin)
 docker ps -a --format '{{.Names}}' | grep -q '^seq-dev$' || MISSING+=(seq)
+if ! docker ps -a --format '{{.Names}}' | grep -q '^fe-demo-dev$' || ! docker ps -a --format '{{.Names}}' | grep -q '^fe-demo-proxy$'; then
+  MISSING+=(frontend)
+fi
+docker ps -a --format '{{.Names}}' | grep -q '^ai-demo-dev$' || MISSING+=(ai)
+docker ps -a --format '{{.Names}}' | grep -q '^dozzle-dev$' || MISSING+=(dozzle)
 
 if [ ${#MISSING[@]} -eq 0 ]; then
   echo "✅ All required containers already exist. Starting any stopped ones..."
   docker start postgres-dev redis-dev pgadmin-dev 2>/dev/null || true
   docker start seq-dev be-demo-dev admin-demo-dev 2>/dev/null || true
+  docker start fe-demo-dev fe-demo-proxy ai-demo-dev dozzle-dev 2>/dev/null || true
   echo "Done. Run ./scripts/status-all.sh to check."
   exit 0
 fi
@@ -89,7 +95,7 @@ if [[ " ${MISSING[*]} " =~ " backend " ]]; then
   echo ""
 fi
 
-# 4. Admin (depends on backend)
+# 4. Admin
 if [[ " ${MISSING[*]} " =~ " admin " ]]; then
   echo "📦 Starting Admin (admin-demo-dev)..."
   docker-compose -f docker-compose.dev.yml up -d admin-demo-dev
@@ -97,4 +103,33 @@ if [[ " ${MISSING[*]} " =~ " admin " ]]; then
   echo ""
 fi
 
+# 5. Frontend (Vite + TLS proxy)
+if [[ " ${MISSING[*]} " =~ " frontend " ]]; then
+  echo "📦 Starting Frontend (fe-demo-dev + fe-demo-proxy)..."
+  docker-compose -f docker-compose.dev.yml up -d fe-demo-dev fe-demo-proxy
+  echo "   ✅ Frontend compose services started."
+  echo ""
+fi
+
+# 6. AI service
+if [[ " ${MISSING[*]} " =~ " ai " ]]; then
+  echo "📦 Starting AI service (ai-demo-dev)..."
+  docker-compose -f docker-compose.dev.yml up -d ai-demo-dev
+  echo "   ✅ AI service started."
+  echo ""
+fi
+
+# 7. Dozzle (log viewer)
+if [[ " ${MISSING[*]} " =~ " dozzle " ]]; then
+  echo "📦 Starting Many Faces log viewer (dozzle-dev)..."
+  if [ -f "many_faces_logger/scripts/start-dev.sh" ]; then
+    (cd many_faces_logger && ./scripts/start-dev.sh)
+  else
+    docker-compose -f many_faces_logger/docker-compose.dev.yml up -d dozzle-dev
+  fi
+  echo "   ✅ Dozzle started."
+  echo ""
+fi
+
 echo "✅ Missing services started. Run ./scripts/status-all.sh to verify."
+echo "💡 Elasticsearch, push, and mailer workers are started by ./scripts/start-all-dev.sh by default. To skip any: ENABLE_ELASTICSEARCH=0, ENABLE_PUSH_WORKER=0, or ENABLE_MAILER_WORKER=0."

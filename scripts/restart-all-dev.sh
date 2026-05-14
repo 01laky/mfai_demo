@@ -1,193 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# restart-all-dev.sh — full Docker dev stack: stop then start (same flow as start-all-dev).
+#
+# Uses ./scripts/stop-all-dev.sh then ./scripts/start-all-dev.sh from the monorepo root.
+# Optional env: same as start-all-dev. Workers (Elasticsearch, push, mailer) are on by default; set ENABLE_*=0 to skip.
+#
+# By default skips the interactive live status TUI at the end of start-all-dev (sets
+# SKIP_STATUS_SCREEN=1). To see the TUI after restart: SKIP_STATUS_SCREEN=0 ./scripts/restart-all-dev.sh
+#
+# Usage: ./scripts/restart-all-dev.sh (from repository root)
 
-# Script to restart all development environments
-# Stops and starts: many_faces_backend (backend), many_faces_portal (frontend), many_faces_admin (admin)
-
-set -e
+set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
 cd "$ROOT"
 
-echo "🔄 Restarting all development environments..."
-echo ""
+echo "🔄 restart-all-dev: stop then start (Docker stack via start-all-dev)"
+export SKIP_STATUS_SCREEN="${SKIP_STATUS_SCREEN:-1}"
 
-# ============================================================================
-# STOP ALL APPLICATIONS
-# ============================================================================
-
-echo "🛑 Stopping all applications..."
-echo ""
-
-# Stop backend
-if [ -f "many_faces_backend/scripts/stop-dev.sh" ]; then
-    echo "  📦 Stopping backend (many_faces_backend)..."
-    cd many_faces_backend
-    ./scripts/stop-dev.sh 2>/dev/null || true
-    cd ..
-else
-    echo "  ⚠️  many_faces_backend/scripts/stop-dev.sh not found"
-fi
-
-# Stop frontend (many_faces_portal)
-if [ -f "many_faces_portal/scripts/stop-dev.sh" ]; then
-    echo "  📦 Stopping frontend (many_faces_portal)..."
-    cd many_faces_portal
-    ./scripts/stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
-    cd ..
-else
-    echo "  ⚠️  many_faces_portal/scripts/stop-dev.sh not found"
-fi
-
-# Stop many_faces_admin
-if [ -f "many_faces_admin/scripts/stop-dev.sh" ]; then
-    echo "  📦 Stopping many_faces_admin..."
-    cd many_faces_admin
-    ./scripts/stop-dev.sh 2>/dev/null || docker-compose down 2>/dev/null || true
-    cd ..
-else
-    echo "  ⚠️  many_faces_admin/scripts/stop-dev.sh not found"
-fi
-
-# Kill any remaining processes
-echo "  🧹 Cleaning up remaining processes..."
-pkill -f "vite.*8081" 2>/dev/null || true
-pkill -f "vite.*8082" 2>/dev/null || true
-pkill -f "dotnet.*BeDemo" 2>/dev/null || true
-
-sleep 2
-
-echo "✅ All applications stopped"
-echo ""
-
-# ============================================================================
-# START ALL APPLICATIONS
-# ============================================================================
-
-echo "🚀 Starting all applications..."
-echo ""
-
-# Start backend
-if [ -f "many_faces_backend/scripts/start-dev.sh" ]; then
-    echo "  📦 Starting backend (many_faces_backend)..."
-    cd many_faces_backend
-    ./scripts/start-dev.sh > /dev/null 2>&1 &
-    BACKEND_PID=$!
-    echo "    ✅ Backend started (PID: $BACKEND_PID)"
-    cd ..
-else
-    echo "  ⚠️  many_faces_backend/scripts/start-dev.sh not found"
-fi
-
-sleep 3
-
-# Start frontend (many_faces_portal)
-if [ -f "many_faces_portal/scripts/start-dev.sh" ]; then
-    echo "  📦 Starting frontend (many_faces_portal)..."
-    cd many_faces_portal || exit 1
-
-    if [ ! -d "node_modules" ]; then
-        echo "    ⚙️  Installing dependencies..."
-        if ! yarn install; then
-            echo "    ❌ Failed to install dependencies!"
-            cd ..
-        else
-            echo "    ✅ Dependencies installed!"
-            ./scripts/start-dev.sh > /dev/null 2>&1 &
-            FRONTEND_PID=$!
-            echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
-            cd ..
-        fi
-    else
-        ./scripts/start-dev.sh > /dev/null 2>&1 &
-        FRONTEND_PID=$!
-        echo "    ✅ Frontend started (PID: $FRONTEND_PID)"
-        cd ..
-    fi
-else
-    echo "  ⚠️  many_faces_portal/scripts/start-dev.sh not found"
-fi
-
-sleep 3
-
-# Start many_faces_admin
-if [ -f "many_faces_admin/package.json" ]; then
-    echo "  📦 Starting many_faces_admin..."
-    cd many_faces_admin || exit 1
-
-    if [ ! -d "node_modules" ]; then
-        echo "    ⚙️  Installing dependencies..."
-        if ! yarn install; then
-            echo "    ❌ Failed to install dependencies!"
-            cd ..
-        else
-            echo "    ✅ Dependencies installed!"
-            export VITE_DEV_PORT=8082
-            yarn dev > /dev/null 2>&1 &
-            ADMIN_PID=$!
-            echo "    ✅ Many Faces Admin started (PID: $ADMIN_PID)"
-            cd ..
-        fi
-    else
-        export VITE_DEV_PORT=8082
-        yarn dev > /dev/null 2>&1 &
-        ADMIN_PID=$!
-        echo "    ✅ Many Faces Admin started (PID: $ADMIN_PID)"
-        cd ..
-    fi
-else
-    echo "  ⚠️  many_faces_admin/package.json not found"
-fi
-
-echo ""
-echo "⏳ Waiting for applications to start..."
-sleep 10
-
-# ============================================================================
-# CHECK STATUS
-# ============================================================================
-
-echo ""
-echo "🔍 Checking application status..."
-echo ""
-
-BACKEND_STATUS="❌"
-FRONTEND_STATUS="❌"
-ADMIN_STATUS="❌"
-
-if curl -s http://localhost:8000/swagger > /dev/null 2>&1; then
-    BACKEND_STATUS="✅"
-fi
-
-if curl -s http://localhost:8081 > /dev/null 2>&1; then
-    FRONTEND_STATUS="✅"
-fi
-
-if curl -s http://localhost:8082 > /dev/null 2>&1; then
-    ADMIN_STATUS="✅"
-fi
-
-echo "$BACKEND_STATUS Backend (many_faces_backend): http://localhost:8000"
-echo "$FRONTEND_STATUS Frontend (many_faces_portal): http://localhost:8081"
-echo "$ADMIN_STATUS Many Faces Admin: http://localhost:8082"
-echo ""
-
-echo "📋 Application URLs:"
-echo "   Backend API: http://localhost:8000"
-echo "   Backend Swagger: http://localhost:8000/swagger"
-echo "   Frontend (many_faces_portal): http://localhost:8081"
-echo "   Many Faces Admin: http://localhost:8082"
-echo ""
-
-if [ "$BACKEND_STATUS" = "✅" ] && [ "$FRONTEND_STATUS" = "✅" ] && [ "$ADMIN_STATUS" = "✅" ]; then
-    echo "✅ All applications are running!"
-    exit 0
-else
-    echo "⚠️  Some applications may still be starting. Please check logs if needed."
-    echo ""
-    echo "💡 To check logs:"
-    echo "   - Backend: cd many_faces_backend && docker-compose logs -f"
-    echo "   - Frontend: cd many_faces_portal && docker-compose logs -f"
-    echo "   - Many Faces Admin: Check terminal or browser console"
-    exit 1
-fi
+"$SCRIPTS_DIR/stop-all-dev.sh"
+"$SCRIPTS_DIR/start-all-dev.sh"

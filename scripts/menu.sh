@@ -13,8 +13,8 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
   exit 1
 fi
 
-ROOT_SCRIPTS="start-all-dev.sh stop-all-dev.sh restart-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh status-all.sh test-all.sh lint-all.sh"
-CONTAINER_ORDER="many_faces_backend many_faces_portal many_faces_admin many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_mobile"
+ROOT_SCRIPTS="start-all-dev.sh stop-all-dev.sh restart-all-dev.sh clear-all-dev.sh rebuild-all-dev.sh build-all.sh start-missing-dev.sh status-all.sh test-all.sh lint-all.sh verify-dev-stack-contracts.sh"
+CONTAINER_ORDER="many_faces_backend many_faces_portal many_faces_admin many_faces_ai many_faces_database many_faces_redis many_faces_logger many_faces_elastic many_faces_push many_faces_mailer many_faces_mobile"
 CONTAINER_SCRIPTS=(
   "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/generate-diagram.sh"
   "scripts/lint.sh scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh scripts/fix-editor.sh"
@@ -23,6 +23,9 @@ CONTAINER_SCRIPTS=(
   "scripts/start-db.sh scripts/stop-db.sh scripts/clear-db.sh scripts/create-bedemo-role.sh"
   "scripts/start-redis.sh scripts/stop-redis.sh scripts/clear-redis.sh"
   "scripts/start-dev.sh scripts/stop-dev.sh scripts/clear-dev.sh scripts/rebuild-dev.sh"
+  "scripts/start-elasticsearch.sh scripts/stop-elasticsearch.sh scripts/smoke-grpc-tls.sh"
+  "scripts/start-push-worker.sh scripts/stop-push-worker.sh scripts/smoke-grpc-tls.sh"
+  "scripts/start-mailer-worker.sh scripts/stop-mailer-worker.sh scripts/smoke-grpc-tls.sh"
   "scripts/lint.sh scripts/verify-ci.sh scripts/test.sh scripts/typecheck.sh scripts/build.sh"
 )
 
