@@ -2,14 +2,16 @@ services:
   # Backend API (many_faces_backend)
   be-demo-dev:
     build:
-      context: ./many_faces_backend/BeDemo.Api
-      dockerfile: Dockerfile.dev
+      context: ./many_faces_backend
+      dockerfile: BeDemo.Api/Dockerfile.dev
     container_name: be-demo-dev
+    working_dir: /src/BeDemo.Api
     ports:
       - "8000:8000"
       - "8001:8001"
     volumes:
-      - ./many_faces_backend/BeDemo.Api:/app
+      - ./many_faces_backend/BeDemo.Api:/src/BeDemo.Api
+      - ./many_faces_backend/many_faces_proto:/src/many_faces_proto:ro
       - ./dev/certs:/https-certs:ro
     # Redis beží v samostatnom repozitári / compose; na hostiteľovi publikuj port 6379 (alebo použi spoločnú Docker sieť).
     extra_hosts:
