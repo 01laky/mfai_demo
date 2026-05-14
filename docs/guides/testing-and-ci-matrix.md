@@ -26,7 +26,7 @@ Details and edge cases: [`development.md`](./development.md) (*Monorepo scripts*
 | Java (`many_faces_mailer` mailer-worker) | `many_faces_mailer/` | `./gradlew test` (CI job `java_many_faces_mailer`, compose checks `infra_many_faces_mailer`). Optional Docker TLS/mTLS smoke: `many_faces_mailer/scripts/smoke-grpc-tls.sh` (CI job `smoke_mailer_worker_grpc_tls`, [`mailer-grpc-tls-mtls.md`](./mailer-grpc-tls-mtls.md)). Dev + Mailpit: [`mailer-local-dev.md`](./mailer-local-dev.md); repo: [`many_faces_mailer/README.md`](../../many_faces_mailer/README.md). |
 | React | `many_faces_portal/`, `many_faces_admin/` | `yarn test`, `yarn validate`, `yarn lint` |
 | Expo | `many_faces_mobile/` | `yarn test`, `./scripts/test.sh` (see mobile guide) |
-| Python AI | `many_faces_ai/` | `pytest`, Ruff (`./scripts/lint.sh`) |
+| Python AI | `many_faces_ai/` | `pytest`, Ruff (`./scripts/lint.sh`). gRPC stubs: `python -m grpc_tools.protoc -I ../many_faces_proto/proto --python_out=proto --grpc_python_out=proto health.proto` (from `many_faces_ai/` with monorepo submodules). |
 
 ## Related
 
