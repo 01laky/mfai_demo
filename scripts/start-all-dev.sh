@@ -74,6 +74,21 @@ else
     cd ..
 fi
 
+# start-db.sh / compose run asynchronously above — wait for the container before port / migrate checks.
+echo "    Waiting for postgres-dev container..."
+_pg_container_ok=0
+for _i in $(seq 1 120); do
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx 'postgres-dev'; then
+        _pg_container_ok=1
+        echo "    ✅ postgres-dev container is present"
+        break
+    fi
+    sleep 1
+done
+if [ "$_pg_container_ok" -eq 0 ]; then
+    echo "    ⚠️  postgres-dev not seen after 120s — migrate step may skip or fail"
+fi
+
 # ============================================================================
 # START REDIS (many_faces_redis submodule)
 # ============================================================================
@@ -159,7 +174,7 @@ EXPECTED_TOTAL=${#EXPECTED_CONTAINERS[@]}
 
 echo "    Waiting for PostgreSQL (localhost:54320)..."
 _pg_ok=0
-for _i in {1..90}; do
+for _i in $(seq 1 120); do
     if nc -z localhost 54320 2>/dev/null; then
         _pg_ok=1
         echo "    ✅ PostgreSQL is accepting connections"
@@ -168,7 +183,7 @@ for _i in {1..90}; do
     sleep 1
 done
 if [ "$_pg_ok" -eq 0 ]; then
-    echo "    ⚠️  PostgreSQL not ready after 90s — backend may retry until DB is up"
+    echo "    ⚠️  PostgreSQL not ready after 120s — backend may retry until DB is up"
 fi
 
 _redis_ok=0
