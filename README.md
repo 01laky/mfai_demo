@@ -4,11 +4,11 @@ Many Faces AI is a full-stack social platform built around the concept of **face
 
 The project shows how a modern social product can be assembled from reusable building blocks: dynamic page grids, role-aware user flows, media-rich content, real-time communication, profile directories, public and private spaces, admin-managed structure, and backend-enforced data separation between faces.
 
-The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), an optional **transactional mailer worker** (`many_faces_mailer`, Java gRPC + SMTP templates), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
+The monorepo includes the customer-facing frontend, the admin portal, the mobile shell (Expo), the backend API, AI services, PostgreSQL and Redis infrastructure, a shared **`many_faces_proto`** git submodule holding **canonical gRPC `.proto` contracts** (push, mailer, search workers, …), optional **Elasticsearch** search tooling (`many_faces_elastic`), an optional **FCM push worker** (`many_faces_push`), an optional **transactional mailer worker** (`many_faces_mailer`, Java gRPC + SMTP templates), Docker-based local orchestration, development scripts, documentation, and reusable AI-agent prompts that help continue implementation work consistently.
 
 It is designed both as a runnable local reference stack and as an engineering playground for experimenting with configurable social experiences, face-specific content, access rules, media workflows, real-time features, and AI-powered interactions. Each app is its own **git submodule**.
 
-**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger, **elastic**, **push**, **mailer**). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
+**GitHub:** this tree is the **`many_faces_main`** repository; submodule remotes use the `many_faces_*` names (backend, portal, admin, mobile, ai, database, redis, logger, **elastic**, **push**, **mailer**, **proto**). Local directory names stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](./.gitmodules) and [`docs/guides/git-submodules.md`](./docs/guides/git-submodules.md).
 
 Security and trust boundaries are a high priority in the architecture: this stack uses OAuth2/JWT authentication, signed access tokens, refresh-token based sessions, role-aware access control, capability-based UI flows, backend-enforced checks for face-specific data, protected admin operations, HTTPS-oriented local development, and documented crypto/TLS hardening work. Token handling covers signed JWTs, refresh-token rotation, server-side validation, explicit expiry handling, and protected API boundaries; the documentation also calls out key/certificate handling, hashing/encryption decisions, and future hardening work. The goal is to keep access rules and sensitive behavior explicit across the frontend, admin portal, and backend API, so the system remains understandable, reviewable, and safer to extend.
 
@@ -394,6 +394,7 @@ flowchart TD
 | Mobile app | [`many_faces_mobile/`](./many_faces_mobile/README.md) | **many_faces_mobile** — Expo (React Native) client; runs outside Docker Compose (`yarn start` after `corepack enable` + `yarn install`). |
 | Admin portal | [`many_faces_admin/`](./many_faces_admin/README.md) | **many_faces_admin** — React SPA for managing faces, pages, grid layouts, roles, admin data, and operational views. |
 | Backend API | [`many_faces_backend/`](./many_faces_backend/README.md) | **many_faces_backend** — ASP.NET Core API for auth, face-scoped routes, EF Core data access, SignalR hubs, ACL/capabilities, and social modules. |
+| Shared gRPC contracts | [`many_faces_proto/`](./many_faces_proto/README.md) | **many_faces_proto** — canonical `.proto` definitions and Buf lint/breaking; Strategy A submodule at monorepo root; workers and backend generate clients from here. |
 | AI service | [`many_faces_ai/`](./many_faces_ai/README.md) | **many_faces_ai** — Python gRPC service used by AI-assisted workflows and health checks. |
 | Data stores | [`many_faces_database/`](./many_faces_database/README.md), [`many_faces_redis/`](./many_faces_redis/README.md), [`many_faces_elastic/`](./many_faces_elastic/README.md), [`many_faces_push/`](./many_faces_push/README.md), [`many_faces_mailer/`](./many_faces_mailer/README.md) | **many_faces_database** + **many_faces_redis** — PostgreSQL and Redis. **many_faces_elastic** — optional Elasticsearch plus Go **search-worker** (gRPC). **many_faces_push** — optional **FCM push** worker (gRPC). **many_faces_mailer** — optional **transactional mail** worker (Java gRPC → SMTP; backend `Mail:*`). PostgreSQL stays authoritative. |
 | Logging | [`many_faces_logger/`](./many_faces_logger/README.md) | **many_faces_logger** — local log viewing with Dozzle / container log tooling. |
@@ -456,6 +457,7 @@ Backend details: [`many_faces_backend/README.md`](./many_faces_backend/README.md
 
 ```
 many_faces_backend/       # many_faces_backend — API (OAuth2, JWT, SignalR, EF Core)
+many_faces_proto/        # many_faces_proto — shared gRPC .proto contracts (Buf)
 many_faces_portal/       # many_faces_portal — user-facing SPA
 many_faces_mobile/       # many_faces_mobile — Expo React Native
 many_faces_admin/    # many_faces_admin — admin SPA
