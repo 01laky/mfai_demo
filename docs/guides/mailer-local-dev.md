@@ -80,7 +80,9 @@ The backend **`MailerGrpcEmailSender`** classifies Identity mail from HTML marke
 
 ## TLS / mTLS
 
-Parity with push/search: **`MAILER_WORKER_GRPC_TLS_CERT_FILE`**, **`MAILER_WORKER_GRPC_TLS_KEY_FILE`**, optional **`MAILER_WORKER_GRPC_MTLS_CLIENT_CA_FILE`**, and backend **`Mail:WorkerTls*`** fields. Step-by-step: start from **[push-grpc-tls-mtls.md](./push-grpc-tls-mtls.md)** and apply the same wiring pattern with the `Mail:` prefix.
+Parity with push/search workers: **`MAILER_WORKER_GRPC_TLS_CERT_FILE`**, **`MAILER_WORKER_GRPC_TLS_KEY_FILE`**, optional **`MAILER_WORKER_GRPC_MTLS_CLIENT_CA_FILE`**, and backend **`Mail:WorkerTls*`** when **`Mail:WorkerGrpcUrl`** uses **`https://`**.
+
+**Step-by-step:** **[mailer-grpc-tls-mtls.md](./mailer-grpc-tls-mtls.md)** (openssl, grpcurl, CI smoke script **`many_faces_mailer/scripts/smoke-grpc-tls.sh`**, Docker project **`mf-mailer-tls-smoke`**, host gRPC port **59216**). The push-worker guide remains a useful generic reference: **[push-grpc-tls-mtls.md](./push-grpc-tls-mtls.md)**.
 
 ## Security reminders
 

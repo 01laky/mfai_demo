@@ -503,7 +503,7 @@ while true; do
     # CHECK AND RESTART STOPPED CONTAINERS
     # ========================================================================
     # Check for stopped containers and attempt to restart them automatically
-    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev)$" || true)
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev|mailer-worker-tls-smoke)$" || true)
     
     if [ -n "$STOPPED" ]; then
         echo ""
