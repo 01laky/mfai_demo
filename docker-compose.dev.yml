@@ -101,12 +101,13 @@ services:
       # Cold named volume: yarn install (esbuild, etc.) can take several minutes before Vite listens.
       start_period: 600s
 
-  # HTTPS reverse proxy: always serves something on host 9081 — static wait page + auto-refresh while Vite is down.
+  # Reverse proxy: HTTPS on host 9081 (mkcert). HTTP on host 9080 for browsers that reject local TLS (e.g. Cursor Simple Browser).
   fe-demo-proxy:
     image: nginx:1.27-alpine
     container_name: fe-demo-proxy
     ports:
       - "9081:443"
+      - "9080:80"
     volumes:
       - ./dev/nginx-fe-wait/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./dev/nginx-fe-wait/wait.html:/usr/share/nginx/html/wait.html:ro

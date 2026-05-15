@@ -104,10 +104,13 @@ check_service() {
     fi
 }
 
-# Docker FE on 9081 goes through fe-demo-proxy: wait page contains this marker until Vite is up.
+# Docker FE: fe-demo-proxy on 9081 (HTTPS) and 9080 (HTTP to browser). Wait page marker until Vite is up.
 fe_docker_vite_ready() {
-    local body
-    body=$(curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null) || return 1
+    local body=""
+    body=$(curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null) || true
+    if echo "$body" | grep -qF '<!-- many-faces-fe-docker-wait-page -->' || [[ -z "$body" ]]; then
+        body=$(curl -s --max-time 8 "http://localhost:9080/" 2>/dev/null) || true
+    fi
     if echo "$body" | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
         return 1
     fi
@@ -334,12 +337,13 @@ if check_container_exists "$FE_CONTAINER"; then
         
         # Check if frontend is accessible (not the nginx auto-refresh wait page)
         if fe_docker_vite_ready; then
-            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 — Docker, Vite)"
+            echo -e "  App: ${GREEN}✓ Accessible${NC} (https://localhost:9081 alebo http://localhost:9080 — Docker, Vite)"
             FE_ACCESSIBLE=true
-        elif curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
-            echo -e "  App: ${YELLOW}⏳ Čaká sa na Vite${NC} (https://localhost:9081 — obnovuje sa samo)"
+        elif curl -sk --max-time 8 "https://localhost:9081/" 2>/dev/null | grep -qF '<!-- many-faces-fe-docker-wait-page -->' \
+            || curl -s --max-time 8 "http://localhost:9080/" 2>/dev/null | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
+            echo -e "  App: ${YELLOW}⏳ Čaká sa na Vite${NC} (9081/9080 — obnovuje sa samo)"
         else
-            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:9081)"
+            echo -e "  App: ${YELLOW}⚠ Not accessible${NC} (https://localhost:9081 / http://localhost:9080)"
         fi
     else
         STATUS_INFO=$(get_container_status "$FE_CONTAINER")
@@ -835,7 +839,7 @@ if check_container "$BE_CONTAINER"; then
     echo "    • Swagger: http://localhost:8000/swagger/index.html"
 fi
 if [ "$FE_ACCESSIBLE" = true ]; then
-    echo "    • Frontend: https://localhost:9081 (Docker) or https://localhost:8081 (yarn dev on host)"
+    echo "    • Frontend: https://localhost:9081 or http://localhost:9080 (Docker) — https://localhost:8081 (yarn dev on host)"
 fi
 if check_container "$ADMIN_CONTAINER"; then
     echo "    • Admin: https://localhost:8082"

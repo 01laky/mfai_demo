@@ -270,6 +270,12 @@ echo "📦 EF database update + SQL reference seeds (many_faces_database)..."
 if nc -z localhost 54320 2>/dev/null; then
     _conn='Host=localhost;Port=54320;Database=bedemo;Username=bedemo_user;Password=bedemo_password'
     export PATH="${PATH:+$PATH:}$HOME/.dotnet/tools"
+    # Restore first — avoids NETSDK1064 / metadata failures when `dotnet ef` runs before packages are on disk.
+    if (cd many_faces_backend/BeDemo.Api && dotnet restore); then
+        echo "    ✅ dotnet restore (BeDemo.Api) completed"
+    else
+        echo "    ⚠️  dotnet restore failed — dotnet ef may still fail"
+    fi
     if (cd many_faces_backend/BeDemo.Api && dotnet ef database update --connection "$_conn"); then
         echo "    ✅ dotnet ef database update completed"
     else
@@ -658,17 +664,20 @@ while true; do
         echo "  Status: $STATUS"
         
         FE_PAGE=$(curl -sk -m 8 https://localhost:9081/ 2>/dev/null || true)
+        if echo "$FE_PAGE" | grep -qF '<!-- many-faces-fe-docker-wait-page -->' || [ -z "$FE_PAGE" ]; then
+            FE_PAGE=$(curl -s -m 8 http://localhost:9080/ 2>/dev/null || true)
+        fi
         if echo "$FE_PAGE" | grep -qF '<!-- many-faces-fe-docker-wait-page -->'; then
-            echo "  App: ⏳ Čaká sa na Vite — https://localhost:9081 sa sám obnoví (nginx wait page)"
+            echo "  App: ⏳ Čaká sa na Vite — https://localhost:9081 alebo http://localhost:9080 sa sám obnoví (nginx wait page)"
         elif [ -n "$FE_PAGE" ]; then
-            echo "  App: ✓ Accessible (https://localhost:9081 — cez fe-demo-proxy → Vite)"
+            echo "  App: ✓ Accessible (https://localhost:9081 alebo http://localhost:9080 — cez fe-demo-proxy → Vite)"
         else
-            echo "  App: ⚠ Not accessible (https://localhost:9081 — je spustený fe-demo-proxy?)"
+            echo "  App: ⚠ Not accessible (9081/9080 — je spustený fe-demo-proxy?)"
         fi
         if docker ps --format '{{.Names}}' | grep -q "^fe-demo-proxy$"; then
             echo "  Proxy: ✓ Running (fe-demo-proxy)"
         else
-            echo "  Proxy: ○ fe-demo-proxy not running (port 9081 nebude fungovať)"
+            echo "  Proxy: ○ fe-demo-proxy not running (porty 9081/9080 nebudú fungovať)"
         fi
     elif docker ps -a --format '{{.Names}}' | grep -q "^fe-demo-dev$"; then
         STATUS=$(docker ps -a --format '{{.Status}}' --filter name=fe-demo-dev | head -1)
@@ -796,7 +805,7 @@ while true; do
     echo "  Quick Links:"
     echo "    • Backend API: http://localhost:8000 / https://localhost:8001"
     echo "    • Swagger: https://localhost:8001/swagger/index.html"
-    echo "    • Frontend (Docker): https://localhost:9081"
+    echo "    • Frontend (Docker): https://localhost:9081 — or http://localhost:9080 (Simple Browser / no local TLS)"
     echo "    • Admin: https://localhost:8082"
     echo "    • Seq Logs: http://localhost:5341"
     echo "    • Many Faces log viewer (Dozzle): http://localhost:8080"
