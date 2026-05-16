@@ -36,6 +36,11 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: node scripts/verify-localization-key-parity.mjs
 
+      # SHV2 PI-10: named moderation security gate (corpus, Unicode spoofing, trust boundary, log redaction)
+      - name: Content moderation security regression (SHV2 PI-10)
+        working-directory: ${{ github.workspace }}
+        run: node scripts/verify-moderation-security-tests.mjs
+
   # Shared gRPC contracts: Buf lint (and breaking vs main on pull requests).
   many_faces_proto:
     name: many_faces_proto

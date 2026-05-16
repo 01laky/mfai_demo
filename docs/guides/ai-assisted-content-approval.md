@@ -213,9 +213,12 @@ AI `flags` from the wire are **whitelisted and canonicalized** before persistenc
 Run corpus-related tests:
 
 ```bash
+# PI-10 CI gate (same filter as GitHub Actions after full solution test)
+node scripts/verify-moderation-security-tests.mjs
+
+# Or individual filters from repo root / many_faces_backend:
+cd many_faces_backend && dotnet test --filter "Category=ModerationSecurity"
 cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationSecurityEdgeTests"
-cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationUnicodeSpoofing"
-cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationTrustBoundary"
 ```
 
 ## Redis Queue And Backpressure
