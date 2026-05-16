@@ -160,12 +160,14 @@ In `BeDemo.Api/appsettings.json` (and overridable via environment / secrets):
 | **`Jwt:ExpiresInMinutesRememberMe`**                                     | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). Default **10 080** minutes (**7 days**). Startup validation rejects values above 7 days (SHV2 **BE-A2**, `JwtTokenLifetimeOptions`). |
 | **`Jwt:Issuer`**, **`Jwt:Audience`**                                     | Standard JWT validation; must match between token creation and validation.                                                                |
 | **`Jwt:RefreshTokenDaysSession`** / **`Jwt:RefreshTokenDaysRememberMe`** | Absolute lifetime (days) for stored refresh rows after password grant (shorter vs remember-me).                                           |
+| **`Identity:Password:RequiredLength`**                                  | Minimum password length for **register/complete**, password reset, and admin-created users. Default **12** (SHV2 **BE-A3**). **`appsettings.Development.json`** may set **4** for local demos only; Production/Testing reject &lt; 12 at startup. |
 
 **Environment override example** (Docker / k8s):
 
 ```text
 Jwt__ExpiresInMinutes=60
 Jwt__ExpiresInMinutesRememberMe=10080
+Identity__Password__RequiredLength=12
 ```
 
 (`__` is the usual .NET env nesting separator.)

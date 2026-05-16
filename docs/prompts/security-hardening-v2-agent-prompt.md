@@ -147,7 +147,7 @@ flowchart LR
 |----|------|----------------|
 | BE-A1 | [ ] Global `FallbackPolicy = RequireAuthenticatedUser`; explicit `[AllowAnonymous]` on OAuth, JWKS, localization, documented public routes | `Program.cs` |
 | BE-A2 | [x] Fix `Jwt:ExpiresInMinutesRememberMe` (remove multi-year value; align with refresh policy, e.g. 7d access + 90d refresh) — `JwtTokenLifetimeOptions`, `appsettings.json` / `appsettings.Production.json` (10080 min), `OAuthAccessTokenFactory`, `JwtTokenLifetimeOptionsTests`, `OAuth2RememberMeTests`. |
-| BE-A3 | [ ] Raise `Password.RequiredLength` to ≥12 (dev profile may use lower via `appsettings.Development.json` only) | `Program.cs` |
+| BE-A3 | [x] Raise `Password.RequiredLength` to ≥12 (dev profile may use lower via `appsettings.Development.json` only) — `IdentityPasswordPolicyOptions`, `ConfigureIdentityPasswordPolicy`, `IdentityPasswordPolicyValidateOptions`, `appsettings*.json`, `IdentityPasswordPolicyOptionsTests`, `IntegrationTestCredentials`. |
 | BE-A4 | [ ] Cookie `AuthController`: `lockoutOnFailure: true` + rate limits matching OAuth | `Controllers/AuthController.cs` |
 | BE-A5 | [ ] Document deprecate-or-align plan for cookie auth vs OAuth2 | `docs/guides/authentication-and-sessions.md` |
 | BE-A6 | [ ] SignalR: prefer `Authorization` header; redact `access_token` query in logs | `Program.cs`, logging config |
