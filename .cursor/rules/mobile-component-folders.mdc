@@ -27,11 +27,13 @@ node scripts/verify-mobile-component-colocation.mjs --imports
 cd many_faces_mobile && yarn validate
 ```
 
-Scaffold moves:
+Scaffold / batch moves (monorepo root):
 
 ```bash
 node scripts/colocate-mobile-component.mjs MyScreen --screen
 node scripts/colocate-mobile-component.mjs BlogGridBlock --grid-block
+node scripts/migrate-mobile-colocate-phase.mjs   # documented phases only
+node scripts/fix-mobile-colocated-imports.mjs    # after bulk git mv
 ```
 
-Spec: `docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md` (Track A colocation; §23–§27 for parity follow-ups).
+Live layout: `many_faces_mobile/README.md`, `src/components/README.md`. Spec: `docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md` (§1 is historical; Track A + §27 slices delivered).

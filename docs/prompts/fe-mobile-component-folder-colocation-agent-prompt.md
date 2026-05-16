@@ -14,6 +14,8 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
+> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
 - [fe-portal-component-folder-colocation-agent-prompt.md](./fe-portal-component-folder-colocation-agent-prompt.md) — colocation phases, `git mv`, verify script, CI guard patterns (**delivered** on portal).
@@ -57,43 +59,43 @@
 
 ### 0.1 Labels
 
-| Label | Meaning |
-| ----- | ------- |
-| **(required)** | Must be satisfied before merge, or explicitly deferred in PR with reason. |
-| **(required — if _condition_)** | Mandatory when _condition_ is true. |
-| **(optional)** | Skip only with written deferral in PR. |
+| Label                           | Meaning                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| **(required)**                  | Must be satisfied before merge, or explicitly deferred in PR with reason. |
+| **(required — if _condition_)** | Mandatory when _condition_ is true.                                       |
+| **(optional)**                  | Skip only with written deferral in PR.                                    |
 
 ### 0.2 Section coverage (**required** — copy into PR)
 
-| § | Topic | Status (✓ / N/A) | If N/A, reason |
-| - | ----- | ---------------- | -------------- |
-| **§1** | As-is audit | | |
-| **§2** | Target folder layout | | |
-| **§3** | What belongs inside a UI folder | | |
-| **§4** | Import / export rules | | |
-| **§5** | `screens/`, `navigation/` | | |
-| **§6** | `theme/` | | |
-| **§7** | `wall-tickets/` namespace | | |
-| **§8** | `grid/` | | |
-| **§9** | Shell + effects | | |
-| **§10** | Phased delivery / PR split | | |
-| **§11** | Verification | | |
-| **§12** | Documentation | | |
-| **§13** | Master checklist (summary) | | |
-| **§14** | Before / after examples | | |
-| **§15** | Engagement exit rule | | |
-| **§16** | Implementing-agent task list | | |
-| **§17** | Tooling, CI, conventions | | |
-| **§18** | Large screens / grid — private sub-components | | |
-| **§19** | Colocated tests + final sweep | | |
-| **§20** | Import boundaries (ESLint) | | |
-| **§21** | DX — README, local verify, CI | | |
-| **§23** | Rollout sequencing (colocation vs parity) | | |
-| **§24** | Future `src/features/` namespace | | |
-| **§25** | Grid `blocks/` registry + parity matrix | | |
-| **§26** | `yarn validate` + committed Jest config | | |
-| **§27** | Post-colocation product slices | | |
-| **§28** | Explicit non-goals (summary) | | |
+| §       | Topic                                         | Status (✓ / N/A) | If N/A, reason |
+| ------- | --------------------------------------------- | ---------------- | -------------- |
+| **§1**  | As-is audit                                   |                  |                |
+| **§2**  | Target folder layout                          |                  |                |
+| **§3**  | What belongs inside a UI folder               |                  |                |
+| **§4**  | Import / export rules                         |                  |                |
+| **§5**  | `screens/`, `navigation/`                     |                  |                |
+| **§6**  | `theme/`                                      |                  |                |
+| **§7**  | `wall-tickets/` namespace                     |                  |                |
+| **§8**  | `grid/`                                       |                  |                |
+| **§9**  | Shell + effects                               |                  |                |
+| **§10** | Phased delivery / PR split                    |                  |                |
+| **§11** | Verification                                  |                  |                |
+| **§12** | Documentation                                 |                  |                |
+| **§13** | Master checklist (summary)                    |                  |                |
+| **§14** | Before / after examples                       |                  |                |
+| **§15** | Engagement exit rule                          |                  |                |
+| **§16** | Implementing-agent task list                  |                  |                |
+| **§17** | Tooling, CI, conventions                      |                  |                |
+| **§18** | Large screens / grid — private sub-components |                  |                |
+| **§19** | Colocated tests + final sweep                 |                  |                |
+| **§20** | Import boundaries (ESLint)                    |                  |                |
+| **§21** | DX — README, local verify, CI                 |                  |                |
+| **§23** | Rollout sequencing (colocation vs parity)     |                  |                |
+| **§24** | Future `src/features/` namespace              |                  |                |
+| **§25** | Grid `blocks/` registry + parity matrix       |                  |                |
+| **§26** | `yarn validate` + committed Jest config       |                  |                |
+| **§27** | Post-colocation product slices                |                  |                |
+| **§28** | Explicit non-goals (summary)                  |                  |                |
 
 ---
 
@@ -108,20 +110,20 @@ find many_faces_mobile/src/grid -maxdepth 1 -name '*.tsx' | wc -l
 find many_faces_mobile/src/theme -maxdepth 1 -name '*.tsx' | wc -l
 ```
 
-| Area | Path | Today (snapshot) | Problem |
-| ---- | ---- | ---------------- | ------- |
-| **Flat shell / feature components** | `src/components/*.tsx` | **9** TSX at `components/` root | Hard to see ownership; large files (`AppShell`, `ShellDrawer`) mixed with tiny effects |
-| **Screens** | `src/screens/*.tsx` | **12** flat screen TSX | Same issue; auth screens ~200 LOC with inline `StyleSheet` |
-| **Grid engine** | `src/grid/MobilePageLayout.tsx` + helpers | **1** layout TSX + `parseGridSchema.ts` at `grid/` root | `BlockChrome` / `GridBlockBody` inline; **no** `grid/blocks/` yet — placeholders for most `KNOWN_TYPES` (§25) |
-| **Grid block parity** | `parseGridSchema` `KNOWN_TYPES` vs layout | **1** real family (`ad*`) + i18n placeholder | **§25** registry + matrix; portal has full `components/grid/*` |
-| **Theme** | `src/theme/*.tsx` + `gradientSettings.ts` | `AnimatedShellGradient.tsx` + pure TS settings | Group exists but not per-module folders |
-| **Wall tickets cluster** | `WallTicketsSection.tsx`, `WallTicketsAdGridBlock.tsx` | Flat in `components/` | Only consumed by face page + grid — should be namespaced together |
-| **Navigation glue** | `src/navigation/RootNavigator.tsx` | Imports all screens; inline `AuthReconnectNavigatorEffect` | Update import paths when screens move; optional effect colocation §5.3 |
-| **App entry** | `src/App.tsx`, `src/Bootstrap.tsx` | Provider tree + i18n gate (`Bootstrap` → `App`) | Update imports only; **do not** colocate or move into `screens/` / `components/` |
-| **Contexts / API / hooks** | `src/contexts/*`, `src/api/*`, `src/hooks/api/*` | Shared layers | **Keep** flat at layer root |
-| **Tests** | `src/screens/__tests__/*` | Centralized (`LoginScreen.test.tsx`, `RegisterScreen.test.tsx`) | **Colocate** in Phase 4 per §19 |
-| **Imports** | Whole repo | **`@/`** alias (`tsconfig` + `babel-plugin-module-resolver`) | Prefer **`@/screens/LoginScreen`** style **unchanged** after `index.ts` barrels |
-| **Styling** | All UI TSX | **`StyleSheet.create` at bottom of file** (no `.scss`) | Colocate styles **in the same folder** — see §2.2 |
+| Area                                | Path                                                   | Today (snapshot)                                                | Problem                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Flat shell / feature components** | `src/components/*.tsx`                                 | **9** TSX at `components/` root                                 | Hard to see ownership; large files (`AppShell`, `ShellDrawer`) mixed with tiny effects                        |
+| **Screens**                         | `src/screens/*.tsx`                                    | **12** flat screen TSX                                          | Same issue; auth screens ~200 LOC with inline `StyleSheet`                                                    |
+| **Grid engine**                     | `src/grid/MobilePageLayout.tsx` + helpers              | **1** layout TSX + `parseGridSchema.ts` at `grid/` root         | `BlockChrome` / `GridBlockBody` inline; **no** `grid/blocks/` yet — placeholders for most `KNOWN_TYPES` (§25) |
+| **Grid block parity**               | `parseGridSchema` `KNOWN_TYPES` vs layout              | **1** real family (`ad*`) + i18n placeholder                    | **§25** registry + matrix; portal has full `components/grid/*`                                                |
+| **Theme**                           | `src/theme/*.tsx` + `gradientSettings.ts`              | `AnimatedShellGradient.tsx` + pure TS settings                  | Group exists but not per-module folders                                                                       |
+| **Wall tickets cluster**            | `WallTicketsSection.tsx`, `WallTicketsAdGridBlock.tsx` | Flat in `components/`                                           | Only consumed by face page + grid — should be namespaced together                                             |
+| **Navigation glue**                 | `src/navigation/RootNavigator.tsx`                     | Imports all screens; inline `AuthReconnectNavigatorEffect`      | Update import paths when screens move; optional effect colocation §5.3                                        |
+| **App entry**                       | `src/App.tsx`, `src/Bootstrap.tsx`                     | Provider tree + i18n gate (`Bootstrap` → `App`)                 | Update imports only; **do not** colocate or move into `screens/` / `components/`                              |
+| **Contexts / API / hooks**          | `src/contexts/*`, `src/api/*`, `src/hooks/api/*`       | Shared layers                                                   | **Keep** flat at layer root                                                                                   |
+| **Tests**                           | `src/screens/__tests__/*`                              | Centralized (`LoginScreen.test.tsx`, `RegisterScreen.test.tsx`) | **Colocate** in Phase 4 per §19                                                                               |
+| **Imports**                         | Whole repo                                             | **`@/`** alias (`tsconfig` + `babel-plugin-module-resolver`)    | Prefer **`@/screens/LoginScreen`** style **unchanged** after `index.ts` barrels                               |
+| **Styling**                         | All UI TSX                                             | **`StyleSheet.create` at bottom of file** (no `.scss`)          | Colocate styles **in the same folder** — see §2.2                                                             |
 
 **Inventory — `src/components/` (flat today):**
 
@@ -151,16 +153,16 @@ find many_faces_mobile/src/theme -maxdepth 1 -name '*.tsx' | wc -l
 
 **Large UI files — line-count audit (re-run `wc -l`; split in Phase 4 §18):**
 
-| File | ~lines (snapshot) | Split guidance |
-| ---- | ----------------- | -------------- |
-| `ShellDrawer.tsx` | ~339 | §18.1 — drawer sections / menu rows as private siblings |
-| `AppShell.tsx` | ~297 | §18.1 — header / footer / offline banner as private siblings |
-| `LoginScreen.tsx` | ~207 | §18.2 — optional `LoginForm.tsx` + `loginSchema.ts` (page-private) |
-| `RegisterCompleteScreen.tsx` | ~207 | §18.2 — same pattern if touching file |
-| `RegisterScreen.tsx` | ~166 | §18.2 — optional |
-| `HomePlaceholderScreen.tsx` | ~143 | §18.2 — optional |
-| `MobilePageLayout.tsx` | ~141 | §18.3 — extract `BlockChrome`, `GridBlockBody` (already inline) |
-| `WallTicketsSection.tsx` | ~139 | Optional §18.4 when in `wall-tickets/` |
+| File                         | ~lines (snapshot) | Split guidance                                                     |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------ |
+| `ShellDrawer.tsx`            | ~339              | §18.1 — drawer sections / menu rows as private siblings            |
+| `AppShell.tsx`               | ~297              | §18.1 — header / footer / offline banner as private siblings       |
+| `LoginScreen.tsx`            | ~207              | §18.2 — optional `LoginForm.tsx` + `loginSchema.ts` (page-private) |
+| `RegisterCompleteScreen.tsx` | ~207              | §18.2 — same pattern if touching file                              |
+| `RegisterScreen.tsx`         | ~166              | §18.2 — optional                                                   |
+| `HomePlaceholderScreen.tsx`  | ~143              | §18.2 — optional                                                   |
+| `MobilePageLayout.tsx`       | ~141              | §18.3 — extract `BlockChrome`, `GridBlockBody` (already inline)    |
+| `WallTicketsSection.tsx`     | ~139              | Optional §18.4 when in `wall-tickets/`                             |
 
 **Audit tasks (start of engagement):**
 
@@ -193,7 +195,7 @@ src/screens/LoginScreen/
 **Import after migration (preferred — unchanged path shape):**
 
 ```ts
-import { LoginScreen } from '@/screens/LoginScreen';
+import { LoginScreen } from "@/screens/LoginScreen";
 ```
 
 **Forbidden after migration:**
@@ -206,22 +208,22 @@ src/screens/LoginScreen.tsx    # flat screen file at screens/ root — remove
 
 Mobile has **no SCSS**. When colocating:
 
-| Pattern | When to use |
-| ------- | ----------- |
-| **Inline `StyleSheet.create` in `Component.tsx`** | Default — keep at bottom of same file after move (no behavior change). |
-| **`Component.styles.ts`** | **(optional)** When a file exceeds ~250 LOC **and** styles are large — export `styles` from sibling file; import in `Component.tsx`. |
-| **Shared theme tokens** | Stay in `src/theme/gradientSettings.ts` (or `theme/gradientSettings/`) — not duplicated per screen. |
+| Pattern                                           | When to use                                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Inline `StyleSheet.create` in `Component.tsx`** | Default — keep at bottom of same file after move (no behavior change).                                                               |
+| **`Component.styles.ts`**                         | **(optional)** When a file exceeds ~250 LOC **and** styles are large — export `styles` from sibling file; import in `Component.tsx`. |
+| **Shared theme tokens**                           | Stay in `src/theme/gradientSettings.ts` (or `theme/gradientSettings/`) — not duplicated per screen.                                  |
 
 **Do not** introduce global StyleSheet registries or change color/spacing values during this rollout.
 
 ### 2.3 Barrel `index.ts` rules
 
-| Rule | Detail |
-| ---- | ------ |
-| **Per-folder `index.ts`** | `export { LoginScreen } from './LoginScreen'` (match existing named export style) |
-| **Public API only** | **`index.ts` exports only what other folders may import** |
+| Rule                           | Detail                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| **Per-folder `index.ts`**      | `export { LoginScreen } from './LoginScreen'` (match existing named export style)  |
+| **Public API only**            | **`index.ts` exports only what other folders may import**                          |
 | **No deep import requirement** | Consumers use `@/screens/LoginScreen`, not `@/screens/LoginScreen/LoginScreen.tsx` |
-| **Avoid mega-barrels** | Do **not** add `screens/index.ts` re-exporting the whole app |
+| **Avoid mega-barrels**         | Do **not** add `screens/index.ts` re-exporting the whole app                       |
 
 ### 2.4 `wall-tickets/` namespace (**required** — Phase 2b)
 
@@ -240,7 +242,7 @@ src/components/wall-tickets/
 **Public import (after migration):**
 
 ```ts
-import { WallTicketsSection } from '@/components/wall-tickets/WallTicketsSection';
+import { WallTicketsSection } from "@/components/wall-tickets/WallTicketsSection";
 ```
 
 **Re-export note:** `WallTicketsSection` today re-exports `wallTicketsQueryKeys` from `@/hooks/api/useWallTicketsListQuery` — **keep** that re-export from the colocated folder’s `index.ts` or main file; do not move the hook.
@@ -292,13 +294,13 @@ Cross-cutting modules (settings panel, messenger) use **`src/features/<area>/<Co
 
 ## 3. What belongs inside a UI folder (**required**)
 
-| Belongs in folder | Stays outside folder |
-| ----------------- | -------------------- |
-| Primary `.tsx` + optional `*.styles.ts` | `src/api/**`, `src/contexts/**`, `src/hooks/api/**` |
-| Props/types used only there (`*.types.ts`) | `src/utils/**` shared by multiple features |
-| Page-private hooks (`useFacePageHeader.ts`) | `src/navigation/types.ts`, `navigationRef.ts` |
-| Private sub-components (§18) — **not** exported from `index.ts` | `src/acl/**`, `src/realtime/**`, `src/config/**` |
-| Colocated `*.test.tsx` (§19) | Central `src/**/__tests__` for **api** / **utils** unless already colocated |
+| Belongs in folder                                               | Stays outside folder                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Primary `.tsx` + optional `*.styles.ts`                         | `src/api/**`, `src/contexts/**`, `src/hooks/api/**`                         |
+| Props/types used only there (`*.types.ts`)                      | `src/utils/**` shared by multiple features                                  |
+| Page-private hooks (`useFacePageHeader.ts`)                     | `src/navigation/types.ts`, `navigationRef.ts`                               |
+| Private sub-components (§18) — **not** exported from `index.ts` | `src/acl/**`, `src/realtime/**`, `src/config/**`                            |
+| Colocated `*.test.tsx` (§19)                                    | Central `src/**/__tests__` for **api** / **utils** unless already colocated |
 
 **Never** move `httpClient.ts`, `authSession.ts`, or OpenAPI-shaped clients into a screen folder.
 
@@ -325,11 +327,11 @@ Every routable screen under `src/screens/<ScreenName>/` per §2.1.
 
 ### 5.2 Do not colocate navigation wiring
 
-| Keep at `src/navigation/` root | Reason |
-| ------------------------------ | ------ |
-| `RootNavigator.tsx` | Stack definitions |
-| `types.ts` | `AppStackParamList` |
-| `navigationRef.ts` | Imperative navigation |
+| Keep at `src/navigation/` root | Reason                |
+| ------------------------------ | --------------------- |
+| `RootNavigator.tsx`            | Stack definitions     |
+| `types.ts`                     | `AppStackParamList`   |
+| `navigationRef.ts`             | Imperative navigation |
 
 ### 5.3 `AuthReconnectNavigatorEffect` **(optional)**
 
@@ -396,26 +398,26 @@ Skip with §0.2 **N/A** if team prefers a single navigator file.
 
 Prefer **reviewable PRs**; mobile tree is **small** — product owner may approve **2–3 PRs** instead of six.
 
-| Phase | Scope | Suggested PR title |
-| ----- | ----- | ------------------ |
-| **0.5** | Monorepo helper scripts + verify `--imports` + optional ESLint stub — §17 | `chore(mobile): colocation helper scripts` |
-| **1** | `src/theme/*` §6 | `refactor(mobile): colocate theme modules` |
-| **2** | Shell + effects §9 | `refactor(mobile): colocate shell and effects` |
-| **2b** | `src/components/wall-tickets/*` §7 | `refactor(mobile): colocate wall-tickets components` |
-| **3** | `src/grid/MobilePageLayout` §8 | `refactor(mobile): colocate grid layout` |
-| **4** | `src/screens/*` + colocate screen tests §19 + optional §18 splits | `refactor(mobile): colocate screens` |
-| **2c** | (optional) `navigation/effects/*` §5.3 | `refactor(mobile): colocate navigator effects` |
-| **Final** | ESLint §20, CI verify §17.3, **`yarn validate`** §26, docs §12 | `chore(mobile): colocation guards and docs` (may merge with Phase 4) |
+| Phase     | Scope                                                                     | Suggested PR title                                                   |
+| --------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **0.5**   | Monorepo helper scripts + verify `--imports` + optional ESLint stub — §17 | `chore(mobile): colocation helper scripts`                           |
+| **1**     | `src/theme/*` §6                                                          | `refactor(mobile): colocate theme modules`                           |
+| **2**     | Shell + effects §9                                                        | `refactor(mobile): colocate shell and effects`                       |
+| **2b**    | `src/components/wall-tickets/*` §7                                        | `refactor(mobile): colocate wall-tickets components`                 |
+| **3**     | `src/grid/MobilePageLayout` §8                                            | `refactor(mobile): colocate grid layout`                             |
+| **4**     | `src/screens/*` + colocate screen tests §19 + optional §18 splits         | `refactor(mobile): colocate screens`                                 |
+| **2c**    | (optional) `navigation/effects/*` §5.3                                    | `refactor(mobile): colocate navigator effects`                       |
+| **Final** | ESLint §20, CI verify §17.3, **`yarn validate`** §26, docs §12            | `chore(mobile): colocation guards and docs` (may merge with Phase 4) |
 
 **After Track A (colocation) — Track B scheduling (§23):**
 
-| Slice | Prompt § | Suggested order |
-| ----- | -------- | --------------- |
-| `yarn validate` + Jest config | §26 | With **Final** or first small DX PR |
-| Shell i18n + reduced motion | §27.3 | Early polish (low risk) |
-| My Submissions detail | §27.2 | First full user journey |
-| Grid `blocks/` registry + first real blocks | §25, §27.1 | Parallel with parity prompt |
-| `src/features/settings` (when product asks) | §24 | With settings parity slice |
+| Slice                                       | Prompt §   | Suggested order                     |
+| ------------------------------------------- | ---------- | ----------------------------------- |
+| `yarn validate` + Jest config               | §26        | With **Final** or first small DX PR |
+| Shell i18n + reduced motion                 | §27.3      | Early polish (low risk)             |
+| My Submissions detail                       | §27.2      | First full user journey             |
+| Grid `blocks/` registry + first real blocks | §25, §27.1 | Parallel with parity prompt         |
+| `src/features/settings` (when product asks) | §24        | With settings parity slice          |
 
 Each PR must pass **§11** for its phase (use **`yarn validate`** once §26 is merged).
 
@@ -456,15 +458,15 @@ find src/theme -maxdepth 1 -name 'AnimatedShellGradient.tsx' | wc -l
 
 ## 12. Documentation (**required**)
 
-| Document | Content |
-| -------- | ------- |
-| `many_faces_mobile/README.md` | Update project tree; link to `src/components/README.md` if created |
-| `many_faces_mobile/src/components/README.md` | Conventions §2.1–§2.9, `wall-tickets/`; link §23–§27; verify command |
-| [docs/guides/mobile-expo-development.md](../guides/mobile-expo-development.md) | Colocation verify command; link to §23–§27 roadmap |
-| `many_faces_mobile/docs/rest-parity-matrix.md` | REST + **grid block** columns per §25.3 |
-| `many_faces_mobile/README.md` | **Route ↔ portal URL** table per §27.4 when shipping Track B routes |
-| [docs/prompts/README.md](./README.md) | Row in prompt table (maintainer) |
-| `.cursor/rules/mobile-component-folders.mdc` | Agent rule §17.6; no flat screens; `features/` + `grid/blocks/` per §24–§25 |
+| Document                                                                       | Content                                                                     |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `many_faces_mobile/README.md`                                                  | Update project tree; link to `src/components/README.md` if created          |
+| `many_faces_mobile/src/components/README.md`                                   | Conventions §2.1–§2.9, `wall-tickets/`; link §23–§27; verify command        |
+| [docs/guides/mobile-expo-development.md](../guides/mobile-expo-development.md) | Colocation verify command; link to §23–§27 roadmap                          |
+| `many_faces_mobile/docs/rest-parity-matrix.md`                                 | REST + **grid block** columns per §25.3                                     |
+| `many_faces_mobile/README.md`                                                  | **Route ↔ portal URL** table per §27.4 when shipping Track B routes         |
+| [docs/prompts/README.md](./README.md)                                          | Row in prompt table (maintainer)                                            |
+| `.cursor/rules/mobile-component-folders.mdc`                                   | Agent rule §17.6; no flat screens; `features/` + `grid/blocks/` per §24–§25 |
 
 **Do not** tick `[ ]` items inside this canonical prompt file in git — mirror completion in the PR.
 
@@ -547,7 +549,7 @@ src/theme/AnimatedShellGradient/
 - **English:** Do **not** declare the task done until the **agreed track** is satisfied:
   - **Track A only:** **§13** + agreed **§16** phase(s) + **§19.2** / **§26** `yarn validate` green + colocation verify **0**.
   - **Track A + named §27 slice(s):** above **plus** every `- [ ]` in the scheduled **§27** subsection(s) implemented and tested.
-  A half-moved tree (broken `@/` imports, flat screens left behind, or red Jest) is **not** acceptable.
+    A half-moved tree (broken `@/` imports, flat screens left behind, or red Jest) is **not** acceptable.
 
 - **Slovak:** Agent **nesmie skončiť**, kým nie je hotová **dohodnutá stopa** — Track A: §13 + §16 + testy; Track B: navyše konkrétne §27 checklisty z PR.
 
@@ -638,15 +640,15 @@ node scripts/colocate-mobile-component.mjs SettingsPanel --feature settings [--d
 
 Creates `Name/Name.tsx`, `index.ts`; does **not** split inline `StyleSheet` unless operator passes a separate refactor flag (out of scope).
 
-| Flag | Target base dir |
-| ---- | ---------------- |
-| (default) | `src/components/` |
-| `--screen` | `src/screens/` |
-| `--grid` | `src/grid/` (layout only — prefer `--grid-block`) |
-| `--grid-block` | `src/grid/blocks/` |
-| `--wall-tickets` | `src/components/wall-tickets/` |
-| `--theme` | `src/theme/` |
-| `--feature <area>` | `src/features/<area>/` |
+| Flag               | Target base dir                                   |
+| ------------------ | ------------------------------------------------- |
+| (default)          | `src/components/`                                 |
+| `--screen`         | `src/screens/`                                    |
+| `--grid`           | `src/grid/` (layout only — prefer `--grid-block`) |
+| `--grid-block`     | `src/grid/blocks/`                                |
+| `--wall-tickets`   | `src/components/wall-tickets/`                    |
+| `--theme`          | `src/theme/`                                      |
+| `--feature <area>` | `src/features/<area>/`                            |
 
 ### 17.2 Verify script — `scripts/verify-mobile-component-colocation.mjs` **(required)**
 
@@ -672,9 +674,9 @@ node scripts/verify-mobile-component-colocation.mjs --imports
 Add to `.github/workflows/ci.yml` under `many_faces_mobile` job **after** verify script exists and passes on branch:
 
 ```yaml
-      - name: Verify mobile component folder colocation
-        working-directory: many_faces_mobile
-        run: node ../scripts/verify-mobile-component-colocation.mjs
+- name: Verify mobile component folder colocation
+  working-directory: many_faces_mobile
+  run: node ../scripts/verify-mobile-component-colocation.mjs
 ```
 
 Extend `scripts/verify-dev-stack-contracts.sh` **when** mobile scripts land — append `verify-mobile-component-colocation.mjs` and `colocate-mobile-component.mjs` to the existing colocation script list (alongside portal/admin). Until Phase 0.5 merges, the parent contract script will not mention mobile files yet.
@@ -723,9 +725,9 @@ Optional `WallTicketRow.tsx` if list rendering is split — only when already ed
 
 ## 19. Colocated tests (**required** — Phase 4)
 
-| Today | After |
-| ----- | ----- |
-| `src/screens/__tests__/LoginScreen.test.tsx` | `src/screens/LoginScreen/LoginScreen.test.tsx` |
+| Today                                           | After                                                |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| `src/screens/__tests__/LoginScreen.test.tsx`    | `src/screens/LoginScreen/LoginScreen.test.tsx`       |
 | `src/screens/__tests__/RegisterScreen.test.tsx` | `src/screens/RegisterScreen/RegisterScreen.test.tsx` |
 
 - [ ] Update test imports to match moved modules.
@@ -771,14 +773,14 @@ node ../scripts/verify-mobile-component-colocation.mjs --imports
 
 ### 23.2 Mandatory order (default)
 
-| Step | Track | Deliverable |
-| ---- | ----- | ----------- |
-| **1** | **A** | Complete **§10** colocation phases (through **Final** + verify CI). |
-| **2** | **B — DX** | **§26** `yarn validate` + committed Jest config (may merge with Final). |
-| **3** | **B — polish** | **§27.3** shell i18n + reduced motion (small, touches `AppShell/` / `ShellDrawer/` already colocated). |
-| **4** | **B — journey** | **§27.2** My Submissions detail screen. |
-| **5** | **B — grid** | **§25** + **§27.1** — `grid/blocks/` registry; replace placeholders block-by-block. |
-| **6** | **B — features** | **§24** + parity prompt — `features/settings/`, messenger, etc. |
+| Step  | Track            | Deliverable                                                                                            |
+| ----- | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| **1** | **A**            | Complete **§10** colocation phases (through **Final** + verify CI).                                    |
+| **2** | **B — DX**       | **§26** `yarn validate` + committed Jest config (may merge with Final).                                |
+| **3** | **B — polish**   | **§27.3** shell i18n + reduced motion (small, touches `AppShell/` / `ShellDrawer/` already colocated). |
+| **4** | **B — journey**  | **§27.2** My Submissions detail screen.                                                                |
+| **5** | **B — grid**     | **§25** + **§27.1** — `grid/blocks/` registry; replace placeholders block-by-block.                    |
+| **6** | **B — features** | **§24** + parity prompt — `features/settings/`, messenger, etc.                                        |
 
 ### 23.3 Waiver
 
@@ -814,11 +816,11 @@ src/features/
 
 ### 24.2 What belongs in `features/` vs `screens/` vs `components/`
 
-| Layer | Use for |
-| ----- | ------- |
-| **`src/screens/`** | **Routable** full-screen destinations registered in `RootNavigator` (`FacePage`, `MySubmissions`, `Login`, …). |
+| Layer                      | Use for                                                                                                                                                  |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`src/screens/`**         | **Routable** full-screen destinations registered in `RootNavigator` (`FacePage`, `MySubmissions`, `Login`, …).                                           |
 | **`src/features/<area>/`** | **Non-route** or **composite** UI reused across screens (settings side panel, messenger tab body, notifications list) — same role as portal `features/`. |
-| **`src/components/`** | App-wide **chrome** (`AppShell`, `MainLogo`, effects) and shared widgets (`wall-tickets/`). |
+| **`src/components/`**      | App-wide **chrome** (`AppShell`, `MainLogo`, effects) and shared widgets (`wall-tickets/`).                                                              |
 
 ### 24.3 Colocation rules (same as §2.1)
 
@@ -876,8 +878,8 @@ src/grid/
 
 ```ts
 // Illustrative — implement in repo
-import type { ComponentType } from 'react';
-import type { GridBlockRenderProps } from '@/grid/gridTypes';
+import type { ComponentType } from "react";
+import type { GridBlockRenderProps } from "@/grid/gridTypes";
 
 export const gridBlockRegistry: Partial<
   Record<GridComponentType, ComponentType<GridBlockRenderProps>>
@@ -896,12 +898,12 @@ export const gridBlockRegistry: Partial<
 
 Add columns to the existing table (or a second **Grid blocks** table):
 
-| `componentType` (schema) | Portal component (reference) | Mobile block folder | Status |
-| ------------------------ | ---------------------------- | ------------------- | ------ |
-| `ad`, `adGrid`, `adCarousel` | wall/ad widgets | `WallTicketsAdGridBlock` or `blocks/AdGridBlock/` | **Done** (compact list) |
-| `album`, `albumGrid`, `albumCarousel` | `grid/Album*` | `blocks/AlbumGridBlock/` | **Deferred** |
-| `blog`, … | … | … | **Deferred** |
-| … | … | … | … |
+| `componentType` (schema)              | Portal component (reference) | Mobile block folder                               | Status                  |
+| ------------------------------------- | ---------------------------- | ------------------------------------------------- | ----------------------- |
+| `ad`, `adGrid`, `adCarousel`          | wall/ad widgets              | `WallTicketsAdGridBlock` or `blocks/AdGridBlock/` | **Done** (compact list) |
+| `album`, `albumGrid`, `albumCarousel` | `grid/Album*`                | `blocks/AlbumGridBlock/`                          | **Deferred**            |
+| `blog`, …                             | …                            | …                                                 | **Deferred**            |
+| …                                     | …                            | …                                                 | …                       |
 
 **Convention:** **Done** = real data UI + tests for pure helpers; **Placeholder** = registry entry missing, layout shows i18n placeholder; **N/A** = type not used on mobile product.
 
@@ -946,13 +948,13 @@ Create `many_faces_mobile/jest.config.js` (adjust if repo standardizes on `.cjs`
 ```js
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: 'jest-expo',
+  preset: "jest-expo",
   setupFilesAfterEnv: [], // add jest.setup.ts if needed later
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)",
   ],
 };
 ```
@@ -982,13 +984,13 @@ Implement only subsections **explicitly named** in the engagement or PR title. E
 
 **Minimum first batch (product default — adjust in PR if waived):**
 
-| Priority | Types | Rationale |
-| -------- | ----- | --------- |
-| P1 | `blog`, `blogGrid`, `blogCarousel` | Common face home content |
-| P1 | `album`, `albumGrid`, `albumCarousel` | Same |
-| P2 | `reel`, `reelGrid`, `reelCarousel` | Media-heavy |
-| P2 | `story`, `storyGrid`, `storyCarousel` | Stories route synergy |
-| P3 | `chatRoom`, `chatRoomGrid`, `chatRoomCarousel` | Depends on §27.5 SignalR UI |
+| Priority | Types                                          | Rationale                   |
+| -------- | ---------------------------------------------- | --------------------------- |
+| P1       | `blog`, `blogGrid`, `blogCarousel`             | Common face home content    |
+| P1       | `album`, `albumGrid`, `albumCarousel`          | Same                        |
+| P2       | `reel`, `reelGrid`, `reelCarousel`             | Media-heavy                 |
+| P2       | `story`, `storyGrid`, `storyCarousel`          | Stories route synergy       |
+| P3       | `chatRoom`, `chatRoomGrid`, `chatRoomCarousel` | Depends on §27.5 SignalR UI |
 
 **Checklist:**
 
@@ -1014,7 +1016,9 @@ Implement only subsections **explicitly named** in the engagement or PR title. E
 **Target routes (`AppStackParamList`):**
 
 ```ts
-MySubmissionDetail: { submissionId: string }; // or number — match API id type
+MySubmissionDetail: {
+  submissionId: string;
+} // or number — match API id type
 ```
 
 **Target layout:**
@@ -1054,12 +1058,12 @@ src/screens/MySubmissionDetailScreen/
 
 **Known gaps (fix in `AppShell/`, `ShellDrawer/`, `HomePlaceholderScreen/` after colocation):**
 
-| Location | Issue | Fix |
-| -------- | ----- | --- |
-| `HomePlaceholderScreen.tsx` | Hardcoded **"Sign in"**, **"Register"** button labels | `t('home.signIn')`, `t('home.register')` in `common` namespace (+ `sk`/`cz` via localization API) |
-| Same | `accessibilityLabel="Open sign in"` hardcoded English | `t('home.signInA11y')` |
-| `AppShell.tsx` / `ShellDrawer.tsx` | Reanimated drawer / gradient motion always on | Respect **`AccessibilityInfo.isReduceMotionEnabled()`** (and listen for changes) |
-| `AnimatedShellGradient.tsx` | Continuous animation | Disable or shorten loop when reduce motion enabled |
+| Location                           | Issue                                                 | Fix                                                                                               |
+| ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `HomePlaceholderScreen.tsx`        | Hardcoded **"Sign in"**, **"Register"** button labels | `t('home.signIn')`, `t('home.register')` in `common` namespace (+ `sk`/`cz` via localization API) |
+| Same                               | `accessibilityLabel="Open sign in"` hardcoded English | `t('home.signInA11y')`                                                                            |
+| `AppShell.tsx` / `ShellDrawer.tsx` | Reanimated drawer / gradient motion always on         | Respect **`AccessibilityInfo.isReduceMotionEnabled()`** (and listen for changes)                  |
+| `AnimatedShellGradient.tsx`        | Continuous animation                                  | Disable or shorten loop when reduce motion enabled                                                |
 
 **Implementation notes:**
 
@@ -1082,15 +1086,15 @@ src/screens/MySubmissionDetailScreen/
 
 Add subsection **`## Navigation vs portal URLs`** to `many_faces_mobile/README.md`:
 
-| Portal path pattern (example) | Mobile route name | Notes |
-| --------------------------- | ----------------- | ----- |
-| `/:lang/:faceIndex` (home) | `Home` | Config-driven page list |
-| `/:lang/:faceIndex/login` | `Login` | Guest stack |
-| `/:lang/:faceIndex/register` | `Register` | When `faceOffersRegisterPage` |
-| `/:lang/:faceIndex/register/complete?hash=` | `RegisterComplete` | `linking` config in `App.tsx` |
-| Face page by stable id | `FacePage` | `{ pageId: number }` — not path segment |
-| Portal **My submissions** | `MySubmissions` | |
-| Portal submission detail | `MySubmissionDetail` | After §27.2 |
+| Portal path pattern (example)               | Mobile route name    | Notes                                   |
+| ------------------------------------------- | -------------------- | --------------------------------------- |
+| `/:lang/:faceIndex` (home)                  | `Home`               | Config-driven page list                 |
+| `/:lang/:faceIndex/login`                   | `Login`              | Guest stack                             |
+| `/:lang/:faceIndex/register`                | `Register`           | When `faceOffersRegisterPage`           |
+| `/:lang/:faceIndex/register/complete?hash=` | `RegisterComplete`   | `linking` config in `App.tsx`           |
+| Face page by stable id                      | `FacePage`           | `{ pageId: number }` — not path segment |
+| Portal **My submissions**                   | `MySubmissions`      |                                         |
+| Portal submission detail                    | `MySubmissionDetail` | After §27.2                             |
 
 - [ ] Table updated whenever `AppStackParamList` or portal routes change.
 - [ ] Deep links documented (`manyfaces://`, `RegisterComplete` today).
@@ -1099,12 +1103,12 @@ Add subsection **`## Navigation vs portal URLs`** to `many_faces_mobile/README.m
 
 ### 27.5 Deferred here (track in parity prompt, not §27 default scope)
 
-| Item | Track in |
-| ---- | -------- |
+| Item                                       | Track in                                                                                           |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | SignalR messenger / chat room / AI chat UI | [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md) §10 |
-| `features/settings` panel | **§24** + parity prompt |
-| Full API client class port (`ApiClient`) | Parity §3 — mobile uses `httpClient` + `faceScope` today |
-| E2E (Maestro / Detox) | Separate engagement |
+| `features/settings` panel                  | **§24** + parity prompt                                                                            |
+| Full API client class port (`ApiClient`)   | Parity §3 — mobile uses `httpClient` + `faceScope` today                                           |
+| E2E (Maestro / Detox)                      | Separate engagement                                                                                |
 
 ---
 

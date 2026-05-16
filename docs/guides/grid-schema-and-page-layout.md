@@ -2,8 +2,8 @@
 
 ## Data model
 
-- Each **page** stores a JSON **`gridSchema`** string (managed from **`many_faces_admin`**, consumed by **`many_faces_portal`** / mobile).
-- Backend persists via **`PagesController`**; admin UI edits routes + schema; user app **parses** schema into responsive layouts.
+- Each **page** stores a JSON **`gridSchema`** string (managed from **`many_faces_admin`**, consumed by **`many_faces_portal`** and **`many_faces_mobile`**).
+- Backend persists via **`PagesController`**; admin UI edits routes + schema; user apps **parse** schema into layouts (web: `PageGridLayout`; mobile: `parseGridSchema.ts` + `MobilePageLayout/` + `blockRegistry.ts`).
 
 ## JSON shape (conceptual)
 
@@ -17,3 +17,4 @@ See the **Page Grid Schema Lifecycle** Mermaid diagram in [`many_faces_backend/R
 
 - [`fe-grid-face-scope-rollout-agent-prompt.md`](../prompts/fe-grid-face-scope-rollout-agent-prompt.md) — agent checklist for face-scoped grid work.
 - [`readmes/fe-portal-overview.md`](../readmes/fe-portal-overview.md)
+- Mobile: [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), `src/grid/MobilePageLayout/blockRegistry.ts`

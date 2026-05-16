@@ -11,14 +11,14 @@ This guide is the **human-facing** counterpart to the agent prompt [`docs/prompt
 
 ## 2. Prerequisites
 
-| Requirement | Notes |
-| ----------- | ----- |
-| **Node** | Use **`.nvmrc`** inside `many_faces_mobile` (aligned with monorepo root, currently **22.14+**). |
-| **Yarn 4** | **`packageManager`** in `many_faces_mobile/package.json` (Corepack). CI uses **`yarn install --immutable`** (same lockfile discipline as the SPAs). |
-| **Watchman** (macOS) | Recommended for Metro file watching. |
-| **Xcode** | For iOS Simulator. |
-| **Android Studio / SDK** | For Android emulator (optional). |
-| **Expo Go** (physical device) | Install from App Store / Play Store; phone and dev machine must reach Metro (LAN or tunnel). |
+| Requirement                   | Notes                                                                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Node**                      | Use **`.nvmrc`** inside `many_faces_mobile` (aligned with monorepo root, currently **22.14+**).                                                     |
+| **Yarn 4**                    | **`packageManager`** in `many_faces_mobile/package.json` (Corepack). CI uses **`yarn install --immutable`** (same lockfile discipline as the SPAs). |
+| **Watchman** (macOS)          | Recommended for Metro file watching.                                                                                                                |
+| **Xcode**                     | For iOS Simulator.                                                                                                                                  |
+| **Android Studio / SDK**      | For Android emulator (optional).                                                                                                                    |
+| **Expo Go** (physical device) | Install from App Store / Play Store; phone and dev machine must reach Metro (LAN or tunnel).                                                        |
 
 ## 3. First-time setup (local)
 
@@ -53,13 +53,26 @@ Then press `i` / `a` / scan QR for Expo Go. For HTTPS dev API from a device, you
 
 Implementers should mirror behaviour and data contracts, not necessarily file names:
 
-| Concern | Where in `many_faces_portal` |
-| ------- | ------------------------------ |
-| Faces + pages config | `src/api/config/getFacesConfig.ts`, `src/api/types/facesConfig.ts`, `src/contexts/FaceConfigContext.tsx` |
-| Dynamic route ideas | `src/routes/useFaceRouteEntries.ts`, `src/routes/facePagePaths.ts` |
-| Guest vs authenticated | `src/components/GuestRoute.tsx`, `src/components/ProtectedRoute.tsx` |
-| Login form + validation | `src/pages/LoginPage.tsx`, `src/contexts/AuthContext.tsx` |
-| Header / gradient shell | `src/components/Header.tsx`, `src/styles/AnimatedGradient.scss` (mobile uses `expo-linear-gradient` + parsed JSON) |
+| Concern                 | Where in `many_faces_portal`                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Faces + pages config    | `src/api/config/getFacesConfig.ts`, `src/api/types/facesConfig.ts`, `src/contexts/FaceConfigContext.tsx`                     |
+| Dynamic route ideas     | `src/routes/useFaceRouteEntries.ts`, `src/routes/facePagePaths.ts`                                                           |
+| Guest vs authenticated  | `src/components/GuestRoute/GuestRoute.tsx`, `src/components/ProtectedRoute/ProtectedRoute.tsx`                               |
+| Login form + validation | `src/pages/LoginPage/LoginPage.tsx`, `src/contexts/AuthContext.tsx`                                                          |
+| Header / gradient shell | `src/components/Header/Header.tsx`, `src/styles/AnimatedGradient.scss` (mobile: `AppShell/`, `theme/AnimatedShellGradient/`) |
+
+### Mobile layout (colocated — `many_faces_mobile`)
+
+| Area        | Path                                                                |
+| ----------- | ------------------------------------------------------------------- |
+| Shell       | `src/components/AppShell/` (`ShellHeader`, `ShellFooter`)           |
+| Screens     | `src/screens/<ScreenName>/`                                         |
+| Grid engine | `src/grid/MobilePageLayout/` + `src/grid/parseGridSchema.ts`        |
+| Grid blocks | `src/grid/blocks/*` + `blockRegistry.ts`                            |
+| Wall / ads  | `src/components/wall-tickets/`                                      |
+| Features    | `src/features/settings/` (panel scaffold; not mounted in shell yet) |
+
+See [`many_faces_mobile/src/components/README.md`](../../many_faces_mobile/src/components/README.md) and [`docs/readmes/mobile-overview.md`](../readmes/mobile-overview.md).
 
 ## 5. Quality gates and colocation verify
 
@@ -79,9 +92,11 @@ node scripts/verify-mobile-component-colocation.mjs
 node scripts/verify-mobile-component-colocation.mjs --imports
 ```
 
-Spec: [`docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md`](../prompts/fe-mobile-component-folder-colocation-agent-prompt.md).
+Spec: [`docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md`](../prompts/fe-mobile-component-folder-colocation-agent-prompt.md) (**implemented**). Cursor rule: [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
-Parent CI runs **`verify-mobile-component-colocation.mjs`** and **`./scripts/verify-ci.sh`** under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`. Locally: **`./many_faces_mobile/scripts/verify-ci.sh --quick`** (or set **`SKIP_YARN_INSTALL=1`**) to mirror the mobile CI job.
+Scaffold / batch moves (monorepo root): `colocate-mobile-component.mjs`, `migrate-mobile-colocate-phase.mjs`, `fix-mobile-colocated-imports.mjs`.
+
+Parent CI runs **`verify-mobile-component-colocation.mjs`** then **`./scripts/verify-ci.sh --quick`** inside **`many_faces_mobile/`** (`many_faces_main/.github/workflows/ci.yml`). The **submodule-only** workflow runs **`verify-ci.sh`** only. Locally: **`cd many_faces_mobile && ./scripts/verify-ci.sh --quick`** (or **`SKIP_YARN_INSTALL=1`**).
 
 ## 6. Git / submodule workflow (short)
 
@@ -99,10 +114,10 @@ Details: [`git-submodules.md`](./git-submodules.md).
 
 ## 8. Troubleshooting
 
-| Symptom | Check |
-| ------- | ----- |
-| Metro cannot reach API from phone | Same Wi‑Fi, correct `EXPO_PUBLIC_*` host, firewall, or use Expo tunnel. |
+| Symptom                                      | Check                                                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Metro cannot reach API from phone            | Same Wi‑Fi, correct `EXPO_PUBLIC_*` host, firewall, or use Expo tunnel.                       |
 | TLS errors to local `https://localhost:8001` | Device may not trust dev cert; use LAN IP + dev cert trust or HTTP-only dev URL if supported. |
-| Stale submodule | `git submodule update --init --recursive` from monorepo root. |
+| Stale submodule                              | `git submodule update --init --recursive` from monorepo root.                                 |
 
 When in doubt, update **`many_faces_mobile/README.md`** with the exact commands and env vars your team uses after phase-1 lands.

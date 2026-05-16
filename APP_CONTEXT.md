@@ -17,12 +17,12 @@ So in one sentence: **one shared platform, many branded “sites” (faces), one
 
 ## 2. How it should work — mental model
 
-| Concept | Meaning |
-|--------|---------|
-| **Face** | Tenant anchor: slug (`index`), title, gradient/branding knobs, visibility (public vs private), seeded/default pages (`home`, maybe `wall`), optional profile directory visibility. Middleware rewrites requests so `/api/{face}/...` resolves in the backend. |
-| **Page** | A route segment under that face (`/home`, `/lab`, …) with a **page type** (`home`, `static`, `wall`, …). **Static** pages carry an optional **`gridSchema`**: responsive layout + **typed component placeholders** rendered on the Frontend. Translations define localized path aliases. |
-| **User / roles** | **Global roles** (`SUPER_ADMIN`, `ADMIN`, `USER`, …) and **per-face roles** (`FACE_ADMIN`, `FACE_HOST`, …). Capability checks drive what API and hubs allow. Seed data provides known accounts (`docs/guides/local-dev-accounts.md`). |
-| **Realtime + AI** | SignalR hubs (chat, messenger, notifications, …); optional **SendToAi** flows through **`many_faces_ai`** (`many_faces_ai/`) over gRPC. |
+| Concept           | Meaning                                                                                                                                                                                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Face**          | Tenant anchor: slug (`index`), title, gradient/branding knobs, visibility (public vs private), seeded/default pages (`home`, maybe `wall`), optional profile directory visibility. Middleware rewrites requests so `/api/{face}/...` resolves in the backend.                            |
+| **Page**          | A route segment under that face (`/home`, `/lab`, …) with a **page type** (`home`, `static`, `wall`, …). **Static** pages carry an optional **`gridSchema`**: responsive layout + **typed component placeholders** rendered on the Frontend. Translations define localized path aliases. |
+| **User / roles**  | **Global roles** (`SUPER_ADMIN`, `ADMIN`, `USER`, …) and **per-face roles** (`FACE_ADMIN`, `FACE_HOST`, …). Capability checks drive what API and hubs allow. Seed data provides known accounts (`docs/guides/local-dev-accounts.md`).                                                    |
+| **Realtime + AI** | SignalR hubs (chat, messenger, notifications, …); optional **SendToAi** flows through **`many_faces_ai`** (`many_faces_ai/`) over gRPC.                                                                                                                                                  |
 
 The Frontend’s job is **not** to redefine business rules: it reflects **backend config + auth + realtime**. The Admin’s job is to **safely mutate** that config and moderation state.
 
@@ -47,15 +47,15 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 ## 5. Backend & siblings (minimal context)
 
-| Piece | Role |
-|-------|------|
-| **`many_faces_backend`** (`many_faces_backend/`) | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC clients to AI / search / push / mailer workers. |
-| **`many_faces_database`** (`many_faces_database/`) / **`many_faces_redis`** (`many_faces_redis/`) | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides). |
-| **`many_faces_ai`** (`many_faces_ai/`) | gRPC `Health`, local Qwen `Generate`, **`ReviewContent`**, optional admin stats RPCs — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes). |
-| **`many_faces_elastic`** (`many_faces_elastic/`) | Elasticsearch read index + **Go search-worker** (gRPC); API never talks to ES directly. |
-| **`many_faces_push`** (`many_faces_push/`) | **FCM** dispatch worker (Go gRPC); device tokens and sends owned by the API. |
-| **`many_faces_mailer`** (`many_faces_mailer/`) | Transactional mail (Java gRPC + SMTP templates); Identity email flows via **`MailerGrpcEmailSender`**. |
-| **`many_faces_mobile`** (`many_faces_mobile/`) | Expo React Native client — REST parity with **`many_faces_portal`** (Phase 1+). |
+| Piece                                                                                             | Role                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`many_faces_backend`** (`many_faces_backend/`)                                                  | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC clients to AI / search / push / mailer workers.                                                                                                                                                                                                          |
+| **`many_faces_database`** (`many_faces_database/`) / **`many_faces_redis`** (`many_faces_redis/`) | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides).                                                                                                                                                                                                                                                           |
+| **`many_faces_ai`** (`many_faces_ai/`)                                                            | gRPC `Health`, local Qwen `Generate`, **`ReviewContent`**, optional admin stats RPCs — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes).                                                                                                               |
+| **`many_faces_elastic`** (`many_faces_elastic/`)                                                  | Elasticsearch read index + **Go search-worker** (gRPC); API never talks to ES directly.                                                                                                                                                                                                                                                             |
+| **`many_faces_push`** (`many_faces_push/`)                                                        | **FCM** dispatch worker (Go gRPC); device tokens and sends owned by the API.                                                                                                                                                                                                                                                                        |
+| **`many_faces_mailer`** (`many_faces_mailer/`)                                                    | Transactional mail (Java gRPC + SMTP templates); Identity email flows via **`MailerGrpcEmailSender`**.                                                                                                                                                                                                                                              |
+| **`many_faces_mobile`** (`many_faces_mobile/`)                                                    | Expo React Native client — REST parity with **`many_faces_portal`** (Phase 1+). UI is **colocated** under `src/screens/`, `src/components/`, `src/grid/blocks/`, `src/features/`; verify with `node scripts/verify-mobile-component-colocation.mjs` from monorepo root. See [`docs/readmes/mobile-overview.md`](./docs/readmes/mobile-overview.md). |
 
 ---
 
@@ -74,12 +74,13 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 - Respect **OAuth2**, **face-prefixed API paths**, and **React Router v6 route rules** (no custom wrappers where `<Routes>` insist on literal `<Route>` children).
 - When changing face visibility or **`availableFaces` semantics**, revisit **logged-in UX** — public showcase faces must remain reachable unless product explicitly restricts them.
 - For **grid components and face-scoped API reads**, follow **[§8](#8-frontend-architecture--face-scoped-data-grid-specs-responsiveness)** (patterns: `useFaceConfig` → `faceId`, TanStack + OpenAPI services, `useFillGridPagination`, `ResizeObserver`).
+- For **mobile** UI files, follow [`.cursor/rules/mobile-component-folders.mdc`](./.cursor/rules/mobile-component-folders.mdc) and [`many_faces_mobile/src/components/README.md`](./many_faces_mobile/src/components/README.md) — one folder per screen/component/block; no new flat `src/screens/Foo.tsx`.
 
 ---
 
 ## 8. Frontend architecture — face-scoped data, grid specs, responsiveness
 
-*(Working name only: nothing magic about “FA” — this section is what you meant.)*
+_(Working name only: nothing magic about “FA” — this section is what you meant.)_
 
 ### 8.1 Face scope (how data reads must behave)
 
@@ -110,19 +111,19 @@ Several grid variants are already **wired** (`AlbumGrid`, `BlogGrid`, `ReelGrid`
 
 Two layers collaborate:
 
-| Layer | Behavior |
-|-------|----------|
-| **Page canvas** | `react-grid-layout` **cols / breakpoints / rowHeight** (`gridSchema` from Admin); blocks reflow across `lg/md/sm/xs/xxs`. |
+| Layer                 | Behavior                                                                                                                                                                                                                                                                                      |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Page canvas**       | `react-grid-layout` **cols / breakpoints / rowHeight** (`gridSchema` from Admin); blocks reflow across `lg/md/sm/xs/xxs`.                                                                                                                                                                     |
 | **Inside each block** | Components **observe their own container width** (`ResizeObserver`, `useFillGridPagination`, carousel `visibleCount` math — see `AlbumCarousel`, grids) so **tile counts, thumbnails, carousel windows** tighten/loosen dynamically with allocated cell size — NOT only `@media` breakpoints. |
 
 When adding new grid types **copy patterns from finished siblings**: mount ref on scrollport, cancel async on unmount, debounce/observe politely.
 
 ### 8.4 Seed data & placeholders — explicit policy
 
-| Source | Policy |
-|--------|--------|
-| **PostgreSQL seed / sample tenants** (`many_faces_backend` / `many_faces_backend/` seeders, seeded users/faces, `local-dev-accounts.md`) | **Keep** while we need scripted local setups until product says drop them. Coordinate removal with docs + teardown scripts. |
-| **Hard-coded Frontend placeholders** (e.g. Lorem ipsum, **picsum.photos** stand-ins, fictitious carousel slides) | **Treat as transitional**: once real media URLs/API fields arrive, strip placeholders so empties reflect **truth** (“no uploads yet”). If a placeholder confuses testers, remove it outright. |
+| Source                                                                                                                                   | Policy                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PostgreSQL seed / sample tenants** (`many_faces_backend` / `many_faces_backend/` seeders, seeded users/faces, `local-dev-accounts.md`) | **Keep** while we need scripted local setups until product says drop them. Coordinate removal with docs + teardown scripts.                                                                   |
+| **Hard-coded Frontend placeholders** (e.g. Lorem ipsum, **picsum.photos** stand-ins, fictitious carousel slides)                         | **Treat as transitional**: once real media URLs/API fields arrive, strip placeholders so empties reflect **truth** (“no uploads yet”). If a placeholder confuses testers, remove it outright. |
 
 **Rule of thumb:** if there is **no persisted entity**, the UI shows **scoped empty/error** states — never fake sibling-face content.
 
