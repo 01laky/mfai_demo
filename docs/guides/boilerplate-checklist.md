@@ -17,7 +17,7 @@ flowchart TB
     Q1[BE xUnit FE Vitest admin tests]
   end
   subgraph Svc["Services"]
-    V1[API FE admin DB AI logger]
+    V1[API FE admin mobile DB AI elastic push mailer logger]
   end
   subgraph Sec["Security and i18n"]
     Sec1[OAuth2 JWT HTTPS CORS locales]
@@ -89,6 +89,10 @@ flowchart TB
 - ✅ **Admin Panel** - React + TypeScript + Vite
 - ✅ **Database** - PostgreSQL with pgAdmin
 - ✅ **AI Service** - Python gRPC service
+- ✅ **Mobile** - Expo (`many_faces_mobile`)
+- ✅ **Search** - Elasticsearch + Go search-worker (`many_faces_elastic`)
+- ✅ **Push** - FCM worker (`many_faces_push`)
+- ✅ **Mailer** - Java gRPC + SMTP (`many_faces_mailer`)
 - ✅ **Logger** - Dozzle for log viewing
 - ✅ **Seq** - Structured logging server
 

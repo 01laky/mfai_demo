@@ -4,7 +4,7 @@
 
 ### 1. Create repositories on GitHub
 
-Create **8+ private repositories** on GitHub (root + submodules). Canonical names in this org:
+Create **12+ private repositories** on GitHub (root + submodules). Canonical names in this org:
 
 1. **Root repo**: `many_faces_main` (GitHub). Submodule remotes use `many_faces_*` names; working-tree paths stay `many_faces_backend/`, `many_faces_portal/`, … — see [`.gitmodules`](../../.gitmodules) at the repo root.
 2. **Submodules** (remote repo names — **local paths** in the monorepo stay `many_faces_backend/`, `many_faces_portal/`, …):
@@ -16,6 +16,9 @@ Create **8+ private repositories** on GitHub (root + submodules). Canonical name
    - `many_faces_redis` → path `many_faces_redis/`
    - `many_faces_logger` → path `many_faces_logger/`
    - `many_faces_mobile` → path `many_faces_mobile/`
+   - `many_faces_elastic` → path `many_faces_elastic/` (Elasticsearch + Go search-worker; nested **`many_faces_proto/`**)
+   - `many_faces_push` → path `many_faces_push/` (FCM push worker; nested **`many_faces_proto/`**)
+   - `many_faces_mailer` → path `many_faces_mailer/` (Java mailer worker; nested **`many_faces_proto/`**)
 
 ### 2. Set remote URL in each submodule
 
@@ -69,6 +72,24 @@ cd ../many_faces_mobile
 git remote add origin https://github.com/YOUR_USERNAME/many_faces_mobile.git
 git branch -M main
 git push -u origin main
+
+# Elasticsearch + search-worker
+cd ../many_faces_elastic
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_elastic.git
+git branch -M main
+git push -u origin main
+
+# Push / FCM worker
+cd ../many_faces_push
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_push.git
+git branch -M main
+git push -u origin main
+
+# Mailer worker
+cd ../many_faces_mailer
+git remote add origin https://github.com/YOUR_USERNAME/many_faces_mailer.git
+git branch -M main
+git push -u origin main
 ```
 
 ### 3. Update `.gitmodules` with real GitHub URLs
@@ -94,6 +115,9 @@ git submodule add -f https://github.com/YOUR_USERNAME/many_faces_database.git ma
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_redis.git many_faces_redis
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_logger.git many_faces_logger
 git submodule add -f https://github.com/YOUR_USERNAME/many_faces_mobile.git many_faces_mobile
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_elastic.git many_faces_elastic
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_push.git many_faces_push
+git submodule add -f https://github.com/YOUR_USERNAME/many_faces_mailer.git many_faces_mailer
 
 # Or if they already exist, update .gitmodules and commit:
 git add .gitmodules

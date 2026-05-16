@@ -60,7 +60,7 @@ Configuration (**`many_faces_backend`**):
 **`many_faces_ai`**:
 
 - **`Generate`** prepends optional **`stats_context_json`** before the conversational prompt.
-- **`FetchPublicStats`**, **`OperatorStatsChat`** — see `many_faces_ai/README.md` and `proto/health.proto`.
+- **`FetchPublicStats`**, **`OperatorStatsChat`** — see `many_faces_ai/README.md` and **`many_faces_proto/proto/health.proto`** (nested submodule; generated stubs under `many_faces_ai/proto/`).
 
 Agent prompt (completed checklist): [`docs/prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](../prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
 

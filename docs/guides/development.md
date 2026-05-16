@@ -37,10 +37,11 @@ flowchart TB
   ES[many_faces_elastic ES + search-worker]
   PU[many_faces_push FCM worker]
   MA[many_faces_mailer Java mailer]
+  MO[many_faces_mobile Expo RN]
   LG[many_faces_logger Dozzle]
 
   classDef apiFill fill:#fff3e0,stroke:#ef6c00
-  class BE,FE,AD,AI,DB,RD,ES,PU,MA,LG apiFill
+  class BE,FE,AD,AI,DB,RD,ES,PU,MA,MO,LG apiFill
 ```
 
 The **root** repository runs aggregated CI (see below). Each submodule that ships code also has its own `.github/workflows/ci.yml` for standalone pushes to that repo.
@@ -80,7 +81,8 @@ The mobile submodule uses **Expo**, **TypeScript**, and **Yarn 4** via Corepack 
   ./scripts/generate_proto.sh
   ```
 
-  or `python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/health.proto`.
+  or, after `git submodule update --init --recursive` (nested **`many_faces_proto`**):  
+  `python -m grpc_tools.protoc -I many_faces_proto/proto --python_out=proto --grpc_python_out=proto health.proto` (from `many_faces_ai/`).
 
 - **Lint**: `./scripts/lint.sh` (Ruff). **Tests**: after generating protos, `PYTHONPATH=. pytest test_server.py` (no PyTorch required for health-check tests).
 
