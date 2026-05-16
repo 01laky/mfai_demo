@@ -145,6 +145,8 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 | `FaceFormPage.scss` | `CreateFacePage.tsx`, `EditFacePage.tsx` |
 | `PageFormPage.scss` | `CreatePagePage.tsx`, `EditPagePage.tsx` |
 
+**Per-page SCSS vs shared form partials:** Most pages also have a **paired** stylesheet at `src/pages/` root today (e.g. `DashboardPage.scss`, `LoginPage.scss`, `ChatPage.scss`). In Phase 4, move each **with its page** into `pages/<PageName>/<PageName>.scss` and keep the `import './<PageName>.scss'` pattern inside the page TSX. Only the three **shared form** files in the table above go to `src/styles/forms/` (§4.4) — do not put them under a single create/edit page folder.
+
 **Positive patterns to preserve:**
 
 - SCSS imported **from the component file** (`import './Header.scss'`) — path becomes same-folder import inside `Header/Header.tsx`.
@@ -363,7 +365,7 @@ After Phase 4, keep this **`.then((m) => ({ default: m.X }))` pattern** — do *
 
 ### 4.4 Cross-page / shared form SCSS (**required** in Phase 4)
 
-Three **shared** form stylesheets live at `src/pages/` root today with **no** sibling `.tsx` (see §1 table). They must **not** remain flat at `pages/` after Phase 4 — otherwise §16.4 orphan checks fail.
+Three **shared** form stylesheets live at `src/pages/` root today with **no** sibling `.tsx` (see §1 table). They must **not** remain flat at `pages/` after Phase 4 — otherwise §16.4 orphan checks fail. **Other** page-level SCSS (e.g. `DashboardPage.scss`, `LoginPage.scss`) is **not** in this bucket: colocate each with its page folder in the same Phase 4 PR (§1 “Per-page SCSS vs shared form partials”).
 
 **Canonical target (required):**
 
@@ -513,7 +515,7 @@ find src/components/page-editor -maxdepth 1 -name '*.tsx' | wc -l  # → 0 after
 find src/components/tables -maxdepth 1 -name '*.tsx' 2>/dev/null | wc -l  # → 0 after Phase 2c (if used)
 find src/components/dashboard -maxdepth 1 -name '*.tsx' | wc -l      # → 0 after Phase 3
 find src/pages -maxdepth 1 -name '*.tsx' | wc -l                   # → 0 after Phase 4
-find src/routes -maxdepth 1 -name '*.tsx' | wc -l                  # only RouteLoadingFallback.tsx at root → 0 after Phase 2 (folder remains)
+find src/routes -maxdepth 1 -name 'RouteLoadingFallback.tsx' | wc -l  # → 0 after Phase 2 (AppRoutes.tsx, lazyAdminPages.tsx, useAdminRoutePaths.ts stay at routes/ root)
 ```
 
 - [ ] `node scripts/verify-admin-component-colocation.mjs` (and `--imports` on final branch) — §16.2.
