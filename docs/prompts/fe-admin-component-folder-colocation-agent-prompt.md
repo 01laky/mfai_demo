@@ -35,7 +35,7 @@
 
 - Namespaces **`dashboard/`**, **`page-editor/`**, optional **`tables/`** (§17–§18).
 - **`routes/RouteLoadingFallback/`** colocation (§19).
-- **Colocated Vitest** files (§21).
+- **Colocated Vitest** files (§21) + **final test sweep** after all phases (§21.2).
 - **Large-page file splits** into private sub-components inside the page folder (§20).
 - **`src/styles/forms/`** for shared form SCSS (§4.4, §8).
 - **ESLint import boundaries** + verify `--imports` (§22, §16.2).
@@ -79,7 +79,7 @@
 | **§18** | `tables/` namespace (optional) | | |
 | **§19** | `routes/` colocation | | |
 | **§20** | Large pages / components — private sub-components | | |
-| **§21** | Colocated tests | | |
+| **§21** | Colocated tests + final sweep | | |
 | **§22** | Import boundaries (ESLint) | | |
 | **§23** | Vite `manualChunks` verification | | |
 | **§24** | Path alias `@/` (optional) | | |
@@ -548,7 +548,7 @@ Each PR must pass **§10** independently (for its phase gates).
 
 - [ ] `cd many_faces_admin && yarn install --immutable`
 - [ ] `yarn validate` — includes `type-check`, `lint`, and **`format:check`** (Prettier on `src/**/*.{ts,tsx,scss}`); run after each phase, not only `yarn build`.
-- [ ] `yarn test` (Vitest)
+- [ ] `yarn test` (Vitest) — after each phase when imports change; **full suite** must pass before engagement exit (§21.2).
 - [ ] `yarn build`
 - [ ] **Grep guard** (run from `many_faces_admin/`; expectations depend on phase — see §15):
 
@@ -611,6 +611,7 @@ find src/routes -maxdepth 1 -name 'RouteLoadingFallback.tsx' | wc -l  # → 0 af
 ### 12.4 Tests & large pages
 
 - [ ] Component tests colocated per §21 (no stale `src/components/__tests__/` paths).
+- [ ] **§21.2** final test sweep: `yarn test` green; all test import paths updated for colocated folders.
 - [ ] §20 splits: `ContentModerationPage` (+ optional `ChatPage`, `EditPagePage`) — structure only, tests green.
 
 ### 12.5 Quality gates
@@ -661,7 +662,7 @@ src/styles/forms/
 
 ## 14. Agent engagement exit rule (NON-NEGOTIABLE)
 
-- **English:** Do **not** declare the task done until **§12** and the **agreed §15 phase section(s)** are satisfied (or explicitly waived in the PR with reason). A half-moved tree (broken imports, flat files left behind, page-editor still at `components/` root, tests still only under `__tests__/`) is **not** acceptable.
+- **English:** Do **not** declare the task done until **§12** and the **agreed §15 phase section(s)** are satisfied (or explicitly waived in the PR with reason), and **§21.2** (`yarn test` green on the final branch). A half-moved tree (broken imports, flat files left behind, page-editor still at `components/` root, tests still only under `__tests__/`, or red Vitest) is **not** acceptable.
 
 - **Slovak:** Agent **nesmie skončiť**, kým nie je dokončená dohodnutá fáza podľa **§12** a **§15** — každá komponenta má svoj priečinok so súvisiacim SCSS a privátnymi skriptmi; žiadne „polovičné“ presuny.
 
@@ -758,6 +759,7 @@ src/styles/forms/
 ### 15.7 Final gates
 
 - [ ] §12 satisfied.
+- [ ] **§21.2** complete — full Vitest suite green; no tests left pointing at deleted flat paths.
 - [ ] `yarn validate && yarn test && yarn build` on final branch.
 - [ ] Manual smoke §10 (includes page-editor + moderation).
 - [ ] `node scripts/verify-admin-component-colocation.mjs` exits **0**.
@@ -1081,6 +1083,24 @@ src/components/PagesTable/PagesTable.test.tsx
 - [ ] Vitest `include` globs still discover tests (`**/*.{test,spec}.tsx` — confirm `vitest.config`).
 - [ ] **Import style:** if Phase 0 (`@/`) is **N/A**, write new/ moved tests with **relative** imports like the app — `vitest.config.ts` already defines `@` → `./src`, but `tsconfig.app.json` may not; avoid `@/` in tests unless Phase 0 aligned §24.
 - [ ] `yarn test` green after each move.
+
+### 21.2 Final test sweep (**required** — when all agreed phases are done)
+
+Colocation is **not** finished until the **entire** Vitest suite passes on the final branch, not only the two table tests moved in Phase 2.
+
+**Scope:**
+
+- [ ] Run `cd many_faces_admin && yarn test` after the **last** colocation PR (or in the Final PR).
+- [ ] Fix **any** failing tests caused by moved files — update `import` paths and test file locations; **do not** change assertions or behavior unless a test was clearly testing implementation details of a deleted flat path.
+- [ ] Check suites that often import UI after moves:
+  - `src/components/__tests__/` (should be empty or removed)
+  - `src/hooks/api/__tests__/` (mocks of pages/components)
+  - `src/utils/__tests__/`, `src/api/__tests__/`, `src/acl/__tests__/`, `src/config/__tests__/`
+- [ ] When a colocated component has no test yet, **moving** an existing test into its folder is enough; writing **new** tests is **optional** here (see [unit-test-gap-fill-agent-prompt.md](./unit-test-gap-fill-agent-prompt.md) for follow-up coverage gaps).
+- [ ] After page colocation (Phase 4), add or move page-level tests next to `pages/<Page>/` only if they already existed or broke — no mandatory new page test suite for this rollout.
+- [ ] PR notes: list test files touched and confirm `yarn test` output (pass count) on final branch.
+
+**Per-phase rule:** run `yarn test` when a phase touches files imported by tests; do not wait until the end if CI would stay red on intermediate branches.
 
 ---
 
