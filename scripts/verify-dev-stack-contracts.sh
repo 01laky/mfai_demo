@@ -30,7 +30,9 @@ for f in \
   verify-portal-component-colocation.mjs colocate-portal-component.mjs \
   verify-admin-component-colocation.mjs colocate-admin-component.mjs \
   migrate-admin-colocate-phase.mjs fix-admin-colocated-relative-paths.mjs \
-  migrate-admin-imports-to-alias.mjs; do
+  migrate-admin-imports-to-alias.mjs \
+  verify-mobile-component-colocation.mjs colocate-mobile-component.mjs \
+  migrate-mobile-colocate-phase.mjs fix-mobile-colocated-imports.mjs; do
   [ -f "$SCRIPTS_DIR/$f" ] || fail "missing $f"
 done
 

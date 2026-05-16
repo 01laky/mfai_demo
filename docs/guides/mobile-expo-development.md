@@ -61,19 +61,27 @@ Implementers should mirror behaviour and data contracts, not necessarily file na
 | Login form + validation | `src/pages/LoginPage.tsx`, `src/contexts/AuthContext.tsx` |
 | Header / gradient shell | `src/components/Header.tsx`, `src/styles/AnimatedGradient.scss` (mobile uses `expo-linear-gradient` + parsed JSON) |
 
-## 5. Quality gates (after phase-1 tooling lands)
+## 5. Quality gates and colocation verify
 
 From `many_faces_mobile/`:
 
 ```bash
-yarn lint
-yarn format:check
-yarn typecheck
-yarn test
+yarn validate
 npx expo-doctor
 ```
 
-Parent CI runs the same matrix under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`, and this submodule has a standalone **`.github/workflows/ci.yml`** for pushes to the mobile repo alone. Root orchestration calls **`./many_faces_mobile/scripts/lint.sh`** from **`scripts/lint-all.sh`**, **`./many_faces_mobile/scripts/build.sh`** from **`scripts/build-all.sh`**, and **`./many_faces_mobile/scripts/test.sh`** from **`scripts/test-all.sh`** when the directory exists. Locally you can run **`./scripts/verify-ci.sh`** or **`./scripts/verify-ci.sh --quick`** (skips **`yarn install --immutable`** when you set **`SKIP_YARN_INSTALL=1`** or pass **`--quick`**) from the mobile repo root to mirror the mobile CI job.
+(`yarn validate` = `typecheck` + `lint` + `format:check` + `test`.)
+
+From **monorepo root** (folder layout guard):
+
+```bash
+node scripts/verify-mobile-component-colocation.mjs
+node scripts/verify-mobile-component-colocation.mjs --imports
+```
+
+Spec: [`docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md`](../prompts/fe-mobile-component-folder-colocation-agent-prompt.md).
+
+Parent CI runs **`verify-mobile-component-colocation.mjs`** and **`./scripts/verify-ci.sh`** under **`many_faces_mobile`** in `many_faces_main/.github/workflows/ci.yml`. Locally: **`./many_faces_mobile/scripts/verify-ci.sh --quick`** (or set **`SKIP_YARN_INSTALL=1`**) to mirror the mobile CI job.
 
 ## 6. Git / submodule workflow (short)
 

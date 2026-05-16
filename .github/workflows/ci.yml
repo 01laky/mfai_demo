@@ -150,6 +150,9 @@ jobs:
       - name: Make scripts executable
         run: find scripts -maxdepth 1 -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
 
+      - name: Verify mobile component folder colocation
+        run: node ../scripts/verify-mobile-component-colocation.mjs
+
       - name: Verify (lint + format check + typecheck + test + expo-doctor + audit)
         run: ./scripts/verify-ci.sh --quick
 

@@ -1,0 +1,37 @@
+---
+description: many_faces_mobile UI folder colocation — screens, components, grid blocks, features
+globs: many_faces_mobile/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Mobile component folders (`many_faces_mobile`)
+
+New UI must live in **colocated folders**, not flat `src/screens/Foo.tsx` or `src/components/Foo.tsx`.
+
+## Rules
+
+- One primary React component = `src/<area>/<Name>/<Name>.tsx` + `index.ts` barrel.
+- Import via `@/screens/LoginScreen`, `@/components/AppShell`, `@/components/wall-tickets/WallTicketsSection`, `@/grid/MobilePageLayout`, `@/grid/blocks/BlogGridBlock`, `@/features/settings/SettingsSidePanel`.
+- **No** deep imports like `@/screens/LoginScreen/LoginScreen.tsx` from outside the folder.
+- Grid block UIs go under `src/grid/blocks/<BlockName>/`; engine stays at `src/grid/` root (`parseGridSchema.ts`, `gridTypes.ts`).
+- Cross-cutting non-route UI uses `src/features/<area>/` (mirror portal `features/`).
+- Shared hooks stay in `src/hooks/api/`; do not move `httpClient` or contexts into screen folders.
+
+## Before push
+
+From monorepo root:
+
+```bash
+node scripts/verify-mobile-component-colocation.mjs
+node scripts/verify-mobile-component-colocation.mjs --imports
+cd many_faces_mobile && yarn validate
+```
+
+Scaffold moves:
+
+```bash
+node scripts/colocate-mobile-component.mjs MyScreen --screen
+node scripts/colocate-mobile-component.mjs BlogGridBlock --grid-block
+```
+
+Spec: `docs/prompts/fe-mobile-component-folder-colocation-agent-prompt.md` (Track A colocation; §23–§27 for parity follow-ups).
