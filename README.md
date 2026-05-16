@@ -67,7 +67,7 @@ flowchart LR
 
 ## Mailer worker (`many_faces_mailer`)
 
-**`many_faces_mailer`** is a **Java gRPC** worker that renders **localized HTML/text** templates and sends mail over **SMTP** (Mailpit in dev). **`many_faces_backend`** uses **`Mail:`** + **`IEmailSender`** (`MailerGrpcEmailSender`) for Identity flows; optional **TLS/mTLS** matches the push/search worker pattern.
+**`many_faces_mailer`** is a **Java gRPC** worker that renders **localized HTML/text** templates and sends mail over **SMTP** (Mailpit in dev). **`many_faces_backend`** calls **`IMailerWorkerClient.SendTemplatedEmail`** directly for **email + code registration** (`account_registration_code`); optional **TLS/mTLS** matches the push/search worker pattern. See [`docs/guides/email-code-registration.md`](./docs/guides/email-code-registration.md).
 
 - **Submodule:** [`many_faces_mailer/README.md`](./many_faces_mailer/README.md)
 - **Local dev:** [`docs/guides/mailer-local-dev.md`](./docs/guides/mailer-local-dev.md) — Mailpit, `Mail:*`, grpcurl; TLS: [`docs/guides/mailer-grpc-tls-mtls.md`](./docs/guides/mailer-grpc-tls-mtls.md). Example env: [`dev/mail-dev.env.example`](./dev/mail-dev.env.example).
@@ -84,8 +84,8 @@ sequenceDiagram
     participant MW as many_faces_mailer gRPC
     participant S as Mailpit or SMTP relay
 
-    U->>API: Confirm email / password reset
-    API->>API: MailerGrpcEmailSender builds template_id + params
+    U->>API: Register request / password reset (domain flows)
+    API->>API: Build template_id + params (e.g. account_registration_code)
     Note over API,MW: Metadata x-mailer-worker-token optional correlation headers
     API->>MW: SendTemplatedEmail
     MW->>MW: Validate template locale params
@@ -94,6 +94,33 @@ sequenceDiagram
     S-->>MW: Accepted Message-ID optional
     MW-->>API: correlation_id smtp_message_id
 ```
+
+## Email-code registration (signup)
+
+Public signup is **two-step**: request email → receive **verification code** + link with **`?hash=`** → complete on portal or mobile with password → **OAuth2 tokens** returned (auto-login). Mail uses template **`account_registration_code`** via gRPC (not legacy Identity `IEmailSender`).
+
+```mermaid
+flowchart LR
+  subgraph clients [Clients]
+    portal["many_faces_portal"]
+    mobile["many_faces_mobile"]
+  end
+  api["many_faces_backend"]
+  mailer["many_faces_mailer"]
+  mailpit["Mailpit / SMTP"]
+  portal -->|"register/request"| api
+  mobile -->|"register/request"| api
+  api -->|"SendTemplatedEmail"| mailer
+  mailer --> mailpit
+  mailpit -->|"code + link ?hash="| portal
+  mailpit -->|"deep link"| mobile
+  portal -->|"register/complete + tokens"| api
+  mobile -->|"register/complete + tokens"| api
+```
+
+- **Guide:** [`docs/guides/email-code-registration.md`](./docs/guides/email-code-registration.md)
+- **Agent prompt:** [`docs/prompts/email-code-registration-via-mailer-agent-prompt.md`](./docs/prompts/email-code-registration-via-mailer-agent-prompt.md)
+- **Mailer dev:** [`docs/guides/mailer-local-dev.md`](./docs/guides/mailer-local-dev.md)
 
 ## System Overview
 

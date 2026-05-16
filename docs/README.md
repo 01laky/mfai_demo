@@ -53,6 +53,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | Document | Contents |
 | -------- | -------- |
 | [authentication-and-sessions.md](./guides/authentication-and-sessions.md) | OAuth2, JWT, `rememberMe`, configuration, FE/admin, tests. |
+| [email-code-registration.md](./guides/email-code-registration.md) | Two-step signup (email code + link), mailer template, portal/mobile/admin. |
 | [acl-and-capabilities.md](./guides/acl-and-capabilities.md) | Permission keys, `GET …/api/me/capabilities`, gates, file map, tests. |
 | [security-crypto-sockets.md](./guides/security-crypto-sockets.md) | TLS, JWT keys, WebSockets backlog, deferred `TRACK-*`, §16–18 record. |
 | [signalr-hub-security-matrix.md](./guides/signalr-hub-security-matrix.md) | Hub inventory (`ChatHub`), JWT/face rules, coverage. |

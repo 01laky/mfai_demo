@@ -4,6 +4,15 @@ This document explains **how login works** across **BeDemo API** (`many_faces_ba
 
 For a **curl walkthrough** (register + token), see [api-oauth-stories-curl.md](./api-oauth-stories-curl.md).
 
+### Public signup (email + code)
+
+Legacy **`POST /api/oauth2/register`** (immediate account + password) is **deprecated**. New users use:
+
+1. **`POST /api/oauth2/register/request`** — pending invite + mail (`account_registration_code`).
+2. **`POST /api/oauth2/register/complete`** — `hash` + `code` + `password` → **`EmailConfirmed=true`** + **OAuth2 access/refresh tokens** in one response (same storage as login).
+
+Portal and mobile persist tokens after complete and navigate to the authenticated home. Full flow: **[email-code-registration.md](./email-code-registration.md)**.
+
 ---
 
 ## 1. Why this exists (mental model)

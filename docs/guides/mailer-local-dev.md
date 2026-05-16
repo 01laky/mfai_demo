@@ -61,7 +61,7 @@ With default submodule port maps:
 
 | Key | Example | Notes |
 | --- | ------- | ----- |
-| `Mail:Enabled` | `true` | When `false`, **`IEmailSender`** logs and **no-ops** (safe default in `appsettings.Development.json`). |
+| `Mail:Enabled` | `true` | When `false`, registration/password flows that call **`IMailerWorkerClient`** skip send (log only; safe default in `appsettings.Development.json`). |
 | `Mail:WorkerGrpcUrl` | `http://mailer-worker-dev:50054` | From **inside** `be-demo-dev`; on the host use `http://localhost:59204` only if you point the API at the host-mapped port. |
 | `Mail:WorkerAuthToken` | shared secret | Must match **`MAILER_WORKER_EXPECTED_TOKEN`** on the worker when set. Header: **`x-mailer-worker-token`**. |
 | `Mail:DefaultLocale` | `en` | Fallback BCP 47 tag when `CultureInfo.CurrentUICulture` is empty. |
@@ -117,10 +117,27 @@ grpcurl -plaintext \
 
 | `template_id` | Required `params` | Locales |
 | --- | --- | --- |
+| `account_registration_code` | `action_link`, `registration_code`, `user_name`, `expiry_minutes` | `en`, `sk` |
 | `identity_email_confirm` | `action_link`, `user_name` | `en`, `sk` (+ fallback chain in worker) |
 | `identity_password_reset` | `action_link`, `user_name` | `en`, `sk` |
 
-The backend **`MailerGrpcEmailSender`** classifies Identity mail from HTML markers, **does not** forward Identity’s HTML as the MIME body, and passes only the extracted callback URL plus a display name — see code comments in `MailerGrpcEmailSender.cs`.
+**Signup mail:** backend **`IRegistrationInviteService`** calls **`IMailerWorkerClient`** with `account_registration_code`. The `action_link` param must include **`?hash=`** (opaque link id); the human code is only in `registration_code`.
+
+Example **grpcurl** smoke for the registration template:
+
+```bash
+grpcurl -plaintext -d '{
+  "template_id": "account_registration_code",
+  "locale": "en",
+  "to": [{"email": "you@example.com"}],
+  "params": {
+    "action_link": "http://localhost:9081/en/register/complete?hash=demo-hash-for-mailpit",
+    "registration_code": "ABC123",
+    "user_name": "Demo",
+    "expiry_minutes": "30"
+  }
+}' localhost:59204 manyfaces.mailer.v1.MailerService/SendTemplatedEmail
+```
 
 ## TLS / mTLS
 
@@ -130,11 +147,11 @@ Parity with push/search workers: **`MAILER_WORKER_GRPC_TLS_CERT_FILE`**, **`MAIL
 
 ## Manual acceptance (operator)
 
-Run once per environment or before a release when mail behavior changed. Requires **`ENABLE_MAILER_WORKER=1`**, **`Mail:Enabled=true`**, Mailpit reachable, and a test user.
+Run once per environment or before a release when mail behavior changed. Requires **`ENABLE_MAILER_WORKER=1`**, **`Mail:Enabled=true`**, Mailpit reachable.
 
-1. **Confirm email (`sk`):** set UI culture to Slovak (or call the API with `Accept-Language: sk`), register a new user or trigger resend confirmation. In Mailpit, open the message: body should be **Slovak**, link must target your dev host. Follow the link and confirm the account completes.
-2. **Confirm email (`en`):** repeat with English locale; verify **English** template text.
-3. **Password reset:** trigger forgot-password for an existing user; Mailpit shows **reset** template; follow the link only on a throwaway account in dev.
+1. **Email-code registration:** portal step 1 (`POST /api/oauth2/register/request`) → Mailpit shows **`account_registration_code`** with visible code + link `…/register/complete?hash=…` → complete signup → user is **logged in** without visiting login. See **[email-code-registration.md](./email-code-registration.md)**.
+2. **Locale `sk`:** repeat request with `locale: sk`; body/subject should be Slovak.
+3. **Password reset (if enabled):** Mailpit shows **`identity_password_reset`** for forgot-password flows.
 
 **Correlation:** trigger any send from the web UI with `X-Request-Id` or W3C tracing enabled on the API; worker logs / JSON should show the same id in `correlation_id` or `traceparent` MDC fields (see [`many_faces_mailer/README.md`](../../many_faces_mailer/README.md)).
 
