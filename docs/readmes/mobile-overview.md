@@ -42,6 +42,7 @@ Parent CI: colocation script → `verify-ci.sh` (see [`development.md`](../guide
 ## Parity tracking
 
 - REST / grid matrix: [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md)
+- Portal ↔ mobile routes: [`many_faces_mobile/docs/portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md)
 - Contributor guide: [`mobile-expo-development.md`](../guides/mobile-expo-development.md)
 - Phase 2+ behaviour spec: [`mobile-portal-feature-parity-agent-prompt.md`](../prompts/mobile-portal-feature-parity-agent-prompt.md)
 

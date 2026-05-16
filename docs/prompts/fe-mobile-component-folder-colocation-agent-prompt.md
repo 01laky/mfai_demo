@@ -14,7 +14,7 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
-> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` + **`LanguageSwitcher`** + **`settings.signOut`** — **§24.6** (`[x]`). **First-launch locale:** `expo-localization` when `i18nextLng` absent. **`yarn validate` + `jest.config.js`** — **§26** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+> **Status (2026-05-16):** Track A and **§27.1–§27.4** Track B slices are **implemented** on `many_faces_mobile` `main` (see [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md)). **§24.6** settings shell + language + sign out (`[x]`). **§26** `yarn validate` + `jest.config.js` (`[x]`). Full settings tabs / messenger / SignalR remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
@@ -173,7 +173,7 @@ find many_faces_mobile/src/theme -maxdepth 1 -name '*.tsx' | wc -l
 - [ ] Confirm `RootNavigator.tsx` screen list matches §1 inventory.
 - [ ] Confirm `App.tsx` linking config still resolves `RegisterComplete` after screen moves.
 - [ ] List tests under `src/screens/__tests__/` to colocate in Phase 4 (§19).
-- [ ] Note Jest uses **`jest-expo`** (no committed `jest.config.cjs` today) and `babel.config.js` **`module-resolver`** maps `@/*` → `src/*` — colocated tests must still resolve `@/`.
+- [x] Jest uses **`jest.config.js`** + **`jest-expo`**; `babel.config.js` **`module-resolver`** maps `@/*` → `src/*` — colocated tests resolve `@/`.
 
 ---
 
@@ -608,16 +608,16 @@ src/theme/AnimatedShellGradient/
 - [ ] `verify-mobile-component-colocation.mjs --imports` exits **0**.
 - [ ] Parent `many_faces_main` CI step added §17.3 (or merged in Phase 4 if verify already green).
 - [x] §26 `yarn validate` green; `scripts/verify-ci.sh` calls `yarn validate`; `jest.config.js` committed.
-- [ ] §12 docs updated (colocation tree + pointer to §23–§27).
+- [x] §12 docs updated (README, `portal-route-parity.md`, component/features READMEs, §23–§27 pointers).
 
 ### 16.8 Track B — post-colocation slices **(separate PRs — §27)**
 
 Copy the relevant §27 subsection checklist into each PR. **Do not** mix with Track A `git mv` unless explicitly approved.
 
-- [ ] **§27.2** My Submissions detail — when scheduled.
-- [ ] **§27.3** Shell i18n + reduced motion — when scheduled.
-- [ ] **§27.1** Grid blocks — per block or small batch.
-- [ ] **§27.4** Route ↔ portal URL table in README — when adding/rename routes in Track B.
+- [x] **§27.2** My Submissions detail — `MySubmissionDetailScreen`, navigation + tests.
+- [x] **§27.3** Shell i18n + reduced motion — `useShellReduceMotion`, localized Home, gradient/drawer.
+- [x] **§27.1** Grid blocks — `gridBlockRegistry` + P1/P2 blocks in matrix.
+- [x] **§27.4** Route parity — [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) + README link.
 - [x] **§24** `features/settings` scaffold + **§24.6** shell mount (`f2de1d3`); messenger / full settings tabs → parity prompt.
 
 ---
@@ -753,12 +753,7 @@ Defer with PR note if `eslint-config-expo` conflict — verify script (§17.2) i
 
 ## 21. DX — README, Metro, local verify
 
-- [ ] Document in `many_faces_mobile/README.md`:
-
-```bash
-node ../scripts/verify-mobile-component-colocation.mjs
-node ../scripts/verify-mobile-component-colocation.mjs --imports
-```
+- [x] Document in `many_faces_mobile/README.md` (`verify-mobile-component-colocation.mjs`, optional `--imports`).
 
 - [ ] **Metro / bundle (optional):** note in PR if `npx expo export` bundle size changed; not a gate unless regression > ~10% on entry chunk.
 - [ ] **CI source of truth:** `many_faces_main/.github/workflows/ci.yml` job `many_faces_mobile` (submodule has no separate workflow in this monorepo layout). Optional: duplicate verify in the submodule repo only if it gains its own `ci.yml` later.
@@ -1006,10 +1001,10 @@ Implement only subsections **explicitly named** in the engagement or PR title. E
 
 **Checklist:**
 
-- [ ] `src/grid/MobilePageLayout/blockRegistry.ts` (or equivalent) wired.
-- [ ] At least **one** non-`ad*` block **Done** in matrix (§25.4).
-- [ ] `FacePageScreen` smoke: face page with `gridSchema` showing real block, not only placeholder.
-- [ ] Tests for block pure helpers; no snapshot-only tests.
+- [x] `src/grid/MobilePageLayout/blockRegistry.ts` (`gridBlockRegistry`) wired.
+- [x] Multiple non-`ad*` blocks **Done** in matrix (§25.4) — blog/album/reel/story/chatRoom/userProfile.
+- [x] `FacePageScreen` renders real blocks via registry (not only generic placeholder).
+- [x] Tests for block helpers / layout (`parseGridSchema`, block APIs); no snapshot-only gate.
 
 **Out of scope here:** Admin grid **editing** (stays in `many_faces_admin`); **Quill** in RN (see parity prompt §2.3).
 
@@ -1044,23 +1039,23 @@ src/screens/MySubmissionDetailScreen/
 
 **Behavior (v1 — read-only):**
 
-- [ ] Tap row on `MySubmissionsScreen` → `navigate('MySubmissionDetail', { submissionId })`.
-- [ ] Fetch single submission if API exists; else reuse list payload + find by id (document choice in PR).
-- [ ] Show pipeline status, content type, title/summary fields allowed for **creator** (reuse `creatorSafeReason` / portal field policy).
-- [ ] Guest / wrong capability → sign-in or “not available” copy — no raw API errors.
-- [ ] Register screen on **guest and auth** stacks if product requires (mirror `MySubmissions` today).
+- [x] Tap row on `MySubmissionsScreen` → `navigate('MySubmissionDetail', { submissionId })`.
+- [x] Reuse list query payload + find by id (no separate GET-by-id yet).
+- [x] Creator-safe fields via `creatorSafeReason` / moderation utils.
+- [x] Guest → sign-in copy on detail; no raw API errors in UI.
+- [x] `MySubmissionDetail` on guest + auth stacks.
 
 **v2 (defer unless PR scope says otherwise):** `?edit=1`, resubmit, delete — track under [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md).
 
 **Tests:**
 
-- [ ] RTL test: list navigation pushes detail route with param.
-- [ ] API module test if new `fetchMyContentSubmission(id)` added.
+- [x] RTL test: list navigation pushes detail route with param (`MySubmissionsScreen.test.tsx`).
+- [x] `myContentSubmissionsApi` tests (list); no `fetchById` until API exists.
 
 **Docs:**
 
-- [ ] Update `rest-parity-matrix.md` creator row to **Detail read path Done**.
-- [ ] **§27.4** route table row for detail.
+- [x] `rest-parity-matrix.md` creator row **Detail read path**.
+- [x] **§27.4** — [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md).
 
 ---
 
@@ -1079,16 +1074,16 @@ src/screens/MySubmissionDetailScreen/
 
 **Implementation notes:**
 
-- [ ] Use **`useReducedMotion()`** from `react-native-reanimated` **or** `AccessibilityInfo` — pick one pattern and use consistently in shell + theme.
-- [ ] When reduce motion: drawer open/close → `duration: 0` or instant layout; gradient → static first color from `gradientSettings`.
-- [ ] No change to business routes or API calls — copy + motion only.
-- [ ] `yarn test` — add tests for any extracted `useShellMotionPolicy` pure helper if logic is non-trivial.
+- [x] **`useShellReduceMotion`** (`AccessibilityInfo`) in shell + `AnimatedShellGradient`.
+- [x] Reduce motion: drawer durations → `0`; gradient animation disabled.
+- [x] Copy + motion only — no route/API changes in this slice.
+- [x] `useShellReduceMotion.test.ts` for `shellMotionDuration` helper.
 
 **Checklist:**
 
-- [ ] No user-visible English hardcoded strings remain on **Home** auth buttons (grep `Sign in` / `Register` in `src/screens` / `src/components`).
-- [ ] Manual test: iOS **Settings → Accessibility → Motion → Reduce Motion** → reload app → drawer/gradient respect setting.
-- [ ] Portal reference for shell copy: `many_faces_portal` header/home — align keys where sensible, do not rename keys unnecessarily.
+- [x] Home auth buttons use `t('home.signIn')` / `t('home.register')` (+ a11y keys).
+- [x] Manual: iOS Reduce Motion → drawer/gradient respect setting (operator smoke).
+- [x] Shell keys aligned with portal where sensible (`common` namespace via API).
 
 ---
 
@@ -1108,8 +1103,8 @@ Add subsection **`## Navigation vs portal URLs`** to `many_faces_mobile/README.m
 | Portal **My submissions**                   | `MySubmissions`      |                                         |
 | Portal submission detail                    | `MySubmissionDetail` | After §27.2                             |
 
-- [ ] Table updated whenever `AppStackParamList` or portal routes change.
-- [ ] Deep links documented (`manyfaces://`, `RegisterComplete` today).
+- [x] [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) — update when `AppStackParamList` / stacks change.
+- [x] Deep links documented (`manyfaces://register/complete`, `RegisterComplete` in `App.tsx`).
 
 ---
 

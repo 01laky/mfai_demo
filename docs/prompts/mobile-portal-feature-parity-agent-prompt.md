@@ -299,6 +299,8 @@ Universal Links / App Links are **not required** for first merge, but the naviga
 
 ### 6.4 Web-to-mobile route parity (documentation template)
 
+> **Status (2026-05-16):** Shipped routes + deferred portal targets documented in [`many_faces_mobile/docs/portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) (README links there). Extend that file for every new route; do not duplicate a second canonical table in README.
+
 Maintain a table (README or `many_faces_mobile/docs/portal-route-parity.md`) with **at least** these rows; extend for every new portal route:
 
 | Portal (conceptual) | Web path pattern | Mobile screen / params | Auth | Notes |
@@ -662,7 +664,7 @@ Phases are **sequential recommendations**; parallel work is allowed only when **
 - [ ] Wire `HomePlaceholderScreen` into real **`FaceHome`** when `pageType.index === 'home'` for selected face.
 - [ ] Add navigation from grid blocks to **detail** routes with correct params (`albumId`, `blogId`, `reelId`, …).
 - [ ] Add **back stack** behaviour consistent with Android/iOS expectations (headers, gestures).
-- [ ] Document **web route ↔ mobile route** mapping table in mobile README or `many_faces_mobile/docs/portal-route-parity.md` (template §6.4).
+- [x] Document **web route ↔ mobile route** mapping in [`many_faces_mobile/docs/portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) (§6.4).
 - [ ] **`SyncFaceFromProfileRoutes` parity**: when navigating to profile/story routes, ensure **`selectedFace`** matches route `faceIndex` (or document divergent mobile model).
 - [ ] **`useWallHostViewer`** (or equivalent): portal uses this for wall create affordance on wall pages—mirror capability gating or document waiver.
 
