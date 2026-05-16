@@ -38,7 +38,7 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped via `faceScope`); **`MySubmissionsScreen`** + **`MySubmissionDetailScreen`** (read-only detail from list cache). **No** native `?edit=1` / edit form / delete yet — portal remains canonical for mutations until ported. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
-| **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`, `ContentModerationUnicodeSpoofingTests` for SHV2 **PI-6** Unicode spoofing); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
 
 ## Core Rule
 
@@ -157,6 +157,7 @@ AI `flags` from the wire are **whitelisted and canonicalized** before persistenc
 - **Heuristic:** Phrases in title, HTML body, or reel `VideoUrl` query text (including percent-encoded query stuffing); negative examples that must not match; case-insensitive matching after normalization.
 - **Policy:** `Approve` blocked when the instruction flag survives normalization; `Reject` with the same flag remains valid when a reject reason is present; unknown AI flags dropped; duplicate canonical flags collapsed.
 - **Red-team corpus:** `many_faces_backend/BeDemo.Api.Tests/Fixtures/prompt_injection_corpus.txt` (≥20 attack lines). `ContentModerationSecurityEdgeTests` asserts each line cannot yield `AiReviewStatus.RecommendedApprove` when the AI returns high-confidence `Approve`; `ContentModerationUntrustedContentEvaluator` mirrors the worker merge path in pure functions.
+- **Unicode spoofing (SHV2 PI-6):** bidi controls (LRE/RLO/LRI/PDI), zero-width joiners, and Cyrillic/Greek homoglyphs are stripped from gRPC wire fields via `ContentModerationInputSanitizer` and folded in `ContentModerationUnicodeHomoglyphFold` + `ContentModerationTextNormalization.BuildHeuristicScanBlob` so instruction heuristics still match smuggled phrases. Tests: `ContentModerationUnicodeSpoofingTests`; corpus includes bidi-wrapped and homoglyph `ignore previous` lines.
 - **Invalid Redis payload logging (SHV2 PI-7):** malformed `content.ai-review` jobs log only `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog` diagnostics (length, hash prefix, safe ids) — never raw JSON that may contain smuggled title/body. Tests: `ContentModerationPayloadLogRedactionTests`.
 - **Python:** Same sanitizer limits at `ReviewContent` entry plus classifier behaviour on delimiter-smuggled keywords.
 
@@ -164,6 +165,7 @@ Run corpus-related tests:
 
 ```bash
 cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationSecurityEdgeTests"
+cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationUnicodeSpoofing"
 ```
 
 ## Redis Queue And Backpressure
