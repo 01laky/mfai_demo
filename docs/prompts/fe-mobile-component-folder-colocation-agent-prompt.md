@@ -14,7 +14,7 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
-> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` + **`LanguageSwitcher`** (`en`/`sk`/`cz`, `i18nextLng`) — see **§24.6** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` + **`LanguageSwitcher`** — **§24.6** (`[x]`). **`yarn validate` + `jest.config.js`** — **§26** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
@@ -607,7 +607,7 @@ src/theme/AnimatedShellGradient/
 
 - [ ] `verify-mobile-component-colocation.mjs --imports` exits **0**.
 - [ ] Parent `many_faces_main` CI step added §17.3 (or merged in Phase 4 if verify already green).
-- [ ] §26 `yarn validate` green; `scripts/verify-ci.sh` calls `yarn validate` when §26 is in repo.
+- [x] §26 `yarn validate` green; `scripts/verify-ci.sh` calls `yarn validate`; `jest.config.js` committed.
 - [ ] §12 docs updated (colocation tree + pointer to §23–§27).
 
 ### 16.8 Track B — post-colocation slices **(separate PRs — §27)**
@@ -687,7 +687,7 @@ Extend `scripts/verify-dev-stack-contracts.sh` **when** mobile scripts land — 
 
 ### 17.5 Jest module resolution
 
-Today the repo runs **`jest-expo`** without a committed `jest.config.cjs` (ESLint may still ignore that filename if added later). **`@/`** for tests comes from the same **`babel-plugin-module-resolver`** config as the app (`babel.config.js`). After colocation, run `yarn test` and fix any colocated test that breaks; prefer `@/screens/LoginScreen` or relative `./LoginScreen` imports.
+Jest uses **`jest.config.js`** (`jest-expo` preset, `@/` `moduleNameMapper`) plus **`babel.config.js`** `module-resolver` for transforms. After colocation, run `yarn validate` before push.
 
 ### 17.6 Cursor rule — `.cursor/rules/mobile-component-folders.mdc` **(required)**
 
@@ -936,11 +936,10 @@ Add columns to the existing table (or a second **Grid blocks** table):
 
 ## 26. `yarn validate` + committed Jest config (**required** in Final or dedicated DX PR)
 
-### 26.1 Problem (as-is)
+### 26.1 Problem (historical — resolved on `main`)
 
-- `many_faces_admin` exposes **`yarn validate`** (`type-check` + `lint` + `format:check`).
-- Mobile runs the same checks **separately** in CI via `scripts/verify-ci.sh` / `scripts/lint.sh` but has **no** single `validate` script.
-- Jest runs via **`jest-expo`** with **no** committed `jest.config.js`; `@/` resolution depends on Babel `module-resolver` only.
+- ~~Mobile had no single `validate` script~~ → **`yarn validate`** in `package.json`; **`scripts/verify-ci.sh`** calls it.
+- ~~No committed Jest config~~ → **`jest.config.js`** (`jest-expo` preset + `@/` `moduleNameMapper`).
 
 ### 26.2 Required `package.json` script
 
@@ -950,8 +949,8 @@ Add to `many_faces_mobile/package.json`:
 "validate": "yarn typecheck && yarn lint && yarn format:check && yarn test"
 ```
 
-- [ ] `yarn validate` exits **0** locally and in CI.
-- [ ] Update `many_faces_mobile/scripts/verify-ci.sh` to call **`yarn validate`** instead of duplicating individual steps (keep `expo-doctor` / audit as separate CI steps if present today).
+- [x] `yarn validate` exits **0** locally and in CI.
+- [x] `many_faces_mobile/scripts/verify-ci.sh` calls **`yarn validate`** (`expo-doctor` / audit remain separate).
 
 ### 26.3 Required `jest.config.js` **(required)**
 
@@ -971,13 +970,13 @@ module.exports = {
 };
 ```
 
-- [ ] Remove `jest.config.cjs` from ESLint **ignores** only if the file exists; add to **include** when created.
-- [ ] Colocated screen tests under `src/screens/<Screen>/` still resolve `@/` after colocation.
+- [x] `jest.config.js` committed; `jest.config.cjs` removed from ESLint ignores; `jest.config.js` linted with test-config rules.
+- [x] Colocated screen tests under `src/screens/<Screen>/` resolve `@/` via `moduleNameMapper` + Babel `module-resolver`.
 
 ### 26.4 CI / monorepo
 
-- [ ] `many_faces_main` job `many_faces_mobile` still green after `verify-ci.sh` uses `yarn validate`.
-- [ ] Document `yarn validate` in README **Scripts** table next to `yarn test`.
+- [x] `many_faces_main` job `many_faces_mobile` runs `./scripts/verify-ci.sh --quick` → **`yarn validate`**.
+- [x] README **Scripts** table documents `yarn validate` next to `yarn test` and `jest.config.js`.
 
 ---
 
