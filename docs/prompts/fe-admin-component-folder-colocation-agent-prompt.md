@@ -12,7 +12,7 @@
 
 **Precedent (portal — already rolled out):**
 
-- [fe-portal-component-folder-colocation-agent-prompt.md](./fe-portal-component-folder-colocation-agent-prompt.md) — same rules, phases, and tooling patterns; **reuse** monorepo scripts as templates (`colocate-portal-component.mjs`, `migrate-portal-colocate-phase.mjs`, `fix-colocated-relative-paths.mjs`, `verify-portal-component-colocation.mjs`) and adapt paths to `many_faces_admin`.
+- [fe-portal-component-folder-colocation-agent-prompt.md](./fe-portal-component-folder-colocation-agent-prompt.md) — same rules, phases, and tooling patterns; **reuse** monorepo scripts `colocate-portal-component.mjs` and `verify-portal-component-colocation.mjs` as templates and add admin-specific bulk helpers (`migrate-admin-colocate-phase.mjs`, `fix-admin-colocated-relative-paths.mjs`; portal one-off bulk scripts were removed after rollout).
 
 **Related (do not duplicate scope unless PR explicitly combines):**
 
@@ -111,7 +111,7 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 | **Routes helper** | `src/routes/RouteLoadingFallback.tsx` | Flat TSX in `routes/` | Colocate in Phase 2 per §19 |
 | **Page editor cluster** | `GridLayoutEditor`, `ComponentPickerModal`, `GradientPicker` | Flat in `components/` root | Only used by **`EditPagePage`**, **`EditFacePage`** → move to **`page-editor/`** in Phase 2b (§17) |
 | **Large pages** | See §20 table | Single huge TSX files | Structure-only split in Phase 4 |
-| **Imports** | Whole repo | Relative paths (`../components/Header`, `./Header.scss`) | Mass update; use `git mv` + scripted deepen (see portal `fix-colocated-relative-paths.mjs`) |
+| **Imports** | Whole repo | Relative paths (`../components/Header`, `./Header.scss`) | Mass update; use `git mv` + scripted deepen (`fix-admin-colocated-relative-paths.mjs`, §16.7) |
 
 **Inventory — root `src/components/` (non-`dashboard/`, non-`radix/`, non-`page-editor/`, non-`tables/`, non-`__tests__`):**
 
@@ -335,7 +335,7 @@ Update `AppRoutes.tsx` (and any other importers) to `from './RouteLoadingFallbac
 3. **Fix** internal imports (`./Component.scss` stays same folder).
 4. **Add** `index.ts` re-export.
 5. **Update** importers: `src/routes/**`, `src/pages/**`, `src/components/**`, tests.
-6. **Run** `node scripts/fix-colocated-relative-paths.mjs` with admin scope if script supports it (extend portal script or add `fix-admin-colocated-relative-paths.mjs`).
+6. **Run** `node scripts/fix-admin-colocated-relative-paths.mjs` after bulk moves (§16.7).
 7. **Delete** empty flat files.
 8. **Run** §10.
 
@@ -643,7 +643,7 @@ src/styles/forms/
 - [ ] `scripts/colocate-admin-component.mjs` (adapt from portal; flags §16.1).
 - [ ] `scripts/verify-admin-component-colocation.mjs` (+ `--imports` §16.2).
 - [ ] `scripts/migrate-admin-colocate-phase.mjs` with phases `radix | root | page-editor | tables | dashboard | pages | routes` (§16.7).
-- [ ] `scripts/fix-colocated-relative-paths.mjs` extended with `admin` scope **or** `fix-admin-colocated-relative-paths.mjs`.
+- [ ] `scripts/fix-admin-colocated-relative-paths.mjs` (deepen relative imports after moves).
 - [ ] `.cursor/rules/admin-component-folders.mdc` (§16.6).
 - [ ] ESLint restricted-import patterns drafted (§22) — may enable in final PR.
 - [ ] No component/page files moved in this PR (scripts + rules only).
@@ -816,7 +816,7 @@ Create `.cursor/rules/admin-component-folders.mdc` (mirror `portal-component-fol
 
 ### 16.7 Bulk phase script — `scripts/migrate-admin-colocate-phase.mjs` **(required)**
 
-Mirror `migrate-portal-colocate-phase.mjs`:
+Implement phased bulk moves (portal used a one-off script removed after rollout; mirror that pattern for admin):
 
 ```bash
 node scripts/migrate-admin-colocate-phase.mjs radix

@@ -244,7 +244,7 @@ builder.Services.AddSingleton<ILocalizationBundleService>(); // name illustrativ
 
 ### 4.2.1 One-time migration script (**required**)
 
-- [ ] Add `scripts/migrate-locale-json-to-resx.mjs` (or similar) that reads each `src/i18n/locales/**/*.json` and emits `.resx` per app/culture.
+- [x] Add `scripts/migrate-locale-json-to-resx.mjs` (or similar) that reads each `src/i18n/locales/**/*.json` and emits `.resx` per app/culture. *(Delivered; one-off script removed from monorepo after migration.)*
 - [ ] Preserve `{{count}}`, `{{name}}`, etc. — XML-escape `&`, `<`, `>` in `.resx` values.
 - [ ] PR includes generated `.resx` + spot-check diff against legacy JSON via golden test (§11.1).
 
@@ -616,7 +616,7 @@ Each app README must gain or refresh an **Internationalization (i18n)** subsecti
 ### Backend — `.resx` + export
 
 - [ ] `Localization/` tree with `Portal`, `Admin`, `Mobile` resources.
-- [ ] `scripts/migrate-locale-json-to-resx.mjs` (or equivalent) run; keys match nested JSON §4.2.
+- [x] `scripts/migrate-locale-json-to-resx.mjs` (or equivalent) run; keys match nested JSON §4.2. *(Script removed post-migration; `.resx` is source of truth.)*
 - [ ] `AddLocalization` + bundle service + JSON un-flattener.
 - [ ] `GET /api/localization/{app}` anonymous, returns `en`/`sk`/`cz`.
 - [ ] **`/api/localization` added to `Routing.ExemptPathPrefixes`** §3.4.
