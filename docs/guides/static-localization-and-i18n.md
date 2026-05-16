@@ -10,10 +10,10 @@ How **UI copy** and **URL segments** are translated across Many Faces clients, a
 
 ## Two separate systems (do not merge)
 
-| System | What it translates | Source of truth | Edited by |
-| ------ | ------------------- | --------------- | --------- |
-| **Static UI i18n** | Buttons, labels, validation, app menu routes (`routes.login` → `prihlasenie`) | **`many_faces_backend`** — `.resx` per app (`PortalResources`, `AdminResources`, `MobileResources`) | Developers in git |
-| **CMS dynamic route slugs** | Per-page URL path under a face (`home` → `domov` for one `Page` row) | **PostgreSQL** — `PageRouteTranslations` | Operators in admin (Create/Edit Page) |
+| System                      | What it translates                                                            | Source of truth                                                                                     | Edited by                             |
+| --------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| **Static UI i18n**          | Buttons, labels, validation, app menu routes (`routes.login` → `prihlasenie`) | **`many_faces_backend`** — `.resx` per app (`PortalResources`, `AdminResources`, `MobileResources`) | Developers in git                     |
+| **CMS dynamic route slugs** | Per-page URL path under a face (`home` → `domov` for one `Page` row)          | **PostgreSQL** — `PageRouteTranslations`                                                            | Operators in admin (Create/Edit Page) |
 
 Static strings are **not** stored in the database. CMS slugs are **not** in `.resx`.
 
@@ -40,10 +40,10 @@ flowchart TB
 
 All product surfaces use the same language codes:
 
-| Code | Meaning |
-| ---- | ------- |
-| `en` | English (default) |
-| `sk` | Slovak |
+| Code | Meaning                                                                           |
+| ---- | --------------------------------------------------------------------------------- |
+| `en` | English (default)                                                                 |
+| `sk` | Slovak                                                                            |
 | `cz` | Czech (client/DB code; .NET satellites use `cs` / `cs-CZ` internally — see below) |
 
 ---
@@ -62,10 +62,10 @@ All product surfaces use the same language codes:
 GET /api/localization/{app}
 ```
 
-| `app` | Resource set |
-| ----- | -------------- |
+| `app`    | Resource set      |
+| -------- | ----------------- |
 | `portal` | `PortalResources` |
-| `admin` | `AdminResources` |
+| `admin`  | `AdminResources`  |
 | `mobile` | `MobileResources` |
 
 - **Anonymous** (no Bearer token) — required for login/register before OAuth.
@@ -83,8 +83,8 @@ Example shape:
   "supportedLanguages": ["en", "sk", "cz"],
   "resources": {
     "en": { "common": { "routes": { "login": "login" } } },
-    "sk": { "common": { } },
-    "cz": { "common": { } }
+    "sk": { "common": {} },
+    "cz": { "common": {} }
   }
 }
 ```
@@ -105,11 +105,11 @@ sequenceDiagram
   UI->>UI: configureApiClient, auth, faces, render
 ```
 
-| App | Entry | Notes |
-| --- | ----- | ----- |
-| **Portal** | `main.tsx` | After `validateEnv`, **before** `configureApiClient` if needed for bare `/api/localization`; then `resetLangLevelStaticRouteSegmentsCache()` |
-| **Admin** | `main.tsx` | Async bootstrap; remove side-effect `import './i18n/config'` |
-| **Mobile** | `src/i18n/index.ts` | Block before `App` / `I18nextProvider` |
+| App        | Entry                          | Notes                                                                                                                                                             |
+| ---------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portal** | `main.tsx`                     | After `validateEnv`, **before** `configureApiClient` if needed for bare `/api/localization`; then `resetLangLevelStaticRouteSegmentsCache()`                      |
+| **Admin**  | `main.tsx`                     | Async bootstrap; remove side-effect `import './i18n/config'`                                                                                                      |
+| **Mobile** | `Bootstrap.tsx` → `initI18n()` | Before `App`; first launch uses **device locale** (`expo-localization`, `cs`→`cz`) when `i18nextLng` is unset; **settings `LanguageSwitcher`** persists overrides |
 
 - **One GET** returns all languages; `changeLanguage('sk')` does not refetch.
 - **Optional:** cache bundle in `localStorage` when `version` unchanged.
@@ -117,21 +117,21 @@ sequenceDiagram
 ### Using copy in components
 
 ```tsx
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 // Portal also: useApp() from contexts/AppContext.tsx
 
-const { t } = useTranslation('common');
-return <button>{t('pages.login.submit')}</button>;
+const { t } = useTranslation("common");
+return <button>{t("pages.login.submit")}</button>;
 ```
 
 ### Static localized app routes (React Router)
 
 English segment names (`login`, `register`, `dashboard`, …) are keys under `routes.*` in the static bundle. Utilities map them per language:
 
-| App | Utility |
-| --- | ------- |
+| App    | Utility                                                                        |
+| ------ | ------------------------------------------------------------------------------ |
 | Portal | `src/utils/routeTranslations.ts`, `useLocalizedLink`, `buildLocalizedLinkPath` |
-| Admin | `src/utils/routeTranslations.ts`, `useAdminRoutePaths` |
+| Admin  | `src/utils/routeTranslations.ts`, `useAdminRoutePaths`                         |
 
 `getAllRouteTranslations` registers **multiple path variants** per route id so `/sk/prihlasenie` and `/en/login` both match.
 
@@ -185,12 +185,12 @@ sequenceDiagram
 
 Browser REST calls usually go to `/{facePrefix}/api/...`. System paths are exempt:
 
-| Path prefix | Purpose |
-| ----------- | ------- |
-| `/api/oauth2` | Token, registration |
-| `/api/auth` | Legacy cookie auth |
-| `/api/localization` | Static UI bundles (**required** for this feature) |
-| `/swagger`, `/openapi`, `/uploads/` | Tooling / static files |
+| Path prefix                         | Purpose                                           |
+| ----------------------------------- | ------------------------------------------------- |
+| `/api/oauth2`                       | Token, registration                               |
+| `/api/auth`                         | Legacy cookie auth                                |
+| `/api/localization`                 | Static UI bundles (**required** for this feature) |
+| `/swagger`, `/openapi`, `/uploads/` | Tooling / static files                            |
 
 Portal `src/api/faceApiRouting.ts` must treat `/api/localization` like OAuth (no face prepend).
 
@@ -198,11 +198,11 @@ Portal `src/api/faceApiRouting.ts` must treat `/api/localization` like OAuth (no
 
 ## Culture code `cz` vs .NET `cs`
 
-| Layer | Code |
-| ----- | ---- |
-| React apps, DB `LanguageCode`, API JSON keys | `cz` |
-| `.resx` satellite files | `*.cs.resx` or `cs-CZ` (valid `CultureInfo`) |
-| API builder | Read `cs` resources, emit under `resources.cz` |
+| Layer                                        | Code                                           |
+| -------------------------------------------- | ---------------------------------------------- |
+| React apps, DB `LanguageCode`, API JSON keys | `cz`                                           |
+| `.resx` satellite files                      | `*.cs.resx` or `cs-CZ` (valid `CultureInfo`)   |
+| API builder                                  | Read `cs` resources, emit under `resources.cz` |
 
 Do not call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture.
 
@@ -220,11 +220,11 @@ Do not call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture.
 
 ## Per-app pointers
 
-| Submodule | Local README | Backend resources |
-| --------- | ------------- | ----------------- |
-| Portal | [`many_faces_portal/src/i18n/README.md`](../../many_faces_portal/src/i18n/README.md) | `Localization/Portal/` |
-| Admin | [`many_faces_admin/src/i18n/README.md`](../../many_faces_admin/src/i18n/README.md) | `Localization/Admin/` |
-| Mobile | (bootstrap in `src/i18n/index.ts`) | `Localization/Mobile/` |
+| Submodule | Local README                                                                         | Backend resources      |
+| --------- | ------------------------------------------------------------------------------------ | ---------------------- |
+| Portal    | [`many_faces_portal/src/i18n/README.md`](../../many_faces_portal/src/i18n/README.md) | `Localization/Portal/` |
+| Admin     | [`many_faces_admin/src/i18n/README.md`](../../many_faces_admin/src/i18n/README.md)   | `Localization/Admin/`  |
+| Mobile    | (bootstrap in `src/i18n/index.ts`)                                                   | `Localization/Mobile/` |
 
 ---
 

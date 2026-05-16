@@ -6,13 +6,13 @@
 
 **Critical scope boundary — CMS dynamic route translations stay in PostgreSQL:**
 
-| In scope (this prompt) | **Out of scope — do not remove or redesign** |
-| ---------------------- | --------------------------------------------- |
-| Static strings in `src/i18n/locales/*.json` (portal/admin) and mobile `src/i18n/locales/**` | **`PageRouteTranslations`** table, entity, EF configuration |
-| App menu `routes.*` keys used by `routeTranslations.ts` utilities | **`GET/PUT /api/pages/{pageId}/translations`** |
-| Backend export API `GET /api/localization/{app}` | Admin **Create/Edit Page** “Route translations” form section |
-| CI key-parity across `en`/`sk`/`cz` for static bundles | `routeTranslations` array on each page in **faces config** (`FacesController`) |
-| | Portal **`buildFacePagePaths`**, **`faceWallPage.ts`** behavior driven by API page slugs |
+| In scope (this prompt)                                                                      | **Out of scope — do not remove or redesign**                                             |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Static strings in `src/i18n/locales/*.json` (portal/admin) and mobile `src/i18n/locales/**` | **`PageRouteTranslations`** table, entity, EF configuration                              |
+| App menu `routes.*` keys used by `routeTranslations.ts` utilities                           | **`GET/PUT /api/pages/{pageId}/translations`**                                           |
+| Backend export API `GET /api/localization/{app}`                                            | Admin **Create/Edit Page** “Route translations” form section                             |
+| CI key-parity across `en`/`sk`/`cz` for static bundles                                      | `routeTranslations` array on each page in **faces config** (`FacesController`)           |
+|                                                                                             | Portal **`buildFacePagePaths`**, **`faceWallPage.ts`** behavior driven by API page slugs |
 
 **(required)** Read **§1** (as-is) and **§2** (non-goals) before coding; complete **§15** master checklist while implementing; ship **§14** documentation with the PR.
 
@@ -34,34 +34,34 @@
 
 ### 0.1 Labels
 
-| Label | Meaning |
-| ----- | ------- |
-| **(required)** | Must be satisfied before merge, or explicitly deferred in PR with reason. |
-| **(required — if _condition_)** | Mandatory when _condition_ is true. |
-| **(optional)** | Skip only with written deferral. |
+| Label                           | Meaning                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| **(required)**                  | Must be satisfied before merge, or explicitly deferred in PR with reason. |
+| **(required — if _condition_)** | Mandatory when _condition_ is true.                                       |
+| **(optional)**                  | Skip only with written deferral.                                          |
 
 ### 0.2 Section coverage (**required** — copy into PR)
 
-| § | Topic | Status (✓ / N/A) | If N/A, reason |
-| - | ----- | ---------------- | -------------- |
-| **§1** | As-is audit | | |
-| **§2** | Scope boundary (CMS DB preserved) | | |
-| **§3** | Target architecture | | |
-| **§4** | Backend `.resx` layout + services | | |
-| **§5** | Localization HTTP API | | |
-| **§6** | Portal bootstrap | | |
-| **§7** | Admin bootstrap | | |
-| **§8** | Mobile bootstrap | | |
-| **§9** | Culture `cz` vs `cs` (API alias) | | |
-| **§3.4** | Face-prefix exempt `/api/localization` | | |
-| **§4.5** | Rate limiting `localization-read` | | |
-| **§4.6** | Dev watch / restart workflow | | |
-| **§10** | CI + key parity | | |
-| **§11** | Tests | | |
-| **§12** | Anti-patterns | | |
-| **§13** | Phased delivery / PR split | | |
-| **§14** | Documentation | | |
-| **§15** | Master checklist | | |
+| §        | Topic                                  | Status (✓ / N/A) | If N/A, reason |
+| -------- | -------------------------------------- | ---------------- | -------------- |
+| **§1**   | As-is audit                            |                  |                |
+| **§2**   | Scope boundary (CMS DB preserved)      |                  |                |
+| **§3**   | Target architecture                    |                  |                |
+| **§4**   | Backend `.resx` layout + services      |                  |                |
+| **§5**   | Localization HTTP API                  |                  |                |
+| **§6**   | Portal bootstrap                       |                  |                |
+| **§7**   | Admin bootstrap                        |                  |                |
+| **§8**   | Mobile bootstrap                       |                  |                |
+| **§9**   | Culture `cz` vs `cs` (API alias)       |                  |                |
+| **§3.4** | Face-prefix exempt `/api/localization` |                  |                |
+| **§4.5** | Rate limiting `localization-read`      |                  |                |
+| **§4.6** | Dev watch / restart workflow           |                  |                |
+| **§10**  | CI + key parity                        |                  |                |
+| **§11**  | Tests                                  |                  |                |
+| **§12**  | Anti-patterns                          |                  |                |
+| **§13**  | Phased delivery / PR split             |                  |                |
+| **§14**  | Documentation                          |                  |                |
+| **§15**  | Master checklist                       |                  |                |
 
 ---
 
@@ -69,11 +69,11 @@
 
 ### 1.1 Static UI i18n (in scope to centralize)
 
-| App | Location | Approx. size | Load mechanism |
-| --- | -------- | ------------ | -------------- |
-| **`many_faces_admin`** | `src/i18n/locales/{en,sk,cz}.json` | ~570 lines / locale | **Static import** in `src/i18n/config.ts` — full bundle in initial JS |
-| **`many_faces_portal`** | `src/i18n/locales/{en,sk,cz}.json` | ~390 lines / locale | **Lazy** `import()` per language in `src/i18n/config.ts`; `main.tsx` calls `initI18n()` before render |
-| **`many_faces_mobile`** | `src/i18n/locales/en/{common,login,register}.json` | small | **Static import** in `src/i18n/index.ts`; **only English** today for `sk`/`cz` |
+| App                     | Location                                           | Approx. size        | Load mechanism                                                                                        |
+| ----------------------- | -------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| **`many_faces_admin`**  | `src/i18n/locales/{en,sk,cz}.json`                 | ~570 lines / locale | **Static import** in `src/i18n/config.ts` — full bundle in initial JS                                 |
+| **`many_faces_portal`** | `src/i18n/locales/{en,sk,cz}.json`                 | ~390 lines / locale | **Lazy** `import()` per language in `src/i18n/config.ts`; `main.tsx` calls `initI18n()` before render |
+| **`many_faces_mobile`** | `src/i18n/locales/en/{common,login,register}.json` | small               | **Static import** in `src/i18n/index.ts`; **only English** today for `sk`/`cz`                        |
 
 **Usage patterns:**
 
@@ -88,14 +88,14 @@
 
 ### 1.2 Dynamic CMS route translations (out of scope — preserve)
 
-| Piece | Role |
-| ----- | ---- |
-| **Table** `PageRouteTranslations` | Per-`Page` slug per `LanguageCode` (`en`, `sk`, `cz`) |
-| **Model** `PageRouteTranslation` | `TranslatedRoute` string (max 200) |
-| **API** | `GET/PUT /api/pages/{pageId}/translations` in `PagesController` |
-| **Admin UI** | `CreatePagePage`, `EditPagePage` — manual inputs + `usePageRouteTranslationsApi` / `updatePageRouteTranslations` |
-| **Faces config** | `FacesController` embeds `routeTranslations` on each page |
-| **Portal** | `buildFacePagePaths` / `faceWallPage.ts` consume API data |
+| Piece                             | Role                                                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Table** `PageRouteTranslations` | Per-`Page` slug per `LanguageCode` (`en`, `sk`, `cz`)                                                            |
+| **Model** `PageRouteTranslation`  | `TranslatedRoute` string (max 200)                                                                               |
+| **API**                           | `GET/PUT /api/pages/{pageId}/translations` in `PagesController`                                                  |
+| **Admin UI**                      | `CreatePagePage`, `EditPagePage` — manual inputs + `usePageRouteTranslationsApi` / `updatePageRouteTranslations` |
+| **Faces config**                  | `FacesController` embeds `routeTranslations` on each page                                                        |
+| **Portal**                        | `buildFacePagePaths` / `faceWallPage.ts` consume API data                                                        |
 
 **(required)** Agent must **grep** before merge and confirm **no** deletion of the above surfaces.
 
@@ -124,13 +124,13 @@ flowchart LR
   end
 ```
 
-| Question | Answer for this engagement |
-| -------- | --------------------------- |
-| Remove `PageRouteTranslations` from DB? | **No** |
-| Remove admin route-translation inputs? | **No** |
-| Change faces config shape? | **No** (unless additive unrelated fields) |
-| Move static `routes.login` to DB? | **No** — stays in `.resx` / localization API |
-| Portal still registers multiple paths per CMS page? | **Yes** — from API `routeTranslations` |
+| Question                                               | Answer for this engagement                                                                       |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Remove `PageRouteTranslations` from DB?                | **No**                                                                                           |
+| Remove admin route-translation inputs?                 | **No**                                                                                           |
+| Change faces config shape?                             | **No** (unless additive unrelated fields)                                                        |
+| Move static `routes.login` to DB?                      | **No** — stays in `.resx` / localization API                                                     |
+| Portal still registers multiple paths per CMS page?    | **Yes** — from API `routeTranslations`                                                           |
 | Hardcoded guest path `register/complete` (email link)? | **Unchanged** — e.g. `languageRouteElements.tsx`; only **copy** around it comes from static i18n |
 
 ---
@@ -154,27 +154,27 @@ sequenceDiagram
 
 **(required)** Localization fetch runs **before**:
 
-| App | Today’s “config” step that must come **after** i18n |
-| --- | --------------------------------------------------- |
+| App    | Today’s “config” step that must come **after** i18n                                                                                                                                                                                                                                                |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Portal | Today: sync `configureApiClient()` then async `initI18n()`. **Target order:** `validateEnv` → **localization GET** (see §3.4) → `initI18n` from response → **`resetLangLevelStaticRouteSegmentsCache()`** (`faceApiRouting.ts` depends on loaded `routes.*`) → `configureApiClient` → `createRoot` |
-| Admin | `import './i18n/config'` side-effect — **remove**; async bootstrap in `main.tsx` (localization → i18n → `configureApiClient` → `setupAxiosInterceptors` → render) |
-| Mobile | `App.tsx` render — block on fetch in `src/i18n/index.ts` (or entry) before `I18nextProvider` |
+| Admin  | `import './i18n/config'` side-effect — **remove**; async bootstrap in `main.tsx` (localization → i18n → `configureApiClient` → `setupAxiosInterceptors` → render)                                                                                                                                  |
+| Mobile | `App.tsx` render — block on fetch in `src/i18n/index.ts` (or entry) before `I18nextProvider`                                                                                                                                                                                                       |
 
 ### 3.2 Single source of truth
 
-| Layer | Format | Consumers |
-| ----- | ------ | ----------- |
-| **Authoring** | `.resx` + culture-specific `.sk.resx`, `.cz.resx` under `BeDemo.Api/Localization/` | Developers, CI |
-| **Wire** | JSON nested objects matching today’s i18next tree | Browsers / Expo |
-| **Runtime CMS** | PostgreSQL `PageRouteTranslations` | Unchanged |
+| Layer           | Format                                                                             | Consumers       |
+| --------------- | ---------------------------------------------------------------------------------- | --------------- |
+| **Authoring**   | `.resx` + culture-specific `.sk.resx`, `.cz.resx` under `BeDemo.Api/Localization/` | Developers, CI  |
+| **Wire**        | JSON nested objects matching today’s i18next tree                                  | Browsers / Expo |
+| **Runtime CMS** | PostgreSQL `PageRouteTranslations`                                                 | Unchanged       |
 
 ### 3.3 App identifiers
 
-| `{app}` path segment | Resource class / folder | Source JSON today |
-| -------------------- | ------------------------- | ----------------- |
-| `portal` | `PortalResources` | `many_faces_portal/src/i18n/locales/*.json` |
-| `admin` | `AdminResources` | `many_faces_admin/src/i18n/locales/*.json` |
-| `mobile` | `MobileResources` | `many_faces_mobile/src/i18n/locales/en/*.json` (merge into one logical `common` + namespaces — see §8) |
+| `{app}` path segment | Resource class / folder | Source JSON today                                                                                      |
+| -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `portal`             | `PortalResources`       | `many_faces_portal/src/i18n/locales/*.json`                                                            |
+| `admin`              | `AdminResources`        | `many_faces_admin/src/i18n/locales/*.json`                                                             |
+| `mobile`             | `MobileResources`       | `many_faces_mobile/src/i18n/locales/en/*.json` (merge into one logical `common` + namespaces — see §8) |
 
 **(required — no shared bundle)** Do **not** introduce `SharedResources.resx` or a merged `shared` namespace in the API response. Each `{app}` loads **only** its own `.resx` tree. Duplicate keys across portal/admin (e.g. `pages.login.*`) are **accepted**; keep naming aligned manually per [`i18n-conventions.md`](../guides/i18n-conventions.md).
 
@@ -182,11 +182,11 @@ sequenceDiagram
 
 Browser clients today call most APIs as `/{facePrefix}/api/...`. Bare `/api/...` (without face prefix) returns **400** from `RoutingMiddleware` unless the path is **system-exempt**.
 
-| Layer | File | Action |
-| ----- | ---- | ------ |
-| **Backend** | `BeDemo.Api/Utils/Routing.cs` → `ExemptPathPrefixes` | Add **`/api/localization`** (prefix match, same pattern as `/api/oauth2`) so `GET /api/localization/{app}` works **without** `/{face}/` prefix |
-| **Portal** | `src/api/faceApiRouting.ts` → `isApiPathExemptFromFacePrefix` | Add **`/api/localization`** so axios/fetch does not prepend face segment |
-| **Admin / mobile** | API client helpers | Same rule if they use face-prefix rewriting |
+| Layer              | File                                                          | Action                                                                                                                                         |
+| ------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend**        | `BeDemo.Api/Utils/Routing.cs` → `ExemptPathPrefixes`          | Add **`/api/localization`** (prefix match, same pattern as `/api/oauth2`) so `GET /api/localization/{app}` works **without** `/{face}/` prefix |
+| **Portal**         | `src/api/faceApiRouting.ts` → `isApiPathExemptFromFacePrefix` | Add **`/api/localization`** so axios/fetch does not prepend face segment                                                                       |
+| **Admin / mobile** | API client helpers                                            | Same rule if they use face-prefix rewriting                                                                                                    |
 
 **(required)** Integration test: `GET /api/localization/portal` with **no** face prefix returns **200** (not 400).
 
@@ -244,7 +244,7 @@ builder.Services.AddSingleton<ILocalizationBundleService>(); // name illustrativ
 
 ### 4.2.1 One-time migration script (**required**)
 
-- [x] Add `scripts/migrate-locale-json-to-resx.mjs` (or similar) that reads each `src/i18n/locales/**/*.json` and emits `.resx` per app/culture. *(Delivered; one-off script removed from monorepo after migration.)*
+- [x] Add `scripts/migrate-locale-json-to-resx.mjs` (or similar) that reads each `src/i18n/locales/**/*.json` and emits `.resx` per app/culture. _(Delivered; one-off script removed from monorepo after migration.)_
 - [ ] Preserve `{{count}}`, `{{name}}`, etc. — XML-escape `&`, `<`, `>` in `.resx` values.
 - [ ] PR includes generated `.resx` + spot-check diff against legacy JSON via golden test (§11.1).
 
@@ -255,14 +255,14 @@ builder.Services.AddSingleton<ILocalizationBundleService>(); // name illustrativ
 
 ### 4.3 Caching and versioning
 
-| Mechanism | Requirement |
-| --------- | ----------- |
-| **In-memory cache** | Build nested JSON once per app at first request (or at startup) |
-| **`version` field** | String in response — hash of all `.resx` files for that app, or `AssemblyInformationalVersion` + content hash |
-| **`ETag` / `If-None-Match`** | **(optional)** — return 304 when unchanged |
-| **`Cache-Control`** | **(optional)** `public, max-age=300` for anonymous bundle (dev may use `no-cache`) |
-| **Config override** | `Localization:Version` in appsettings for forced bust in dev |
-| **Client cache** | `localStorage` key e.g. `i18nBundle:{app}:version` — skip GET when `version` matches **(optional)** |
+| Mechanism                    | Requirement                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **In-memory cache**          | Build nested JSON once per app at first request (or at startup)                                               |
+| **`version` field**          | String in response — hash of all `.resx` files for that app, or `AssemblyInformationalVersion` + content hash |
+| **`ETag` / `If-None-Match`** | **(optional)** — return 304 when unchanged                                                                    |
+| **`Cache-Control`**          | **(optional)** `public, max-age=300` for anonymous bundle (dev may use `no-cache`)                            |
+| **Config override**          | `Localization:Version` in appsettings for forced bust in dev                                                  |
+| **Client cache**             | `localStorage` key e.g. `i18nBundle:{app}:version` — skip GET when `version` matches **(optional)**           |
 
 ### 4.4 Authorization
 
@@ -273,16 +273,16 @@ builder.Services.AddSingleton<ILocalizationBundleService>(); // name illustrativ
 
 Anonymous localization is callable on every cold load (portal + admin + mobile). Apply a **dedicated** ASP.NET rate-limit policy so abuse cannot megabyte-scrape all apps in a tight loop, without blocking normal UX (one GET per app per session).
 
-| Requirement | Detail |
-| ----------- | ------ |
-| **Policy name** | e.g. `localization-read` (new — do not overload `oauth-register`) |
-| **Partition** | Client IP (`RemoteIpAddress`) — same pattern as `oauth-token` / `oauth-register` in `Program.cs` |
-| **Algorithm** | Fixed window |
-| **Defaults** | e.g. **120 requests / 60 seconds / IP** (generous for dev HMR + retries); tune via config |
-| **Config keys** | `Localization:RateLimitPermitLimit`, `Localization:RateLimitWindowSeconds` in `appsettings` (+ `appsettings.Development.json`) |
+| Requirement     | Detail                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Policy name** | e.g. `localization-read` (new — do not overload `oauth-register`)                                                                                                              |
+| **Partition**   | Client IP (`RemoteIpAddress`) — same pattern as `oauth-token` / `oauth-register` in `Program.cs`                                                                               |
+| **Algorithm**   | Fixed window                                                                                                                                                                   |
+| **Defaults**    | e.g. **120 requests / 60 seconds / IP** (generous for dev HMR + retries); tune via config                                                                                      |
+| **Config keys** | `Localization:RateLimitPermitLimit`, `Localization:RateLimitWindowSeconds` in `appsettings` (+ `appsettings.Development.json`)                                                 |
 | **Testing env** | When `ASPNETCORE_ENVIRONMENT=Testing` and existing OAuth bypass flags apply, allow high permit limit (mirror `oauth-register` bypass pattern) so integration tests stay stable |
-| **Controller** | `[EnableRateLimiting("localization-read")]` on `LocalizationController` (or equivalent) |
-| **Response** | **429** with existing global JSON shape `{"error":"rate_limit",...}` and `Retry-After` header (already configured in `AddRateLimiter` `OnRejected`) |
+| **Controller**  | `[EnableRateLimiting("localization-read")]` on `LocalizationController` (or equivalent)                                                                                        |
+| **Response**    | **429** with existing global JSON shape `{"error":"rate_limit",...}` and `Retry-After` header (already configured in `AddRateLimiter` `OnRejected`)                            |
 
 **(required)** Integration test: exceeding limit returns **429** (can use low permit limit in test configuration).
 
@@ -292,12 +292,12 @@ Anonymous localization is callable on every cold load (portal + admin + mobile).
 
 `.resx` edits do **not** hot-reload into an already-built `ILocalizationBundleService` cache unless the running API process reloads them.
 
-| Scenario | Expected behavior |
-| -------- | ------------------- |
-| **Edit `.resx` on disk** | Developer **restarts** `many_faces_backend` (or `dotnet watch run` on `BeDemo.Api`) so embedded resources / file provider reloads |
-| **In-memory cache** | `ILocalizationBundleService` must expose **cache invalidation** when `IHostEnvironment.IsDevelopment()` and files change, **or** document that restart is mandatory (minimum: restart) |
-| **`version` / ETag** | After backend reload, `version` hash **must change** so clients refetch (bust `localStorage` cache when version differs) |
-| **Frontends** | Portal/admin Vite HMR does **not** refresh i18n strings from backend — after `.resx` change: restart BE → hard refresh browser (or clear `localStorage` i18n version keys) |
+| Scenario                 | Expected behavior                                                                                                                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edit `.resx` on disk** | Developer **restarts** `many_faces_backend` (or `dotnet watch run` on `BeDemo.Api`) so embedded resources / file provider reloads                                                                  |
+| **In-memory cache**      | `ILocalizationBundleService` must expose **cache invalidation** when `IHostEnvironment.IsDevelopment()` and files change, **or** document that restart is mandatory (minimum: restart)             |
+| **`version` / ETag**     | After backend reload, `version` hash **must change** so clients refetch (bust `localStorage` cache when version differs)                                                                           |
+| **Frontends**            | Portal/admin Vite HMR does **not** refresh i18n strings from backend — after `.resx` change: restart BE → hard refresh browser (or clear `localStorage` i18n version keys)                         |
 | **Optional enhancement** | `dotnet watch` + `IOptionsMonitor<LocalizationOptions>` or `PhysicalFileProvider` watching `Localization/**/*.resx` in Development only — if implemented, document in `static-localization-api.md` |
 
 **(required)** Add a short **“Editing copy in dev”** subsection to updated `i18n-conventions.md`:
@@ -319,13 +319,13 @@ Anonymous localization is callable on every cold load (portal + admin + mobile).
 GET /api/localization/{app}
 ```
 
-| Parameter | Values |
-| --------- | ------ |
-| `app` | `portal` \| `admin` \| `mobile` (case-insensitive) |
+| Parameter | Values                                             |
+| --------- | -------------------------------------------------- |
+| `app`     | `portal` \| `admin` \| `mobile` (case-insensitive) |
 
-| Query | Purpose |
-| ----- | ------- |
-| `v` | Client-known version; if matches server `version`, may return **304** (if implemented) |
+| Query | Purpose                                                                                |
+| ----- | -------------------------------------------------------------------------------------- |
+| `v`   | Client-known version; if matches server `version`, may return **304** (if implemented) |
 
 ### 5.2 Response shape (illustrative)
 
@@ -337,10 +337,10 @@ GET /api/localization/{app}
   "supportedLanguages": ["en", "sk", "cz"],
   "resources": {
     "en": {
-      "common": { "routes": { "login": "login" }, "pages": { } }
+      "common": { "routes": { "login": "login" }, "pages": {} }
     },
-    "sk": { "common": { } },
-    "cz": { "common": { } }
+    "sk": { "common": {} },
+    "cz": { "common": {} }
   }
 }
 ```
@@ -352,10 +352,10 @@ GET /api/localization/{app}
 
 ### 5.3 Errors
 
-| Status | When |
-| ------ | ---- |
-| `404` | Unknown `app` |
-| `500` | Missing culture file / empty bundle — log and fail fast in dev |
+| Status | When                                                           |
+| ------ | -------------------------------------------------------------- |
+| `404`  | Unknown `app`                                                  |
+| `500`  | Missing culture file / empty bundle — log and fail fast in dev |
 
 ### 5.4 OpenAPI / integration
 
@@ -428,11 +428,13 @@ GET /api/localization/{app}
 
 ## 8. Mobile changes (`many_faces_mobile`) (**required**)
 
+> **Status (2026-05-16):** Bootstrap via `Bootstrap.tsx` → `initI18n()` loads **`GET /api/localization/mobile`** (`en`/`sk`/`cz`). **First launch:** `expo-localization` + `mapLocaleTagToSupportedLanguage` when `i18nextLng` absent; **settings `LanguageSwitcher`** overrides and persists.
+
 ### 8.1 Bootstrap
 
-- [ ] `GET /api/localization/mobile` before `App` render
-- [ ] Hydrate `common`, `login`, `register` namespaces from response
-- [ ] Add **`sk`** and **`cz`** parity (today missing)
+- [x] `GET /api/localization/mobile` before `App` render (`src/Bootstrap.tsx`).
+- [x] Hydrate `common`, `login`, `register` namespaces from response (`src/i18n/index.ts`).
+- [x] **`sk`** and **`cz`** in API bundle; device locale maps `cs`→`cz` on first launch.
 
 ### 8.2 Cleanup
 
@@ -446,8 +448,8 @@ GET /api/localization/{app}
 
 ### 8.4 Verification
 
-- [ ] `yarn lint`, `yarn typecheck`, `yarn test` (project uses Yarn 4)
-- [ ] Register flow strings in `sk`/`cz` when language selector exists or device locale mapped
+- [x] `yarn lint`, `yarn typecheck`, `yarn test` (`yarn validate` on `main`).
+- [x] Register/login copy available in `sk`/`cz` via API bundle; language switcher + device locale on first launch.
 
 ---
 
@@ -455,12 +457,12 @@ GET /api/localization/{app}
 
 Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `PageRouteTranslation.LanguageCode`, mailer locale in many flows). **ISO 639-1 for Czech is `cs`, not `cz`** — .NET satellite assemblies normally use valid cultures.
 
-| Layer | Recommended rule |
-| ----- | ---------------- |
+| Layer                       | Recommended rule                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
 | **`.resx` satellite files** | Name files `PortalResources.sk.resx` and **`PortalResources.cs.resx`** (or `cs-CZ`) — valid `CultureInfo` |
-| **API JSON keys** | Expose **`cz`** (not `cs`) under `resources` so clients need **zero** renames |
-| **Loader** | When building `cz` bundle, read from `CultureInfo("cs")` or `"cs-CZ"` resources, emit under key `"cz"` |
-| **CMS DB** | **Do not** rename `LanguageCode` values (`cz` stays `cz`) |
+| **API JSON keys**           | Expose **`cz`** (not `cs`) under `resources` so clients need **zero** renames                             |
+| **Loader**                  | When building `cz` bundle, read from `CultureInfo("cs")` or `"cs-CZ"` resources, emit under key `"cz"`    |
+| **CMS DB**                  | **Do not** rename `LanguageCode` values (`cz` stays `cz`)                                                 |
 
 **(required)** Do **not** call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture and may throw. Map explicitly in `ILocalizationBundleService`.
 
@@ -526,13 +528,13 @@ Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `P
 
 ## 13. Phased delivery (**recommended**)
 
-| Phase | PR focus | Merge gate |
-| ----- | -------- | ---------- |
+| Phase | PR focus                                                                | Merge gate                                     |
+| ----- | ----------------------------------------------------------------------- | ---------------------------------------------- |
 | **1** | Backend `.resx` + migration from current JSON + API + tests + CI parity | Backend tests green; Postman/curl returns JSON |
-| **2** | Portal fetch bootstrap + delete local JSON | Portal lint/tsc/tests + manual routes |
-| **3** | Admin fetch bootstrap + delete local JSON | Admin lint + create page with DB slugs |
-| **4** | Mobile fetch + `sk`/`cz` + delete local JSON | Mobile lint/tests |
-| **5** | Docs + monorepo hub + submodule bumps | §14 complete |
+| **2** | Portal fetch bootstrap + delete local JSON                              | Portal lint/tsc/tests + manual routes          |
+| **3** | Admin fetch bootstrap + delete local JSON                               | Admin lint + create page with DB slugs         |
+| **4** | Mobile fetch + `sk`/`cz` + delete local JSON                            | Mobile lint/tests                              |
+| **5** | Docs + monorepo hub + submodule bumps                                   | §14 complete                                   |
 
 **(required)** Each phase leaves **`main`** deployable; phase 1 can ship with frontends still on JSON until phase 2–4 land.
 
@@ -546,20 +548,20 @@ Documentation is part of definition of done — not a follow-up PR. Canonical us
 
 **(required)** Guide must be **English** and include **all** sections below. Use Mermaid syntax consistent with other guides (no spaces in node IDs; quoted labels if needed).
 
-| Section | Required content |
-| ------- | ---------------- |
-| **Two systems** | Table + Mermaid: static UI (`.resx` → API → i18next) vs CMS `PageRouteTranslations` (admin → DB → faces config → portal routes) |
-| **Languages** | `en`, `sk`, `cz` |
-| **Static — authoring** | Per-app `.resx` under `BeDemo.Api/Localization/`; **no** `SharedResources.resx` |
-| **Static — API** | `GET /api/localization/{app}`, anonymous, rate limit, `version`, sample JSON |
-| **Static — client startup** | Mermaid sequence: GET before render; portal `resetLangLevelStaticRouteSegmentsCache` |
-| **Static — `routes.*`** | `routeTranslations.ts` / localized React Router; note hardcoded paths like `register/complete` |
-| **CMS dynamic** | Admin forms, `GET/PUT …/translations`, faces config shape, `buildFacePagePaths` — **unchanged** |
-| **Face-prefix exempt** | `/api/localization` alongside `/api/oauth2` |
-| **`cz` vs `cs`** | API keys `cz`, `.resx` satellites `cs` |
-| **Dev workflow** | Restart backend after `.resx` edit; hard refresh SPA; link §4.6 |
-| **Transitional note** | Until rollout done, `src/i18n/locales/*.json` may still exist |
-| **Per-app pointers** | Links to portal/admin `src/i18n/README.md` and mobile bootstrap |
+| Section                     | Required content                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Two systems**             | Table + Mermaid: static UI (`.resx` → API → i18next) vs CMS `PageRouteTranslations` (admin → DB → faces config → portal routes) |
+| **Languages**               | `en`, `sk`, `cz`                                                                                                                |
+| **Static — authoring**      | Per-app `.resx` under `BeDemo.Api/Localization/`; **no** `SharedResources.resx`                                                 |
+| **Static — API**            | `GET /api/localization/{app}`, anonymous, rate limit, `version`, sample JSON                                                    |
+| **Static — client startup** | Mermaid sequence: GET before render; portal `resetLangLevelStaticRouteSegmentsCache`                                            |
+| **Static — `routes.*`**     | `routeTranslations.ts` / localized React Router; note hardcoded paths like `register/complete`                                  |
+| **CMS dynamic**             | Admin forms, `GET/PUT …/translations`, faces config shape, `buildFacePagePaths` — **unchanged**                                 |
+| **Face-prefix exempt**      | `/api/localization` alongside `/api/oauth2`                                                                                     |
+| **`cz` vs `cs`**            | API keys `cz`, `.resx` satellites `cs`                                                                                          |
+| **Dev workflow**            | Restart backend after `.resx` edit; hard refresh SPA; link §4.6                                                                 |
+| **Transitional note**       | Until rollout done, `src/i18n/locales/*.json` may still exist                                                                   |
+| **Per-app pointers**        | Links to portal/admin `src/i18n/README.md` and mobile bootstrap                                                                 |
 
 ### 14.2 Update [`docs/guides/i18n-conventions.md`](../guides/i18n-conventions.md) (**required**)
 
@@ -587,11 +589,11 @@ Each app README must gain or refresh an **Internationalization (i18n)** subsecti
 - [ ] Points to local `src/i18n/README.md` (portal/admin) or `src/i18n/index.ts` (mobile) for code entrypoints.
 - [ ] Removes or marks deprecated “add JSON under `src/i18n/locales`” as **transitional** only.
 
-| Submodule | File | Extra |
-| --------- | ---- | ----- |
-| Portal | `many_faces_portal/README.md` | Mention `routeTranslations.ts`, `faceApiRouting` exempt |
-| Admin | `many_faces_admin/README.md` | Mention Create/Edit Page route translation fields |
-| Mobile | `many_faces_mobile/README.md` | Namespaces `common`, `login`, `register`; `EXPO_PUBLIC_API_BASE_URL` |
+| Submodule | File                          | Extra                                                                |
+| --------- | ----------------------------- | -------------------------------------------------------------------- |
+| Portal    | `many_faces_portal/README.md` | Mention `routeTranslations.ts`, `faceApiRouting` exempt              |
+| Admin     | `many_faces_admin/README.md`  | Mention Create/Edit Page route translation fields                    |
+| Mobile    | `many_faces_mobile/README.md` | Namespaces `common`, `login`, `register`; `EXPO_PUBLIC_API_BASE_URL` |
 
 ### 14.6 Submodule `src/i18n/README.md` — portal & admin (**required**)
 
@@ -616,7 +618,7 @@ Each app README must gain or refresh an **Internationalization (i18n)** subsecti
 ### Backend — `.resx` + export
 
 - [ ] `Localization/` tree with `Portal`, `Admin`, `Mobile` resources.
-- [x] `scripts/migrate-locale-json-to-resx.mjs` (or equivalent) run; keys match nested JSON §4.2. *(Script removed post-migration; `.resx` is source of truth.)*
+- [x] `scripts/migrate-locale-json-to-resx.mjs` (or equivalent) run; keys match nested JSON §4.2. _(Script removed post-migration; `.resx` is source of truth.)_
 - [ ] `AddLocalization` + bundle service + JSON un-flattener.
 - [ ] `GET /api/localization/{app}` anonymous, returns `en`/`sk`/`cz`.
 - [ ] **`/api/localization` added to `Routing.ExemptPathPrefixes`** §3.4.
