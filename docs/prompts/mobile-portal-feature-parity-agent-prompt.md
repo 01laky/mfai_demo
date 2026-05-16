@@ -754,7 +754,7 @@ Phases are **sequential recommendations**; parallel work is allowed only when **
 - [ ] Add **`ApiContext` / `ApiClient` analogue** on mobile **or** document why `fetch` wrapper alone is sufficient—either way, **centralise** face-prefix application and token injection; add tests mirroring `facePathRouting.test.ts` critical cases without `window`.
 - [ ] Inventory **`many_faces_portal/src/api/services/*.ts`**; create a tracking table in PR for each service: **ported / not needed on mobile / deferred** with reason.
 - [ ] **`FaceProfileDetailPage` parity**: likes, comments, reviews, error toasts, `allowRecensions` / face gating — not only directory list tiles.
-- [ ] **`ProfilePage` parity** (“me” from JWT) vs face profile detail (other user).
+- [x] **`ProfilePage` parity** (“me” from JWT) — `ProfileMeScreen` (`many_faces_mobile`); face profile detail (other user) still deferred.
 - [ ] **`UsersPage` / `UserDetailPage` parity** if product expects global directory on mobile.
 - [ ] **`ComponentListPage` / `ComponentDetailPage` parity** (dynamic `componentTypeId` routes).
 - [ ] **`StoriesListPage` route** + navigation from grid/story blocks.
