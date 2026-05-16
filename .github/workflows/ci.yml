@@ -73,6 +73,10 @@ jobs:
         with:
           workspace: many_faces_portal
 
+      - name: Verify portal component colocation
+        working-directory: .
+        run: node scripts/verify-portal-component-colocation.mjs
+
       - name: Dependency audit (informational)
         run: yarn npm audit || true
 
