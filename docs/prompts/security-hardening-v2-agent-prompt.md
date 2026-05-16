@@ -126,14 +126,14 @@ flowchart LR
 
 ### 4.1 Phase 0 tasklist
 
-- [ ] **PI-1** Wire sanitizer + heuristic into **production** moderation path before `ReviewContentAsync` (not test-only).
-- [ ] **PI-2** `ContentModerationSecurityOptions:InstructionHeuristicEnabled = true` in non-dev appsettings profile.
-- [ ] **PI-3** Policy: instruction-like or `prompt_injection_suspected` → **never** auto-`RecommendedApprove`; malicious model approve → `NeedsHumanReview`.
-- [ ] **PI-4** Mirror sanitization in `many_faces_ai` for fields sent to any LLM path.
-- [ ] **PI-5** Corpus tests: every line in `prompt_injection_corpus.txt` → safe stored state (no unsafe approve persistence).
+- [x] **PI-1** Wire sanitizer + heuristic into **production** moderation path before `ReviewContentAsync` (not test-only) — `ContentAiReviewService.ProcessQueuedReviewAsync`, `ContentModerationProductionPathTests`.
+- [x] **PI-2** `ContentModerationSecurityOptions:InstructionHeuristicEnabled = true` in non-dev appsettings profile — `appsettings.json`, `appsettings.Production.json`.
+- [x] **PI-3** Policy: instruction-like or `prompt_injection_suspected` → **never** auto-`RecommendedApprove`; malicious model approve → `NeedsHumanReview` — `ContentModerationPromptInjectionHeuristic`, `ValidateRecommendation`.
+- [x] **PI-4** Mirror sanitization in `many_faces_ai` for fields sent to any LLM path — `moderation_input_sanitize.py`, `server.py` `ReviewContent`, `test_moderation_input_sanitize.py`.
+- [x] **PI-5** Corpus tests: every line in `prompt_injection_corpus.txt` → safe stored state (no unsafe approve persistence) — `ContentModerationSecurityEdgeTests.Corpus_line_full_worker_persists_safe_state_not_recommended_approve`.
 - [x] **PI-6** Zero-width / homoglyph / mixed-script cases in edge tests — `ContentModerationUnicodeSpoofingTests`, `ContentModerationUnicodeHomoglyphFold`, corpus bidi/homoglyph lines in `prompt_injection_corpus.txt`.
 - [x] **PI-7** Redact/truncate user content in `ProcessQueuedReviewAsync` invalid-payload logs (align with `RedactForAudit`) — `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog`, `ContentModerationPayloadLogRedactionTests`.
-- [ ] **PI-8** Admin/portal: moderation preview **text-only** (no `dangerouslySetInnerHTML` on untrusted fields).
+- [x] **PI-8** Admin/portal: moderation preview **text-only** (no `dangerouslySetInnerHTML` on untrusted fields) — `ContentModerationPreviewText`, `ModerationItemDto` previews, admin `ModerationPlainTextPreview`, portal `ModerationSafeText` for pending owner blogs.
 - [x] **PI-9** Docs: untrusted vs trusted operator AI subsection in `ai-assisted-content-approval.md` — § “Untrusted creator content vs trusted operator AI”, `ContentModerationTrustBoundary`, `ContentModerationTrustBoundaryTests`.
 - [x] **PI-10** CI: run `ContentModerationSecurityEdgeTests` in required backend job — `scripts/verify-moderation-security-tests.mjs`, xUnit trait `Category=ModerationSecurity`, `ContentModerationCiGate`.
 

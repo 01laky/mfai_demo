@@ -174,7 +174,7 @@ flowchart LR
 1. Never pass creator submission fields through **`Generate`** for moderation decisions; never pass **`stats_context_json`** through **`ReviewContent`**.
 2. **`ContentModeration:InstructionHeuristicEnabled`** and red-team corpus tests apply **only** to the untrusted path (`ContentModerationTrustBoundaryTests` in `BeDemo.Api.Tests`).
 3. Operator chat may contain arbitrary natural language; threat model is **misuse of privileged access**, not **anonymous auto-approve of public UGC**. Still: stats context must remain **non-row-level** (see public stats prompt).
-4. Admin moderation UI shows **text fields as plain text** in the queue/detail drawer (no `dangerouslySetInnerHTML` on untrusted preview — SHV2 **PI-8** tracks any future body preview).
+4. Admin moderation UI shows **text fields as plain text** in the queue/detail drawer via `bodyPreviewPlainText` / `mediaUrlPreview` (SHV2 **PI-8**). Portal owners viewing pending/rejected blogs use `ModerationSafeText` instead of `dangerouslySetInnerHTML`.
 
 ### Untrusted moderation pipeline (detail)
 
