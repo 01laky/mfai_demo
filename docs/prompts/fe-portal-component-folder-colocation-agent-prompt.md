@@ -642,9 +642,9 @@ flowchart TB
   Tsx --> Types
 ```
 
-### 16.9 Follow-up: admin parity **(optional — out of scope)**
+### 16.9 Admin parity **(separate spec — do not mix PRs)**
 
-After portal rollout, clone this prompt for **`many_faces_admin`** as a separate spec (e.g. `fe-admin-component-folder-colocation-agent-prompt.md`) — **do not** refactor admin in the same PR series unless explicitly requested.
+**`many_faces_admin`** colocation is specified in [fe-admin-component-folder-colocation-agent-prompt.md](./fe-admin-component-folder-colocation-agent-prompt.md). **Do not** refactor admin in the same PR series as portal unless explicitly requested.
 
 ### 16.10 New component snippet **(required)**
 
