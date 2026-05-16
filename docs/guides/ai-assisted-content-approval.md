@@ -38,7 +38,7 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped via `faceScope`); **`MySubmissionsScreen`** + **`MySubmissionDetailScreen`** (read-only detail from list cache). **No** native `?edit=1` / edit form / delete yet — portal remains canonical for mutations until ported. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
-| **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`, `ContentModerationUnicodeSpoofingTests` for SHV2 **PI-6** Unicode spoofing); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
+| **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`, `ContentModerationUnicodeSpoofingTests` for SHV2 **PI-6**, `ContentModerationTrustBoundaryTests` for SHV2 **PI-9** untrusted vs operator AI split); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |
 
 ## Core Rule
 
@@ -135,7 +135,48 @@ The gRPC layer maps to persisted fields including:
 
 Invalid or high-risk combinations are forced to **`NeedsHumanReview`** after validation in the backend worker.
 
-## Untrusted content vs moderation model
+## Untrusted creator content vs trusted operator AI (SHV2 PI-9)
+
+Many Faces AI exposes **two separate trust models**. Confusing them would either block legitimate operator tooling or leave creator prompt-injection undefended.
+
+| Dimension | **Untrusted — creator moderation** | **Trusted — operator AI** |
+|-----------|-----------------------------------|---------------------------|
+| **Who supplies input** | Any authenticated user submitting album / blog / reel | Platform operators with **`CanManageAllFaces`** (admin face scope) |
+| **What is sent to AI** | Title, body/description, media URL from the submission | Operator chat message + optional **aggregate public stats** JSON (counts only) |
+| **Transport** | Redis `content.ai-review` → `ContentAiReviewService` → gRPC **`ReviewContent`** | SignalR **`/hubs/chat`** → `ChatHub` → gRPC **`Generate`** / **`OperatorStatsChat`** / **`FetchPublicStats`** |
+| **Prompt-injection defenses** | **Yes** — sanitizer, instruction heuristic, `ValidateRecommendation`, corpus tests | **No** — not the same as auto-publish moderation; ACL + rate limit + stats URL policy instead |
+| **Auto-approve risk** | AI **`RecommendedApprove`** can influence queue; policy must block unsafe combos | Chat replies are **not** written to `ApprovalStatus`; no creator content is published from chat |
+| **Code anchors** | `ContentModerationInputSanitizer`, `ContentModerationPromptInjectionHeuristic`, `ContentModerationTrustBoundary.UntrustedAiRpcName` | `GET /api/Stats/public`, `PublicStatsSnapshotDto`, `ContentModerationTrustBoundary.TrustedOperatorAiRpcNames` |
+| **Spec** | [`moderation-content-prompt-injection-defense-agent-prompt.md`](../prompts/moderation-content-prompt-injection-defense-agent-prompt.md) | [`admin-ai-public-stats-operator-chat-agent-prompt.md`](../prompts/admin-ai-public-stats-operator-chat-agent-prompt.md) |
+
+```mermaid
+flowchart LR
+  subgraph untrusted [Untrusted creator moderation]
+    U["User submission<br/>title / body / media URL"]
+    W["ContentAiReviewService"]
+    S["Sanitize + heuristic + ValidateRecommendation"]
+    RC["gRPC ReviewContent"]
+    U --> W --> S --> RC
+  end
+
+  subgraph trusted [Trusted operator AI]
+    O["Operator JWT<br/>CanManageAllFaces"]
+    H["SignalR ChatHub<br/>/hubs/chat"]
+    G["gRPC Generate / OperatorStatsChat"]
+    P["PublicStatsSnapshotDto<br/>counts only"]
+    O --> H --> G
+    P -.->|"optional stats_context_json"| G
+  end
+```
+
+**Rules of thumb**
+
+1. Never pass creator submission fields through **`Generate`** for moderation decisions; never pass **`stats_context_json`** through **`ReviewContent`**.
+2. **`ContentModeration:InstructionHeuristicEnabled`** and red-team corpus tests apply **only** to the untrusted path (`ContentModerationTrustBoundaryTests` in `BeDemo.Api.Tests`).
+3. Operator chat may contain arbitrary natural language; threat model is **misuse of privileged access**, not **anonymous auto-approve of public UGC**. Still: stats context must remain **non-row-level** (see public stats prompt).
+4. Admin moderation UI shows **text fields as plain text** in the queue/detail drawer (no `dangerouslySetInnerHTML` on untrusted preview — SHV2 **PI-8** tracks any future body preview).
+
+### Untrusted moderation pipeline (detail)
 
 Album, blog, and reel text (and media URLs) are **untrusted**: they must not be able to steer the moderation classifier as if it were a chat “system” message. The implementation uses **defense in depth**:
 
@@ -144,6 +185,13 @@ Album, blog, and reel text (and media URLs) are **untrusted**: they must not be 
 - **`many_faces_ai`** applies the same normalization at the start of **`ReviewContent`** so delimiter-smuggling cannot bypass keyword checks inside the Python process.
 
 AI `flags` from the wire are **whitelisted and canonicalized** before persistence; unknown flag strings are dropped.
+
+### Trusted operator AI (detail)
+
+- **`GET /api/Stats/public`** — `[AllowAnonymous]` only under the **`public`** face prefix; returns **`PublicStatsSnapshotDto`** (numeric aggregates, no message bodies, no moderation audit payloads).
+- **SignalR** — `SendToAi` / `SendToAiWithOperatorStats`; latter requires **`CanManageAllFaces`** and reuses **`IChatHubAiRateLimiter`**.
+- **Modes** — `off` | `inline` | `live` via admin `localStorage` key `admin_ai_public_stats_mode` (see operator AI prompt).
+- **Hub security matrix** — [`signalr-hub-security-matrix.md`](./signalr-hub-security-matrix.md).
 
 ### Configuration
 
@@ -159,6 +207,7 @@ AI `flags` from the wire are **whitelisted and canonicalized** before persistenc
 - **Red-team corpus:** `many_faces_backend/BeDemo.Api.Tests/Fixtures/prompt_injection_corpus.txt` (≥20 attack lines). `ContentModerationSecurityEdgeTests` asserts each line cannot yield `AiReviewStatus.RecommendedApprove` when the AI returns high-confidence `Approve`; `ContentModerationUntrustedContentEvaluator` mirrors the worker merge path in pure functions.
 - **Unicode spoofing (SHV2 PI-6):** bidi controls (LRE/RLO/LRI/PDI), zero-width joiners, and Cyrillic/Greek homoglyphs are stripped from gRPC wire fields via `ContentModerationInputSanitizer` and folded in `ContentModerationUnicodeHomoglyphFold` + `ContentModerationTextNormalization.BuildHeuristicScanBlob` so instruction heuristics still match smuggled phrases. Tests: `ContentModerationUnicodeSpoofingTests`; corpus includes bidi-wrapped and homoglyph `ignore previous` lines.
 - **Invalid Redis payload logging (SHV2 PI-7):** malformed `content.ai-review` jobs log only `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog` diagnostics (length, hash prefix, safe ids) — never raw JSON that may contain smuggled title/body. Tests: `ContentModerationPayloadLogRedactionTests`.
+- **Trust boundary (SHV2 PI-9):** `ContentModerationTrustBoundary` + `ContentModerationTrustBoundaryTests` — `ReviewContent` vs `Generate`/`OperatorStatsChat`; public stats JSON must not match instruction heuristic.
 - **Python:** Same sanitizer limits at `ReviewContent` entry plus classifier behaviour on delimiter-smuggled keywords.
 
 Run corpus-related tests:
@@ -166,6 +215,7 @@ Run corpus-related tests:
 ```bash
 cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationSecurityEdgeTests"
 cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationUnicodeSpoofing"
+cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationTrustBoundary"
 ```
 
 ## Redis Queue And Backpressure
@@ -219,7 +269,9 @@ Rejected (or edited pending) content flows through existing **update** endpoints
 
 ## Related agent specifications
 
-- **Prompt-injection defense** for untrusted creator content in the `ReviewContent` / moderation pipeline (sanitization, policy, tests; admin chat out of scope): [`../prompts/moderation-content-prompt-injection-defense-agent-prompt.md`](../prompts/moderation-content-prompt-injection-defense-agent-prompt.md).
+- **Prompt-injection defense** for untrusted creator content in the `ReviewContent` / moderation pipeline (sanitization, policy, tests): [`../prompts/moderation-content-prompt-injection-defense-agent-prompt.md`](../prompts/moderation-content-prompt-injection-defense-agent-prompt.md).
+- **Trusted operator AI** (admin chat + public stats — explicitly **out of scope** for moderation sanitizer/heuristic): [`../prompts/admin-ai-public-stats-operator-chat-agent-prompt.md`](../prompts/admin-ai-public-stats-operator-chat-agent-prompt.md).
+- **Security hardening v2 PI-9** task list: [`../prompts/security-hardening-v2-agent-prompt.md`](../prompts/security-hardening-v2-agent-prompt.md) §4.
 
 ## Implementation Phase Checklist (historical)
 

@@ -117,9 +117,9 @@ flowchart LR
 
 | Component | Paths |
 |-----------|-------|
-| Backend sanitize + heuristic | `many_faces_backend/BeDemo.Api/Services/ContentModerationInputSanitizer.cs`, `ContentModerationPromptInjectionHeuristic.cs`, `ContentModerationTextNormalization.cs`, `ContentModerationUnicodeHomoglyphFold.cs`, `ContentModerationUntrustedContentEvaluator.cs`, `ContentModerationPromptInjectionCorpus.cs` |
+| Backend sanitize + heuristic | `many_faces_backend/BeDemo.Api/Services/ContentModerationInputSanitizer.cs`, `ContentModerationPromptInjectionHeuristic.cs`, `ContentModerationTextNormalization.cs`, `ContentModerationUnicodeHomoglyphFold.cs`, `ContentModerationUntrustedContentEvaluator.cs`, `ContentModerationTrustBoundary.cs`, `ContentModerationPromptInjectionCorpus.cs` |
 | Backend policy | `ContentModerationHelpers.cs`, `ContentAiReviewService.cs`, `ContentModerationSecurityOptions.cs` |
-| Backend tests | `many_faces_backend/BeDemo.Api.Tests/ContentModerationSecurityEdgeTests.cs`, `ContentModerationUnicodeSpoofingTests.cs` (PI-6), `Fixtures/prompt_injection_corpus.txt` |
+| Backend tests | `many_faces_backend/BeDemo.Api.Tests/ContentModerationSecurityEdgeTests.cs`, `ContentModerationUnicodeSpoofingTests.cs` (PI-6), `ContentModerationTrustBoundaryTests.cs` (PI-9), `Fixtures/prompt_injection_corpus.txt` |
 | AI mirror | `many_faces_ai/moderation_input_sanitize.py`, `server.py` `ReviewContent` |
 | Docs | `docs/guides/ai-assisted-content-approval.md` |
 
@@ -133,7 +133,7 @@ flowchart LR
 - [x] **PI-6** Zero-width / homoglyph / mixed-script cases in edge tests — `ContentModerationUnicodeSpoofingTests`, `ContentModerationUnicodeHomoglyphFold`, corpus bidi/homoglyph lines in `prompt_injection_corpus.txt`.
 - [x] **PI-7** Redact/truncate user content in `ProcessQueuedReviewAsync` invalid-payload logs (align with `RedactForAudit`) — `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog`, `ContentModerationPayloadLogRedactionTests`.
 - [ ] **PI-8** Admin/portal: moderation preview **text-only** (no `dangerouslySetInnerHTML` on untrusted fields).
-- [ ] **PI-9** Docs: untrusted vs trusted operator AI subsection in `ai-assisted-content-approval.md`.
+- [x] **PI-9** Docs: untrusted vs trusted operator AI subsection in `ai-assisted-content-approval.md` — § “Untrusted creator content vs trusted operator AI”, `ContentModerationTrustBoundary`, `ContentModerationTrustBoundaryTests`.
 - [ ] **PI-10** CI: run `ContentModerationSecurityEdgeTests` in required backend job.
 
 ---
