@@ -14,7 +14,7 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
-> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` mounted from `AppShell` when signed in (`f2de1d3`) — see **§24.6** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` + **`LanguageSwitcher`** (`en`/`sk`/`cz`, `i18nextLng`) — see **§24.6** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
@@ -847,8 +847,9 @@ Read-only native panel opened from the header when authenticated (portal `Header
 - [x] `ShellHeader` settings control (`common:shell.openSettings`) — guests do not see it.
 - [x] Mobile resx: `common.settings.*` + `common.shell.openSettings` (en/sk/cz) in `many_faces_backend` `MobileResources.*.resx`.
 - [x] Tests: `SettingsSidePanel.test.tsx`, `ShellHeader.test.tsx`, `AppShell.settings.test.tsx`.
-- [x] `docs/rest-parity-matrix.md` — settings row **Shell (read-only)**.
-- [ ] Full portal `SettingsSidePanelBody` tabs and messenger/notification settings — **deferred** (parity prompt).
+- [x] `docs/rest-parity-matrix.md` — settings row **Language + shell**.
+- [x] **`LanguageSwitcher`** in `SettingsSidePanelBody` (`en`/`sk`/`cz`, `i18nextLng` persistence) — portal settings-tab subset.
+- [ ] Full portal `SettingsSidePanelBody` tabs (profile, messenger, notifications) — **deferred** (parity prompt).
 
 ---
 
@@ -1117,7 +1118,7 @@ Add subsection **`## Navigation vs portal URLs`** to `many_faces_mobile/README.m
 | Item                                       | Track in                                                                                           |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | SignalR messenger / chat room / AI chat UI | [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md) §10 |
-| `features/settings` shell (read-only panel) | **Done** — §24.6 (`f2de1d3`)                                                                       |
+| `features/settings` shell + language picker | **Done** — §24.6 (`f2de1d3` + language switcher)                                                 |
 | `features/settings` full portal tabs       | [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md) §13 |
 | Full API client class port (`ApiClient`)   | Parity §3 — mobile uses `httpClient` + `faceScope` today                                           |
 | E2E (Maestro / Detox)                      | Separate engagement                                                                                |
