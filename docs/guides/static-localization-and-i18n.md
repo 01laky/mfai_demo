@@ -1,5 +1,7 @@
 # Static localization and i18n (portal, admin, mobile)
 
+**Status:** Shipped **2026-05-16** — portal, admin, and mobile load bundles from **`GET /api/localization/{app}`**; source of truth is `BeDemo.Api/Localization/**/*.resx` (no bundled `locales/*.json` in FE repos).
+
 How **UI copy** and **URL segments** are translated across Many Faces clients, and how that relates to **CMS page slugs** stored in PostgreSQL.
 
 **Implementation spec:** [`docs/prompts/centralized-static-i18n-resx-backend-agent-prompt.md`](../prompts/centralized-static-i18n-resx-backend-agent-prompt.md)
