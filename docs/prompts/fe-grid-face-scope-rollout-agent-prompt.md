@@ -29,7 +29,7 @@ Shared infrastructure:
 - [x] **List pages** — [`ComponentListView`](../../many_faces_portal/src/components/ComponentListView.tsx) reuses grids by numeric `componentTypeId` for `/list/:id` style routes.
 - [x] **`FaceConfigContext`** — logged-in users see **public + private** faces; pathname can **select face** (deep links).
 - [ ] **TanStack Query** — most grid components still use **manual `useEffect` + fetch**; optional future unification (see performance prompt).
-- [ ] **i18n** — many user-visible strings in grid components are **hard-coded English** (`"Sign in to see…"`).
+- [x] **i18n** — grid block guest/empty/load/profile/wall copy uses **`gridBlockI18n.ts`** + **`PortalResources`** (`gridBlocks.*`, en/sk/cs). _Out of scope here: full form label/placeholder sweep (`AlbumForm`, `BlogForm`, …)._
 
 Face-scoped reads (high level):
 
@@ -56,6 +56,8 @@ Forms (create flows exist in repo; wire to capabilities & face scope when extend
 ## 3. Per `componentType` — current state & remaining work
 
 Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by REST; **Guest** = behaves without token where product allows; **PH** = FE placeholder (picsum etc.); **R** = responsive inner layout.
+
+**Display i18n (2026-05-16):** guest gates, empty/load errors, profile role fallbacks, wall label, loading aria, and shared form face legend/no-faces use **`gridBlockI18n`** + **`PortalResources`** (en/sk/cs). Remaining **`[ ] i18n`** rows below = form field labels/placeholders, `ChatRoomCard` copy, or a11y polish unless marked done inline.
 
 ### `album`
 
@@ -146,7 +148,7 @@ Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by
 3. [ ] **Binding IDs:** evaluate `boundAlbumId`, `boundBlogId`, … in `GridItem` + Admin editor + BE validation (mirrors `boundChatRoomId`).
 4. [ ] **Capabilities:** gate “Create” buttons in **`ComponentBlock`** using `GET …/capabilities` or existing ACL hooks — no create UI without permission.
 5. [ ] **Uploads:** wire image/video upload endpoints (if BE ready) through forms; never cross face.
-6. [ ] **i18n** — migrate grid strings to `common` JSON (en/sk/cz).
+6. [x] **i18n** — grid display strings in `common` via API bundle (`gridBlockI18n` + `PortalResources` en/sk/cs). _Forms/ChatRoomCard copy still English._
 7. [x] **Top-panel create parity:** replace generic `+` fallback for `ad`, `story`, and `userProfile` with product-approved flows or explicitly disable/hide create for those types.
 8. [x] **Scoped write defaults:** make form defaults match current face unless product intentionally allows multi-face / all-face writes (album, blog, reel need review).
 9. [x] **Admin schema preservation:** add/preserve `boundChatRoomId`, `title`, `icon`, and any future `bound*` fields in Admin `GridItem` editing/saving; do not drop metadata during drag/resize.
@@ -184,7 +186,7 @@ Legend: **Face** = uses `selectedFace` / `faceId` correctly; **API** = backed by
 ### Platform & infrastructure
 
 - [ ] **TanStack Query (optional):** migrate grid fetchers from ad-hoc `useEffect` + fetch to Query keys scoped by `faceId` + auth (see [`fe-performance-and-refactor-agent-prompt.md`](./fe-performance-and-refactor-agent-prompt.md)).
-- [ ] **Global i18n sweep:** move grid user-visible strings (e.g. sign-in gates, empty states) into locale JSON (target: en / sk / cz per product). _Started: grid action/create copy now lives in locale JSON._
+- [x] **Global i18n sweep:** grid block guest/empty/load/profile/wall strings via **`gridBlockI18n`** + **`PortalResources`** (en/sk/cs). _Started earlier: grid action/create copy in locale JSON; forms/card activity strings still open._
 
 ### Hardening & security of reads
 
