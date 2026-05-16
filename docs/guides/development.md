@@ -46,6 +46,18 @@ flowchart TB
 
 The **root** repository runs aggregated CI (see below). Each submodule that ships code also has its own `.github/workflows/ci.yml` for standalone pushes to that repo.
 
+## Brand assets (kitsune mask icon)
+
+Canonical raster: **`many_faces_mobile/assets/logo-raster-source.png`** (from `assets/logo-raw.svg` via `yarn icons:export` in the mobile submodule).
+
+| Step | Command / location |
+| ---- | ------------------ |
+| Vector → raster | `cd many_faces_mobile && yarn icons:export` |
+| Mobile app icons | `cd many_faces_mobile && yarn icons:pad` (or `yarn icons:rebuild` after SVG edits) |
+| Portal + admin favicons | `node ./scripts/generate-brand-favicons.mjs` from repo root, or `yarn favicon:generate` inside `many_faces_portal` / `many_faces_admin` |
+
+After favicon changes, restart FE containers (`docker compose -f docker-compose.dev.yml restart fe-demo-dev fe-demo-proxy admin-demo-dev`) or `./scripts/restart-all-dev.sh`, then hard-refresh the browser tab.
+
 ## Node.js (many_faces_portal, many_faces_admin)
 
 - **Version**: `22.14.0` (`.nvmrc` in repo root, `many_faces_portal`, and `many_faces_admin`).
