@@ -14,7 +14,7 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
-> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+> **Status (2026-05-16):** Track A and the Track B slices in **§27** are **implemented** on `many_faces_mobile` `main`. **Settings shell:** `SettingsSidePanel` mounted from `AppShell` when signed in (`f2de1d3`) — see **§24.6** (`[x]`). Full portal settings tabs remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
@@ -618,7 +618,7 @@ Copy the relevant §27 subsection checklist into each PR. **Do not** mix with Tr
 - [ ] **§27.3** Shell i18n + reduced motion — when scheduled.
 - [ ] **§27.1** Grid blocks — per block or small batch.
 - [ ] **§27.4** Route ↔ portal URL table in README — when adding/rename routes in Track B.
-- [ ] **§24** `features/*` — when porting settings/messenger from parity prompt.
+- [x] **§24** `features/settings` scaffold + **§24.6** shell mount (`f2de1d3`); messenger / full settings tabs → parity prompt.
 
 ---
 
@@ -798,21 +798,21 @@ When starting [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-fea
 
 ## 24. Future `src/features/` namespace (**required** when adding parity modules)
 
-Portal groups cross-cutting product areas under `many_faces_portal/src/features/` (e.g. **settings**). Mobile has **no** `src/features/` today; shell logic lives in `src/components/` (`AppShell`, `ShellDrawer`).
+Portal groups cross-cutting product areas under `many_faces_portal/src/features/` (e.g. **settings**). Mobile ships **`src/features/settings/`** (`SettingsSidePanel*`) — shell mount **§24.6**; app chrome stays in `src/components/` (`AppShell`, `ShellDrawer`).
 
 ### 24.1 Target layout (mirror portal intent)
 
 ```
 src/features/
   settings/
-    SettingsPanel/
-      SettingsPanel.tsx
+    SettingsSidePanel/
+      SettingsSidePanel.tsx
       index.ts
-      sections/              # optional private sub-panels
-    index.ts                 # (optional) re-export public entry only
+    SettingsSidePanelHeader/
+    SettingsSidePanelBody/
 ```
 
-**Do not** add flat `src/features/settings/SettingsPanel.tsx` at the `settings/` root.
+**Do not** add flat `src/features/settings/SettingsSidePanel.tsx` at the `settings/` root.
 
 ### 24.2 What belongs in `features/` vs `screens/` vs `components/`
 
@@ -834,10 +834,21 @@ Extend `scripts/verify-mobile-component-colocation.mjs` to fail on flat `*.tsx` 
 
 ### 24.5 Checklist — first `features/` PR
 
-- [ ] Create `src/features/<area>/` only for a **defined** parity slice (see portal `src/features/*`).
-- [ ] Document area in `many_faces_mobile/README.md` project layout.
-- [ ] Update verify script + `.cursor/rules/mobile-component-folders.mdc`.
-- [ ] No new flat TSX under `features/<area>/`.
+- [x] Create `src/features/settings/` for the defined settings scaffold slice.
+- [x] Document area in `many_faces_mobile/README.md` project layout + [`src/features/README.md`](../../many_faces_mobile/src/features/README.md).
+- [x] Update verify script + `.cursor/rules/mobile-component-folders.mdc`.
+- [x] No new flat TSX under `features/settings/`.
+
+### 24.6 Settings panel — shell wiring **(completed `f2de1d3`)**
+
+Read-only native panel opened from the header when authenticated (portal `Header` `onSettingsToggle` parity). Full tabs (profile, messenger settings, notifications, language) stay in [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md).
+
+- [x] `AppShell` state + `SettingsSidePanel` modal/side sheet; closes drawer when opening settings.
+- [x] `ShellHeader` settings control (`common:shell.openSettings`) — guests do not see it.
+- [x] Mobile resx: `common.settings.*` + `common.shell.openSettings` (en/sk/cz) in `many_faces_backend` `MobileResources.*.resx`.
+- [x] Tests: `SettingsSidePanel.test.tsx`, `ShellHeader.test.tsx`, `AppShell.settings.test.tsx`.
+- [x] `docs/rest-parity-matrix.md` — settings row **Shell (read-only)**.
+- [ ] Full portal `SettingsSidePanelBody` tabs and messenger/notification settings — **deferred** (parity prompt).
 
 ---
 
@@ -1106,7 +1117,8 @@ Add subsection **`## Navigation vs portal URLs`** to `many_faces_mobile/README.m
 | Item                                       | Track in                                                                                           |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | SignalR messenger / chat room / AI chat UI | [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md) §10 |
-| `features/settings` panel                  | **§24** + parity prompt                                                                            |
+| `features/settings` shell (read-only panel) | **Done** — §24.6 (`f2de1d3`)                                                                       |
+| `features/settings` full portal tabs       | [mobile-portal-feature-parity-agent-prompt.md](./mobile-portal-feature-parity-agent-prompt.md) §13 |
 | Full API client class port (`ApiClient`)   | Parity §3 — mobile uses `httpClient` + `faceScope` today                                           |
 | E2E (Maestro / Detox)                      | Separate engagement                                                                                |
 
