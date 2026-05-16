@@ -49,9 +49,13 @@ The Frontend’s job is **not** to redefine business rules: it reflects **backen
 
 | Piece | Role |
 |-------|------|
-| **`many_faces_backend`** (`many_faces_backend/`) | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC client to AI. |
+| **`many_faces_backend`** (`many_faces_backend/`) | Source of truth: Identity + EF Postgres, OAuth2 JWT, ACL/capabilities, REST, SignalR, gRPC clients to AI / search / push / mailer workers. |
 | **`many_faces_database`** (`many_faces_database/`) / **`many_faces_redis`** (`many_faces_redis/`) | Persistence + background/worker prerequisites (Redis for wall/async patterns per guides). |
-| **`many_faces_ai`** (`many_faces_ai/`) | gRPC `Health`, local Qwen `Generate`, and **`ReviewContent`** — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes). |
+| **`many_faces_ai`** (`many_faces_ai/`) | gRPC `Health`, local Qwen `Generate`, **`ReviewContent`**, optional admin stats RPCs — structured, advisory recommendations for user-created album/blog/reel moderation (`many_faces_backend` validates and `SUPER_ADMIN` finalizes). |
+| **`many_faces_elastic`** (`many_faces_elastic/`) | Elasticsearch read index + **Go search-worker** (gRPC); API never talks to ES directly. |
+| **`many_faces_push`** (`many_faces_push/`) | **FCM** dispatch worker (Go gRPC); device tokens and sends owned by the API. |
+| **`many_faces_mailer`** (`many_faces_mailer/`) | Transactional mail (Java gRPC + SMTP templates); Identity email flows via **`MailerGrpcEmailSender`**. |
+| **`many_faces_mobile`** (`many_faces_mobile/`) | Expo React Native client — REST parity with **`many_faces_portal`** (Phase 1+). |
 
 ---
 

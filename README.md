@@ -116,8 +116,10 @@ flowchart LR
     api -.->|"Search enabled"| sw
     api --> realtime["SignalR<br/>real-time updates"]
     api --> ai["many_faces_ai<br/>Python gRPC + ReviewContent sanitizer"]
+    pw["many_faces_push<br/>Go gRPC FCM"]
     mw["many_faces_mailer<br/>Java gRPC + templates"]
     smtp["Mailpit / SMTP relay"]
+    api -.->|"Push:Enabled"| pw
     api -.->|"Mail:Enabled"| mw
     mw --> smtp
 
@@ -127,6 +129,7 @@ flowchart LR
     scripts --> db
     scripts --> redis
     scripts -.->|"start-all-dev (default)"| sw
+    scripts -.->|"start-all-dev (default)"| pw
     scripts -.->|"start-all-dev (default)"| mw
     scripts --> ai
     scripts --> mobile
@@ -138,6 +141,7 @@ flowchart LR
     docs -.-> ai
     docs -.-> mobile
     docs -.-> sw
+    docs -.-> pw
     docs -.-> mw
 ```
 
@@ -306,7 +310,9 @@ flowchart TD
     services --> db["PostgreSQL via EF Core"]
     services --> redis["Redis queue/cache infrastructure"]
     services --> ai["Python gRPC AI service"]
-    services -.->|"optional"| es["many_faces_elastic<br/>Elasticsearch HTTP API"]
+    services -.->|"Search enabled"| swg["many_faces_elastic<br/>search-worker gRPC"]
+    services -.->|"Push enabled"| pwg["many_faces_push<br/>gRPC"]
+    services -.->|"Mail enabled"| mwg["many_faces_mailer<br/>gRPC"]
     controllers --> dto["Typed DTOs / OpenAPI contracts"]
 ```
 

@@ -104,7 +104,7 @@ Index file: [`components/README.md`](./components/README.md). Short **what it is
 
 Specs for **agent-assisted implementation**: [`prompts/README.md`](./prompts/README.md) (full table + retention rules). **Humans** implementing features should read the relevant **`guides/`** first, then open a prompt for checklists and acceptance criteria.
 
-**Push notifications (FCM):** full-stack agent spec (Go gRPC worker submodule, backend, Expo) — [`prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md) (companion guide path `guides/push-notifications-local-dev.md` is created when that work ships).
+**Push notifications (FCM):** full-stack agent spec (Go gRPC worker submodule, backend, Expo) — [`prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md); operator guide [`guides/push-notifications-local-dev.md`](./guides/push-notifications-local-dev.md).
 
 ---
 

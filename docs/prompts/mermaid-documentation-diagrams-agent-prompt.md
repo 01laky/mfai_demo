@@ -51,7 +51,7 @@
 - Backend: `many_faces_backend/BeDemo.Api` — ASP.NET Core, OAuth2 (`OAuth2Controller`, `OAuth2Middleware`, `OAuth2Service`), JWT (`ECDSAKeyService`), refresh store (`OAuthRefreshTokenStore`), face routing (`RoutingMiddleware`), SignalR hubs (`ChatHub`, `MessengerHub`, chat room hub), EF Core, PostgreSQL.
 - Frontends: `many_faces_portal`, `many_faces_admin` — Vite/React, axios interceptors for `/{face}/` prefix, `localStorage` keys `auth_token`, `auth_refresh_token`, `auth_user`, JWT utils, React Query, SignalR clients.
 - Job queue: Redis lists / ZSET (`bedemo:jobs:ready`, `bedemo:jobs:delayed`), worker `RedisJobWorkerService`, job types e.g. `wall.ticket-delete`, `chatroom.idle-check`, `reel.postprocess`.
-- Submodules: `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`.
+- Submodules: `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, `many_faces_mobile`, `many_faces_ai`, `many_faces_database`, `many_faces_redis`, `many_faces_logger`, `many_faces_elastic`, `many_faces_push`, `many_faces_mailer`. Nested **`many_faces_proto/`** inside gRPC consumers (Strategy B — not a root submodule).
 - When docs disagree with code, **prefer code** and update diagram labels to match code; optionally file a separate doc fix (out of scope unless asked).
 
 ---
