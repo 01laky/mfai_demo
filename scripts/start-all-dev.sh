@@ -639,6 +639,11 @@ while true; do
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/swagger 2>&1 || echo "000")
         if [ "$HTTP_CODE" != "000" ] && echo "$HTTP_CODE" | grep -qE "^[234]"; then
             echo "  API: ✓ Accessible (http://localhost:8000)"
+            if "$ROOT/scripts/smoke-localization-api.sh" http://localhost:8000 >/dev/null 2>&1; then
+                echo "  Localization: ✓ /api/localization/{portal,admin,mobile}"
+            else
+                echo "  Localization: ⚠ not ready (docker restart be-demo-dev)"
+            fi
         else
             echo "  API: ⚠ Not accessible (http://localhost:8000)"
         fi

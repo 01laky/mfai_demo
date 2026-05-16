@@ -295,6 +295,11 @@ if check_container_exists "$BE_CONTAINER"; then
         if check_service "http://localhost:8000/swagger/index.html" "Backend API"; then
             echo -e "  API: ${GREEN}✓ Accessible${NC} (http://localhost:8000)"
             echo "  Swagger: http://localhost:8000/swagger/index.html"
+            if "$ROOT/scripts/smoke-localization-api.sh" http://localhost:8000 >/dev/null 2>&1; then
+                echo -e "  Localization: ${GREEN}✓${NC} GET /api/localization/{portal,admin,mobile}"
+            else
+                echo -e "  Localization: ${YELLOW}⚠${NC} bundles not ready (restart be-demo-dev)"
+            fi
         else
             echo -e "  API: ${YELLOW}⚠ Not accessible${NC} (http://localhost:8000)"
         fi

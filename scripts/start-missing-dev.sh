@@ -87,6 +87,11 @@ if [[ " ${MISSING[*]} " =~ " backend " ]]; then
   for i in {1..90}; do
     if docker inspect be-demo-dev --format '{{.State.Health.Status}}' 2>/dev/null | grep -q healthy; then
       echo "   ✅ Backend ready."
+      if "$ROOT/scripts/smoke-localization-api.sh" http://localhost:8000 2>/dev/null; then
+        echo "   ✅ Localization API ready."
+      else
+        echo "   ⚠ Localization API not ready — try: docker restart be-demo-dev"
+      fi
       break
     fi
     [ "$i" -eq 90 ] && echo "   ⚠ Backend not healthy yet, continuing anyway."
