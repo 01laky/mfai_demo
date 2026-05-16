@@ -154,9 +154,16 @@ AI `flags` from the wire are **whitelisted and canonicalized** before persistenc
 ### Edge cases covered by automated tests
 
 - **Sanitizer:** C0 controls (except tab/LF/CR), bidi and zero-width code points, BOM, length caps for title/body/media URL.
-- **Heuristic:** Phrases in title, HTML body, or reel `VideoUrl` query text; negative examples that must not match; case-insensitive matching.
+- **Heuristic:** Phrases in title, HTML body, or reel `VideoUrl` query text (including percent-encoded query stuffing); negative examples that must not match; case-insensitive matching after normalization.
 - **Policy:** `Approve` blocked when the instruction flag survives normalization; `Reject` with the same flag remains valid when a reject reason is present; unknown AI flags dropped; duplicate canonical flags collapsed.
+- **Red-team corpus:** `many_faces_backend/BeDemo.Api.Tests/Fixtures/prompt_injection_corpus.txt` (≥20 attack lines). `ContentModerationSecurityEdgeTests` asserts each line cannot yield `AiReviewStatus.RecommendedApprove` when the AI returns high-confidence `Approve`; `ContentModerationUntrustedContentEvaluator` mirrors the worker merge path in pure functions.
 - **Python:** Same sanitizer limits at `ReviewContent` entry plus classifier behaviour on delimiter-smuggled keywords.
+
+Run corpus-related tests:
+
+```bash
+cd many_faces_backend && dotnet test --filter "FullyQualifiedName~ContentModerationSecurityEdgeTests"
+```
 
 ## Redis Queue And Backpressure
 

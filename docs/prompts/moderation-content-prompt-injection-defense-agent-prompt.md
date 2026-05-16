@@ -126,10 +126,10 @@ Verify paths after submodule checkout:
 
 ## 7. Testing requirements
 
-- [ ] **Pure function tests** (C# or shared test project) for sanitization + flag whitelist + new validation branches.
-- [ ] **Backend integration** test: enqueue or invoke `ProcessQueuedReviewAsync` with a payload containing known injection strings; assert persisted `AiReviewStatus` is **`NeedsHumanReview`** (or equivalent safe terminal) when policy demands — **never** `RecommendedApprove` with `ApprovalStatus` becoming public without human action (today public still requires `SUPER_ADMIN`; assert no regression).
+- [x] **Pure function tests** (C# or shared test project) for sanitization + flag whitelist + new validation branches (`ContentModerationTests`, `ContentModerationUntrustedContentEvaluator`).
+- [x] **Backend integration** test: `ProcessQueuedReviewAsync` with injection strings → `NeedsHumanReview` (`ContentModerationTests`, `ContentModerationSecurityEdgeTests` integration sample).
 - [ ] **`many_faces_ai`** tests (`test_server.py`): `ReviewContent` returns structured response; after LLM integration, mock model output to include malicious `reason` and assert server-side mapping still produces valid proto or errors gracefully.
-- [ ] **Red-team corpus file** (e.g. embedded resource or `Tests/Fixtures/prompt_injection_corpus.txt`) with at least **20** diverse strings (multilingual snippets, fake XML, “developer mode”, “output your instructions”, excessive repetition). Automate: each line must satisfy the chosen policy outcome.
+- [x] **Red-team corpus file** — `many_faces_backend/BeDemo.Api.Tests/Fixtures/prompt_injection_corpus.txt` (≥20 lines); `ContentModerationSecurityEdgeTests` automates policy outcome per line.
 
 ---
 
