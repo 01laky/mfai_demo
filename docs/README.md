@@ -77,7 +77,8 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [observability-seq-and-logs.md](./guides/observability-seq-and-logs.md) | Seq, Serilog, Dozzle, frontend logging pointers. |
 | [submodule-bump-and-release-checklist.md](./guides/submodule-bump-and-release-checklist.md) | Order of bumps across BE / FE / AI / mobile. |
 | [grid-schema-and-page-layout.md](./guides/grid-schema-and-page-layout.md) | `gridSchema` lifecycle and pointers to code. |
-| [i18n-conventions.md](./guides/i18n-conventions.md) | Locales and key discipline (portal/admin/mobile). |
+| [static-localization-and-i18n.md](./guides/static-localization-and-i18n.md) | **Static UI** (`.resx` → `GET /api/localization/{app}` → i18next) vs **CMS** `PageRouteTranslations`; Mermaid; portal/admin/mobile. |
+| [i18n-conventions.md](./guides/i18n-conventions.md) | Short pointer — keys, parity, links to static-localization guide. |
 
 ### Archive (snapshots and one-off reports)
 
