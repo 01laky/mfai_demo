@@ -31,6 +31,11 @@ jobs:
       - run: dotnet build BeDemo.sln --no-restore -c Release --no-incremental
       - run: dotnet test BeDemo.sln --no-build -c Release --verbosity minimal
 
+      # Explicit static i18n gate (parity, golden subtree, ambiguous .resx prefixes) — see docs/guides/testing-and-ci-matrix.md
+      - name: Static localization regression (dotnet filter)
+        working-directory: ${{ github.workspace }}
+        run: node scripts/verify-localization-key-parity.mjs
+
   # Shared gRPC contracts: Buf lint (and breaking vs main on pull requests).
   many_faces_proto:
     name: many_faces_proto

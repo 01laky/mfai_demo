@@ -473,11 +473,12 @@ Adjust order if security incidents dictate **P0** elsewhere first.
 
 ### 14.2 Related prompts in this repo (**required — if** scope intersects; **N/A** with reason otherwise)
 
-- **Security, headers, JWT/OAuth edge cases, full-stack hardening:** [security-hardening-full-stack-edge-tests-agent-prompt.md](./security-hardening-full-stack-edge-tests-agent-prompt.md)
+- **Security hardening v2 (workers, FE, moderation PI, CI):** [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md)
+- **Security v1 baseline re-audit (K/J/O/T/S/H/D/M):** [security-hardening-full-stack-edge-tests-agent-prompt.md](./security-hardening-full-stack-edge-tests-agent-prompt.md)
 - **Dependency upgrades, CVEs, lockfiles, CI matrix:** [monorepo-dependency-audit-and-upgrade-agent-prompt.md](./monorepo-dependency-audit-and-upgrade-agent-prompt.md)
 - **Architecture / flow diagrams in docs (when tests justify updating Mermaid):** [mermaid-documentation-diagrams-agent-prompt.md](./mermaid-documentation-diagrams-agent-prompt.md)
 
-Use the **security** prompt when tests touch auth cookies, CSP, rate limits, or token storage; use the **dependency** prompt when test work requires **Vitest / TanStack / EF** major bumps; use the **Mermaid** prompt when new auth or data flows should be reflected in diagrams **after** behavior is locked by tests.
+Use the **security-hardening-v2** prompt when tests touch worker auth, CSP, blog XSS, moderation corpus, or cross-cutting hardening; use **security-hardening v1** only for K/J/O/T/S/H/D/M re-audit. Use the **dependency** prompt when test work requires **Vitest / TanStack / EF** major bumps; use the **Mermaid** prompt when new auth or data flows should be reflected in diagrams **after** behavior is locked by tests.
 
 ---
 

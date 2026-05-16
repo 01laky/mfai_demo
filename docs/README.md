@@ -58,6 +58,7 @@ Start with **[`development.md`](./guides/development.md)** for CI, scripts, and 
 | [security-crypto-sockets.md](./guides/security-crypto-sockets.md)         | TLS, JWT keys, WebSockets backlog, deferred `TRACK-*`, §16–18 record.      |
 | [signalr-hub-security-matrix.md](./guides/signalr-hub-security-matrix.md) | Hub inventory (`ChatHub`), JWT/face rules, coverage.                       |
 | [manual-oauth-smoke.md](./guides/manual-oauth-smoke.md)                   | Curl-level OAuth smoke when E2E/Cypress is skipped.                        |
+| [prompts/security-hardening-v2-agent-prompt.md](./prompts/security-hardening-v2-agent-prompt.md) | **Agent spec:** Security hardening v2 — full monorepo phased tasklists (workers, AI, ES, Redis, FE, CI). |
 
 ### Product domains and operations
 
@@ -107,6 +108,8 @@ Index file: [`components/README.md`](./components/README.md). Short **what it is
 Specs for **agent-assisted implementation**: [`prompts/README.md`](./prompts/README.md) (full table + retention rules). **Humans** implementing features should read the relevant **`guides/`** first, then open a prompt for checklists and acceptance criteria.
 
 **Push notifications (FCM):** full-stack agent spec (Go gRPC worker submodule, backend, Expo) — [`prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md`](./prompts/push-notifications-fcm-go-grpc-firebase-worker-agent-prompt.md); operator guide [`guides/push-notifications-local-dev.md`](./guides/push-notifications-local-dev.md).
+
+**Security hardening v2:** monorepo trust boundary + phased checklists — [`prompts/security-hardening-v2-agent-prompt.md`](./prompts/security-hardening-v2-agent-prompt.md) (extends v1 [`prompts/security-hardening-full-stack-edge-tests-agent-prompt.md`](./prompts/security-hardening-full-stack-edge-tests-agent-prompt.md); v1 completion in [`guides/security-crypto-sockets.md`](./guides/security-crypto-sockets.md)).
 
 ---
 

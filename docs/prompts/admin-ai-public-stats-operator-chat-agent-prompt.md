@@ -79,7 +79,7 @@ Give **platform operators** (users with **`CanManageAllFaces`** under the **admi
 ## 4. Python (`many_faces_ai`) design notes
 
 - **`Generate`**: If **`stats_context_json`** is set, prepend a short English banner + JSON + separator before the conversational prompt.
-- **`FetchPublicStats`**: Reject non-http(s) URLs; for **localhost / 127.0.0.1 / ::1** HTTPS, allow insecure TLS for dev self-signed certs only.
+- **`FetchPublicStats`**: Reject non-http(s) URLs; for **localhost / 127.0.0.1 / ::1** HTTPS, allow insecure TLS for dev self-signed certs only. **Production URL allow-list / SSRF hardening** if AI gRPC is reachable: [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **AI-3** (not re-specified here).
 - **`OperatorStatsChat`**: Optionally **`FetchPublicStats`**, then build **`GenerateRequest`** with **`stats_context_json`** + final **`User:` / `AI:`** prompt tail.
 - **Regeneration:** `proto/health_pb2*.py` are **gitignored**; run **`scripts/generate_proto.sh`** (uses **`.venv/bin/python`** when present).
 

@@ -198,15 +198,14 @@ Add **`docs/guides/push-notifications-local-dev.md`** (or agreed filename) cover
 
 ## 6. Security model — worker exposure
 
-### 6.1 Network (required)
+**Hardening tasklist (mandatory tokens, TLS, reflection off, hardened compose):** [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§11** (**PUSH-1…PUSH-6**) — tick there in security engagements; do not duplicate checklists in this file.
+
+**Product-specific (document in submodule `README.md`):**
 
 - Push worker listens on **internal Docker network only** in dev/prod patterns used by Many Faces.
-- **mTLS or bearer token** metadata on gRPC from backend → worker is **strongly recommended**; align with [`docs/guides/elasticsearch-grpc-tls-mtls.md`](../guides/elasticsearch-grpc-tls-mtls.md) patterns where feasible (shared vocabulary: server cert, client CA, optional HMAC token for dev).
-
-### 6.2 Threats to document (required)
-
 - **Token theft** — treat FCM tokens like secrets-in-transit; TLS for mobile ↔ backend; TLS for backend ↔ worker.
-- **Spoofed sends** — without auth on gRPC, any container on the network could send pushes — **close this gap in v1** unless explicitly waived by maintainers with a written risk acceptance in README (not recommended).
+- **Spoofed sends** — worker does not authorize per-user domains; backend must not forward arbitrary registration tokens (see **§5.3**).
+- TLS/mTLS vocabulary: [`docs/guides/push-grpc-tls-mtls.md`](../guides/push-grpc-tls-mtls.md), [`docs/guides/elasticsearch-grpc-tls-mtls.md`](../guides/elasticsearch-grpc-tls-mtls.md).
 
 ---
 
@@ -251,9 +250,9 @@ Document **manual smoke** steps end-to-end: register token → trigger pilot eve
 1. **Phase A — Submodule skeleton** — Go gRPC server, health check, compose, docs, no real FCM yet (or behind feature flag).
 2. **Phase B — FCM send** — `SendPush` works with a manually supplied token; backend stub call from a **maintenance/admin-only** endpoint or test harness (avoid shipping arbitrary send to members).
 3. **Phase C — Persistence + mobile registration** — EF migration + mobile register API + pilot user flow.
-4. **Phase D — Production hardening** — auth on gRPC, TLS/mTLS, metrics, invalid token GC, rate limits.
+4. **Phase D — Production hardening** — see [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§11** (**PUSH-***); plus metrics, invalid token GC, rate limits in this prompt’s **§9**.
 
-The agent may **compress** phases if product demands, but **document risks** when skipping auth/TLS.
+The agent may **compress** phases if product demands, but **document risks** when skipping auth/TLS (use **`TRACK-SHV2-*`** in v2 report if waived).
 
 ---
 
@@ -300,8 +299,7 @@ Copy this section into PRs or issues and tick items there per [`docs/prompts/REA
 
 ### Security, privacy, and ops
 
-- [ ] Implement **gRPC authentication** between backend and worker (token or mTLS) per **section 6** — do not ship open gRPC on shared networks.
-- [ ] Document **TLS/mTLS** approach for non-dev environments; align with existing internal gRPC security docs where possible.
+- [ ] **gRPC auth + TLS + hardened compose:** complete **PUSH-1…PUSH-3**, **PUSH-5** in [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§11** (not duplicated here).
 - [ ] Review **loc-key catalog**, **format args**, and **`data`** payload for **lock-screen privacy** per **section 5.3** and **§3.4.1**.
 - [ ] Add short **operator runbook** bullets (credential rotation, common failures) to the new guide per **section 9**.
 

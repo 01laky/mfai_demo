@@ -30,7 +30,7 @@ Implement or design the following extension areas:
 - Retention/privacy cleanup rules for rejected/removed content.
 - More complete OpenAPI/generated-client alignment where applicable.
 
-**Related (dedicated spec):** untrusted creator **title/body/media URL** must not act as instructions to the moderation AI path — instruction–data separation, sanitization, heuristics, red-team tests, and LLM hardening are specified in [`moderation-content-prompt-injection-defense-agent-prompt.md`](./moderation-content-prompt-injection-defense-agent-prompt.md). Admin / superadmin conversational AI is **out of scope** for that prompt.
+**Related (dedicated specs):** untrusted creator **title/body/media URL** must not act as instructions to the moderation AI path — threat model and design in [`moderation-content-prompt-injection-defense-agent-prompt.md`](./moderation-content-prompt-injection-defense-agent-prompt.md); engagement tasks **PI-1…PI-10** in [`security-hardening-v2-agent-prompt.md`](./security-hardening-v2-agent-prompt.md) **§4**. Admin / superadmin conversational AI is **out of scope** for those prompts.
 
 Do not weaken the existing safety boundary:
 

@@ -395,8 +395,9 @@ If a flow is **out of scope for v1**, state it explicitly (e.g. **2FA email**, *
 
 ### 6.3 Threats to document in submodule `README.md` (required)
 
-- **Spoofed gRPC sends** — any process on the dev network could invoke the worker if unauthenticated — close with **token** or **mTLS** before shared environments.
+- **Spoofed gRPC sends** — mandatory token/mTLS + hardened compose: [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§12** (**MAIL-1**, **MAIL-2**, **MAIL-7**).
 - **Credential theft** — SMTP passwords are **high value**; restrict file mounts and env injection; rotate on compromise.
+- **`action_link` / template injection:** **MAIL-3**, **MAIL-4** in the same v2 section (server-built URLs only).
 
 ---
 
@@ -426,9 +427,9 @@ Document **manual smoke** in **`docs/guides/mailer-local-dev.md`**: trigger Iden
 1. **Phase A** — Submodule skeleton: gRPC + health + config + logs + Mailpit compose; **no** real SMTP provider required.
 2. **Phase B** — Templates + i18n + **`SendTemplatedEmail`** end-to-end to Mailpit.
 3. **Phase C** — **`many_faces_backend`** `MailOptions`, **`GrpcWorkerChannelFactory`**, **`IMailerWorkerClient`**, **`IEmailSender`** for Identity (**§5.4.1–5.4.2**).
-4. **Phase D** — Optional real relay env + **mTLS** / token auth hardening.
+4. **Phase D** — Optional real relay env + **mTLS** / token auth: [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§12** (**MAIL-*** hardening rows).
 
-The agent may **compress** phases if product demands, but **document risks** when skipping **gRPC auth** or **TLS**.
+The agent may **compress** phases if product demands, but **document risks** when skipping **gRPC auth** or **TLS** (use **`TRACK-SHV2-*`** in v2 report if waived).
 
 ---
 

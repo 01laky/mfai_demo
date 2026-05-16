@@ -4,6 +4,8 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 **Scope:** Signing keys, JWT hardening, TLS, REST API, SignalR/WebSockets, OAuth2 client flows, operational controls.
 
+**Security hardening v2 (2026-05-16):** Worker/AI/ES/Redis trust boundary, FE CSP/XSS, uploads, PII logging, hardened compose, and moderation **PI-*** tasks — **[`../prompts/security-hardening-v2-agent-prompt.md`](../prompts/security-hardening-v2-agent-prompt.md)**. This guide remains the **K/J/O/T/S/H/D/M backlog** and **v1 (2026-04-11) completion record**; do not duplicate v2 phase checklists here.
+
 **Related:** [acl-and-capabilities.md](./acl-and-capabilities.md) (authorization / capabilities); this file focuses on **transport + token + key lifecycle**.
 
 ### Diagram: backlog layers (depends-on overview)
@@ -251,7 +253,7 @@ Product or infra items not covered by the baseline table above; keep IDs for iss
 | **TRACK-CI-E2E-AUTH**        | **Resolved for CI:** `many_faces_portal` GitHub job runs **Cypress** `app-load.cy.js` after `yarn build` + `vite preview` (HTTP). **Optional:** set `E2E_API_URL` and run `oauth-api-chain.cy.js` for register→token→refresh→capabilities. **UI login** in browser remains manual or a future Cypress UI spec. |
 | **TRACK-QA-IDOR-MATRIX**     | Broader IDOR / ACL matrix across controllers vs representative tests today.                                                               |
 | **TRACK-DOCS-MERMAID-CI**    | Optional CI gate to render-verify Mermaid in `docs/guides/`.                                                                              |
-| **TRACK-AI-GRPC-THREAT**     | Deeper gRPC threat model for `many_faces_ai` if exposure grows.                                                                                 |
+| **TRACK-AI-GRPC-THREAT**     | Superseded for implementation tracking by [security-hardening-v2-agent-prompt.md](../prompts/security-hardening-v2-agent-prompt.md) **§9** (**AI-***). Keep this row as historical pointer only. |
 | **TRACK-DOCS-SUBMODULES**    | Exhaustive README sweep per submodule if required as a separate doc pass.                                                                 |
 
 **Short runbook (ops):** set `Jwt:SigningPemPath` + `Jwt:KeyId`; for rotation overlap use `Jwt:PreviousSigningPemPath` + `Jwt:PreviousKeyId`, deploy, wait for old token `exp`, then clear previous config. Run `dotnet ef database update` in `many_faces_backend/BeDemo.Api`. Seeded OAuth client: seeded `be-demo-client` in `OAuthClients`; rotate DB row + config together. Per release: `dotnet list package --vulnerable` and `yarn npm audit` in FE/admin; log in CI or release notes.

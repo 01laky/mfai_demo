@@ -9,6 +9,8 @@
 
 **Repo evidence (2026-04-11 pass, updated v6):** A full **§15–§18**-style closure for the current `many_faces_main` tree (gap analysis, hub matrix, dependency snapshot, §18 test evidence, new Mermaid diagrams with `mmdc` render check, **Cypress CI smoke**, optional **OAuth API chain** spec, **`scripts/audit-monorepo-deps.sh`**, SignalR JWT connect test) is committed under **[`docs/guides/security-crypto-sockets.md`](../guides/security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11)** — use that section as the canonical checklist attachment for audits; keep **this** prompt file’s `[ ]` rows as templates for future engagements.
 
+**Net-new monorepo hardening (2026-05-16):** Worker/AI/ES/Redis trust boundary, mandatory worker tokens + TLS profiles, FE CSP/blog XSS/401 refresh, upload + PII logging, `docker-compose.hardened`, CI audit gates, and moderation **PI-1…PI-10** engagement tracking live in **[security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md)**. Use **this (v1)** prompt for **K/J/O/T/S/H/D/M** workstreams and **re-audit** of the 2026-04-11 baseline only — **do not** duplicate v2 phase checklists here.
+
 **Related docs (read in full before coding):**
 
 - [../guides/security-crypto-sockets.md](../guides/security-crypto-sockets.md) — backlog items K/J/O/T/S/H/D/M.

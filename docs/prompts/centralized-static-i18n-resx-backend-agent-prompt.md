@@ -238,15 +238,15 @@ builder.Services.AddSingleton<ILocalizationBundleService>(); // name illustrativ
 
 **(required)** Implement **`ResourceJsonFlattener`** (unflatten to nested JSON) with unit tests for:
 
-- [ ] Single segment keys
-- [ ] Deep nesting (3+ levels)
-- [ ] Keys that share prefixes (`pages.login` vs `pages.login.title`) — **forbid ambiguous keys in CI**
+- [x] Single segment keys (`ResourceJsonUnflattenerTests.ToNestedObject_SingleSegment`)
+- [x] Deep nesting (3+ levels) (`ResourceJsonUnflattenerTests.ToNestedObject_DeepNesting_FourLevels`)
+- [x] Keys that share prefixes (`pages.login` vs `pages.login.title`) — **forbid ambiguous keys in CI** (`ResxLocalizationKeyAmbiguityTests`, `ResourceJsonUnflattener.FindAmbiguousFlatKeys`)
 
 ### 4.2.1 One-time migration script (**required**)
 
 - [x] Add `scripts/migrate-locale-json-to-resx.mjs` (or similar) that reads each `src/i18n/locales/**/*.json` and emits `.resx` per app/culture. _(Delivered; one-off script removed from monorepo after migration.)_
 - [ ] Preserve `{{count}}`, `{{name}}`, etc. — XML-escape `&`, `<`, `>` in `.resx` values.
-- [ ] PR includes generated `.resx` + spot-check diff against legacy JSON via golden test (§11.1).
+- [x] PR includes generated `.resx` + spot-check diff against legacy JSON via golden test (§11.1).
 
 ### 4.2.2 Interpolation and special characters
 
@@ -474,15 +474,15 @@ Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `P
 
 ### 10.1 Script (location flexible)
 
-- [ ] `scripts/verify-localization-key-parity.mjs` or `BeDemo.Api.Tests/LocalizationKeyParityTests.cs`
-- [ ] For each app: same set of keys in `en`, `sk`, `cz` `.resx`
+- [x] `scripts/verify-localization-key-parity.mjs` or `BeDemo.Api.Tests/LocalizationKeyParityTests.cs`
+- [x] For each app: same set of keys in `en`, `sk`, `cz` `.resx`
 - [ ] Fail CI on missing or empty values
 - [ ] **(optional)** Compare exported JSON key count against legacy frontend JSON snapshot during transition only
 
 ### 10.2 Wire into monorepo CI
 
-- [ ] Parent `ci.yml` or backend test job runs parity check
-- [ ] Document command in `docs/guides/testing-and-ci-matrix.md` **(§14)**
+- [x] Parent `ci.yml` or backend test job runs parity check (`node scripts/verify-localization-key-parity.mjs` after `dotnet test`)
+- [x] Document command in `docs/guides/testing-and-ci-matrix.md` **(§14)**
 
 ---
 
@@ -490,12 +490,12 @@ Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `P
 
 ### 11.1 Backend
 
-- [ ] `LocalizationControllerTests` — `portal`/`admin`/`mobile` return 200 + expected keys sample
-- [ ] **`GET /api/localization/portal` without face prefix** returns 200 (routing exempt §3.4)
+- [x] `LocalizationControllerTests` — `portal`/`admin`/`mobile` return 200 + expected keys sample
+- [x] **`GET /api/localization/portal` without face prefix** returns 200 (routing exempt §3.4)
 - [x] Rate limit: excess requests → **429** §4.5 (`LocalizationRateLimit429Tests`)
 - [x] Snapshot or golden-file test: exported JSON for one key path matches legacy `en.json` subtree (portal sample — `portal-auth-flow-golden.en.json`, `LocalizationPortalGoldenTests`)
-- [ ] `ResourceJsonFlattenerTests` — nesting edge cases
-- [ ] Unknown app → 404
+- [x] `ResourceJsonUnflattenerTests` — nesting edge cases
+- [x] Unknown app → 404 (`LocalizationControllerTests.GetBundle_UnknownApp_Returns404`)
 - [ ] **Regression:** `PagesController` `GET/PUT …/translations` and any `PageRouteTranslation` tests still pass — **do not delete**
 
 ### 11.2 Frontends

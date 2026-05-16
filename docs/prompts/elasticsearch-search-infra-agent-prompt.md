@@ -212,20 +212,11 @@ SPAs and the mobile app call **`many_faces_backend` REST only**; they **never** 
 
 - **Secrets**: Elasticsearch credentials (if any beyond dev open cluster) live in **worker environment** / secret store for the worker container — **never** in git. The **backend** should not need Elasticsearch superuser credentials for the gRPC-only architecture.
 
-### 7.3 Transport
+### 7.3–7.4 Transport and worker authentication
 
-- **Dev:** HTTP to Elasticsearch **inside the Docker network** may be acceptable with explicit README warnings; **gRPC** from backend/AI to worker may start as **plaintext** on `many_faces_main_dev-network` only if **worker is not host-published** and network is trusted — document threat model.
-- **Prod:** **TLS for gRPC** (worker presents server cert; clients validate). **TLS for Elasticsearch** when the cluster requires it. Prefer **mTLS** between **backend ↔ worker** and **AI ↔ worker** so arbitrary containers on the network cannot call the worker.
+**Hardening checklist (ES host ports, xpack, mandatory `SEARCH_WORKER_EXPECTED_TOKEN`, TLS, reflection):** [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§10** (**ES-1…ES-6**). Guides: [`../guides/elasticsearch-grpc-tls-mtls.md`](../guides/elasticsearch-grpc-tls-mtls.md).
 
-### 7.4 Authenticating callers to the Go worker (required)
-
-Pick **at least one** mechanism before exposing the worker beyond loopback:
-
-- **mTLS:** worker trusts a CA; **`many_faces_backend`** and **`many_faces_ai`** present client certs issued for their service identities.
-- **Shared HMAC / bearer token** in **gRPC metadata** on every RPC, rotated via secrets manager (weaker than mTLS but simpler for early dev — document downgrade risks).
-- **Network allowlisting** is **not** sufficient alone for production; combine with TLS + auth.
-
-Reject unauthenticated or untrusted peers at the worker **before** touching Elasticsearch.
+**Architecture rule (unchanged):** reject unauthenticated or untrusted gRPC peers at the worker **before** touching Elasticsearch. **Network allowlisting alone is not sufficient** for production.
 
 ---
 
@@ -270,7 +261,7 @@ Reject unauthenticated or untrusted peers at the worker **before** touching Elas
 4. [ ] **Indexing strategy** (section 4.3) implemented in backend jobs calling **worker RPCs** (not ES HTTP).
 5. [ ] **First vertical slice**: one index + one read REST API + portal **or** admin UI.
 6. [ ] **`many_faces_ai`**: generate Python stubs from the same protos; add narrow client + auth metadata when AI needs search.
-7. [ ] Hardening: **mTLS** or token auth on worker, rate limits, index retention, reindex playbook.
+7. [ ] **Hardening:** [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§10** (**ES-***); plus index retention and reindex playbook (product-specific — document in submodule README).
 
 ---
 

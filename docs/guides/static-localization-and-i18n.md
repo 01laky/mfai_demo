@@ -215,7 +215,7 @@ Do not call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture.
 ## Editing static copy in development
 
 1. Edit `many_faces_backend/BeDemo.Api/Localization/{Portal|Admin|Mobile}/*.resx`.
-2. Run key parity check: `node scripts/verify-localization-key-parity.mjs` (or `dotnet test` filter `LocalizationKeyParity`).
+2. Run static localization CI bundle: `node scripts/verify-localization-key-parity.mjs` (parity, unflattener, golden subtree, **ambiguous `.resx` prefix** guard). Or individually: `dotnet test --filter LocalizationKeyParity`, `ResxLocalizationKeyAmbiguity`, `LocalizationPortalGolden`.
 3. Portal auth copy regression: `dotnet test --filter FullyQualifiedName~LocalizationPortalGolden` (golden file `many_faces_backend/BeDemo.Api.Tests/Fixtures/portal-auth-flow-golden.en.json`). To refresh after intentional English copy changes: `REGENERATE_LOCALIZATION_GOLDEN=1 dotnet test --filter RegeneratePortalAuthFlowGolden` from `many_faces_backend/`.
 4. **Restart** the API (`dotnet watch run` or container restart) — `.resx` changes are not picked up by Vite/Expo HMR.
 5. Confirm new `version` in `GET /api/localization/{app}`.

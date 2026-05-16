@@ -6,6 +6,8 @@ Implement **defense-in-depth** so that **untrusted user text** in albums, blogs,
 
 This document is an **English** implementation specification for an AI coding agent working across **`many_faces_main`** submodules. Treat every checkbox as a **task**; keep **`[ ]` unchecked** in the canonical file in git (tick copies in PRs or issues only — see [`prompts/README.md`](./README.md) checklist conventions).
 
+**Engagement tracking:** For a full-stack hardening run, map implementation tasks to **`PI-1…PI-10`** in [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§4** (tick there in the PR). **This file** stays normative for **threat model (§3)**, **design requirements (§6)**, and **LLM path (§8 Phase 3)** — not duplicated in v2.
+
 **Product safety rules (must not regress):**
 
 - AI **recommends** only; it does **not** publish content.
@@ -113,7 +115,7 @@ Verify paths after submodule checkout:
 
 - [ ] If new flags exist: add filter chip or query param support matching backend `ContentModerationController` contract.
 - [ ] Document in admin help text what the flag means (operator-facing English).
-- [ ] When rendering any model- or user-origin strings in the moderation UI (reasons, snippets), use normal **React text escaping** / safe components; do not `dangerouslySetInnerHTML` with unsanitized content — **prompt injection is not XSS**, but the same fields can carry HTML-like payloads used in blended attacks.
+- [ ] When rendering any model- or user-origin strings in the **moderation drawer** (reasons, snippets), use normal **React text escaping** / safe components; do not `dangerouslySetInnerHTML` with unsanitized content — **prompt injection is not XSS**, but the same fields can carry HTML-like payloads used in blended attacks. **Portal blog HTML** and other non-moderation surfaces: [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **PI-8** / **FE-P2**.
 
 ### 6.6 Creator FE / mobile
 
@@ -126,16 +128,14 @@ Verify paths after submodule checkout:
 
 ## 7. Testing requirements
 
-- [x] **Pure function tests** (C# or shared test project) for sanitization + flag whitelist + new validation branches (`ContentModerationTests`, `ContentModerationUntrustedContentEvaluator`).
-- [x] **Backend integration** test: `ProcessQueuedReviewAsync` with injection strings → `NeedsHumanReview` (`ContentModerationTests`, `ContentModerationSecurityEdgeTests` integration sample).
 - [ ] **`many_faces_ai`** tests (`test_server.py`): `ReviewContent` returns structured response; after LLM integration, mock model output to include malicious `reason` and assert server-side mapping still produces valid proto or errors gracefully.
-- [x] **Red-team corpus file** — `many_faces_backend/BeDemo.Api.Tests/Fixtures/prompt_injection_corpus.txt` (≥20 lines); `ContentModerationSecurityEdgeTests` automates policy outcome per line.
+- [ ] **Backend + corpus policy tests:** tracked as **PI-5**, **PI-6**, **PI-10** in [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§4** (files: `ContentModerationSecurityEdgeTests`, `Fixtures/prompt_injection_corpus.txt`).
 
 ---
 
 ## 8. Deliverables checklist (implementation phases)
 
-Tick in PR copies only.
+Tick in PR copies only. **Phases 1–2 (backend hygiene + heuristic wiring, corpus CI):** use **PI-1…PI-7**, **PI-9**, **PI-10** in [security-hardening-v2-agent-prompt.md](./security-hardening-v2-agent-prompt.md) **§4** — not duplicated here.
 
 ### Phase 0 — Discovery (no behaviour change)
 
@@ -143,21 +143,6 @@ Tick in PR copies only.
 - [ ] Trace `ToAiRequest()` (or equivalent) from album/blog/reel entities through `ContentAiReviewService.ProcessQueuedReviewAsync`.
 - [ ] Read `many_faces_ai` `ReviewContent` implementation and list every place user strings influence model input today and in planned LLM path.
 - [ ] Record findings in PR description under “Threat surface audit”.
-
-### Phase 1 — Backend input hygiene + validation (low user-visible risk)
-
-- [ ] Implement sanitization helper module (static class or dedicated service) with clear XML doc comments.
-- [ ] Apply sanitization **immediately before** building the gRPC request inside backend (single choke point preferred). Document whether you also **normalize on write** (create/update) so DB and AI see the same bytes, or **only at review time** (worker) — if only at review time, legacy rows still get sanitized before `ReviewContent`; if on write, add migration/backfill only if product requires it.
-- [ ] Extend `ValidateRecommendation` with flag whitelist and new policy branches; add unit tests for each branch.
-- [ ] Add structured logging for sanitization events (no raw secrets).
-- [ ] **REST OpenAPI + generated clients** (`many_faces_portal` / `many_faces_admin`): update NSwag/OpenAPI spec and regenerate TypeScript **only** if you change **public HTTP** request/response shapes (e.g. `GET /api/my/content-submissions`, `GET /api/contentmoderation`, moderation action bodies). **No OpenAPI work** is required for edits confined to **gRPC** `ReviewContent` / `health.proto` / `many_faces_ai` — the browser never consumes that contract directly; codegen for AI stays in the protobuf toolchain, not OpenAPI.
-
-### Phase 2 — Heuristic “instruction-like” signal
-
-- [ ] Implement scoring or boolean heuristic with configuration (`appsettings` or options pattern): enable/disable, thresholds.
-- [ ] Map heuristic hit to a **stable flag string** agreed with admin UI (`instruction_like_text` or project convention).
-- [ ] Add metrics / dashboard filter if `ContentModerationMetrics` already exposes flag tables.
-- [ ] Document tuning process for operators (short markdown in admin or in `ai-assisted-content-approval.md`).
 
 ### Phase 3 — `many_faces_ai` LLM hardening (when LLM is wired into `ReviewContent`)
 
@@ -198,7 +183,8 @@ Tick in PR copies only.
 - [`user-content-approval-extensions-agent-prompt.md`](./user-content-approval-extensions-agent-prompt.md) — broader moderation extensions (models, media, bulk, retention).
 - [`fe-user-content-ai-approval-workflow-agent-prompt.md`](./fe-user-content-ai-approval-workflow-agent-prompt.md) — original pending-approval workflow.
 - [`../guides/ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md) — product and engineering reference for the live stack.
-- [`security-hardening-full-stack-edge-tests-agent-prompt.md`](./security-hardening-full-stack-edge-tests-agent-prompt.md) — broader security / edge-test discipline if this work touches transport, logging, or cross-cutting abuse cases (use only relevant sections).
+- [`security-hardening-v2-agent-prompt.md`](./security-hardening-v2-agent-prompt.md) — **PI-1…PI-10** engagement tasks + cross-cutting transport/logging/FE (portal blog **FE-P2**).
+- [`security-hardening-full-stack-edge-tests-agent-prompt.md`](./security-hardening-full-stack-edge-tests-agent-prompt.md) — v1 **K/J/O/T/S/H/D/M** baseline re-audit only (2026-04-11 record in `security-crypto-sockets.md`).
 
 ---
 
