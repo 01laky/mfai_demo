@@ -211,24 +211,10 @@ Do not call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture.
 ## Editing static copy in development
 
 1. Edit `many_faces_backend/BeDemo.Api/Localization/{Portal|Admin|Mobile}/*.resx`.
-2. Run key parity check: `scripts/verify-localization-key-parity` (when added) or backend tests.
+2. Run key parity check: `node scripts/verify-localization-key-parity.mjs` (or `dotnet test` filter `LocalizationKeyParity`).
 3. **Restart** the API (`dotnet watch run` or container restart) — `.resx` changes are not picked up by Vite/Expo HMR.
 4. Confirm new `version` in `GET /api/localization/{app}`.
 5. Hard refresh portal/admin or restart Expo; clear `localStorage` i18n cache if needed.
-
----
-
-## Transitional state (before rollout completes)
-
-Until [`centralized-static-i18n-resx-backend-agent-prompt.md`](../prompts/centralized-static-i18n-resx-backend-agent-prompt.md) is fully implemented, static strings may still live under:
-
-| App | Current path |
-| --- | ------------- |
-| Portal | `many_faces_portal/src/i18n/locales/{en,sk,cz}.json` |
-| Admin | `many_faces_admin/src/i18n/locales/{en,sk,cz}.json` |
-| Mobile | `many_faces_mobile/src/i18n/locales/en/*.json` (often English only) |
-
-**CMS `PageRouteTranslations` already work as documented above** in both transitional and target states.
 
 ---
 

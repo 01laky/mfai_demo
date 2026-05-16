@@ -20,12 +20,9 @@ Implementation checklist: [`docs/prompts/centralized-static-i18n-resx-backend-ag
 
 ## Where static copy lives
 
-| Phase | Location |
-| ----- | -------- |
-| **Target** | `many_faces_backend/BeDemo.Api/Localization/{Portal,Admin,Mobile}/*.resx` |
-| **Transitional** | `src/i18n/locales/` in each frontend until rollout completes |
+Static UI strings: `many_faces_backend/BeDemo.Api/Localization/{Portal,Admin,Mobile}/*.resx`.
 
-Clients load static bundles via **`GET /api/localization/{app}`** at startup (see canonical guide).
+Clients load bundles via **`GET /api/localization/{app}`** at startup (see canonical guide).
 
 ## CMS page URL slugs (dynamic)
 
