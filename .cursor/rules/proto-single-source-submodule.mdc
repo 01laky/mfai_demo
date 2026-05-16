@@ -1,0 +1,34 @@
+---
+description: Edit many_faces_proto once; bump nested submodule pointers in consumers — never duplicate .proto edits
+alwaysApply: true
+---
+
+# `many_faces_proto` — single source, nested submodules (Strategy B)
+
+## One remote, many checkouts
+
+`many_faces_proto` is **one git repository** (`github.com/01laky/many_faces_proto`). Each gRPC consumer vendors it as a **nested submodule** at `many_faces_<consumer>/many_faces_proto/` (same URL everywhere). Those trees are **pointers**, not separate contracts.
+
+## Required workflow (proto / wire changes)
+
+1. **Edit `.proto` in exactly one checkout** — default anchor: `many_faces_backend/many_faces_proto/`.  
+   Do **not** edit parallel copies under `many_faces_push/proto/`, duplicate trees, or multiple nested checkouts in one task.
+2. **Commit and push `many_faces_proto` first** (`git push origin main` from that nested repo).
+3. **Pin the same commit SHA** in every consumer that embeds the submodule:
+   - `many_faces_backend`, `many_faces_push`, `many_faces_mailer`, `many_faces_elastic`, `many_faces_ai`
+   - In each: `cd many_faces_proto && git fetch origin && git checkout <sha>` → `git add many_faces_proto` → commit in **that consumer repo** → push.
+4. **Regenerate stubs** per consumer (C#, Go, Java, Python) from `many_faces_proto/proto` — do not hand-copy generated code between repos.
+5. **Bump `many_faces_main`** submodule pointers for each consumer you changed, then commit the monorepo.
+
+Helper (after step 2): `./scripts/bump-nested-many-faces-proto.sh [<sha>]` stages `many_faces_proto` in all consumers; you still commit/push each repo.
+
+## Forbidden
+
+- Changing the same `.proto` file in more than one nested `many_faces_proto` checkout in one change set.
+- Committing different `many_faces_proto` SHAs across consumers for the same wire release.
+- Treating `many_faces_push/proto/` (legacy) as canonical when `many_faces_proto` exists.
+
+## If unsure
+
+- Run `git -C many_faces_backend/many_faces_proto remote -v` — all nested paths must show the **same** `many_faces_proto` URL.
+- See `docs/guides/git-submodules.md` and `docs/prompts/proto-shared-repository-and-submodules-agent-prompt.md`.

@@ -8,6 +8,8 @@
 
 **Agent discipline:** Prefer **one submodule pointer revision** consumed consistently across services that call each other in the same release train. When ambiguous, choose **monorepo-first linking** (see **§4**) so `git clone --recursive` on **`many_faces_main`** yields a working dev tree. Document **every** `git submodule update` requirement in root **`README.md`** and **[`docs/guides/git-submodules.md`](../guides/git-submodules.md)**.
 
+**Cursor (always on in `many_faces_main`):** **[`.cursor/rules/proto-single-source-submodule.mdc`](../../.cursor/rules/proto-single-source-submodule.mdc)** — edit `.proto` in **one** nested `many_faces_proto` checkout, push the proto repo, then pin the **same SHA** in all consumers (helper: **`scripts/bump-nested-many-faces-proto.sh`**). Never duplicate contract edits across nested checkouts.
+
 ---
 
 ## 1. Problem statement

@@ -171,11 +171,32 @@ flowchart TB
 - Clone with `git clone --recursive` or run `git submodule update --init --recursive` after clone.
 - After updating a submodule, **commit the new pointer** in the root repository.
 
-### `many_faces_proto` (nested Strategy B)
+### `many_faces_proto` (nested Strategy B — current)
 
-- The **`many_faces_proto`** remote is linked **inside** each gRPC consumer (e.g. **`many_faces_backend/many_faces_proto/`**, **`many_faces_ai/many_faces_proto/`**, …), not as a sibling folder at **`many_faces_main/`** root.
-- After **`git submodule update --init --recursive`** on **`many_faces_main`**, Git initializes **nested** submodules when parent repos record them in their **`.gitmodules`**.
-- To bump the contract pin in one consumer: `cd many_faces_backend/many_faces_proto && git pull origin main && cd ../.. && git add many_faces_backend && git commit -m "chore: bump nested many_faces_proto in backend"` — repeat for other consumers **with the same commit** when changing shared wire.
+- **One remote:** `https://github.com/01laky/many_faces_proto.git`
+- **Many nested checkouts:** each gRPC consumer records the same submodule at **`many_faces_proto/`** (e.g. **`many_faces_backend/many_faces_proto/`**, **`many_faces_push/many_faces_proto/`**, …). There is **no** separate contract per consumer — only **git submodule pointers** to the same repo.
+- After **`git submodule update --init --recursive`** on **`many_faces_main`**, Git initializes nested **`many_faces_proto`** inside each consumer that declares it in **`.gitmodules`**.
+
+#### Editing protos (agents and humans)
+
+| Step | Where | Action |
+| ---- | ----- | ------ |
+| 1 | **One** nested checkout (default: `many_faces_backend/many_faces_proto/`) | Edit `proto/**/*.proto` only here |
+| 2 | `many_faces_proto` remote | Commit + **push** contract changes |
+| 3 | Each consumer repo | `git checkout <same-sha>` inside **that** repo’s `many_faces_proto/`, commit pointer, push consumer |
+| 4 | Each consumer | Regenerate stubs (C#, Go, Java, Python) from `many_faces_proto/proto` |
+| 5 | `many_faces_main` | Bump submodule pointer(s) for consumers you updated |
+
+**Do not** edit the same `.proto` in multiple nested checkouts in one change set. **Do not** leave consumers pinned to **different** `many_faces_proto` SHAs for the same release.
+
+Helper from monorepo root (stages only):
+
+```bash
+./scripts/bump-nested-many-faces-proto.sh        # pin all consumers to backend/many_faces_proto HEAD
+./scripts/bump-nested-many-faces-proto.sh abc123 # pin all to commit abc123
+```
+
+Cursor rule: **`.cursor/rules/proto-single-source-submodule.mdc`** (always on in `many_faces_main`).
 
 ## Day-to-day usage
 
