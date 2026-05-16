@@ -54,7 +54,7 @@ const PHASES = {
       'PlaceholderScreen',
       'FacePageScreen',
       'MySubmissionsScreen',
-      'ProfileMePlaceholderScreen',
+      'ProfileMeScreen',
       'ChatAiPlaceholderScreen',
       'ChatRoomPlaceholderScreen',
     ],

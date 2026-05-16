@@ -17,4 +17,4 @@ See the **Page Grid Schema Lifecycle** Mermaid diagram in [`many_faces_backend/R
 
 - [`fe-grid-face-scope-rollout-agent-prompt.md`](../prompts/fe-grid-face-scope-rollout-agent-prompt.md) — agent checklist for face-scoped grid work.
 - [`readmes/fe-portal-overview.md`](../readmes/fe-portal-overview.md)
-- Mobile: [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), `src/grid/MobilePageLayout/blockRegistry.ts`
+- Mobile: [`rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md), `src/grid/MobilePageLayout/blockRegistry.ts`

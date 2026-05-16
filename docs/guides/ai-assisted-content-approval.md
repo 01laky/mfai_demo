@@ -6,7 +6,7 @@ This guide is the **product and engineering reference** for how user-created alb
 
 ## Scope
 
-The workflow applies to content created by **regular users** from the user-facing frontend (`many_faces_portal`) and to the **same creator API** when surfaced on mobile (`many_faces_mobile` — list-only today):
+The workflow applies to content created by **regular users** from the user-facing frontend (`many_faces_portal`) and to the **same creator API** when surfaced on mobile (`many_faces_mobile` — list + read-only detail today; mutations still portal-first):
 
 - Albums
 - Blogs
@@ -35,7 +35,7 @@ Users create content inside a **face**, but **non-approved** items must **not** 
 | **AI service** | Deterministic classifier (text + media URL metadata) with the same input normalization at RPC entry + optional Qwen `Generate` for other features; `ReviewContent` adds `image_analysis_boundary` / `video_analysis_boundary` flags for future heavy models without using them as sole reject triggers. |
 | **Admin** | `ContentModerationController`: queue with filters (type, status, AI status, face, author, risk, flags substring, confidence band, submitted window, reviewer, queue age, moderation version), metrics `{ metrics, alerts }`, per-item actions, **bulk** approve/reject/remove/requeue, audit events. |
 | **Creator FE** | `GET /api/my/content-submissions`, **My submissions** page (`/my-submissions`), grouping helpers, safe reasons, links to detail with optional `?edit=1`, edit/delete gated on owner + pending/rejected. |
-| **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped URL via `many_faces_mobile` `faceScope`); **`MySubmissionsScreen`** lists rows grouped with `contentModeration` helpers (creator-safe fields). **No** native detail editor / `?edit=1` / delete yet — portal remains canonical for mutations until ported. |
+| **Creator mobile** | Same **`GET /api/my/content-submissions`** (face-scoped via `faceScope`); **`MySubmissionsScreen`** + **`MySubmissionDetailScreen`** (read-only detail from list cache). **No** native `?edit=1` / edit form / delete yet — portal remains canonical for mutations until ported. |
 | **Notifications** | `IContentModerationNotifier` writes `Notification` rows for creator + super-admins on submit and when AI exhausts retries. |
 | **Retention** | `ContentRetentionCleanupService` + hosted worker: optional `Retention:` config; dry-run vs execute; redacts internal AI trace fields after policy delay; `ModerationActorType.Retention` audit events. |
 | **Tests** | Backend integration tests for visibility, bulk, retention, alerts, **prompt-injection defenses** (`ContentModerationTests`, `ContentModerationSecurityEdgeTests`); FE/admin helpers covered by Vitest; AI `ReviewContent` + `moderation_input_sanitize` tests in `many_faces_ai`; mobile grouping + response normalisation in `many_faces_mobile` Jest (`contentModeration`, `myContentSubmissionsApi`). |

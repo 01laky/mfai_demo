@@ -14,7 +14,7 @@
 
 **(required)** Read **§1** (as-is) and **§2** (target layout) before moving files; read **§23** (rollout order) so parity work does not recreate flat files; complete **§13** (master checklist) and **§16** (implementing-agent phases) for Track A; apply **§6–§9** (namespaces), **§18–§21** (large screens, tests, guards, DX); for Track B use **§24–§27** in separate PRs; update **§12** documentation; obey the [**engagement exit rule**](#agent-engagement-exit-rule) for the **agreed track** (A only, or A + named §27 slices).
 
-> **Status (2026-05-16):** Track A and **§27.1–§27.4** Track B slices are **implemented** on `many_faces_mobile` `main` (see [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md)). **§24.6** settings shell + language + sign out (`[x]`). **§26** `yarn validate` + `jest.config.js` (`[x]`). Full settings tabs / messenger / SignalR remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
+> **Status (2026-05-16):** Track A and **§27.1–§27.4** Track B slices are **implemented** on `many_faces_mobile` `main` (see [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md)). **§24.6** settings shell + language + sign out (`[x]`). **§26** `yarn validate` + `jest.config.js` (`[x]`). **`ProfileMeScreen`** ships portal **`ProfilePage`** parity (auth JWT user). Full settings tabs / messenger / SignalR remain **parity prompt** scope. **§1** (“Today”) and parts of **§24–§25** describe the **pre-rollout inventory** — for current layout use [`many_faces_mobile/README.md`](../../many_faces_mobile/README.md), [`src/components/README.md`](../../many_faces_mobile/src/components/README.md), [`docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md), and [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc).
 
 **Precedent (web SPAs — portal rolled out, admin spec ready):**
 
@@ -135,7 +135,7 @@ find many_faces_mobile/src/theme -maxdepth 1 -name '*.tsx' | wc -l
 
 **Inventory — `src/screens/`:**
 
-`SplashOrLoadingScreen`, `ConfigErrorScreen`, `HomePlaceholderScreen`, `LoginScreen`, `RegisterScreen`, `RegisterCompleteScreen`, `PlaceholderScreen`, `FacePageScreen`, `MySubmissionsScreen`, `ProfileMePlaceholderScreen`, `ChatAiPlaceholderScreen`, `ChatRoomPlaceholderScreen`.
+`SplashOrLoadingScreen`, `ConfigErrorScreen`, `HomePlaceholderScreen`, `LoginScreen`, `RegisterScreen`, `RegisterCompleteScreen`, `PlaceholderScreen`, `FacePageScreen`, `MySubmissionsScreen`, `MySubmissionDetailScreen`, `ProfileMeScreen`, `ChatAiPlaceholderScreen`, `ChatRoomPlaceholderScreen`. _(§1 pre-rollout snapshot — flat `src/screens/*.tsx` before colocation; live tree uses colocated folders.)_
 
 **Inventory — `src/grid/`:**
 

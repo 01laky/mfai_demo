@@ -14,11 +14,11 @@ Each UI unit lives in its own directory (`ComponentName/ComponentName.tsx` + `in
 
 | Namespace         | Examples                                                       |
 | ----------------- | -------------------------------------------------------------- |
-| `src/screens/`    | `LoginScreen/`, `FacePageScreen/`, `MySubmissionDetailScreen/` |
+| `src/screens/`    | `LoginScreen/`, `FacePageScreen/`, `MySubmissionsScreen/`, `MySubmissionDetailScreen/`, `ProfileMeScreen/` |
 | `src/components/` | `AppShell/`, `ShellDrawer/`, `wall-tickets/*`                  |
 | `src/grid/`       | `MobilePageLayout/`, `blocks/*`, `parseGridSchema.ts`          |
 | `src/theme/`      | `AnimatedShellGradient/`                                       |
-| `src/features/`   | `settings/SettingsSidePanel*` (scaffold; not in shell yet)     |
+| `src/features/`   | `settings/` — panel in `AppShell` (`LanguageSwitcher`, sign out) |
 
 **Verify** (from monorepo root):
 

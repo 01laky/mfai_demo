@@ -82,7 +82,7 @@ The mobile submodule uses **Expo**, **TypeScript**, and **Yarn 4** via Corepack 
 - **Start here:** [`mobile-expo-development.md`](./mobile-expo-development.md) — prerequisites, `corepack enable`, `yarn install`, `yarn start`, Expo Go, env vars, submodule pointer bumps.
 - **Colocation:** `node scripts/verify-mobile-component-colocation.mjs` (+ `--imports`) from monorepo root; [`.cursor/rules/mobile-component-folders.mdc`](../../.cursor/rules/mobile-component-folders.mdc); [`docs/readmes/mobile-overview.md`](../readmes/mobile-overview.md).
 - **Implementation prompts:** [`mobile-phase1-foundation-agent-prompt.md`](../prompts/mobile-phase1-foundation-agent-prompt.md) (foundation), [`fe-mobile-component-folder-colocation-agent-prompt.md`](../prompts/fe-mobile-component-folder-colocation-agent-prompt.md) (**implemented** — folder layout + Track B slices).
-- **REST parity inventory:** [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md) (submodule) — keep in sync when adding mobile API clients.
+- **Parity inventories (submodule):** [`rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md) (REST / grid blocks), [`portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) (routes) — update when adding clients or screens.
 - **Quality:** `cd many_faces_mobile && yarn validate` (typecheck + lint + format + test); `./scripts/verify-ci.sh --quick` mirrors CI.
 
 ## Python (many_faces_ai)

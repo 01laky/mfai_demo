@@ -70,7 +70,8 @@ Implementers should mirror behaviour and data contracts, not necessarily file na
 | Grid engine | `src/grid/MobilePageLayout/` + `src/grid/parseGridSchema.ts`        |
 | Grid blocks | `src/grid/blocks/*` + `blockRegistry.ts`                            |
 | Wall / ads  | `src/components/wall-tickets/`                                      |
-| Features    | `src/features/settings/` (panel scaffold; not mounted in shell yet) |
+| Features    | `src/features/settings/` (`SettingsSidePanel` from `AppShell`; language + sign out) |
+| Screens     | `ProfileMeScreen/` — portal `ProfilePage` parity (auth user from JWT)               |
 
 See [`many_faces_mobile/src/components/README.md`](../../many_faces_mobile/src/components/README.md) and [`docs/readmes/mobile-overview.md`](../readmes/mobile-overview.md).
 
@@ -110,7 +111,9 @@ Details: [`git-submodules.md`](./git-submodules.md).
 
 - [`development.md`](./development.md) — monorepo scripts, `ci-local.sh`, Node versions.
 - [`authentication-and-sessions.md`](./authentication-and-sessions.md) — OAuth2 / JWT for login parity.
-- [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md) — full-stack moderation story; mobile exposes a **read-only My submissions** list (`GET /api/my/content-submissions`) — see guide table row **Creator mobile**. Native detail / edit / grid moderation UIs remain incremental.
+- [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md) — moderation pipeline; mobile **list + read-only detail** (`MySubmissionsScreen`, `MySubmissionDetailScreen`). Edit / `?edit=1` / delete remain portal-first.
+- [`many_faces_mobile/docs/portal-route-parity.md`](../../many_faces_mobile/docs/portal-route-parity.md) — portal URL ↔ React Navigation (canonical route table).
+- [`many_faces_mobile/docs/rest-parity-matrix.md`](../../many_faces_mobile/docs/rest-parity-matrix.md) — REST / grid block inventory.
 
 ## 8. Troubleshooting
 
@@ -120,4 +123,4 @@ Details: [`git-submodules.md`](./git-submodules.md).
 | TLS errors to local `https://localhost:8001` | Device may not trust dev cert; use LAN IP + dev cert trust or HTTP-only dev URL if supported. |
 | Stale submodule                              | `git submodule update --init --recursive` from monorepo root.                                 |
 
-When in doubt, update **`many_faces_mobile/README.md`** with the exact commands and env vars your team uses after phase-1 lands.
+When in doubt, update **`many_faces_mobile/README.md`** with the exact commands and env vars your team uses.
