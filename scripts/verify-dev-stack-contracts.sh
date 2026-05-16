@@ -25,6 +25,11 @@ for f in \
   bash -n "$SCRIPTS_DIR/$f" || fail "bash -n failed: $f"
 done
 
+echo "🔎 verify-dev-stack-contracts: node colocation scripts exist..."
+for f in verify-portal-component-colocation.mjs colocate-portal-component.mjs; do
+  [ -f "$SCRIPTS_DIR/$f" ] || fail "missing $f"
+done
+
 echo "🔎 verify-dev-stack-contracts: start-all-dev ENABLE_* defaults (must be on unless =0)..."
 grep -q 'ENABLE_ELASTICSEARCH:-1' "$SCRIPTS_DIR/start-all-dev.sh" \
   || fail "start-all-dev.sh missing ENABLE_ELASTICSEARCH:-1 default"

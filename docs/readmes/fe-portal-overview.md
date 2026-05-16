@@ -8,6 +8,27 @@ Typical dev URL: **http://localhost:8081**.
 
 **Performance / TanStack Query / ACL notes** (for PRs and audits): [`many_faces_portal/docs/performance-and-query-appendix.md`](../../many_faces_portal/docs/performance-and-query-appendix.md).
 
+**Component folder colocation** (structure rollout): each UI block lives in its own directory (`ComponentName/ComponentName.tsx` + SCSS + `index.ts`). Spec: [`docs/prompts/fe-portal-component-folder-colocation-agent-prompt.md`](../prompts/fe-portal-component-folder-colocation-agent-prompt.md). Verify: `node scripts/verify-portal-component-colocation.mjs` from monorepo root.
+
+```mermaid
+flowchart TB
+  subgraph feature [Feature or route]
+    Page[pages/HomePage]
+  end
+  subgraph comp [Component folder]
+    Index[index.ts public exports]
+    Tsx[Header.tsx]
+    Scss[Header.scss]
+    Hook[useHeaderMenu.ts internal]
+    Types[Header.types.ts internal]
+  end
+  Page --> Index
+  Index --> Tsx
+  Tsx --> Scss
+  Tsx --> Hook
+  Tsx --> Types
+```
+
 ---
 
 ## 1. Sign-in and registration

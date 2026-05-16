@@ -1,0 +1,17 @@
+---
+description: many_faces_portal — colocated component folders (TSX + SCSS + index.ts)
+globs: many_faces_portal/src/components/**/*
+alwaysApply: false
+---
+
+# Portal component folders
+
+When adding or moving UI in **`many_faces_portal`**:
+
+- **Do not** create flat pairs like `src/components/MyWidget.tsx` + `MyWidget.scss` side by side.
+- **Do** create `src/components/MyWidget/MyWidget.tsx`, `MyWidget.scss`, and `index.ts` exporting the public component.
+- Grid blocks: `src/components/grid/MyBlock/` with the same pattern.
+- Keep **component-private** hooks/utils/types inside the folder; shared code stays in `src/hooks/`, `src/utils/`, `src/contexts/`.
+- **`index.ts`** exports only the intentional public API.
+
+Spec: `docs/prompts/fe-portal-component-folder-colocation-agent-prompt.md`
