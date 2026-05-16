@@ -1,0 +1,19 @@
+---
+description: many_faces_admin — colocated component folders (TSX + SCSS + index.ts)
+globs: many_faces_admin/src/components/**/*,many_faces_admin/src/pages/**/*,many_faces_admin/src/routes/**/*
+alwaysApply: false
+---
+
+# Admin component folders
+
+When adding or moving UI in **`many_faces_admin`**:
+
+- **Do not** create flat pairs like `src/components/MyWidget.tsx` + `MyWidget.scss` side by side.
+- **Do** create `src/components/MyWidget/MyWidget.tsx`, `MyWidget.scss`, and `index.ts` exporting the public component.
+- Dashboard widgets: `src/components/dashboard/MyWidget/` with the same pattern.
+- Page-editor widgets: `src/components/page-editor/MyWidget/`.
+- Pages: `src/pages/MyPage/MyPage.tsx` + optional SCSS + `index.ts` (export page only).
+- Page-private splits live inside the page folder; **do not** export them from the page `index.ts`.
+- Shared form SCSS: `src/styles/forms/` — not under a single page folder.
+
+Spec: `docs/prompts/fe-admin-component-folder-colocation-agent-prompt.md`

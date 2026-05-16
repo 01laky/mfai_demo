@@ -109,6 +109,10 @@ jobs:
         with:
           workspace: many_faces_admin
 
+      - name: Verify admin component folder colocation
+        working-directory: .
+        run: node scripts/verify-admin-component-colocation.mjs
+
       - name: Dependency audit (informational)
         run: yarn npm audit || true
 

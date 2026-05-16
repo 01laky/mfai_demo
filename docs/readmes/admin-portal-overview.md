@@ -6,6 +6,31 @@ The admin app manages the whole platform: users, faces (tenants), pages, and con
 
 Typical dev URL: **http://localhost:8082**.
 
+**Component folder colocation** (structure rollout): each UI block lives in its own directory (`ComponentName/ComponentName.tsx` + SCSS + `index.ts`). Spec: [`docs/prompts/fe-admin-component-folder-colocation-agent-prompt.md`](../prompts/fe-admin-component-folder-colocation-agent-prompt.md). Verify: `node scripts/verify-admin-component-colocation.mjs` from monorepo root.
+
+```mermaid
+flowchart TB
+  subgraph route [Admin route]
+    Page[pages/DashboardPage]
+  end
+  subgraph comp [Component folder]
+    Index[index.ts]
+    Tsx[Sidebar.tsx]
+    Scss[Sidebar.scss]
+  end
+  subgraph dash [dashboard namespace]
+    Widget[dashboard/DashboardCharts]
+  end
+  subgraph editor [page-editor namespace]
+    GLE[page-editor/GridLayoutEditor]
+  end
+  Page --> Widget
+  Page --> GLE
+  Page --> Index
+  Index --> Tsx
+  Tsx --> Scss
+```
+
 **Performance / TanStack Query / ACL notes** (for PRs and audits): [`many_faces_admin/docs/performance-and-query-appendix.md`](../../many_faces_admin/docs/performance-and-query-appendix.md).
 
 ---
