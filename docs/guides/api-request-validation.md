@@ -2,6 +2,19 @@
 
 Centralized input validation for `many_faces_backend` (`BeDemo.Api`) using **FluentValidation 11.x**. One validator class per request or query schema; controllers stay thin for authz and domain rules.
 
+## Request flow
+
+```mermaid
+flowchart LR
+  Client -->|HTTP| Middleware
+  Middleware --> Controller
+  Controller -->|auto FV| Validator
+  Validator -->|fail| Problem400[400 ValidationProblemDetails]
+  Validator -->|ok| Action[Action + domain rules]
+  OAuthToken[POST /api/oauth2/token] --> ManualFV[Manual ValidateAsync]
+  ManualFV --> OAuth400[400 OAuth2ErrorResponse]
+```
+
 ## Layout
 
 | Path | Purpose |
@@ -47,7 +60,8 @@ Clients should read `errors[field][0]` for forms, or `errorCode` when present (`
 | `val_face_id_invalid` | `faceId` ≤ 0 when required |
 | `val_push_platform_invalid` | Push platform not ios/android |
 | `val_platform_invalid` | Registration platform not mobile/empty |
-| `val_file_required` / `val_file_format` / `val_file_empty` | Upload validation |
+| `val_file_required` / `val_file_format` / `val_file_empty` / `val_file_content_type` | Upload validation |
+| `val_sort_order_range` | Story image `sortOrder` not in 0–9 |
 | `val_password_min_length` | Password below Identity minimum on admin create/update |
 | `val_confidence_range` | Moderation min/max confidence inconsistent |
 
