@@ -135,7 +135,7 @@ sequenceDiagram
 | ----------------- | --------------------------------------------------------- |
 | Omitted           | Treated like “normal” login → **short** JWT lifetime.     |
 | `false` or `null` | Same → **short** lifetime.                                |
-| **`true`**        | **Long** JWT lifetime (`Jwt:ExpiresInMinutesRememberMe`). |
+| **`true`**        | **Long** JWT lifetime (`Jwt:ExpiresInMinutesRememberMe`, **7 days** / 10 080 minutes in default config). |
 
 The server uses **only** `RememberMe == true` (strict). This matches the frontends, which send `rememberMe: true` only when the checkbox is checked (`buildPasswordGrantTokenRequest`).
 
@@ -157,7 +157,7 @@ In `BeDemo.Api/appsettings.json` (and overridable via environment / secrets):
 | Key                                                                      | Role                                                                                                                                      |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **`Jwt:ExpiresInMinutes`**                                               | Default access-token lifetime when **`rememberMe` is not true** (typical “browser session” length).                                       |
-| **`Jwt:ExpiresInMinutesRememberMe`**                                     | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). In local development configs this can be very large; tune down for production. |
+| **`Jwt:ExpiresInMinutesRememberMe`**                                     | Access-token lifetime when **`rememberMe` is true** (“stay signed in”). Default **10 080** minutes (**7 days**). Startup validation rejects values above 7 days (SHV2 **BE-A2**, `JwtTokenLifetimeOptions`). |
 | **`Jwt:Issuer`**, **`Jwt:Audience`**                                     | Standard JWT validation; must match between token creation and validation.                                                                |
 | **`Jwt:RefreshTokenDaysSession`** / **`Jwt:RefreshTokenDaysRememberMe`** | Absolute lifetime (days) for stored refresh rows after password grant (shorter vs remember-me).                                           |
 
@@ -165,7 +165,7 @@ In `BeDemo.Api/appsettings.json` (and overridable via environment / secrets):
 
 ```text
 Jwt__ExpiresInMinutes=60
-Jwt__ExpiresInMinutesRememberMe=43200
+Jwt__ExpiresInMinutesRememberMe=10080
 ```
 
 (`__` is the usual .NET env nesting separator.)
@@ -341,7 +341,7 @@ flowchart TB
 
 1. **“Stay signed in”** keeps a **valid JWT** on the device longer. On a **shared computer**, that is higher risk than a short session.
 2. Tokens in **`localStorage`** are readable by JavaScript (XSS surface). **HttpOnly cookies** would be a different architecture; not what this stack uses.
-3. **Tune** `Jwt:ExpiresInMinutesRememberMe` per environment; local development values may be extremely large for convenience.
+3. **`Jwt:ExpiresInMinutesRememberMe`** must stay ≤ **7 days** (10 080 minutes); refresh persistence uses **`Jwt:RefreshTokenDaysRememberMe`** (default **90** days) when remember-me is selected.
 4. **Refresh tokens** are **rotated** server-side; clients must replace stored refresh material on each refresh response.
 
 ---

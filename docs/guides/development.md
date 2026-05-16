@@ -264,7 +264,7 @@ Each of `many_faces_backend`, `many_faces_portal`, `many_faces_admin`, **`many_f
 
 ## Authentication, JWT, and “stay signed in” (`rememberMe`)
 
-**Purpose:** Users log in through **`POST /api/oauth2/token`** (password grant). The optional **`rememberMe`** flag does **not** create a separate session type — it only selects a **longer JWT lifetime** from configuration (`Jwt:ExpiresInMinutesRememberMe` vs `Jwt:ExpiresInMinutes`). Both **`many_faces_portal`** and **`many_faces_admin`** store the access token in **`localStorage`**, decode **`exp`** in **`jwtUtils.isTokenExpired`**, and clear storage when the token is invalid so the UI matches API **401** behaviour.
+**Purpose:** Users log in through **`POST /api/oauth2/token`** (password grant). The optional **`rememberMe`** flag does **not** create a separate session type — it only selects a **longer JWT lifetime** from configuration (`Jwt:ExpiresInMinutesRememberMe` = **7 days** by default vs `Jwt:ExpiresInMinutes` = **1 hour**). Opaque refresh persistence uses **`Jwt:RefreshTokenDaysRememberMe`** (**90** days) when remember-me was selected (SHV2 **BE-A2**). Both **`many_faces_portal`** and **`many_faces_admin`** store the access token in **`localStorage`**, decode **`exp`** in **`jwtUtils.isTokenExpired`**, and clear storage when the token is invalid so the UI matches API **401** behaviour.
 
 **Why it matters:** Misunderstanding `rememberMe` leads to wrong ops expectations. With **`rememberMe: true`**, the API issues a **longer-lived access JWT**; **refresh tokens** are also supported server-side (rotation, single-use) — see `OAuthRefreshTokenStore` and [acl-and-capabilities.md](./acl-and-capabilities.md).
 
