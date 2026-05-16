@@ -493,7 +493,7 @@ Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `P
 - [ ] `LocalizationControllerTests` — `portal`/`admin`/`mobile` return 200 + expected keys sample
 - [ ] **`GET /api/localization/portal` without face prefix** returns 200 (routing exempt §3.4)
 - [x] Rate limit: excess requests → **429** §4.5 (`LocalizationRateLimit429Tests`)
-- [ ] Snapshot or golden-file test: exported JSON for one key path matches legacy `en.json` subtree (portal sample)
+- [x] Snapshot or golden-file test: exported JSON for one key path matches legacy `en.json` subtree (portal sample — `portal-auth-flow-golden.en.json`, `LocalizationPortalGoldenTests`)
 - [ ] `ResourceJsonFlattenerTests` — nesting edge cases
 - [ ] Unknown app → 404
 - [ ] **Regression:** `PagesController` `GET/PUT …/translations` and any `PageRouteTranslation` tests still pass — **do not delete**

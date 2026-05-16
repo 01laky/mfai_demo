@@ -216,9 +216,10 @@ Do not call `CultureInfo.GetCultureInfo("cz")` — it is not a standard culture.
 
 1. Edit `many_faces_backend/BeDemo.Api/Localization/{Portal|Admin|Mobile}/*.resx`.
 2. Run key parity check: `node scripts/verify-localization-key-parity.mjs` (or `dotnet test` filter `LocalizationKeyParity`).
-3. **Restart** the API (`dotnet watch run` or container restart) — `.resx` changes are not picked up by Vite/Expo HMR.
-4. Confirm new `version` in `GET /api/localization/{app}`.
-5. Hard refresh portal/admin or restart Expo; clear `localStorage` i18n cache if needed.
+3. Portal auth copy regression: `dotnet test --filter FullyQualifiedName~LocalizationPortalGolden` (golden file `many_faces_backend/BeDemo.Api.Tests/Fixtures/portal-auth-flow-golden.en.json`). To refresh after intentional English copy changes: `REGENERATE_LOCALIZATION_GOLDEN=1 dotnet test --filter RegeneratePortalAuthFlowGolden` from `many_faces_backend/`.
+4. **Restart** the API (`dotnet watch run` or container restart) — `.resx` changes are not picked up by Vite/Expo HMR.
+5. Confirm new `version` in `GET /api/localization/{app}`.
+6. Hard refresh portal/admin or restart Expo; clear `localStorage` i18n cache if needed.
 
 ---
 

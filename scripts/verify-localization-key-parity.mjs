@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const backend = path.join(root, 'many_faces_backend');
 const filter =
-  'FullyQualifiedName~LocalizationKeyParity|FullyQualifiedName~ResourceJsonUnflattener';
+  'FullyQualifiedName~LocalizationKeyParity|FullyQualifiedName~ResourceJsonUnflattener|FullyQualifiedName~LocalizationPortalGolden';
 
 const result = spawnSync(
   'dotnet',
