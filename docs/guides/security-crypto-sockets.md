@@ -6,6 +6,8 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 **Security hardening v2 (2026-05-16):** Worker/AI/ES/Redis trust boundary, FE CSP/XSS, uploads, PII logging, hardened compose, and moderation **PI-*** tasks — **[`../prompts/security-hardening-v2-agent-prompt.md`](../prompts/security-hardening-v2-agent-prompt.md)**. This guide remains the **K/J/O/T/S/H/D/M backlog** and **v1 (2026-04-11) completion record**; do not duplicate v2 phase checklists here.
 
+**v2 delivered (examples, see prompt for full list):** **PI-7** — `ContentAiReviewService` no longer logs raw invalid Redis AI review JSON; use `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog` (length + `sha256Prefix` + parsed ids only). See [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md).
+
 **Related:** [acl-and-capabilities.md](./acl-and-capabilities.md) (authorization / capabilities); this file focuses on **transport + token + key lifecycle**.
 
 ### Diagram: backlog layers (depends-on overview)

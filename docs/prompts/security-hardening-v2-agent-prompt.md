@@ -131,7 +131,7 @@ flowchart LR
 - [ ] **PI-4** Mirror sanitization in `many_faces_ai` for fields sent to any LLM path.
 - [ ] **PI-5** Corpus tests: every line in `prompt_injection_corpus.txt` → safe stored state (no unsafe approve persistence).
 - [ ] **PI-6** Zero-width / homoglyph / mixed-script cases in edge tests.
-- [ ] **PI-7** Redact/truncate user content in `ProcessQueuedReviewAsync` invalid-payload logs (align with `RedactForAudit`).
+- [x] **PI-7** Redact/truncate user content in `ProcessQueuedReviewAsync` invalid-payload logs (align with `RedactForAudit`) — `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog`, `ContentModerationPayloadLogRedactionTests`.
 - [ ] **PI-8** Admin/portal: moderation preview **text-only** (no `dangerouslySetInnerHTML` on untrusted fields).
 - [ ] **PI-9** Docs: untrusted vs trusted operator AI subsection in `ai-assisted-content-approval.md`.
 - [ ] **PI-10** CI: run `ContentModerationSecurityEdgeTests` in required backend job.
