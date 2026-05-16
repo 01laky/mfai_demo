@@ -75,7 +75,7 @@ The raster depicts a **symmetrical kitsune (fox) mask**: white face, red forehea
 
 - Preserve **recognizable ears + forehead stripes**; avoid cropping the chin off.
 - Prefer **slight inner padding** (same philosophy as mobile `pad-app-icons.mjs`, ~72% safe zone on 1024 canvas) so circular/squircle masks do not clip ears.
-- Use **opaque white** or **light** favicon background for `.ico` / PNG if transparency renders poorly in older browsers; document the choice in the PR.
+- Use **transparent** PNG / ICO backgrounds for browser tab favicons (mask only, no white plate). Native **app icon** (`icon.png`) may keep a white canvas for iOS home-screen masks.
 
 ---
 

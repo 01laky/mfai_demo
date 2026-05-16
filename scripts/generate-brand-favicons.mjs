@@ -30,7 +30,7 @@ const toIco = require('to-ico');
 
 const SOURCE = path.join(repoRoot, 'many_faces_mobile/assets/logo-raster-source.png');
 const SAFE_RATIO = 0.72;
-const BG = '#ffffff';
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
 const TARGETS = [
   { name: 'many_faces_portal', publicDir: path.join(repoRoot, 'many_faces_portal/public') },
@@ -46,7 +46,7 @@ async function buildPaddedSquare(size) {
     .toBuffer();
 
   return sharp({
-    create: { width: size, height: size, channels: 4, background: BG },
+    create: { width: size, height: size, channels: 4, background: TRANSPARENT },
   })
     .composite([{ input: resized, gravity: 'center' }])
     .png()
