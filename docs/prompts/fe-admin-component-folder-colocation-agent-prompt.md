@@ -65,6 +65,7 @@
 | **§5** | `pages/`, `routes/`, layout shell | | |
 | **§6** | Dashboard subsystem | | |
 | **§7** | Design system (`radix/`) | | |
+| **§7.2** | Existing `radix/index.ts` mega-barrel | | |
 | **§8** | Global styles | | |
 | **§9** | Phased delivery / PR split | | |
 | **§10** | Verification | | |
@@ -77,7 +78,7 @@
 | **§17** | `page-editor/` namespace | | |
 | **§18** | `tables/` namespace (optional) | | |
 | **§19** | `routes/` colocation | | |
-| **§20** | Large pages — private sub-components | | |
+| **§20** | Large pages / components — private sub-components | | |
 | **§21** | Colocated tests | | |
 | **§22** | Import boundaries (ESLint) | | |
 | **§23** | Vite `manualChunks` verification | | |
@@ -104,6 +105,9 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 | **Dashboard widgets** | `src/components/dashboard/*` | ~4 TSX (charts, metrics table, AI stats panel, moderation widget) — flat inside `dashboard/` | Same issue; feature area already grouped but not per-widget folders |
 | **Radix wrappers** | `src/components/radix/*` | Button, Input, FormField, Table (+ SCSS where present) | Group folder OK; each control should be **its own subfolder** |
 | **Pages** | `src/pages/*.tsx` (+ sibling `*.scss`) | ~20 TSX, mostly flat | **Phase 4** (§9) — same rules as components |
+| **`HomePage` / `HomePageProtected`** | `HomePage.tsx`, `HomePageProtected.tsx`, `HomePage.scss` | Routed page imports **shared** `HomePage.scss`; `HomePage.tsx` not in routes | **Phase 4** decision §4.7 — avoid orphan SCSS / dead file |
+| **`RegistrationInvitesPage`** | `src/pages/RegistrationInvitesPage.tsx` | No SCSS; uses `api/services/registrationInvitesAdminApi.ts` | Colocate page folder only; **do not** move custom API into page folder (§3) |
+| **`radix/index.ts`** | `src/components/radix/index.ts` | Re-exports all `@radix-ui/*` + custom wrappers | Phase 1 policy §7.2 — do not break importers |
 | **Routing glue** | `src/routes/AppRoutes.tsx`, `lazyAdminPages.tsx`, `useAdminRoutePaths.ts` | Imports pages/components | Update import paths when targets move |
 | **App entry** | `src/App.tsx` | Thin provider shell | Update imports only; **do not** move `App.tsx` into `components/` |
 | **Contexts / providers** | `src/contexts/*`, `src/providers/*` | Shared app state | **Keep** flat at layer root |
@@ -147,6 +151,8 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 
 **Per-page SCSS vs shared form partials:** Most pages also have a **paired** stylesheet at `src/pages/` root today (e.g. `DashboardPage.scss`, `LoginPage.scss`, `ChatPage.scss`). In Phase 4, move each **with its page** into `pages/<PageName>/<PageName>.scss` and keep the `import './<PageName>.scss'` pattern inside the page TSX. Only the three **shared form** files in the table above go to `src/styles/forms/` (§4.4) — do not put them under a single create/edit page folder.
 
+**`HomePage` / `HomePageProtected` (Phase 4 — §4.7):** `HomePageProtected` is routed and imports `./HomePage.scss`. `HomePage.tsx` exists but is **not** referenced in `AppRoutes` or `lazyAdminPages` (toast demo / legacy). Before colocation, run `rg "HomePage" many_faces_admin/src` and record the PR decision: delete unused `HomePage.tsx`, or colocate both under one folder with shared SCSS, or restore routing — **do not** leave flat `HomePage.scss` at `pages/` root after Phase 4.
+
 **Positive patterns to preserve:**
 
 - SCSS imported **from the component file** (`import './Header.scss'`) — path becomes same-folder import inside `Header/Header.tsx`.
@@ -161,6 +167,9 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 | `EditFacePage.tsx` | ~320 | §20.2 — same as edit page where mirrored |
 | `ChatPage.tsx` | ~240 | §20.3 — optional `useAdminAiChat.ts` (page-private SignalR) |
 | `GridLayoutEditor.tsx` | ~340 | Stays one folder under `page-editor/` unless already split |
+| `FacesTable.tsx` | ~300 | Optional §20.5 split when touching file |
+| `ComponentPickerModal.tsx` | ~291 | Optional §20.5 |
+| `FaceWallTicketsPage.tsx` | ~278 | Optional §20.5 |
 
 **Audit tasks (start of engagement):**
 
@@ -172,6 +181,9 @@ find many_faces_admin/src/pages -maxdepth 1 -name '*.tsx' | wc -l
 - [ ] Confirm `lazyAdminPages.tsx` lazy list matches §1 page inventory.
 - [ ] Note cross-page SCSS imports (shared form partials §4.4; page-to-page SCSS) — update paths in the same Phase 4 PR.
 - [ ] List tests under `src/components/__tests__/` to colocate in Phase 2 (§21).
+- [ ] `rg "HomePage" many_faces_admin/src` — document §4.7 decision in PR.
+- [ ] Note `src/routes/index.ts` barrel (`App.tsx` imports `from './routes'`) — update re-exports after §19.
+- [ ] Confirm `vitest.config.ts` has `@` alias but app may not (§24) — test import style for colocated tests.
 
 ---
 
@@ -318,6 +330,9 @@ Update `AppRoutes.tsx` (and any other importers) to `from './RouteLoadingFallbac
 | Component-only utils | `src/utils/*` used in 3+ places |
 | Component-only types | `src/api/types/*` |
 | Colocated tests (`ComponentName.test.tsx`) | Shared test utilities under `src/test/` or `src/utils/__tests__` when used by many suites |
+| — | `src/api/**` generated OpenAPI client (ESLint-ignored) — **never** colocate or hand-edit during this rollout |
+| — | `src/api/services/*AdminApi.ts` (e.g. `registrationInvitesAdminApi.ts`) — **stay** in `api/services/`; pages only update import paths if needed |
+| — | `src/i18n/*` (`fetchLocalizationBundle('admin')`) — remote bundles, unchanged |
 | Dashboard widget-specific chart helpers | Cross-page table formatters used on many screens |
 | Page-private sub-components (§20) — **not exported** from page `index.ts` | Shared moderation helpers in `src/utils/contentModeration.ts` |
 | Page-private hooks (e.g. `ChatPage/useAdminAiChat.ts`) | `src/hooks/api/*` used on multiple routes |
@@ -397,6 +412,8 @@ import '../../styles/forms/UserFormPage.scss';
 | Renaming exported components in the same PR | Explodes diff; structure-only first |
 | Deep-importing `pages/Foo/Foo.tsx` or another page’s private split | Breaks encapsulation; use barrels + §22 |
 | Exporting page-private splits from `pages/Foo/index.ts` | Leaks internals; couples routes |
+| Editing or moving files under `src/api/**` (generated) | Out of scope; breaks codegen workflow |
+| Colocating `*AdminApi.ts` into `pages/` | API layer stays shared; only page TSX moves |
 
 ### 4.6 `LoginPage` — eager route (**required**)
 
@@ -408,6 +425,21 @@ After Phase 4:
 - [ ] `AppRoutes.tsx` still uses a **static** import of `LoginPage` (not `React.lazy`).
 - [ ] All localized login paths in `AppRoutes` still render the same component.
 
+### 4.7 `HomePage` / `HomePageProtected` shared SCSS (**required** in Phase 4)
+
+**Today:** `HomePageProtected.tsx` imports `./HomePage.scss`. `HomePage.tsx` also imports `./HomePage.scss` but is **not** routed.
+
+**Required PR decision (pick one and document in §0.2):**
+
+| Option | Action |
+| ------ | ------ |
+| **A (recommended)** | Delete unused `HomePage.tsx` if product confirms dead code; colocate `HomePageProtected/HomePageProtected.tsx` + `HomePage.scss` + `index.ts`. |
+| **B** | Colocate both under `pages/HomePageProtected/`; move SCSS into that folder; keep or remove `HomePage.tsx` per product. |
+| **C** | Restore `HomePage` to routing — **out of scope** unless product explicitly expands the PR. |
+
+- [ ] After Phase 4: no flat `HomePage.scss` at `src/pages/` root.
+- [ ] `rg "pages/HomePage\\.scss" many_faces_admin/src` — imports point at colocated or `styles/` path only.
+
 ---
 
 ## 5. `pages/`, `routes/`, layout shell (**required**)
@@ -417,13 +449,14 @@ After Phase 4:
 | **`src/pages/`** | **Phase 4** (§9) — `pages/LoginPage/LoginPage.tsx` + optional SCSS + `index.ts`; large-page splits §20. |
 | **`src/routes/`** | Update imports when `pages/` or `components/` move; colocate `RouteLoadingFallback/` §19; **no** new business logic. |
 | **`src/components/AdminLayout.tsx`** | Colocate to `AdminLayout/` in Phase 2 (layout chrome is still a component). |
-| **`src/App.tsx`** | Stays at `src/App.tsx` — providers + `AppRoutes` only. |
+| **`src/App.tsx`** | Stays at `src/App.tsx` — imports `AppRoutes` via `src/routes/index.ts` barrel (`from './routes'`) — **do not** break that export surface. |
 
 **No `src/features/` or `src/shell/`** in admin today — mark **N/A** in PR §0.2 unless product adds them later.
 
 ### 5.1 Routes checklist (**required** — Phase 2 + 4)
 
 - [ ] `RouteLoadingFallback/` colocated (§19).
+- [ ] `src/routes/index.ts` re-exports `RouteLoadingFallback` from `./RouteLoadingFallback` (folder barrel) so `App.tsx` unchanged.
 - [ ] `AppRoutes.tsx` imports updated for all moved components/pages.
 - [ ] `lazyAdminPages.tsx` — named-export lazy pattern preserved (§4.3).
 - [ ] `LoginPage` remains **eager** in `AppRoutes` (§4.6).
@@ -445,21 +478,31 @@ After Phase 4:
 - [ ] Each primitive gets its own folder (§2.3).
 - [ ] Public imports: `from '../components/radix/Button'` or `from '../radix/Button'` depending on importer depth (via per-primitive `index.ts`).
 
-### 7.1 Optional `radix/index.ts` barrel **(optional** — Phase 1)
+### 7.1 Optional thin barrel for custom wrappers only **(optional** — Phase 1)
 
-Portal exposes `src/components/radix/index.ts` re-exporting custom wrappers. Admin **may** add a thin barrel:
+After each primitive lives in its own folder, admin **may** add **only** custom re-exports to a **new** file (e.g. `radix/custom.ts`) — **do not** duplicate the existing mega-barrel pattern from scratch.
 
-```ts
-export { Button } from './Button';
-export { Input } from './Input';
-export { FormField } from './FormField';
-export { Table } from './Table';
-```
-
-**Do not** re-export the entire `@radix-ui/*` tree from admin unless already present — keep bundle boundaries clear. Respect §2.6 `react-refresh` (barrel = components only).
-
-- [ ] If added: importers may use `from '../components/radix'` for primitives; document in `src/components/README.md`.
+- [ ] If added: document in `src/components/README.md`.
 - [ ] If skipped: mark §0.2 **N/A** for §7.1.
+
+### 7.2 Existing `radix/index.ts` mega-barrel (**required** — Phase 1 decision)
+
+**Today:** `src/components/radix/index.ts` re-exports **many** `@radix-ui/react-*` namespaces **and** custom `Button` / `Input` / `FormField` / `Table`. This predates per-primitive folders.
+
+**Phase 1 must record one approach in the PR (structure-only):**
+
+| Approach | Action |
+| -------- | ------ |
+| **A (minimal)** | Colocate `Button/`, `Input/`, `FormField/`, `Table/`; **leave** `radix/index.ts` at `radix/` root updating paths to `./Button` etc.; importers using `from '../components/radix'` or `from './radix'` keep working. |
+| **B (split)** | Move namespace re-exports to `radix/vendor.ts` (or `radix-ui-exports.ts`); thin `index.ts` re-exports custom wrappers + `export * from './vendor'` — update importers in a follow-up sub-PR if needed. |
+| **C (direct imports)** | Gradually migrate importers to `from '../components/radix/Button'`; shrink `index.ts` over time — **not** required to finish in Phase 1. |
+
+**Rules:**
+
+- [ ] **Do not** add new `@radix-ui/*` re-exports to `index.ts` during colocation unless product asks.
+- [ ] Respect §2.6: if `react-refresh/only-export-components` fires on `index.ts`, use a **narrow** eslint override on that file only — not global off.
+- [ ] `GridLayoutEditor` today uses `from './radix/Button'` — after `page-editor/` move (Phase 2b), path becomes `from '../radix/Button'` (§17.1).
+- [ ] Phase 1 PR: `yarn validate` green; grep importers of `components/radix` before/after.
 
 ---
 
@@ -483,7 +526,7 @@ Prefer **reviewable PRs**; **commit and push after each phase** when the product
 | ----- | ----- | ------------------ |
 | **0** | (optional) `@/` alias — §24 | `chore(admin): path alias for src imports` |
 | **0.5** | Monorepo helper scripts + verify `--imports` + ESLint boundary rule stub — §16, §22 | `chore(admin): colocation helper scripts` |
-| **1** | `src/components/radix/*` (+ optional `radix/index.ts` §7.1) | `refactor(admin): colocate radix primitives` |
+| **1** | `src/components/radix/*` + §7.2 `radix/index.ts` decision | `refactor(admin): colocate radix primitives` |
 | **2** | Shell + **tables at** `components/<Table>/` + `RouteLoadingFallback/` §19 + colocate tests §21 | `refactor(admin): colocate shell components and tests` |
 | **2b** | `src/components/page-editor/*` §17 | `refactor(admin): colocate page-editor components` |
 | **2c** | (optional) Move `UsersTable/`, `FacesTable/`, `PagesTable/` under `components/tables/` §18 | `refactor(admin): namespace admin tables` |
@@ -504,23 +547,24 @@ Each PR must pass **§10** independently (for its phase gates).
 ## 10. Verification (**required**)
 
 - [ ] `cd many_faces_admin && yarn install --immutable`
-- [ ] `yarn validate`
+- [ ] `yarn validate` — includes `type-check`, `lint`, and **`format:check`** (Prettier on `src/**/*.{ts,tsx,scss}`); run after each phase, not only `yarn build`.
 - [ ] `yarn test` (Vitest)
 - [ ] `yarn build`
-- [ ] **Grep guard:**
+- [ ] **Grep guard** (run from `many_faces_admin/`; expectations depend on phase — see §15):
 
 ```bash
-find src/components -maxdepth 1 -name '*.tsx' | wc -l              # → 0 after Phase 2
+# Phase 2 complete: shell + tables + routes fallback done; page-editor may still be flat at components/ root until Phase 2b
+find src/components -maxdepth 1 -name '*.tsx' | wc -l              # → 0 after Phase 2b (or 3 if page-editor still at root after Phase 2 only)
 find src/components/page-editor -maxdepth 1 -name '*.tsx' | wc -l  # → 0 after Phase 2b
 find src/components/tables -maxdepth 1 -name '*.tsx' 2>/dev/null | wc -l  # → 0 after Phase 2c (if used)
 find src/components/dashboard -maxdepth 1 -name '*.tsx' | wc -l      # → 0 after Phase 3
 find src/pages -maxdepth 1 -name '*.tsx' | wc -l                   # → 0 after Phase 4
-find src/routes -maxdepth 1 -name 'RouteLoadingFallback.tsx' | wc -l  # → 0 after Phase 2 (AppRoutes.tsx, lazyAdminPages.tsx, useAdminRoutePaths.ts stay at routes/ root)
+find src/routes -maxdepth 1 -name 'RouteLoadingFallback.tsx' | wc -l  # → 0 after Phase 2 (AppRoutes.tsx, lazyAdminPages.tsx, useAdminRoutePaths.ts, routes/index.ts stay at routes/ root)
 ```
 
 - [ ] `node scripts/verify-admin-component-colocation.mjs` (and `--imports` on final branch) — §16.2.
-- [ ] §23 Vite chunk spot-check (`yarn build` + inspect `dist/assets` or build log).
-- [ ] Manual smoke: login (**eager** `LoginPage`) → dashboard (charts load) → users list → create/edit user → faces list → **edit face** (gradient + grid editor) → **edit page** (grid + component picker) → content moderation queue → settings → AI chat — UI unchanged.
+- [ ] §23 Vite chunk spot-check (`yarn build` + inspect `dist/assets` or build log; compare **login** route bundle vs dashboard).
+- [ ] Manual smoke: login (**eager** `LoginPage`) → dashboard (charts load) → users list → create/edit user → faces list → **edit face** (gradient + grid editor) → **edit page** (grid + component picker) → content moderation queue → **registration invites** (list loads) → settings → AI chat — UI unchanged.
 
 ---
 
@@ -654,15 +698,17 @@ src/styles/forms/
 
 - [ ] `Button/`, `Input/`, `FormField/`, `Table/` each with `index.ts`.
 - [ ] No flat files left in `radix/`.
-- [ ] (optional) `radix/index.ts` thin barrel §7.1.
+- [ ] §7.2 mega-barrel decision recorded (approach A/B/C).
+- [ ] (optional) §7.1 thin custom-only barrel.
 - [ ] §10 green for this PR.
 
 ### 15.3 Phase 2 — shell + tables + routes helper + tests
 
 - [ ] Shell components colocated: `AdminLayout/`, `Header/`, `Sidebar/`, `GuestRoute/`, `ProtectedRoute/`, `LanguageRouter/`, `LanguageSwitcher/`.
 - [ ] Tables colocated: `UsersTable/`, `FacesTable/`, `PagesTable/` at `src/components/<Table>/` (Phase 2c may move them under `components/tables/`).
-- [ ] **Not** in this phase: `page-editor/*` (Phase 2b), `dashboard/*`, `radix/*`.
-- [ ] `find src/components -maxdepth 1 -name '*.tsx'` → **0** (only namespace subdirs remain).
+- [ ] **Not** in this phase: `page-editor/*` (Phase 2b), `dashboard/*`, `radix/*` (radix done in Phase 1).
+- [ ] After Phase 2 only: `find src/components -maxdepth 1 -name '*.tsx'` may still be **3** (`GridLayoutEditor`, `ComponentPickerModal`, `GradientPicker`) — that is OK until Phase 2b.
+- [ ] After Phase 2b: `find src/components -maxdepth 1 -name '*.tsx'` → **0** (only namespace subdirs remain).
 - [ ] `RouteLoadingFallback/` per §19; `AppRoutes.tsx` import updated.
 - [ ] Tests: `UsersTable.test.tsx` → `UsersTable/UsersTable.test.tsx`, `PagesTable.test.tsx` → `PagesTable/` (or under `tables/` if Phase 2c done first — document order in PR).
 - [ ] Remove or empty `src/components/__tests__/` when last test moved.
@@ -695,8 +741,10 @@ src/styles/forms/
 - [ ] `lazyAdminPages.tsx` and `AppRoutes.tsx` imports still resolve; **`LoginPage` eager** §4.6.
 - [ ] Shared form SCSS in `src/styles/forms/` (§4.4).
 - [ ] **§20.1** `ContentModerationPage` split into private sibling TSX files (required).
+- [ ] **§4.7** `HomePage` / `HomePageProtected` / `HomePage.scss` resolved.
 - [ ] **§20.2** `EditPagePage` / `EditFacePage` optional `sections/` split — implement or N/A in PR.
 - [ ] **§20.3** `ChatPage` optional `useAdminAiChat.ts` — implement or N/A in PR.
+- [ ] `RegistrationInvitesPage/` colocated (no SCSS required).
 - [ ] §10 green for this PR.
 
 ### 15.6 Documentation (§11) + DX (§26)
@@ -766,10 +814,14 @@ Exit non-zero when:
 - Any `*.tsx` at `many_faces_admin/src/pages/` maxdepth 1.
 - Any `RouteLoadingFallback.tsx` flat at `src/routes/` maxdepth 1 (folder required).
 
-**Optional `--imports`:** run `rg` (or equivalent) and fail when import strings reference flat paths such as:
+**Optional `--imports`:** run `rg` (or equivalent) under `many_faces_admin/src` and fail when import strings reference flat paths such as:
 
 - `components/Foo.tsx`, `components/dashboard/Bar.tsx`, `components/page-editor/Baz.tsx`
 - `pages/LoginPage.tsx` (must be `pages/LoginPage` folder barrel)
+
+**Exclude from `--imports` scans:** `src/api/**` (generated; ESLint-ignored in `eslint.config.js`). Do not flag OpenAPI client paths.
+
+**Phase-aware mode (recommended):** accept CLI flag or env such as `COLocate_PHASE=2b` so `page-editor` flat files are allowed until that phase completes — or document “run verify only after agreed phase” in PR.
 
 ```bash
 node scripts/verify-admin-component-colocation.mjs
@@ -909,6 +961,8 @@ After each phase, optionally run `yarn dlx knip` in `many_faces_admin` (if adopt
 - [ ] No flat `*.tsx` at `page-editor/` maxdepth 1.
 - [ ] `EditPagePage` and `EditFacePage` import from `../components/page-editor/...` barrels.
 - [ ] No imports from deleted flat paths (`../components/GridLayoutEditor.tsx`).
+- [ ] **Cross-imports inside `page-editor/`** updated (today `GridLayoutEditor` imports `./ComponentPickerModal` and `./radix/Button` — after move: sibling paths + `../radix/Button`).
+- [ ] `ComponentPickerModal` / `GradientPicker` internal imports to each other (if any) updated.
 - [ ] Phase 2b PR smoke: open edit page + edit face, grid drag/resize and picker still work.
 
 ---
@@ -932,7 +986,8 @@ See §2.10. **`RouteLoadingFallback`** is the only route-level presentational he
 ### 19.1 Checklist
 
 - [ ] `src/routes/RouteLoadingFallback/RouteLoadingFallback.tsx` + `index.ts`.
-- [ ] `AppRoutes.tsx` imports `RouteLoadingFallback` from folder barrel.
+- [ ] `AppRoutes.tsx` imports `RouteLoadingFallback` from folder barrel (`./RouteLoadingFallback` or via `routes/index.ts`).
+- [ ] `src/routes/index.ts` exports `RouteLoadingFallback` from `./RouteLoadingFallback` so `App.tsx` `from './routes'` unchanged.
 - [ ] `find many_faces_admin/src/routes -maxdepth 1 -name 'RouteLoadingFallback.tsx'` → **0** files (folder OK).
 - [ ] `lazyAdminPages.tsx`, `useAdminRoutePaths.ts` remain at `routes/` root.
 
@@ -990,6 +1045,20 @@ pages/EditPagePage/
 - [ ] §20.3 implemented or N/A in PR §0.2.
 - [ ] `yarn test` + manual chat smoke if §20.3 touched SignalR wiring.
 
+### 20.5 Large **components** (optional — same phase as colocation)
+
+**Not required** for exit rule. Apply only when you already touch the file; otherwise mark **N/A**.
+
+| Component | ~lines | Optional split |
+| --------- | ------ | -------------- |
+| `FacesTable` | ~300 | Toolbar / row actions / table body |
+| `UsersTable` | ~269 | same pattern |
+| `PagesTable` | ~249 | same pattern |
+| `ComponentPickerModal` | ~291 | Picker list vs modal shell |
+
+- [ ] Splits are **structure-only**; no API or column behavior changes.
+- [ ] Private split files stay inside the component folder; **not** exported from `index.ts`.
+
 ---
 
 ## 21. Colocated tests (**required** — Phase 2)
@@ -1010,6 +1079,7 @@ src/components/PagesTable/PagesTable.test.tsx
 - [ ] Every test for a colocated component lives **inside** that component’s folder (or page folder for page tests).
 - [ ] `src/components/__tests__/` removed when empty.
 - [ ] Vitest `include` globs still discover tests (`**/*.{test,spec}.tsx` — confirm `vitest.config`).
+- [ ] **Import style:** if Phase 0 (`@/`) is **N/A**, write new/ moved tests with **relative** imports like the app — `vitest.config.ts` already defines `@` → `./src`, but `tsconfig.app.json` may not; avoid `@/` in tests unless Phase 0 aligned §24.
 - [ ] `yarn test` green after each move.
 
 ---
@@ -1052,6 +1122,7 @@ After colocation:
 - [ ] Run `yarn build` and confirm **no unexpected** merging of `page-editor` + dashboard into one giant app chunk (inspect `dist/assets/*.js` sizes vs pre-colocation baseline in PR notes).
 - [ ] **Recharts** remains loaded only on routes that import dashboard widgets (dashboard page).
 - [ ] **`react-grid-layout`** remains associated with edit page / `page-editor` routes, not login shell.
+- [ ] **Login route** (`LoginPage` eager): compare main entry / login chunk size before vs after colocation — should not pick up Recharts or `vendor-grid-layout`.
 - [ ] If chunk regression > ~10% on login bundle, document cause; fix dynamic `import()` only in a **follow-up** PR (out of scope unless colocation broke static imports).
 
 ---
@@ -1060,15 +1131,20 @@ After colocation:
 
 **When worth it:** large Phase 4 import depth (`../../../hooks/...`).
 
+**Today:** `vitest.config.ts` already sets `@` → `./src`, but **`tsconfig.app.json` and `vite.config.ts` may not** — app code uses relative imports.
+
 ### 24.1 Implementation checklist
 
 - [ ] `tsconfig.app.json`: `"paths": { "@/*": ["./src/*"] }`.
 - [ ] `vite.config.ts`: `resolve: { alias: { '@': path.resolve(__dirname, 'src') } }`.
+- [ ] **Vitest** `resolve.alias` aligned with Vite (same `@` target).
 - [ ] ESLint import resolver aligned.
 - [ ] Migrate imports incrementally or in Phase 0 only for `components/` + `pages/` (document scope).
-- [ ] `yarn validate && yarn build` green.
+- [ ] `yarn validate && yarn build && yarn test` green.
 
 **Do not** mix alias and relative imports for the same module in one folder without reason.
+
+**If Phase 0 is N/A:** keep **relative** imports everywhere (app + new colocated tests).
 
 ---
 
