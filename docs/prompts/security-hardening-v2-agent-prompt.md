@@ -185,7 +185,7 @@ flowchart LR
 
 ### 5.6 Uploads & static files
 
-- [ ] **BE-U1** Magic-byte / content-type validation on avatar/story uploads.
+- [x] **BE-U1** Magic-byte / content-type validation on avatar/story uploads — **`IFileValidator`** + upload validators (**2026-05-16**, [`api-request-validation.md`](../guides/api-request-validation.md)); profile/story handlers call it. Remaining upload hardening: **BE-U2**–**BE-U5** below.
 - [ ] **BE-U2** Align max size error message with `MaxFileSizeBytes` (fix 5 MB vs 30 MB mismatch).
 - [ ] **BE-U3** Protect `/uploads/*`: signed URLs or auth proxy (document threat of public avatars).
 - [ ] **BE-U4** Path traversal tests in `SecurityEdgeCaseTests` or dedicated upload tests.

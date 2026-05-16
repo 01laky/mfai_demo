@@ -14,6 +14,7 @@ This page is a **narrative index** for the ASP.NET Core API submodule. **Source 
 | Topic | Guide |
 | ----- | ----- |
 | Auth + tokens | [`authentication-and-sessions.md`](../guides/authentication-and-sessions.md) |
+| Request validation (FluentValidation) | [`api-request-validation.md`](../guides/api-request-validation.md) — 400 shapes, `val_*` codes, uploads, CI parity script |
 | Capabilities | [`acl-and-capabilities.md`](../guides/acl-and-capabilities.md) |
 | Content moderation | [`ai-assisted-content-approval.md`](../guides/ai-assisted-content-approval.md), [`content-moderation-operations.md`](../guides/content-moderation-operations.md) |
 | Operator stats + admin AI | [`admin-dashboard-metrics.md`](../guides/admin-dashboard-metrics.md), [`backend-stats-and-admin-ai-runbook.md`](../guides/backend-stats-and-admin-ai-runbook.md) |

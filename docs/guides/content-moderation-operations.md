@@ -14,7 +14,7 @@ This page is the **short operator runbook**. Full architecture, data model, and 
 
 ## Backend levers (names only)
 
-- **`ContentModerationController`** — queue + actions.
+- **`ContentModerationController`** — queue + actions (bulk/decision bodies validated via FluentValidation — [`api-request-validation.md`](./api-request-validation.md)).
 - **`ContentAiReviewService`** — Redis worker path to **`ReviewContent`** gRPC + sanitization.
 - **`ContentModeration:`** configuration — e.g. instruction heuristic toggle.
 
