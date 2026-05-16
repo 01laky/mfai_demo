@@ -70,7 +70,11 @@ GET /api/localization/{app}
 
 - **Anonymous** (no Bearer token) — required for login/register before OAuth.
 - **Face-prefix exempt** — call `/api/localization/portal`, not `/{face}/api/localization/...` (see [routing](#face-prefix-routing-and-api-paths)).
-- **Rate limited** — policy `localization-read` (IP fixed window; config `Localization:RateLimitPermitLimit`).
+- **Rate limited** — policy `localization-read` (per-client-IP **fixed window**; separate from OAuth `oauth-token` / `oauth-register`).
+  - Config (in `many_faces_backend` `appsettings.json`): `Localization:RateLimitPermitLimit` (default **120**), `Localization:RateLimitWindowSeconds` (default **60**).
+  - All `{app}` values (`portal`, `admin`, `mobile`) share the **same IP counter** — normal UX is one GET per app per session.
+  - When exceeded: **HTTP 429**, `Retry-After` header, body `{"error":"rate_limit","error_description":"Too many requests. See Retry-After."}`.
+  - Automated coverage: `BeDemo.Api.Tests/LocalizationRateLimit429Tests.cs` (low permit test host).
 - Response includes `version` (content hash), `supportedLanguages`, and `resources` for `en` / `sk` / `cz`.
 
 Example shape:

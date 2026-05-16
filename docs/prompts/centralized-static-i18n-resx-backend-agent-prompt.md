@@ -284,9 +284,9 @@ Anonymous localization is callable on every cold load (portal + admin + mobile).
 | **Controller**  | `[EnableRateLimiting("localization-read")]` on `LocalizationController` (or equivalent)                                                                                        |
 | **Response**    | **429** with existing global JSON shape `{"error":"rate_limit",...}` and `Retry-After` header (already configured in `AddRateLimiter` `OnRejected`)                            |
 
-**(required)** Integration test: exceeding limit returns **429** (can use low permit limit in test configuration).
+- [x] Integration test: exceeding limit returns **429** (`LocalizationRateLimit429Tests`, `RateLimitedLocalizationWebApplicationFactory`).
 
-**(required)** Document limits in `01-features-running-and-api.md` and optional `static-localization-api.md` §14.
+- [x] Document limits in `01-features-running-and-api.md` and [`static-localization-and-i18n.md`](../guides/static-localization-and-i18n.md).
 
 ### 4.6 Dev watch — refreshing bundles locally (**required** for developer UX)
 
@@ -492,7 +492,7 @@ Frontends and CMS DB use **`cz`** as the language code (`supportedLanguages`, `P
 
 - [ ] `LocalizationControllerTests` — `portal`/`admin`/`mobile` return 200 + expected keys sample
 - [ ] **`GET /api/localization/portal` without face prefix** returns 200 (routing exempt §3.4)
-- [ ] Rate limit: excess requests → **429** §4.5
+- [x] Rate limit: excess requests → **429** §4.5 (`LocalizationRateLimit429Tests`)
 - [ ] Snapshot or golden-file test: exported JSON for one key path matches legacy `en.json` subtree (portal sample)
 - [ ] `ResourceJsonFlattenerTests` — nesting edge cases
 - [ ] Unknown app → 404
@@ -624,7 +624,7 @@ Each app README must gain or refresh an **Internationalization (i18n)** subsecti
 - [ ] **`/api/localization` added to `Routing.ExemptPathPrefixes`** §3.4.
 - [ ] `version` field populated; in-memory cache.
 - [ ] Culture `cz` API alias from `cs` satellites per §9.
-- [ ] Rate limit policy `localization-read` + config + 429 test §4.5.
+- [x] Rate limit policy `localization-read` + config + 429 test §4.5.
 - [ ] Dev watch / restart workflow documented §4.6.
 - [ ] Backend unit/integration tests §11.1 green.
 
