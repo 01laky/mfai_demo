@@ -6,9 +6,28 @@ Language: English. Audience: implementers / security review / AI agents. Actiona
 
 **Security hardening v2 (2026-05-16):** Worker/AI/ES/Redis trust boundary, FE CSP/XSS, uploads, PII logging, hardened compose, and moderation **PI-*** tasks — **[`../prompts/security-hardening-v2-agent-prompt.md`](../prompts/security-hardening-v2-agent-prompt.md)**. This guide remains the **K/J/O/T/S/H/D/M backlog** and **v1 (2026-04-11) completion record**; do not duplicate v2 phase checklists here.
 
-**v2 delivered (examples, see prompt for full list):** **BE-A3** — Identity minimum password length **12** (`Identity:Password:RequiredLength`); Development-only override **4** in `appsettings.Development.json`; `ValidateOnStart` rejects sub-12 outside Development. **BE-A2** — `Jwt:ExpiresInMinutesRememberMe` capped at **7 days** (10 080 min); `ValidateOnStart` rejects legacy multi-year values; refresh **90 days** via `Jwt:RefreshTokenDaysRememberMe`. **PI-6** — Unicode bidi/zero-width stripping + homoglyph fold for moderation heuristics (`ContentModerationUnicodeHomoglyphFold`, `ContentModerationUnicodeSpoofingTests`). **PI-7** — `ContentAiReviewService` no longer logs raw invalid Redis AI review JSON; use `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog` (length + `sha256Prefix` + parsed ids only). **PI-9** — documented untrusted `ReviewContent` vs trusted operator `ChatHub`/`Generate` split (`ContentModerationTrustBoundary`, guide § PI-9). **PI-10** — explicit CI gate `scripts/verify-moderation-security-tests.mjs` (`Category=ModerationSecurity`). See [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md).
+**v2 delivered (examples, see prompt for full list):** **BE-L1–L4** (2026-05-16) — structured log redaction via `PiiLogRedaction` (`BeDemo.Api/Utils/PiiLogRedaction.cs`): failed OAuth password grant logs credential length + SHA-256 prefix only (`OAuth2Service`); registration invite mail-disabled logs `inviteId` + email domain (`RegistrationInviteService`); `ChatHub` AI/broadcast paths log message length + hash only; admin user-create failures log domain-only email hint (`UsersController`). Tests: `PiiLogRedactionTests`, `OAuth2ServiceTests.GenerateTokenAsync_WhenPasswordInvalid_LogsRedactedCredentialHintNotRawUsername`. **BE-A3** — Identity minimum password length **12** (`Identity:Password:RequiredLength`); Development-only override **4** in `appsettings.Development.json`; `ValidateOnStart` rejects sub-12 outside Development. **BE-A2** — `Jwt:ExpiresInMinutesRememberMe` capped at **7 days** (10 080 min); `ValidateOnStart` rejects legacy multi-year values; refresh **90 days** via `Jwt:RefreshTokenDaysRememberMe`. **PI-6** — Unicode bidi/zero-width stripping + homoglyph fold for moderation heuristics (`ContentModerationUnicodeHomoglyphFold`, `ContentModerationUnicodeSpoofingTests`). **PI-7** — `ContentAiReviewService` no longer logs raw invalid Redis AI review JSON; use `ContentModerationHelpers.FormatInvalidAiReviewPayloadForLog` (length + `sha256Prefix` + parsed ids only). **PI-9** — documented untrusted `ReviewContent` vs trusted operator `ChatHub`/`Generate` split (`ContentModerationTrustBoundary`, guide § PI-9). **PI-10** — explicit CI gate `scripts/verify-moderation-security-tests.mjs` (`Category=ModerationSecurity`). See [`ai-assisted-content-approval.md`](./ai-assisted-content-approval.md).
 
 **Related:** [acl-and-capabilities.md](./acl-and-capabilities.md) (authorization / capabilities); this file focuses on **transport + token + key lifecycle**.
+
+---
+
+## PII logging redaction (SHV2 BE-L1–L4)
+
+**Helpers:** `BeDemo.Api/Utils/PiiLogRedaction.cs` — use for any new log line that might touch credentials, mail addresses, or end-user text.
+
+| Surface | Never log | Log instead |
+| ------- | --------- | ----------- |
+| OAuth2 password grant failure | Raw `username` / email typed by client | `credentialHintLength` + `credentialHintSha256Prefix` |
+| Registration invite (mail disabled) | Full `invite.Email` | `inviteId` + `emailDomain` (or hash if malformed) |
+| `ChatHub` broadcast / `SendToAi` | Full `message` body | `messageLength` + `messageSha256Prefix` |
+| Admin `POST /api/users` failure | Full email on validation failure | `FormatEmailForLog` (domain only) |
+
+**Never log:** passwords, refresh tokens, registration codes, JWT access/refresh strings, full AI prompts, or moderation user content (see PI-7).
+
+**Tests:** `PiiLogRedactionTests`, `OAuth2ServiceTests.GenerateTokenAsync_WhenPasswordInvalid_LogsRedactedCredentialHintNotRawUsername`.
+
+---
 
 ### Diagram: backlog layers (depends-on overview)
 

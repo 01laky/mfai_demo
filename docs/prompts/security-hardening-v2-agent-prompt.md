@@ -193,10 +193,10 @@ flowchart LR
 
 ### 5.7 Logging & PII
 
-- [ ] **BE-L1** Stop logging raw usernames on failed OAuth password grant (hash or omit).
-- [ ] **BE-L2** Stop logging raw emails on registration invite flows.
-- [ ] **BE-L3** Do not log full chat/AI message bodies in `ChatHub` (metadata only).
-- [ ] **BE-L4** Document redaction rules in `security-crypto-sockets.md`.
+- [x] **BE-L1** Stop logging raw usernames on failed OAuth password grant (hash or omit) — `PiiLogRedaction.FormatCredentialIdentifierForLog` in `OAuth2Service` (**2026-05-16**).
+- [x] **BE-L2** Stop logging raw emails on registration invite flows — `FormatEmailForLog` + `inviteId` in `RegistrationInviteService.TrySendMailAsync`.
+- [x] **BE-L3** Do not log full chat/AI message bodies in `ChatHub` (metadata only) — `FormatChatMessageForLog` on `SendMessage` / `SendToAi`.
+- [x] **BE-L4** Document redaction rules in `security-crypto-sockets.md` (v2 delivered + `PiiLogRedaction` helpers).
 
 ### 5.8 Supply chain (backend)
 
