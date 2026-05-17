@@ -15,8 +15,8 @@ Short checklist for **platform operators** using **`many_faces_admin`**. Archite
 | Mode | Behaviour |
 | ---- | ---------- |
 | `off` | No stats JSON attached to admin AI chat. |
-| `inline` | API embeds **public snapshot** JSON into gRPC **`Generate`** (`stats_context_json`). |
-| `live` | Python service **HTTP GETs** `AiStats:PublicSnapshotAbsoluteUrl` (must be a **`/public/...`** URL), then generates. |
+| `inline` | API embeds **full operator dashboard** + optional **7-day timeseries** into gRPC when the message is metrics-related. |
+| `live` | Same as **inline** (backend-built JSON at send time). |
 
 ## Config keys (backend)
 

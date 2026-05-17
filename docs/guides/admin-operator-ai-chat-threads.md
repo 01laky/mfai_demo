@@ -40,6 +40,8 @@ Group: `operator_ai_operators` (joined on connect when `CanManageAllFaces`).
 | `MaxConversations` | 1000 | Retention trim |
 | `MessagesPageSize` | 40 | REST page size |
 | `MaxNewTokens` | 384 | gRPC generation cap (dev-friendly on CPU) |
+| `AttachStatsOnlyForMetricsQuestions` | true | Stats JSON only for metrics-like questions (inline/live) |
+| `IncludeTimeseriesInStatsContext` | true | 7-day daily users/messages/stories in stats JSON |
 
 ## Local AI (`ai-demo-dev`)
 

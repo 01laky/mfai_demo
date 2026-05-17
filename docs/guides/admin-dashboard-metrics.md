@@ -45,8 +45,8 @@ Operators may attach **only** the public snapshot shape to the **admin SignalR A
 | Mode | Behaviour |
 | ---- | --------- |
 | **`off`** | `Generate` gRPC with conversation prompt only (legacy behaviour). |
-| **`inline`** | API reads **`PublicStatsSnapshotDto`** from EF, serializes JSON, passes **`stats_context_json`** on **`GenerateRequest`**. |
-| **`live`** | Backend calls gRPC **`OperatorStatsChat`**; Python performs **HTTP GET** of **`AiStats:PublicSnapshotAbsoluteUrl`** (must be reachable from the AI container; use **`/public/...`** URL), then **`Generate`** with the JSON as **`stats_context_json`**. |
+| **`inline`** | API builds **`OperatorAiStatsContextDto`** (`dashboard` = full **`AdminDashboardSummaryDto`**, optional **`timeseriesLast7Days`**) and passes **`stats_context_json`** when the user message is metrics-related. |
+| **`live`** | Same payload as **`inline`** (backend EF at send time; no slimmer public-only fetch for chat). |
 
 SignalR:
 
