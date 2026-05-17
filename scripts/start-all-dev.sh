@@ -484,6 +484,7 @@ fi
 # START FE, PROXY, ADMIN, AI (root compose — single wait; depends_on orders services)
 # ============================================================================
 echo "📦 Starting frontend, proxy, admin, AI (root docker-compose)..."
+mkdir -p "$ROOT/.data/huggingface"
 docker stop be-demo-api be-demo-seq 2>/dev/null || true
 docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
 # fe-demo-proxy after fe-demo-dev; fe/admin wait on healthy be-demo-dev; ai-demo-dev is independent

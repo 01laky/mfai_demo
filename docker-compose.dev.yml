@@ -50,6 +50,8 @@ services:
       - Search__WorkerTlsClientCertPath=${SEARCH_DEV_WORKER_TLS_CLIENT_CERT_PATH:-}
       - Search__WorkerTlsClientKeyPath=${SEARCH_DEV_WORKER_TLS_CLIENT_KEY_PATH:-}
       - Search__WorkerGrpcTlsServerName=${SEARCH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
+      # AI live stats: must be reachable from ai-demo-dev (not host localhost).
+      - AiStats__PublicSnapshotAbsoluteUrl=http://be-demo-dev:8000/public/api/Stats/public
     depends_on:
       seq:
         condition: service_healthy
@@ -178,7 +180,11 @@ services:
       start_period: 30s
 
   # Many Faces AI gRPC Server (independent - no dependency on backend)
-  # Host: Docker Desktop → Settings → Resources must allow enough RAM/CPU for limits below.
+  # Host: Docker Desktop → Resources: allocate ≥16GB RAM for this service (plus other containers).
+  # Model weights: bind-mounted at ./.data/huggingface (gitignored). Survives `docker rm ai-demo-dev`
+  # and `docker compose down -v` on this stack. One-time download (~8 GB). Do not delete that folder
+  # unless you want a re-download. Legacy named volume ai-demo-hf-cache: copy with
+  #   docker run --rm -v ai-demo-hf-cache:/from -v "$PWD/.data/huggingface:/to" alpine cp -a /from/. /to/
   ai-demo-dev:
     build:
       context: ./many_faces_ai
@@ -187,22 +193,24 @@ services:
     ports:
       - "50051:50051"
     volumes:
-      - ai-demo-hf-cache:/root/.cache/huggingface
-    cpus: ${MFAI_CONTAINER_CPUS:-4}
-    # No mem_limit — hard caps caused OOM kill loops at ~80% weight load on Mac Docker.
-    shm_size: ${MFAI_CONTAINER_SHM_SIZE:-1gb}
+      - ./.data/huggingface:/root/.cache/huggingface
+    cpus: ${MFAI_CONTAINER_CPUS:-6}
+    mem_reservation: ${MFAI_CONTAINER_MEM_RESERVATION:-16g}
+    mem_limit: ${MFAI_CONTAINER_MEM_LIMIT:-16g}
+    shm_size: ${MFAI_CONTAINER_SHM_SIZE:-2gb}
     environment:
       - PORT=50051
       - HF_HOME=/root/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/root/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface/hub
       - TOKENIZERS_PARALLELISM=false
       - OMP_NUM_THREADS=${MFAI_CONTAINER_CPUS:-4}
       - MKL_NUM_THREADS=${MFAI_CONTAINER_CPUS:-4}
       - OPENBLAS_NUM_THREADS=${MFAI_CONTAINER_CPUS:-4}
       - MFAI_PRELOAD_MODEL=1
-      # 0.5B fits ~2GB RAM on CPU; use 1.5B/4B only if Docker has 12GB+ RAM:
-      # MFAI_AI_MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct
-      - MFAI_AI_MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct
-      - MFAI_FAST_GENERATION=1
+      # Qwen3-4B needs transformers>=4.51 and ~16g container RAM on CPU.
+      - MFAI_AI_MODEL_NAME=Qwen/Qwen3-4B-Instruct-2507
+      - MFAI_FAST_GENERATION=0
       - MFAI_MAX_NEW_TOKENS_CAP=512
     networks:
       - dev-network
@@ -211,8 +219,9 @@ services:
       test: ["CMD", "python", "-c", "import grpc; from proto import health_pb2, health_pb2_grpc; channel = grpc.insecure_channel('localhost:50051'); stub = health_pb2_grpc.HealthServiceStub(channel); response = stub.HealthCheck(health_pb2.HealthCheckRequest()); exit(0 if response.status == 'success' else 1)"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 600s
+      retries: 10
+      # First Qwen3-4B download + CPU load can exceed 10 min; do not recreate while loading.
+      start_period: 3600s
 
 volumes:
   be-demo-data:
@@ -221,7 +230,6 @@ volumes:
   fe-demo-yarn-cache:
   admin-demo-node-modules:
   admin-demo-yarn-cache:
-  ai-demo-hf-cache:
 
 networks:
   dev-network:

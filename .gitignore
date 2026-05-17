@@ -38,6 +38,9 @@ tmp/
 temp/
 *.tmp
 
+# Local Hugging Face model cache (bind-mounted into ai-demo-dev)
+.data/
+
 # Subrepositories - ignore nested .git (each submodule is its own repo)
 many_faces_backend/.git/
 many_faces_portal/.git/

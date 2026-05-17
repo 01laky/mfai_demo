@@ -119,6 +119,7 @@ fi
 # 6. AI service
 if [[ " ${MISSING[*]} " =~ " ai " ]]; then
   echo "📦 Starting AI service (ai-demo-dev)..."
+  mkdir -p "$ROOT/.data/huggingface"
   docker-compose -f docker-compose.dev.yml up -d ai-demo-dev
   echo "   ✅ AI service started."
   echo ""

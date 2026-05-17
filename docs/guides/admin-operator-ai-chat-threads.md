@@ -45,12 +45,19 @@ Group: `operator_ai_operators` (joined on connect when `CanManageAllFaces`).
 
 | Env | Default (dev compose) | Purpose |
 |-----|----------------------|---------|
-| `MFAI_AI_MODEL_NAME` | `Qwen/Qwen2.5-0.5B-Instruct` | Fits Mac Docker RAM; override to `1.5B` / `Qwen3-4B` if you allocate more memory |
+| `MFAI_AI_MODEL_NAME` | `Qwen/Qwen3-4B-Instruct-2507` | Needs 16g container RAM on CPU |
 | `MFAI_PRELOAD_MODEL` | `1` | Blocking load before gRPC accepts traffic |
-| `MFAI_FAST_GENERATION` | `1` | Greedy decode (faster on CPU) |
-| `MFAI_CONTAINER_CPUS` | `4`–`6` | CPU limit + `OMP_NUM_THREADS` |
+| `MFAI_FAST_GENERATION` | `0` | Greedy decode when `1` (faster, rougher text on CPU) |
+| `MFAI_CONTAINER_CPUS` | `6` | CPU limit + `OMP_NUM_THREADS` |
+| `MFAI_CONTAINER_MEM_LIMIT` | `16g` | Hard cap (Docker Desktop must allow ≥16GB for AI) |
+| `MFAI_CONTAINER_MEM_RESERVATION` | `16g` | Reserved RAM for the AI container |
+| `MFAI_CONTAINER_SHM_SIZE` | `2gb` | Shared memory for PyTorch load |
 
 HealthCheck gRPC `message` is JSON: `{ "ready", "loading", "unavailable", "modelName" }`. Admin polls `model-status` and disables the composer until `ready`.
+
+### Model cache (no re-download on container recreate)
+
+Weights live on the **host** at **`.data/huggingface/`** (bind mount, gitignored). Deleting or recreating `ai-demo-dev` does **not** remove them. Avoid `docker compose down -v` together with deleting `.data/huggingface/`. `./scripts/clear-all-dev.sh` keeps AI and this folder unless you pass **`--clean-ai`** (removes container and deletes `.data/huggingface`). First download of Qwen3-4B is several GB; later starts only load from disk.
 
 ## Admin UI
 

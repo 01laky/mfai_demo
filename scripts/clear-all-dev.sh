@@ -5,7 +5,7 @@
 # legacy mfai_demo_*), legacy short names, and leaves no known demo volumes behind when Docker allows removal.
 #
 # WARNING: Destructive (DB, Redis, Seq, FE/Admin node_modules caches, Elasticsearch + search-worker, push-worker, …).
-# By default the AI gRPC service (ai-demo-dev) and its Hugging Face cache volume are left
+# By default the AI gRPC service (ai-demo-dev) and host HF cache (.data/huggingface) are left
 # alone so models are not re-downloaded; use --clean-ai to remove them too.
 # After containers/volumes are gone, unused Docker images are pruned; the ai-demo-dev image
 # is kept unless you pass --clean-ai (base layers shared with other images may remain until
@@ -13,7 +13,7 @@
 #
 # Usage: ./scripts/clear-all-dev.sh [--yes|-y] [--clean-ai]
 #   --yes, -y   Skip the confirmation prompt (automation / CI).
-#   --clean-ai  Also remove ai-demo-dev, ai-demo-hf-cache, and prune all unused images.
+#   --clean-ai  Also remove ai-demo-dev, .data/huggingface, legacy ai-demo-hf-cache volume, and prune images.
 
 set -euo pipefail
 
@@ -42,9 +42,9 @@ echo "🧹 Clearing development containers, volumes, networks, and (most) Docker
 echo ""
 echo "⚠️  WARNING: This removes demo DB, Redis, Seq, BE/FE/Admin dev stack, logger, Elasticsearch/search-worker, push-worker, TLS smoke stacks, etc."
 if [[ "$CLEAN_AI" -eq 1 ]]; then
-  echo "   Including AI demo and Hugging Face cache (--clean-ai)."
+  echo "   Including AI demo and .data/huggingface model cache (--clean-ai)."
 else
-  echo "   AI demo (ai-demo-dev) and HF model cache are kept unless you pass --clean-ai."
+  echo "   AI demo (ai-demo-dev) and .data/huggingface are kept unless you pass --clean-ai."
 fi
 echo ""
 
@@ -400,7 +400,11 @@ fi
 
 echo ""
 if [[ "$CLEAN_AI" -eq 1 ]]; then
+  if [[ -d "$ROOT/.data/huggingface" ]]; then
+    echo "  🗑️  Removing host Hugging Face cache: $ROOT/.data/huggingface"
+    rm -rf "$ROOT/.data/huggingface"
+  fi
   echo "🎉 Cleanup complete — no known demo volumes or networks left; unused images pruned."
 else
-  echo "🎉 Cleanup complete — AI demo / HF cache / ai-demo image kept (use --clean-ai to remove)."
+  echo "🎉 Cleanup complete — AI demo / .data/huggingface / ai-demo image kept (use --clean-ai to remove)."
 fi
