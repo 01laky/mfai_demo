@@ -14,12 +14,13 @@ Shared **support inbox** for platform operators (`CanManageAllFaces` on the **ad
 | `PATCH` | `/admin/api/operator-ai/conversations/{id}` | Rename |
 | `DELETE` | `/admin/api/operator-ai/conversations/{id}` | Hard delete + cascade messages |
 | `GET` | `/admin/api/operator-ai/conversations/{id}/messages?limit=40&beforeId=` | Newest page; `beforeId` loads older |
+| `GET` | `/admin/api/operator-ai/model-status` | Local Qwen readiness (`ready`, `loading`, `unavailable`) |
 
 ## SignalR (`/admin/hubs/chat`)
 
 | Client → server | Args | Notes |
 |-----------------|------|--------|
-| `SendToAiWithOperatorStats` | `conversationId`, `message`, `statsMode` | History from DB; `MaxNewTokens` from config |
+| `SendToAiWithOperatorStats` | `conversationId`, `message`, `statsMode` | Rejects when model not ready; does not persist transient “model loading” replies |
 
 | Server → client | Purpose |
 |-----------------|--------|
@@ -38,13 +39,25 @@ Group: `operator_ai_operators` (joined on connect when `CanManageAllFaces`).
 | `MaxMessageLength` | 16000 | User message cap |
 | `MaxConversations` | 1000 | Retention trim |
 | `MessagesPageSize` | 40 | REST page size |
-| `MaxNewTokens` | 2048 | gRPC generation limit |
+| `MaxNewTokens` | 384 | gRPC generation cap (dev-friendly on CPU) |
+
+## Local AI (`ai-demo-dev`)
+
+| Env | Default (dev compose) | Purpose |
+|-----|----------------------|---------|
+| `MFAI_AI_MODEL_NAME` | `Qwen/Qwen2.5-0.5B-Instruct` | Fits Mac Docker RAM; override to `1.5B` / `Qwen3-4B` if you allocate more memory |
+| `MFAI_PRELOAD_MODEL` | `1` | Blocking load before gRPC accepts traffic |
+| `MFAI_FAST_GENERATION` | `1` | Greedy decode (faster on CPU) |
+| `MFAI_CONTAINER_CPUS` | `4`–`6` | CPU limit + `OMP_NUM_THREADS` |
+
+HealthCheck gRPC `message` is JSON: `{ "ready", "loading", "unavailable", "modelName" }`. Admin polls `model-status` and disables the composer until `ready`.
 
 ## Admin UI
 
 - Route: `/chat?c={conversationId}`
 - Left: conversation list, **New chat**, select thread
-- Right: messages, scroll-up pagination, composer
+- Right: messages, scroll-up pagination, composer (disabled until model `ready`; banner while loading)
+- Hides legacy DB rows that are transient “model loading” placeholders
 - Stats mode: `admin_ai_public_stats_mode` in `localStorage` (unchanged)
 - **No** `sessionStorage` chat history
 
