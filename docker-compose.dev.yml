@@ -52,6 +52,8 @@ services:
       - Search__WorkerGrpcTlsServerName=${SEARCH_DEV_WORKER_GRPC_TLS_SERVER_NAME:-}
       # AI live stats: must be reachable from ai-demo-dev (not host localhost).
       - AiStats__PublicSnapshotAbsoluteUrl=http://be-demo-dev:8000/public/api/Stats/public
+      # Remote AI worker on LAN: export AI_SERVICE_GRPC_ADDRESS=http://<windows-ip>:50051
+      - AI_SERVICE_GRPC_ADDRESS=${AI_SERVICE_GRPC_ADDRESS:-http://ai-demo-dev:50051}
     depends_on:
       seq:
         condition: service_healthy

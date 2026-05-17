@@ -20,7 +20,7 @@
 #
 # Usage: ./scripts/start-all-dev.sh (from repository root)
 # Elasticsearch + search-worker, push-worker, and mailer-worker start by default when submodule scripts exist.
-# To skip any of them: ENABLE_ELASTICSEARCH=0, ENABLE_PUSH_WORKER=0, or ENABLE_MAILER_WORKER=0.
+# To skip any of them: ENABLE_ELASTICSEARCH=0, ENABLE_PUSH_WORKER=0, ENABLE_MAILER_WORKER=0, or ENABLE_AI=0.
 # Push: place Firebase **service account** JSON at many_faces_push/firebase-sa.json (gitignored) or set FIREBASE_SA_HOST_PATH; PUSH_WORKER_EXPECTED_TOKEN enables gRPC metadata auth (mirrored to Push__WorkerAuthToken).
 # Press Ctrl+C to exit the status screen early
 
@@ -150,15 +150,19 @@ if [ "${ENABLE_MAILER_WORKER:-1}" != "0" ] && [ -f "many_faces_mailer/scripts/st
 fi
 
 # Full stack checklist for the status screen exit condition (redis only if we start many_faces_redis)
+_ai_services=()
+if [ "${ENABLE_AI:-1}" != "0" ]; then
+    _ai_services=(ai-demo-dev)
+fi
 if [ "$_expect_redis" -eq 1 ]; then
     EXPECTED_CONTAINERS=(
         postgres-dev pgadmin-dev redis-dev be-demo-dev seq-dev
-        fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev dozzle-dev
+        fe-demo-dev fe-demo-proxy admin-demo-dev "${_ai_services[@]}" dozzle-dev
     )
 else
     EXPECTED_CONTAINERS=(
         postgres-dev pgadmin-dev be-demo-dev seq-dev
-        fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev dozzle-dev
+        fe-demo-dev fe-demo-proxy admin-demo-dev "${_ai_services[@]}" dozzle-dev
     )
 fi
 if [ "$_expect_elastic" -eq 1 ]; then
@@ -483,13 +487,26 @@ fi
 # ============================================================================
 # START FE, PROXY, ADMIN, AI (root compose — single wait; depends_on orders services)
 # ============================================================================
-echo "📦 Starting frontend, proxy, admin, AI (root docker-compose)..."
-mkdir -p "$ROOT/.data/huggingface"
+if [ "${ENABLE_AI:-1}" != "0" ]; then
+    echo "📦 Starting frontend, proxy, admin, AI (root docker-compose)..."
+    mkdir -p "$ROOT/.data/huggingface"
+else
+    echo "📦 Starting frontend, proxy, admin (ENABLE_AI=0 — skipping ai-demo-dev)..."
+    docker stop ai-demo-dev 2>/dev/null || true
+fi
 docker stop be-demo-api be-demo-seq 2>/dev/null || true
 docker rm -f be-demo-api be-demo-seq 2>/dev/null || true
 # fe-demo-proxy after fe-demo-dev; fe/admin wait on healthy be-demo-dev; ai-demo-dev is independent
-docker-compose -f docker-compose.dev.yml up -d fe-demo-dev fe-demo-proxy admin-demo-dev ai-demo-dev
-echo "    ✅ Frontend, proxy, admin, AI compose step finished"
+_compose_fe_admin=(fe-demo-dev fe-demo-proxy admin-demo-dev)
+if [ "${ENABLE_AI:-1}" != "0" ]; then
+    _compose_fe_admin+=(ai-demo-dev)
+fi
+docker-compose -f docker-compose.dev.yml up -d "${_compose_fe_admin[@]}"
+if [ "${ENABLE_AI:-1}" != "0" ]; then
+    echo "    ✅ Frontend, proxy, admin, AI compose step finished"
+else
+    echo "    ✅ Frontend, proxy, admin compose step finished (no AI)"
+fi
 
 # ============================================================================
 # START LOGGER (Dozzle)
@@ -549,7 +566,11 @@ while true; do
     # CHECK AND RESTART STOPPED CONTAINERS
     # ========================================================================
     # Check for stopped containers and attempt to restart them automatically
-    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev|mailer-worker-tls-smoke)$" || true)
+    _stopped_re='^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev|mailer-worker-tls-smoke)$'
+    if [ "${ENABLE_AI:-1}" != "0" ]; then
+        _stopped_re='^(postgres-dev|be-demo-dev|be-demo-api|fe-demo-dev|fe-demo-proxy|admin-demo-dev|seq-dev|ai-demo-dev|dozzle-dev|pgadmin-dev|elasticsearch-dev|search-worker-dev|push-worker-dev|mailer-worker-dev|mailer-worker-tls-smoke)$'
+    fi
+    STOPPED=$(docker ps -a --format '{{.Names}}' --filter status=exited --filter status=created | grep -E "$_stopped_re" || true)
     
     if [ -n "$STOPPED" ]; then
         echo ""
@@ -754,7 +775,10 @@ while true; do
     # ========================================================================
     echo "📦 Many Faces AI service (many_faces_ai)"
     echo "───────────────────────────────────────────────────────────"
-    if docker ps --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
+    if [ "${ENABLE_AI:-1}" = "0" ]; then
+        echo "  Skipped (ENABLE_AI=0) — point backend gRPC at a remote AI worker if needed"
+        echo ""
+    elif docker ps --format '{{.Names}}' | grep -q "^ai-demo-dev$"; then
         STATUS=$(docker ps --format '{{.Status}}' --filter name=ai-demo-dev)
         echo "  Container: ✓ Running (ai-demo-dev)"
         echo "  Status: $STATUS"
