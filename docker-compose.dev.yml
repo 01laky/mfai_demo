@@ -218,6 +218,7 @@ services:
       - MFAI_LOCAL_FILES_ONLY=${MFAI_LOCAL_FILES_ONLY:-0}
       - MFAI_FAST_GENERATION=${MFAI_FAST_GENERATION:-1}
       - MFAI_MAX_NEW_TOKENS_CAP=512
+      - MFAI_MAX_CONTEXT_TOKENS=${MFAI_MAX_CONTEXT_TOKENS:-1200}
     networks:
       - dev-network
     restart: unless-stopped
