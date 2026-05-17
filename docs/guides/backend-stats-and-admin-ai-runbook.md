@@ -26,6 +26,12 @@ Short checklist for **platform operators** using **`many_faces_admin`**. Archite
 
 - Hub method **`SendToAiWithOperatorStats`** (operator-only; rate limited) — see `ChatHub` + [`signalr-hub-security-matrix.md`](./signalr-hub-security-matrix.md).
 
+## AI chat message history (admin UI)
+
+- **Shipped:** [admin-operator-ai-chat-threads.md](./admin-operator-ai-chat-threads.md) — PostgreSQL `OperatorAiConversations` / `OperatorAiMessages`, two-pane **`ChatPage`**, deep link **`/chat?c={id}`**, SignalR live sync, retention max **1000** threads.
+- **SHV2 FE-A3 waived:** history is **not** cleared on logout (shared support tool for platform operators).
+- Hub: `SendToAiWithOperatorStats(conversationId, message, statsMode)` — server loads history from DB; `OperatorAi:MaxNewTokens` default **2048**.
+
 ## Related
 
 - [`admin-ai-public-stats-operator-chat-agent-prompt.md`](../prompts/admin-ai-public-stats-operator-chat-agent-prompt.md)

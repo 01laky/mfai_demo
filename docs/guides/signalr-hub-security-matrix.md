@@ -10,6 +10,16 @@ Language: English. **Automation:** where an automated test exists, it is referen
 | `BeDemo.Api/Hubs/MessengerHub.cs` | Yes          | Same JWT rules as `ChatHub` on `/hubs/messenger`                                                                 | `IFaceScopeContext` + `EnforceTenantSocialPairAsync` for DM paths           | `SignalRHubTests.MessengerHub_ShouldRejectConnection_WhenNoToken`                                    |
 | `BeDemo.Api/Hubs/ChatRoomHub.cs` | Yes          | Same on `/hubs/chatroom`                                                                                         | `JoinRoom` validates room membership + face                                 | `SignalRHubTests.ChatRoomHub_ShouldRejectConnection_WhenNoToken`                                    |
 
+### `ChatHub` operator AI (shared inbox)
+
+| Method / event | Gate | Notes |
+| -------------- | ---- | ----- |
+| `SendToAiWithOperatorStats(conversationId, message, statsMode)` | `CanManageAllFaces` + admin face | Persists to DB; history from server |
+| `SendToAi(message, history?)` | Authenticated | Portal / legacy; unchanged |
+| `OperatorAiMessageAppended`, `OperatorAiConversationListChanged`, `OperatorAiConversationDeleted` | Group `operator_ai_operators` | Live sync between operators |
+
+See [admin-operator-ai-chat-threads.md](./admin-operator-ai-chat-threads.md).
+
 Full engagement evidence: [security-crypto-sockets.md — completion record](./security-crypto-sockets.md#security-hardening-engagement--completion-record-2026-04-11).
 
 ## Manual checks (repeat per release if tests not extended)

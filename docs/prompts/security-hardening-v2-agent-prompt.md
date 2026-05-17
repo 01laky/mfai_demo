@@ -233,7 +233,7 @@ flowchart LR
 |----|------|-------|
 | FE-A1 | [ ] CSP on admin static host (same policy approach as portal) | nginx / Vite deploy config |
 | FE-A2 | [ ] Share refresh interceptor with portal (import shared module or copy with test parity) | `src/api/interceptors.ts` |
-| FE-A3 | [ ] `sessionStorage` AI chat: clear on logout; no system prompts in storage | `src/pages/ChatPage/ChatPage.tsx` |
+| FE-A3 | ~~clear chat on logout~~ **Waived (product)** — persistent operator support chat; implementation spec: [admin-operator-ai-chat-threads-agent-prompt.md](./admin-operator-ai-chat-threads-agent-prompt.md) (DB threads + sidebar, not SHV2 security). |
 | FE-A4 | [ ] Moderation drawer: remain text-only; tests for injection strings in preview | `ContentModerationPage/ModerationItemDrawer.tsx` |
 | FE-A5 | [ ] SUPER_ADMIN routes audit per [super-admin-api.md](./super-admin-api.md) | controllers + `acl/` |
 | FE-A6 | [ ] Vitest: admin prefix, capabilities, 403 states | existing test dirs |
