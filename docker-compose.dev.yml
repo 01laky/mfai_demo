@@ -182,26 +182,30 @@ services:
       start_period: 30s
 
   # Many Faces AI gRPC Server (independent - no dependency on backend)
-  # Host: Docker Desktop → Resources: allocate ≥16GB RAM for this service (plus other containers).
-  # Model weights: bind-mounted at ./.data/huggingface (gitignored). Survives `docker rm ai-demo-dev`
-  # and `docker compose down -v` on this stack. One-time download (~8 GB). Do not delete that folder
-  # unless you want a re-download. Legacy named volume ai-demo-hf-cache: copy with
-  #   docker run --rm -v ai-demo-hf-cache:/from -v "$PWD/.data/huggingface:/to" alpine cp -a /from/. /to/
+  # Model weights: host ./.data/huggingface (gitignored) — survives image rebuilds and submodule code changes.
+  # App code bind-mounts below: edit many_faces_ai/*.py then `docker compose restart ai-demo-dev` (no re-download).
+  # Set MFAI_LOCAL_FILES_ONLY=1 in .env after the first successful download (see .env.example).
   ai-demo-dev:
     build:
       context: ./many_faces_ai
       dockerfile: Dockerfile.dev
+      args:
+        PYTORCH_INDEX: ${MFAI_PYTORCH_INDEX:-https://download.pytorch.org/whl/cu124}
     container_name: ai-demo-dev
     ports:
-      - "50051:50051"
+      - "0.0.0.0:50051:50051"
     volumes:
       - ./.data/huggingface:/root/.cache/huggingface
+      - ./many_faces_ai/server.py:/app/server.py:ro
+      - ./many_faces_ai/services:/app/services:ro
     cpus: ${MFAI_CONTAINER_CPUS:-6}
     mem_reservation: ${MFAI_CONTAINER_MEM_RESERVATION:-16g}
     mem_limit: ${MFAI_CONTAINER_MEM_LIMIT:-16g}
     shm_size: ${MFAI_CONTAINER_SHM_SIZE:-2gb}
+    gpus: all
     environment:
       - PORT=50051
+      - NVIDIA_VISIBLE_DEVICES=all
       - HF_HOME=/root/.cache/huggingface
       - HUGGINGFACE_HUB_CACHE=/root/.cache/huggingface/hub
       - TRANSFORMERS_CACHE=/root/.cache/huggingface/hub
@@ -210,9 +214,9 @@ services:
       - MKL_NUM_THREADS=${MFAI_CONTAINER_CPUS:-4}
       - OPENBLAS_NUM_THREADS=${MFAI_CONTAINER_CPUS:-4}
       - MFAI_PRELOAD_MODEL=1
-      # Qwen3-4B needs transformers>=4.51 and ~16g container RAM on CPU.
-      - MFAI_AI_MODEL_NAME=Qwen/Qwen3-4B-Instruct-2507
-      - MFAI_FAST_GENERATION=0
+      - MFAI_AI_MODEL_NAME=${MFAI_AI_MODEL_NAME:-Qwen/Qwen3-0.6B}
+      - MFAI_LOCAL_FILES_ONLY=${MFAI_LOCAL_FILES_ONLY:-0}
+      - MFAI_FAST_GENERATION=${MFAI_FAST_GENERATION:-1}
       - MFAI_MAX_NEW_TOKENS_CAP=512
     networks:
       - dev-network
@@ -222,8 +226,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-      # First Qwen3-4B download + CPU load can exceed 10 min; do not recreate while loading.
-      start_period: 3600s
+      start_period: 600s
 
 volumes:
   be-demo-data:
